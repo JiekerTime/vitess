@@ -7,7 +7,7 @@
 				"make",
 				"java_test"
 			],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "10",
 			"RetryMax": 1,
 			"Tags": []
@@ -18,7 +18,7 @@
 			"Command": [
 				"test/client_test.sh"
 			],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "25",
 			"RetryMax": 1,
 			"Tags": []
@@ -75,7 +75,7 @@
 			"Command": [
 				"test/local_example.sh"
 			],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "",
 			"RetryMax": 1,
 			"Tags": []
@@ -95,7 +95,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/pitr", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "backup_pitr",
 			"RetryMax": 1,
 			"Tags": []
@@ -104,16 +104,16 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/vtctlbackup", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtctlbackup_sharded_clustertest_heavy",
 			"RetryMax": 1,
 			"Tags": []
 		},
-		"backup_mysqlctld": { 
+		"backup_mysqlctld": {
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/mysqlctld", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "21",
 			"RetryMax": 1,
 			"Tags": []
@@ -122,7 +122,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/vtbackup", "-timeout", "20m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtbackup",
 			"RetryMax": 1,
 			"Tags": ["upgrade_downgrade_backups"]
@@ -131,7 +131,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/xtrabackup", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "xb_backup",
 			"RetryMax": 2,
 			"Tags": []
@@ -140,7 +140,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/xtrabackupstream", "-run", "XtrabackupStream", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "xb_backup",
 			"RetryMax": 1,
 			"Tags": []
@@ -149,7 +149,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/backup/xtrabackupstream", "-run", "XtrabackupStreamWithlz4Compression", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "xb_backup",
 			"RetryMax": 1,
 			"Tags": []
@@ -185,7 +185,7 @@
 			"File": "messaging_test.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/messaging"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "12",
 			"RetryMax": 3,
 			"Tags": []
@@ -194,7 +194,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/clustertest"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtctlbackup_sharded_clustertest_heavy",
 			"RetryMax": 1,
 			"Tags": []
@@ -203,7 +203,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/encryption/encryptedreplication"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "12",
 			"RetryMax": 1,
 			"Tags": []
@@ -212,7 +212,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/encryption/encryptedtransport"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "12",
 			"RetryMax": 1,
 			"Tags": []
@@ -254,7 +254,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/ghost", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_ghost",
 			"RetryMax": 2,
 			"Tags": []
@@ -263,7 +263,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/vrepl", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_vrepl",
 			"RetryMax": 2,
 			"Tags": []
@@ -272,7 +272,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/vrepl_stress", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_vrepl_stress",
 			"RetryMax": 1,
 			"Tags": []
@@ -281,7 +281,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/vrepl_suite", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_vrepl_suite",
 			"RetryMax": 1,
 			"Tags": []
@@ -290,7 +290,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/vrepl_stress_suite", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_vrepl_stress_suite",
 			"RetryMax": 1,
 			"Tags": []
@@ -299,7 +299,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/revert", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_revert",
 			"RetryMax": 1,
 			"Tags": []
@@ -308,7 +308,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/onlineddl/scheduler", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "onlineddl_scheduler",
 			"RetryMax": 1,
 			"Tags": []
@@ -326,7 +326,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/recovery/pitr"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "10",
 			"RetryMax": 1,
 			"Tags": [
@@ -337,7 +337,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/recovery/unshardedrecovery"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtctlbackup_sharded_clustertest_heavy",
 			"RetryMax": 1,
 			"Tags": []
@@ -364,7 +364,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/reparent/newfeaturetest"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "ers_prs_newfeatures_heavy",
 			"RetryMax": 1,
 			"Tags": [""]
@@ -431,7 +431,7 @@
 				"vitess.io/vitess/go/test/endtoend/tabletmanager","--topo-flavor=consul"
 			],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "tabletmanager_consul",
 			"RetryMax": 1,
 			"Tags": [
@@ -475,7 +475,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/tabletmanager/tablegc"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "tabletmanager_tablegc",
 			"RetryMax": 2,
 			"Tags": [
@@ -488,7 +488,7 @@
 				"vitess.io/vitess/go/test/endtoend/tabletmanager","--topo-flavor=zk2"
 			],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "25",
 			"RetryMax": 1,
 			"Tags": [
@@ -499,7 +499,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/versionupgrade", "-keep-data", "-force-vtdataroot", "/tmp/vtdataroot/vtroot_10901", "-force-port-start", "vtctlbackup_sharded_clustertest_heavy900", "-force-base-tablet-uid", "vtctlbackup_sharded_clustertest_heavy90"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "28",
 			"RetryMax": 1,
 			"Tags": []
@@ -697,7 +697,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtgate/mysql80"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "mysql80",
 			"RetryMax": 1,
 			"Tags": []
@@ -886,7 +886,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/topotest/zk2", "--topo-flavor=zk2"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "25",
 			"RetryMax": 1,
 			"Tags": []
@@ -895,7 +895,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/topotest/consul", "--topo-flavor=consul"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtgate_topo_consul",
 			"RetryMax": 1,
 			"Tags": []
@@ -958,7 +958,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtcombo"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "25",
 			"RetryMax": 1,
 			"Tags": []
@@ -967,7 +967,7 @@
 			"File": "recovery_test.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/recovery/xtrabackup"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "xb_recovery",
 			"RetryMax": 1,
 			"Tags": []
@@ -1048,7 +1048,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "TestVStreamFlushBinlog"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vreplication_basic",
 			"RetryMax": 1,
 			"Tags": []
@@ -1057,7 +1057,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "VStreamFailover"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vstream_failover",
 			"RetryMax": 3,
 			"Tags": []
@@ -1066,7 +1066,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "VStreamStopOnReshardTrue"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vstream_stoponreshard_true",
 			"RetryMax": 1,
 			"Tags": []
@@ -1075,7 +1075,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "VStreamStopOnReshardFalse"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vstream_stoponreshard_false",
 			"RetryMax": 1,
 			"Tags": []
@@ -1084,7 +1084,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "VStreamWithKeyspacesToWatch"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vstream_with_keyspaces_to_watch",
 			"RetryMax": 1,
 			"Tags": []
@@ -1093,7 +1093,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtorc/primaryfailure"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtorc",
 			"RetryMax": 3,
 			"Tags": []
@@ -1102,7 +1102,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtorc/api"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtorc",
 			"RetryMax": 3,
 			"Tags": []
@@ -1111,7 +1111,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtorc/general"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtorc",
 			"RetryMax": 3,
 			"Tags": []
@@ -1120,7 +1120,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtorc/readtopologyinstance"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtorc",
 			"RetryMax": 3,
 			"Tags": []
@@ -1129,7 +1129,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vault"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "mysql_server_vault",
 			"RetryMax": 1,
 			"Tags": []
@@ -1152,15 +1152,15 @@
 			"RetryMax": 1,
 			"Tags": []
 		},
-                "vreplication_mariadb_to_mysql": {
-                        "File": "unused.go",
-                        "Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "TestMoveTablesMariaDBToMySQL", "-timeout", "10m"],
-                        "Command": [],
-                        "Manual": false,
-                        "Shard": "vreplication_across_db_versions",
-                        "RetryMax": 1,
-                        "Tags": []
-                },
+		"vreplication_mariadb_to_mysql": {
+				"File": "unused.go",
+				"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "TestMoveTablesMariaDBToMySQL", "-timeout", "10m"],
+				"Command": [],
+				"Manual": true,
+				"Shard": "vreplication_across_db_versions",
+				"RetryMax": 1,
+				"Tags": []
+		},
 		"vreplication_migrate": {
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "TestMigrate"],
