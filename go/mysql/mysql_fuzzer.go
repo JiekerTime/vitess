@@ -381,3 +381,27 @@ func FuzzTLSServer(data []byte) int {
 	}
 	return 1
 }
+
+func (t fuzztestRun) CheckAttachedHost(c *Conn) error {
+	return nil
+}
+
+func (th *fuzztestRun) InitCrossTabletConn(c *Conn, authServer AuthServer, ks string) error {
+	return nil
+}
+
+func (t fuzztestRun) ValidUseDB(c *Conn, db string, authServer AuthServer) error {
+	return nil
+}
+
+func (th *fuzzTestHandler) CheckAttachedHost(c *Conn) error {
+	return nil
+}
+
+func (th *fuzzTestHandler) InitCrossTabletConn(c *Conn, authServer AuthServer, ks string) error {
+	return nil
+}
+
+func (th *fuzzTestHandler) ValidUseDB(c *Conn, db string, authServer AuthServer) error {
+	return nil
+}

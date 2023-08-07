@@ -270,3 +270,13 @@ func (lci *ClientImpl) Connect(network string, config *ServerConfig) error {
 	}
 	return nil
 }
+
+// GetKeyspace return the user keyspace.
+func (asl *AuthServerLdap) GetKeyspace(user string) ([]string, error) {
+	return nil, nil
+}
+
+// GetPassword return the user password.
+func (asl *AuthServerLdap) GetPassword(user string) (string, error) {
+	return "", nil
+}

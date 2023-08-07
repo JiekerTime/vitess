@@ -38863,6 +38863,15 @@ export namespace vschema {
 
         /** Keyspace require_explicit_routing */
         require_explicit_routing?: (boolean|null);
+
+        /** Keyspace cross_tablet */
+        cross_tablet?: (boolean|null);
+
+        /** Keyspace attach_enable */
+        attach_enable?: (boolean|null);
+
+        /** Keyspace attach_to */
+        attach_to?: (string|null);
     }
 
     /** Represents a Keyspace. */
@@ -38885,6 +38894,15 @@ export namespace vschema {
 
         /** Keyspace require_explicit_routing. */
         public require_explicit_routing: boolean;
+
+        /** Keyspace cross_tablet. */
+        public cross_tablet: boolean;
+
+        /** Keyspace attach_enable. */
+        public attach_enable: boolean;
+
+        /** Keyspace attach_to. */
+        public attach_to: string;
 
         /**
          * Creates a new Keyspace instance using the specified properties.

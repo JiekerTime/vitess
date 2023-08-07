@@ -143,6 +143,39 @@ func (m *Keyspace) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if len(m.AttachTo) > 0 {
+		i -= len(m.AttachTo)
+		copy(dAtA[i:], m.AttachTo)
+		i = encodeVarint(dAtA, i, uint64(len(m.AttachTo)))
+		i--
+		dAtA[i] = 0x5
+		i--
+		dAtA[i] = 0xba
+	}
+	if m.AttachEnable {
+		i--
+		if m.AttachEnable {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x5
+		i--
+		dAtA[i] = 0xb0
+	}
+	if m.CrossTablet {
+		i--
+		if m.CrossTablet {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x5
+		i--
+		dAtA[i] = 0xa8
+	}
 	if m.RequireExplicitRouting {
 		i--
 		if m.RequireExplicitRouting {
@@ -780,6 +813,16 @@ func (m *Keyspace) SizeVT() (n int) {
 	}
 	if m.RequireExplicitRouting {
 		n += 2
+	}
+	if m.CrossTablet {
+		n += 3
+	}
+	if m.AttachEnable {
+		n += 3
+	}
+	l = len(m.AttachTo)
+	if l > 0 {
+		n += 2 + l + sov(uint64(l))
 	}
 	n += len(m.unknownFields)
 	return n
@@ -1513,6 +1556,78 @@ func (m *Keyspace) UnmarshalVT(dAtA []byte) error {
 				}
 			}
 			m.RequireExplicitRouting = bool(v != 0)
+		case 85:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CrossTablet", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.CrossTablet = bool(v != 0)
+		case 86:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttachEnable", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AttachEnable = bool(v != 0)
+		case 87:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AttachTo", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AttachTo = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skip(dAtA[iNdEx:])

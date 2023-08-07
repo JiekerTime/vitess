@@ -142,7 +142,7 @@ func (th *testHandler) ComQuery(c *Conn, query string, callback func(*sqltypes.R
 			},
 			Rows: [][]sqltypes.Value{
 				{
-					sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte(c.schemaName)),
+					sqltypes.MakeTrusted(querypb.Type_VARCHAR, []byte(c.SchemaName)),
 				},
 			},
 		})
@@ -1502,4 +1502,16 @@ func TestServerFlush(t *testing.T) {
 	row, err = c.FetchNext(nil)
 	require.NoError(t, err)
 	assert.Nil(t, row)
+}
+
+func (th *testHandler) CheckAttachedHost(c *Conn) error {
+	return nil
+}
+
+func (th *testHandler) InitCrossTabletConn(c *Conn, authServer AuthServer, ks string) error {
+	return nil
+}
+
+func (th *testHandler) ValidUseDB(c *Conn, db string, authServer AuthServer) error {
+	return nil
 }

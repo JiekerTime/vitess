@@ -838,3 +838,18 @@ func (db *DB) GetQueryPatternResult(key string) (func(string), ExpectedResult, b
 
 	return nil, ExpectedResult{nil, nil}, false, nil
 }
+
+// InitCrossTabletConn - init conn
+func (db *DB) InitCrossTabletConn(c *mysql.Conn, authServer mysql.AuthServer, ks string) error {
+	return nil
+}
+
+// ValidUseDB is part of the mysql.Handler interface.
+func (db *DB) ValidUseDB(c *mysql.Conn, keyspace string, authServer mysql.AuthServer) error {
+	return nil
+}
+
+// CheckAttachedHost check if conn need reconnect
+func (db *DB) CheckAttachedHost(c *mysql.Conn) error {
+	return nil
+}

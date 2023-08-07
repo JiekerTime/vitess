@@ -73,3 +73,13 @@ type NoneGetter struct{}
 func (ng *NoneGetter) Get() *querypb.VTGateCallerID {
 	return &querypb.VTGateCallerID{Username: "userData1"}
 }
+
+// GetKeyspace return the user keyspace.
+func (a *AuthServerNone) GetKeyspace(user string) ([]string, error) {
+	return nil, nil
+}
+
+// GetPassword return the user password.
+func (a *AuthServerNone) GetPassword(user string) (string, error) {
+	return "", nil
+}

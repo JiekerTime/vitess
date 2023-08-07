@@ -19,6 +19,7 @@ package vtgate
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"os/signal"
@@ -28,6 +29,8 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 
 	"github.com/google/uuid"
 	"github.com/spf13/pflag"
@@ -51,7 +54,7 @@ var (
 	mysqlServerBindAddress            string
 	mysqlServerSocketPath             string
 	mysqlTCPVersion                   = "tcp"
-	mysqlAuthServerImpl               = "static"
+	mysqlAuthServerImpl               = "config"
 	mysqlAllowClearTextWithoutTLS     bool
 	mysqlProxyProtocol                bool
 	mysqlServerRequireSecureTransport bool
@@ -646,4 +649,157 @@ var pluginInitializers []func()
 // RegisterPluginInitializer lets plugins register themselves to be init'ed at servenv.OnRun-time
 func RegisterPluginInitializer(initializer func()) {
 	pluginInitializers = append(pluginInitializers, initializer)
+}
+
+func (vh *vtgateHandler) CheckAttachedHost(c *mysql.Conn) error {
+	if !c.CrossEnable && !c.AttachEnable {
+		return nil
+	}
+	tabletType := topodatapb.TabletType_REPLICA
+	if c.AccountType == mysql.AccountTypeAdmin || c.AccountType == mysql.AccountTypeRW || c.AccountType == mysql.AccountTypeUnknown {
+		tabletType = topodatapb.TabletType_PRIMARY
+	} else if c.AccountType == mysql.AccountTypeStream {
+		tabletType = topodatapb.TabletType_RDONLY
+	}
+	keyspace := c.SchemaName
+	if c.AttachEnable {
+		keyspace = c.AttachTo
+	}
+	tablets := vh.GetTabletHost(keyspace, "0", tabletType)
+	if len(tablets) == 0 {
+		if tabletType == topodatapb.TabletType_PRIMARY {
+			return fmt.Errorf("keyspace %v no vailid %v", keyspace, tabletType)
+		}
+		if tabletType == topodatapb.TabletType_REPLICA {
+			tablets = vh.GetTabletHost(keyspace, "0", topodatapb.TabletType_RDONLY)
+		} else {
+			tablets = vh.GetTabletHost(keyspace, "0", topodatapb.TabletType_REPLICA)
+		}
+	}
+
+	for _, tablet := range tablets {
+		if tablet.MysqlHostname == c.CtMysql.MysqlIP && tablet.MysqlPort == c.CtMysql.MysqlPort {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("backend server changed, please reconnect")
+}
+
+func (vh *vtgateHandler) InitCrossTabletConn(c *mysql.Conn, authServer mysql.AuthServer, ks string) error {
+	c.ResetCrossTablet()
+	userks, err := authServer.GetKeyspace(c.User)
+	if err != nil {
+		return err
+	}
+	var dstks string
+	if len(ks) != 0 {
+		dstks = ks
+	} else {
+		if len(userks) == 1 {
+			dstks = userks[0]
+		}
+	}
+	if len(dstks) == 0 {
+		return nil
+	}
+	vschema, ok := vh.vtg.executor.vschema.Keyspaces[dstks]
+	if !ok {
+		c.ResetCrossTablet()
+		return nil
+	}
+
+	if vschema.Keyspace.CrossTablet || vschema.Keyspace.AttachEnable {
+		// 直连模式和共享实例最多一个为true。因为拼写DbName字段规则不同
+		if vschema.Keyspace.CrossTablet {
+			c.CrossEnable = true
+		} else if vschema.Keyspace.AttachEnable {
+			c.AttachEnable = true
+			c.AttachTo = vschema.Keyspace.AttachTo
+		}
+		c.SchemaName = dstks
+		tabletType := topodatapb.TabletType_REPLICA
+		if c.AccountType == mysql.AccountTypeAdmin || c.AccountType == mysql.AccountTypeRW || c.AccountType == mysql.AccountTypeUnknown {
+			tabletType = topodatapb.TabletType_PRIMARY
+		}
+		if c.AccountType == mysql.AccountTypeStream {
+			tabletType = topodatapb.TabletType_RDONLY
+		}
+
+		//tablets := vh.vtg.gateway.GetHealthyTabletStats("", c.AttachBackend.AttachTo, "0", tabletType)
+		if vschema.Keyspace.AttachEnable {
+			dstks = vschema.Keyspace.AttachTo
+		}
+		tablets := vh.GetTabletHost(dstks, "0", tabletType)
+		if len(tablets) == 0 {
+			if tabletType == topodatapb.TabletType_PRIMARY {
+				return fmt.Errorf("keyspace %v no vailid primary", dstks)
+			}
+			if tabletType == topodatapb.TabletType_RDONLY {
+				tabletType = topodatapb.TabletType_REPLICA
+			} else {
+				tabletType = topodatapb.TabletType_RDONLY
+			}
+			tablets = vh.GetTabletHost(dstks, "0", tabletType)
+			if len(tablets) == 0 {
+				return fmt.Errorf("keyspace %v no vailid replica", dstks)
+			}
+		}
+		targetTablet := tablets[0]
+		if tabletType == topodatapb.TabletType_PRIMARY && len(tablets) > 1 {
+			for _, v := range tablets {
+				if v.PrimaryTermStartTime.Seconds > targetTablet.PrimaryTermStartTime.Seconds {
+					targetTablet = v
+				}
+			}
+		}
+
+		if tabletType != topodatapb.TabletType_PRIMARY && len(tablets) > 1 {
+			targetTablet = tablets[rand.Intn(len(tablets))]
+		}
+
+		c.CtMysql.MysqlIP = targetTablet.MysqlHostname
+		c.CtMysql.MysqlPort = targetTablet.MysqlPort
+
+		password, err := authServer.GetPassword(c.User)
+		if err != nil {
+			return err
+		}
+		c.CtMysql.UserName = c.User
+		c.CtMysql.Password = password
+
+		return c.ReConnectCrossTablet()
+	}
+	return nil
+}
+
+func (vh *vtgateHandler) GetTabletHost(ks, shard string, tabletType topodatapb.TabletType) (tablet []*topodatapb.Tablet) {
+	tblist := vh.vtg.resolver.scatterConn.GetHealthCheckHealthyStatus(&querypb.Target{Keyspace: ks, Shard: shard, TabletType: tabletType})
+	for _, v := range tblist {
+		if v.Serving {
+			tablet = append(tablet, v.Tablet)
+		}
+	}
+	return tablet
+}
+
+// ValidUseDB Valid UseDB statement
+func (vh *vtgateHandler) ValidUseDB(c *mysql.Conn, usedb string, authServer mysql.AuthServer) error {
+	userkss, err := authServer.GetKeyspace(c.User)
+	if err != nil {
+		return err
+	}
+	if len(userkss) == 0 {
+		return nil
+	}
+
+	usedb = strings.Split(usedb, ":")[0]
+
+	for _, usks := range userkss {
+		if strings.EqualFold(usks, usedb) {
+			return nil
+		}
+	}
+	err = fmt.Errorf("keyspace %s not found in vschema", usedb)
+	return mysql.NewSQLErrorFromError(err)
 }

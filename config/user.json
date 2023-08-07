@@ -1,0 +1,72 @@
+{
+  "encrypt_version":{
+    "Password": "ENCRYPT",
+    "UserData":"v_0001"
+  },
+  "mysql_user": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "UserData": "",
+    "KeySpaces": [
+      {"Name":"test_keyspace"},
+      {"Name":"test_keyspace2"}
+    ]
+  },
+  "mysql_ro": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "UserData": "",
+    "KeySpaces": [
+      {"Name":"corder"},
+      {"Name":"customer"},
+      {"Name":"test_keyspace"}
+    ]
+  },
+  "mysql_rr": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "UserData": "",
+    "KeySpaces": [
+      {"Name":"test_keyspace"},
+      {"Name":"customer"},
+      {"Name":"commerce"}
+    ],
+    "Privilege": 1,
+    "ReadControlInfo":{
+      "CanReadMaster":true
+    }
+  },
+  "mysql_rw": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "MysqlNativePassword": "*E361D58BFE0A57E237D51CE49E8E395E65538AA9",
+    "UserData": "",
+    "KeySpaces": [
+      {"Name":"commerce"}
+    ],
+    "Privilege": 256
+  },
+  "mysql_rs": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "UserData": "",
+    "KeySpaces": [
+      {"Name":"test_keyspace"},
+      {"Name":"customer"},
+      {"Name":"commerce"}
+    ]
+  },
+  "mysql_auth_test": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "UserData": "mysql_admin",
+    "KeySpaces": [
+      {"Name":"test_keyspace"},
+      {"Name":"test_keyspace2"}
+    ],
+    "Privilege": 255
+  },
+  "mysql_admin": {
+    "Password": "QESVZxh8qnmQOlhHqoq9OA==",
+    "UserData": "",
+    "KeySpaces": [
+      {"Name":"test_keyspace"},
+      {"Name":"customer"},
+      {"Name":"commerce"}
+    ]
+  }
+}

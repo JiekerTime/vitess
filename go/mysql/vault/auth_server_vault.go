@@ -299,3 +299,13 @@ func readFromFile(filePath string) (string, error) {
 	}
 	return strings.TrimSpace(string(fileBytes)), nil
 }
+
+// GetKeyspace return the user keyspace.
+func (a *AuthServerVault) GetKeyspace(user string) ([]string, error) {
+	return nil, nil
+}
+
+// GetPassword return the user password.
+func (a *AuthServerVault) GetPassword(user string) (string, error) {
+	return "", nil
+}

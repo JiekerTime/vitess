@@ -272,3 +272,10 @@ func demuxResourceExhaustedErrors(msg string) ErrorCode {
 		return ERTooManyUserConnections
 	}
 }
+
+func IsConnErrByCross(err error) bool {
+	if sqlErr, ok := err.(*SQLError); ok {
+		return sqlErr.Number() == CRServerLost && sqlErr.SQLState() == SSUnknownSQLState && sqlErr.Message == "EOF"
+	}
+	return false
+}

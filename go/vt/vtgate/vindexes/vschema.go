@@ -115,8 +115,11 @@ type Table struct {
 
 // Keyspace contains the keyspcae info for each Table.
 type Keyspace struct {
-	Name    string
-	Sharded bool
+	Name         string
+	Sharded      bool
+	CrossTablet  bool
+	AttachEnable bool
+	AttachTo     string
 }
 
 // ColumnVindex contains the index info for each index of a table.
@@ -301,8 +304,11 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 	for ksname, ks := range source.Keyspaces {
 		ksvschema := &KeyspaceSchema{
 			Keyspace: &Keyspace{
-				Name:    ksname,
-				Sharded: ks.Sharded,
+				Name:         ksname,
+				Sharded:      ks.Sharded,
+				CrossTablet:  ks.CrossTablet,
+				AttachEnable: ks.AttachEnable,
+				AttachTo:     ks.AttachTo,
 			},
 			Tables:   make(map[string]*Table),
 			Vindexes: make(map[string]Vindex),

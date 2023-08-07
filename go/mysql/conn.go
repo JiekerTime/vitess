@@ -18,6 +18,7 @@ package mysql
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -28,6 +29,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"vitess.io/vitess/go/vt/topo/topoproto"
 
 	"vitess.io/vitess/go/mysql/collations"
 
@@ -71,6 +74,21 @@ type Getter interface {
 	Get() *querypb.VTGateCallerID
 }
 
+const (
+	// AccountTypeUnknown is a undefined account type
+	AccountTypeUnknown = iota
+	// AccountTypeRW is a read write account type
+	AccountTypeRW
+	// AccountTypeRO is a read only account type, read rdonly
+	AccountTypeRO
+	// AccountTypeRR is a read only account type, read replica
+	AccountTypeRR
+	// AccountTypeStream is a stream account type, read only
+	AccountTypeStream
+	// AccountTypeAdmin is a admin account type
+	AccountTypeAdmin
+)
+
 // Conn is a connection between a client and a server, using the MySQL
 // binary protocol. It is built on top of an existing net.Conn, that
 // has already been established.
@@ -92,12 +110,12 @@ type Conn struct {
 	// It is set during the initial handshake.
 	authPluginName AuthMethodDescription
 
-	// schemaName is the default database name to use. It is set
+	// SchemaName is the default database name to use. It is set
 	// during handshake, and by ComInitDb packets. Both client and
 	// servers maintain it. This member is private because it's
 	// non-authoritative: the client can change the schema name
 	// through the 'USE' statement, which will bypass this variable.
-	schemaName string
+	SchemaName string
 
 	// ClientData is a place where an application can store any
 	// connection-related data. Mostly used on the server side, to
@@ -199,6 +217,27 @@ type Conn struct {
 	// enableQueryInfo controls whether we parse the INFO field in QUERY_OK packets
 	// See: ConnParams.EnableQueryInfo
 	enableQueryInfo bool
+
+	// AccountType is a flag about account authority, inlude rw ro rs
+	AccountType int
+
+	// tablet type set
+	QueryTabletType string
+
+	// ClientHost is the client host addr
+	ClientHost string
+
+	//crossTabletConn connection for connect mysql
+	CrossEnable     bool
+	crossTabletConn *Conn
+	AttachEnable    bool
+	AttachTo        string
+	CtMysql         struct {
+		MysqlIP   string
+		MysqlPort int32
+		UserName  string
+		Password  string
+	}
 }
 
 // splitStatementFunciton is the function that is used to split the statement in case of a multi-statement query.
@@ -885,6 +924,9 @@ func (c *Conn) writeEOFPacket(flags uint16, warnings uint16) error {
 // incoming packets.
 func (c *Conn) handleNextCommand(handler Handler) bool {
 	c.sequence = 0
+	if c.CrossEnable || c.AttachEnable {
+		c.crossTabletConn.sequence = 0
+	}
 	data, err := c.readEphemeralPacket()
 	if err != nil {
 		// Don't log EOF errors. They cause too much spam.
@@ -897,6 +939,16 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 		return false
 	}
 
+	if c.CrossEnable || c.AttachEnable {
+		if err = handler.CheckAttachedHost(c); err != nil {
+			if err := c.writeErrorPacketFromError(err); err != nil {
+				log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
+				return false
+			}
+			return false
+		}
+	}
+
 	switch data[0] {
 	case ComQuit:
 		c.recycleReadPacket()
@@ -904,6 +956,27 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 	case ComInitDB:
 		db := c.parseComInitDB(data)
 		c.recycleReadPacket()
+		if c.listener != nil {
+			err := handler.ValidUseDB(c, db, c.listener.authServer)
+			if err != nil {
+				if err := c.writeErrorPacketFromError(err); err != nil {
+					log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
+					return false
+				}
+				return true
+			}
+		}
+		c.ResetCrossTablet()
+		//TODO
+		if err := handler.InitCrossTabletConn(c, c.listener.authServer, db); err != nil {
+			if err := c.writeErrorPacketFromError(err); err != nil {
+				log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
+				return false
+			}
+			return false
+		}
+
+		c.SchemaName = db
 		res := c.execQuery("use "+sqlescape.EscapeID(db), handler, false)
 		return res != connErr
 	case ComQuery:
@@ -919,6 +992,15 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 	case ComStmtSendLongData:
 		return c.handleComStmtSendLongData(data)
 	case ComStmtClose:
+		if c.CrossEnable || c.AttachEnable {
+			if err := c.crossTabletConn.ptComStmtClose(data, c); err != nil {
+				c.recycleReadPacket()
+				log.Errorf("com stmt close error %v", err)
+				return false
+			}
+			c.recycleReadPacket()
+			return true
+		}
 		stmtID, ok := c.parseComStmtClose(data)
 		c.recycleReadPacket()
 		if ok {
@@ -1020,7 +1102,11 @@ func (c *Conn) handleComBinlogDumpGTID(handler Handler, data []byte) (kontinue b
 func (c *Conn) handleComResetConnection(handler Handler) {
 	// Clean up and reset the connection
 	c.recycleReadPacket()
-	handler.ComResetConnection(c)
+	if c.CrossEnable || c.AttachEnable {
+		c.ReConnectCrossTablet()
+	} else {
+		handler.ComResetConnection(c)
+	}
 	// Reset prepared statements
 	c.PrepareData = make(map[uint32]*PrepareData)
 	err := c.writeOKPacket(&PacketOK{})
@@ -1030,6 +1116,14 @@ func (c *Conn) handleComResetConnection(handler Handler) {
 }
 
 func (c *Conn) handleComStmtReset(data []byte) bool {
+	if c.CrossEnable || c.AttachEnable {
+		defer c.recycleReadPacket()
+		if err := c.crossTabletConn.ptOnePacket(data, c); err != nil {
+			log.Errorf("com stmt close error %v", err)
+			return false
+		}
+		return true
+	}
 	stmtID, ok := c.parseComStmtReset(data)
 	c.recycleReadPacket()
 	if !ok {
@@ -1061,6 +1155,24 @@ func (c *Conn) handleComStmtReset(data []byte) bool {
 }
 
 func (c *Conn) handleComStmtSendLongData(data []byte) bool {
+	if c.CrossEnable || c.AttachEnable {
+		defer c.recycleReadPacket()
+		if err := c.crossTabletConn.writePacketNoHeader(data); err != nil {
+			if err := c.writeErrorPacket(ERUnknownComError, SSNetError, "command handling not implemented yet: %v", data[0]); err != nil {
+				log.Errorf("Error writing error packet to client: %v", err)
+				return false
+			}
+			return true
+		}
+
+		if err := c.crossTabletConn.endWriterBuffering(); err != nil {
+			if err := c.writeErrorPacket(ERUnknownComError, SSNetError, "command handling not implemented yet: %v", data[0]); err != nil {
+				log.Errorf("Error writing error packet to client: %v", err)
+				return false
+			}
+		}
+		return true
+	}
 	stmtID, paramID, chunk, ok := c.parseComStmtSendLongData(data)
 	c.recycleReadPacket()
 	if !ok {
@@ -1098,6 +1210,19 @@ func (c *Conn) handleComStmtExecute(handler Handler, data []byte) (kontinue bool
 			kontinue = false
 		}
 	}()
+	if c.CrossEnable || c.AttachEnable {
+		edata := make([]byte, len(data))
+		copy(edata, data)
+		c.recycleReadPacket()
+		err := c.crossTabletConn.ptComStmtExecute(edata, c)
+		if err != nil {
+			if err := c.writeErrorPacket(ERUnknownComError, SSNetError, "command handling not implemented yet: %v", edata[0]); err != nil {
+				log.Errorf("Error writing error packet to client: %v", err)
+				return false
+			}
+		}
+		return true
+	}
 	queryStart := time.Now()
 	stmtID, _, err := c.parseComStmtExecute(c.PrepareData, data)
 	c.recycleReadPacket()
@@ -1192,6 +1317,19 @@ func (c *Conn) handleComPrepare(handler Handler, data []byte) (kontinue bool) {
 	query := c.parseComPrepare(data)
 	c.recycleReadPacket()
 
+	if c.CrossEnable || c.AttachEnable {
+		query = fmt.Sprintf("/* uag::%v;%s;%s;%s;disable */ %s", c.User, c.ClientHost, c.GetLocalAddr(), c.RemoteAddr().String(), query)
+		data = make([]byte, len(query)+1)
+		data[0] = ComPrepare
+		copy(data[1:], query)
+		if err := c.crossTabletConn.ptComPrepare(data, c); err != nil {
+			if err := c.writeErrorPacket(ERUnknownComError, SSNetError, "command handling not implemented yet: %v", data[0]); err != nil {
+				log.Errorf("Error writing error packet to client: %v", err)
+				return false
+			}
+		}
+		return true
+	}
 	var queries []string
 	if c.Capabilities&CapabilityClientMultiStatements != 0 {
 		var err error
@@ -1262,6 +1400,15 @@ func (c *Conn) handleComPrepare(handler Handler, data []byte) (kontinue bool) {
 }
 
 func (c *Conn) handleComSetOption(data []byte) bool {
+	if c.CrossEnable || c.AttachEnable {
+		defer c.recycleReadPacket()
+		if err := c.crossTabletConn.ptOnePacket(data, c); err != nil {
+			log.Errorf("com stmt close error %v", err)
+			return false
+		}
+		return true
+	}
+
 	operation, ok := c.parseComSetOption(data)
 	c.recycleReadPacket()
 	if ok {
@@ -1291,6 +1438,19 @@ func (c *Conn) handleComSetOption(data []byte) bool {
 
 func (c *Conn) handleComPing() bool {
 	c.recycleReadPacket()
+	if c.CrossEnable || c.AttachEnable {
+		if err := c.crossTabletConn.Ping(); err != nil {
+			if err := c.writeErrorPacket(ERUnknownComError, SSNetError, "command handling not implemented yet: %v", err); err != nil {
+				log.Errorf("Error writing error packet to client: %v", err)
+				return false
+			}
+		}
+		if err := c.writeOKPacket(&PacketOK{statusFlags: c.StatusFlags}); err != nil {
+			log.Errorf("Error writing ComPing result to client %v: %v", c.ConnectionID, err)
+			return false
+		}
+		return true
+	}
 	// Return error if listener was shut down and OK otherwise
 	if c.listener.shutdown.Load() {
 		if !c.writeErrorAndLog(ERServerShutdown, SSNetError, "Server shutdown in progress") {
@@ -1319,7 +1479,19 @@ func (c *Conn) handleComQuery(handler Handler, data []byte) (kontinue bool) {
 	queryStart := time.Now()
 	query := c.parseComQuery(data)
 	c.recycleReadPacket()
+	if c.CrossEnable || c.AttachEnable {
+		query = fmt.Sprintf("/* uag::%v;%s;%s;%s;disable */ %s", c.User, c.ClientHost, c.GetLocalAddr(), c.RemoteAddr().String(), query)
+		data = make([]byte, len(query)+1)
+		data[0] = ComQuery
+		copy(data[1:], query)
 
+		if err := c.crossTabletConn.passthroughComQuery(data, c); err != nil {
+			if IsConnErrByCross(err) {
+				return false
+			}
+		}
+		return true
+	}
 	var queries []string
 	var err error
 	if c.Capabilities&CapabilityClientMultiStatements != 0 {
@@ -1631,4 +1803,593 @@ func (c *Conn) IsUnixSocket() bool {
 // GetRawConn returns the raw net.Conn for nefarious purposes.
 func (c *Conn) GetRawConn() net.Conn {
 	return c.conn
+}
+
+// ResetCrossTablet connect to mysql
+func (c *Conn) ResetCrossTablet() {
+	if c.crossTabletConn != nil {
+		c.crossTabletConn.writeComQuit()
+		c.crossTabletConn.Close()
+	}
+	c.CrossEnable = false
+	c.CtMysql.MysqlIP = ""
+	c.CtMysql.MysqlPort = 0
+	c.CtMysql.UserName = ""
+	c.CtMysql.Password = ""
+}
+
+// ReConnectCrossTablet reconnect to mysql
+func (c *Conn) ReConnectCrossTablet() error {
+	if c.crossTabletConn != nil {
+		c.crossTabletConn.writeComQuit()
+		c.crossTabletConn.Close()
+	}
+	schema := ""
+	if len(c.SchemaName) != 0 {
+		schema = fmt.Sprintf("%v%v", topoproto.VtDbPrefix, c.SchemaName)
+	}
+	backendConnParam := &ConnParams{
+		Host:    c.CtMysql.MysqlIP,
+		Uname:   c.CtMysql.UserName,
+		Pass:    c.CtMysql.Password,
+		Port:    int(c.CtMysql.MysqlPort),
+		Flags:   uint64(c.StatusFlags | CLIENT_LOCAL_FILES),
+		Charset: "utf8mb4",
+		DbName:  schema}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	crossconn, err := Connect(ctx, backendConnParam)
+	if err != nil {
+		return err
+	}
+	if _, err = crossconn.ExecuteFetch(fmt.Sprintf("SET WAIT_TIMEOUT=%v", 600), 0, false); err != nil {
+		crossconn.writeComQuit()
+		crossconn.Close()
+		return err
+	}
+	crossconn.StatusFlags = c.StatusFlags
+	crossconn.sequence = 0
+	c.crossTabletConn = crossconn
+	return nil
+}
+
+func (c *Conn) setAccountType() {
+	userLen := len(c.User)
+	if userLen < 3 {
+		c.AccountType = AccountTypeUnknown
+		return
+	}
+
+	if c.User[userLen-3:userLen] == "_rs" {
+		c.AccountType = AccountTypeStream
+	} else if c.User[userLen-3:userLen] == "_ro" {
+		c.AccountType = AccountTypeRO
+	} else if c.User[userLen-3:userLen] == "_rr" {
+		c.AccountType = AccountTypeRR
+	} else if c.User[userLen-3:userLen] == "_rw" {
+		c.AccountType = AccountTypeRW
+	} else if userLen >= 6 && c.User[userLen-6:userLen] == "_admin" {
+		c.AccountType = AccountTypeAdmin
+	} else {
+		c.AccountType = AccountTypeUnknown
+	}
+}
+
+// writePacket without head
+// This method returns a generic error, not a SQLError.
+func (c *Conn) writePacketNoHeader(data []byte) error {
+	dataLen := len(data)
+	dataWithHeader := make([]byte, packetHeaderSize+dataLen)
+	copy(dataWithHeader[packetHeaderSize:], data)
+	return c.writePacket(dataWithHeader)
+}
+
+func (c *Conn) ptComStmtClose(data []byte, clientConn *Conn) error {
+	// This is a new command, need to reset the sequence.
+	c.sequence = 0
+	if err := c.writePacketNoHeader(data); err != nil {
+		return NewSQLError(CRServerGone, SSUnknownSQLState, "%v", err)
+	}
+	if err := c.endWriterBuffering(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Conn) ptOnePacket(data []byte, clientConn *Conn) error {
+	// This is a new command, need to reset the sequence.
+	c.sequence = 0
+	if err := c.writePacketNoHeader(data); err != nil {
+		return NewSQLError(CRServerGone, SSUnknownSQLState, "%v", err)
+	}
+	if err := c.endWriterBuffering(); err != nil {
+		return err
+	}
+
+	data, err := c.readEphemeralPacket()
+	if err != nil {
+		return err
+	}
+	if err := clientConn.writePacketNoHeader(data); err != nil {
+		c.recycleReadPacket()
+		return err
+	}
+	c.recycleReadPacket()
+	return clientConn.endWriterBuffering()
+}
+
+func (c *Conn) passthroughComQuery(data []byte, clientConn *Conn) error {
+	c.sequence = 0
+
+	c.writePacketNoHeader(data)
+	if err := c.endWriterBuffering(); err != nil {
+		return err
+	}
+	rdata, err := c.readEphemeralPacket()
+
+	if err != nil {
+		return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+	}
+	wdata := make([]byte, len(rdata))
+	copy(wdata, rdata)
+	c.recycleReadPacket()
+	if len(wdata) == 0 {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_QUERY response packet")
+	}
+
+	return c.processData(wdata, clientConn)
+}
+
+// 需要流式处理大的查询,考虑超长packet可能引起的异常
+func (c *Conn) processData(data []byte, clientConn *Conn) error {
+	switch data[0] {
+	case ErrPacket:
+		err := ParseErrorPacket(data)
+		if IsConnErr(err) {
+			return err
+		}
+		if err := clientConn.writePacketNoHeader(data); err != nil {
+			return err
+		}
+		//return clientConn.flush()
+		return err
+	case OKPacket:
+		if err := clientConn.writePacketNoHeader(data); err != nil {
+			return err
+		}
+
+		packetOk, err := c.parseOKPacket(data)
+		if err != nil {
+			return err
+		}
+
+		if packetOk.statusFlags&ServerMoreResultsExists == ServerMoreResultsExists {
+			data, err := c.readEphemeralPacket()
+			if err != nil {
+				return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+			}
+			wdata := make([]byte, len(data))
+			copy(wdata, data)
+			c.recycleReadPacket()
+			if len(wdata) == 0 {
+				return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_QUERY response packet")
+			}
+			//clientConn.sequence=0
+			return c.processData(wdata, clientConn)
+		}
+		//return clientConn.flush()
+		return nil
+	case 0xfb:
+		if err := clientConn.writePacketNoHeader(data); err != nil {
+			return err
+		}
+		/*if err := clientConn.flush(); err != nil {
+			return err
+		}*/
+
+		for {
+			loadData, err := clientConn.ReadPacket()
+			if err != nil {
+				return err
+			}
+
+			if len(loadData) == 0 {
+				if err := c.writePacketNoHeader([]byte{}); err != nil {
+					return err
+				}
+
+				if err := c.endWriterBuffering(); err != nil {
+					return err
+				}
+				lastPacket, err := c.readEphemeralPacket()
+				if err != nil {
+					return err
+				}
+				defer c.recycleReadPacket()
+				if err := clientConn.writePacketNoHeader(lastPacket); err != nil {
+					return err
+				}
+				//return clientConn.flush()
+				return err
+			}
+
+			if err := c.writePacketNoHeader(loadData); err != nil {
+				return err
+			}
+		}
+	}
+
+	colNumber, pos, ok := readLenEncInt(data, 0)
+	if !ok {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "cannot get column number")
+	}
+	if pos != len(data) {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "extra data in COM_QUERY response")
+	}
+
+	if colNumber == 0 {
+		if err := clientConn.writePacketNoHeader(data); err != nil {
+			return err
+		}
+		//return clientConn.flush()
+		return nil
+	}
+
+	if err := clientConn.writePacketNoHeader(data); err != nil {
+		return err
+	}
+	for i := 0; i < int(colNumber); i++ {
+		colData, err := c.readEphemeralPacket()
+		if err != nil {
+			return err
+		}
+		if err := clientConn.writePacketNoHeader(colData); err != nil {
+			c.recycleReadPacket()
+			return err
+		}
+		c.recycleReadPacket()
+	}
+
+	if c.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		// EOF is only present here if it's not deprecated.
+		eofData, err := c.readEphemeralPacket()
+		if err != nil {
+			return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+		}
+		if c.isEOFPacket(eofData) {
+			// This is what we expect.
+			// Warnings and status flags are ignored.
+			// goto: read row loop
+			c.recycleReadPacket()
+		} else if isErrorPacket(eofData) {
+			defer c.recycleReadPacket()
+			return ParseErrorPacket(eofData)
+		} else {
+			defer c.recycleReadPacket()
+			return fmt.Errorf("unexpected packet after fields: %v", eofData)
+		}
+	}
+
+	if clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		if err := clientConn.writeEOFPacket(clientConn.StatusFlags, 0); err != nil {
+			return err
+		}
+	}
+
+	// read each row until EOF or OK packet.
+	for {
+		rowData, err := c.ReadPacket()
+		if err != nil {
+			return err
+		}
+
+		//  CLIENT_PROTOCOL_41
+		if c.isEOFPacket(rowData) {
+			_, statusFlag, _ := parse41EOFPacket(rowData)
+			if clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
+				if err := clientConn.writeEOFPacket(clientConn.StatusFlags|(statusFlag&ServerMoreResultsExists), 0); err != nil {
+					return err
+				}
+				//if err := clientConn.flush(); err != nil {
+				//	return err
+				//}
+				if statusFlag&ServerMoreResultsExists == ServerMoreResultsExists {
+					data, err := c.readEphemeralPacket()
+					if err != nil {
+						return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+					}
+					if len(data) == 0 {
+						c.recycleReadPacket()
+						return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_QUERY response packet")
+					}
+					wdata := make([]byte, len(data))
+					copy(wdata, data)
+					c.recycleReadPacket()
+					return c.processData(wdata, clientConn)
+				}
+				return nil
+			}
+
+			//writeOKPacketWithEOFHeader will flush
+			if err := clientConn.writeOKPacketWithEOFHeader(&PacketOK{statusFlags: clientConn.StatusFlags | (statusFlag & ServerMoreResultsExists)}); err != nil {
+				return err
+			}
+			/*if err := clientConn.flush(); err != nil {
+				return err
+			}*/
+			if statusFlag&ServerMoreResultsExists == ServerMoreResultsExists {
+
+				data, err := c.readEphemeralPacket()
+				if err != nil {
+					return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+				}
+				if len(data) == 0 {
+					c.recycleReadPacket()
+					return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_QUERY response packet")
+				}
+				wdata := make([]byte, len(data))
+				copy(wdata, data)
+				c.recycleReadPacket()
+				return c.processData(wdata, clientConn)
+			}
+			return nil
+		}
+		if isErrorPacket(rowData) {
+			if err := clientConn.writePacketNoHeader(rowData); err != nil {
+				return err
+			}
+			//return clientConn.flush()
+			return nil
+		}
+		if err := clientConn.writePacketNoHeader(rowData); err != nil {
+			return err
+		}
+	}
+}
+
+func (c *Conn) ptComPrepare(data []byte, clientConn *Conn) error {
+	// This is a new command, need to reset the sequence.
+	c.sequence = 0
+	if err := c.writePacketNoHeader(data); err != nil {
+		return NewSQLError(CRServerGone, SSUnknownSQLState, "%v", err)
+	}
+	if err := c.endWriterBuffering(); err != nil {
+		return err
+	}
+
+	rdata, err := c.readEphemeralPacket()
+	if err != nil {
+		return err
+	}
+
+	wdata := make([]byte, len(rdata))
+	copy(wdata, rdata)
+	if len(wdata) == 0 {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_STMT_PREPARE response packet")
+	}
+	if len(wdata) == 0 {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_STMT_PREPARE response packet")
+	}
+
+	c.recycleReadPacket()
+	switch wdata[0] {
+	case ErrPacket:
+		if err := clientConn.writePacketNoHeader(wdata); err != nil {
+			return err
+		}
+		return clientConn.endWriterBuffering()
+	case 0xfb:
+		// Local infile
+		return fmt.Errorf("local infile not implemented")
+	}
+
+	if err := clientConn.writePacketNoHeader(wdata); err != nil {
+		return err
+	}
+
+	paramsCount, _, _ := readUint16(wdata, 7)
+	columnsNum, _, _ := readUint16(wdata, 5)
+
+	for i := 0; i < int(paramsCount); i++ {
+		paramData, err := c.readEphemeralPacket()
+		if err != nil {
+			return err
+		}
+		if err := clientConn.writePacketNoHeader(paramData); err != nil {
+			c.recycleReadPacket()
+			return err
+		}
+		c.recycleReadPacket()
+	}
+	if paramsCount > 0 && c.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		// EOF is only present here if it's not deprecated.
+		_, err := c.readEphemeralPacket()
+		if err != nil {
+			return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+		}
+		c.recycleReadPacket()
+	}
+
+	if paramsCount > 0 && clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		if err := clientConn.writeEOFPacket(clientConn.StatusFlags, 0); err != nil {
+			return err
+		}
+	}
+
+	for i := 0; i < int(columnsNum); i++ {
+		colData, err := c.readEphemeralPacket()
+		if err != nil {
+			return err
+		}
+		if err := clientConn.writePacketNoHeader(colData); err != nil {
+			c.recycleReadPacket()
+			return err
+		}
+		c.recycleReadPacket()
+	}
+
+	if columnsNum > 0 && c.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		// EOF is only present here if it's not deprecated.
+		_, err := c.readEphemeralPacket()
+		if err != nil {
+			return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+		}
+		c.recycleReadPacket()
+	}
+
+	if columnsNum > 0 && clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		if err := clientConn.writeEOFPacket(clientConn.StatusFlags, 0); err != nil {
+			return err
+		}
+	}
+	return clientConn.endWriterBuffering()
+}
+
+func parse41EOFPacket(data []byte) (uint16, uint16, error) {
+	pos := 1
+	numWarnings, _, ok := readUint16(data, pos)
+	if !ok {
+		return 0, 0, fmt.Errorf("error 41 eof packet")
+	}
+	statusFlag, _, ok := readUint16(data, pos)
+	if !ok {
+		return 0, 0, fmt.Errorf("error 41 eof packet")
+	}
+	return numWarnings, statusFlag, nil
+}
+
+func (c *Conn) ptComStmtExecute(data []byte, clientConn *Conn) error {
+	// This is a new command, need to reset the sequence.
+	c.sequence = 0
+	if err := c.writePacketNoHeader(data); err != nil {
+		return NewSQLError(CRServerGone, SSUnknownSQLState, "%v", err)
+	}
+	if err := c.endWriterBuffering(); err != nil {
+		return err
+	}
+
+	rdata, err := c.readEphemeralPacket()
+	if err != nil {
+		return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+	}
+	wdata := make([]byte, len(rdata))
+	copy(wdata, rdata)
+	c.recycleReadPacket()
+	if len(wdata) == 0 {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "invalid empty COM_QUERY response packet")
+	}
+
+	switch wdata[0] {
+	case ErrPacket:
+		if err := clientConn.writePacketNoHeader(wdata); err != nil {
+			return err
+		}
+		return clientConn.endWriterBuffering()
+	case OKPacket:
+		if err := clientConn.writePacketNoHeader(wdata); err != nil {
+			return err
+		}
+		return clientConn.endWriterBuffering()
+	case 0xfb:
+		// Local infile
+		return fmt.Errorf("local infile not implemented")
+	}
+
+	colNumber, pos, ok := readLenEncInt(wdata, 0)
+	if !ok {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "cannot get column number")
+	}
+	if pos != len(wdata) {
+		return NewSQLError(CRMalformedPacket, SSUnknownSQLState, "extra data in COM_QUERY response")
+	}
+
+	if colNumber == 0 {
+		if err := clientConn.writePacketNoHeader(wdata); err != nil {
+			return err
+		}
+		return clientConn.endWriterBuffering()
+	}
+
+	if err := clientConn.writePacketNoHeader(wdata); err != nil {
+		return err
+	}
+
+	for i := 0; i < int(colNumber); i++ {
+		colData, err := c.readEphemeralPacket()
+		if err != nil {
+			return err
+		}
+		if err := clientConn.writePacketNoHeader(colData); err != nil {
+			c.recycleReadPacket()
+			return err
+		}
+		c.recycleReadPacket()
+	}
+
+	if c.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		// EOF is only present here if it's not deprecated.
+		eofData, err := c.readEphemeralPacket()
+		if err != nil {
+			return NewSQLError(CRServerLost, SSUnknownSQLState, "%v", err)
+		}
+		if c.isEOFPacket(eofData) {
+			// This is what we expect.
+			// Warnings and status flags are ignored.
+			// goto: read row loop
+			c.recycleReadPacket()
+		} else if isErrorPacket(eofData) {
+			defer c.recycleReadPacket()
+			return ParseErrorPacket(eofData)
+		} else {
+			c.recycleReadPacket()
+			return fmt.Errorf("unexpected packet after fields: %v", data)
+		}
+	}
+
+	if clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		if err := clientConn.writeEOFPacket(clientConn.StatusFlags, 0); err != nil {
+			return err
+		}
+	}
+
+	// read each row until EOF or OK packet.
+	for {
+		rowData, err := c.ReadPacket()
+		if err != nil {
+			return err
+		}
+
+		if c.isEOFPacket(rowData) {
+			if clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
+				if err := clientConn.writeEOFPacket(clientConn.StatusFlags, 0); err != nil {
+					return err
+				}
+				return clientConn.endWriterBuffering()
+			}
+			if err := clientConn.writeOKPacketWithEOFHeader(&PacketOK{statusFlags: clientConn.StatusFlags}); err != nil {
+				return err
+			}
+			if clientConn.endWriterBuffering(); err != nil {
+				return err
+			}
+			return nil
+
+		}
+
+		if isErrorPacket(rowData) {
+			if err := clientConn.writePacketNoHeader(rowData); err != nil {
+				return err
+			}
+			return clientConn.endWriterBuffering()
+		}
+
+		if err := clientConn.writePacketNoHeader(rowData); err != nil {
+			return err
+		}
+	}
+}
+
+// GetLocalAddr get local address
+func (c *Conn) GetLocalAddr() string {
+	return c.conn.LocalAddr().String()
 }

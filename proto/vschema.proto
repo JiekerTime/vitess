@@ -45,6 +45,10 @@ message Keyspace {
   map<string, Table> tables = 3;
   // If require_explicit_routing is true, vindexes and tables are not added to global routing
   bool require_explicit_routing = 4;
+
+  bool cross_tablet = 85;
+  bool attach_enable = 86;
+  string attach_to = 87;
 }
 
 // Vindex is the vindex info for a Keyspace.

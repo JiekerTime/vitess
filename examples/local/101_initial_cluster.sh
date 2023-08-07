@@ -71,6 +71,8 @@ vtctldclient ApplySchema --sql-file create_commerce_schema.sql commerce || fail 
 
 # create the vschema
 vtctldclient ApplyVSchema --vschema-file vschema_commerce_initial.json commerce || fail "Failed to apply vschema for the commerce keyspace"
+# create cross tablet schema
+#vtctldclient ApplyVSchema --vschema-file vschema_commerce_initial_crosstablet.json commerce || fail "Failed to apply schema for the commerce keyspace"
 
 # start vtgate
 CELL=zone1 ../common/scripts/vtgate-up.sh

@@ -874,3 +874,9 @@ const (
 	reserve
 	begin
 )
+
+// GetHealthCheckHealthyStatus returns a displayable version of the HealthCheck cache.
+func (stc *ScatterConn) GetHealthCheckHealthyStatus(target *querypb.Target) []*discovery.TabletHealth {
+	//return stc.gateway.TabletsHealthyStatus(target)
+	return stc.gateway.hc.GetHealthyTabletStats(target)
+}
