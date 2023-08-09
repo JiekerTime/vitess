@@ -24,6 +24,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"github.com/spf13/pflag"
 
 	"vitess.io/vitess/go/vt/servenv"
@@ -150,7 +152,7 @@ func registerBaseFlags(fs *pflag.FlagSet) {
 // The flags will change the global singleton
 func registerPerUserFlags(fs *pflag.FlagSet, userKey string, uc *UserConfig, cp *mysql.ConnParams) {
 	newUserFlag := "db_" + userKey + "_user"
-	fs.StringVar(&uc.User, newUserFlag, "vt_"+userKey, "db "+userKey+" user userKey")
+	fs.StringVar(&uc.User, newUserFlag, topoproto.VtDbPrefix+userKey, "db "+userKey+" user userKey")
 
 	newPasswordFlag := "db_" + userKey + "_password"
 	fs.StringVar(&uc.Password, newPasswordFlag, "", "db "+userKey+" password")

@@ -199,6 +199,15 @@ type Conn struct {
 	// enableQueryInfo controls whether we parse the INFO field in QUERY_OK packets
 	// See: ConnParams.EnableQueryInfo
 	enableQueryInfo bool
+
+	// AccountType is a flag about account authority, inlude rw ro rs
+	AccountType int
+
+	// tablet type set for streamExecute
+	QueryTabletType string
+
+	// ClientHost is the client host addr
+	ClientHost string
 }
 
 // splitStatementFunciton is the function that is used to split the statement in case of a multi-statement query.
@@ -690,6 +699,10 @@ func (c *Conn) writeComQuit() error {
 
 // RemoteAddr returns the underlying socket RemoteAddr().
 func (c *Conn) RemoteAddr() net.Addr {
+	if c.ClientHost != "" {
+		netAddr, _ := net.ResolveTCPAddr("tcp4", c.ClientHost)
+		return netAddr
+	}
 	return c.conn.RemoteAddr()
 }
 
@@ -1631,4 +1644,9 @@ func (c *Conn) IsUnixSocket() bool {
 // GetRawConn returns the raw net.Conn for nefarious purposes.
 func (c *Conn) GetRawConn() net.Conn {
 	return c.conn
+}
+
+// LocalAddr returns the underlying socket LocalAddr().
+func (c *Conn) LocalAddr() net.Addr {
+	return c.conn.LocalAddr()
 }
