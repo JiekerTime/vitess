@@ -10,7 +10,11 @@ import (
 var _ logicalPlan = (*tableRoute)(nil)
 
 type tableRoute struct {
+	logicalPlanCommon
 
+	Select sqlparser.SelectStatement
+
+	eroute *engine.TableRoute
 }
 
 func (t tableRoute) Order() int {

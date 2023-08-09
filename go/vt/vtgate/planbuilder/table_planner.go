@@ -8,12 +8,15 @@ import (
 
 func buildSelectTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 ) (plan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
-	plan = ksPlan
+	if ksPlan == nil {
+		return nil, nil, nil, nil
+	}
 
+	plan = ksPlan
 	_, err = operators.TablePlanQuery(nil, nil)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	return plan, nil, nil, err
+	return plan, nil, nil, nil
 }
