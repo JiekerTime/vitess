@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )

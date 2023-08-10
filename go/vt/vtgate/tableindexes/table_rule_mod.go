@@ -1,6 +1,5 @@
 package tableindexes
 
-
 var _ TableIndex = (*tableRuleMod)(nil)
 
 type tableRuleMod struct {

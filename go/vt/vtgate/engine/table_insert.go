@@ -9,7 +9,6 @@ import (
 var _ Primitive = (*TableInsert)(nil)
 
 type TableInsert struct {
-
 }
 
 func (t TableInsert) RouteType() string {
