@@ -2,6 +2,7 @@ package planbuilder
 
 import (
 	"fmt"
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -27,13 +28,13 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	}
 
 	// generate TablePlan
-	_, err = operators.TablePlanQuery(ctx, route.Select)
+	tablePlan, err := doBuildTableSelectPlan(config, ctx, route.Select, ksPlan)
 	if err != nil {
-		return nil, nil, nil, err
+		return ksPlan, nil, nil, err
 	}
 
 	// merge plan
-	plan = mergePlan(plan, nil)
+	plan = mergePlan(plan, tablePlan)
 
 	return plan, nil, nil, nil
 }
@@ -53,4 +54,16 @@ func getRoutePlan(plan logicalPlan) (route *routeGen4, err error) {
 
 func mergePlan(plan logicalPlan, tablePlan logicalPlan) logicalPlan {
 	return plan
+}
+
+func doBuildTableSelectPlan(config plancontext.LogicTableConfig, ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement, ksPlan logicalPlan) (tablePlan logicalPlan, err error) {
+	tableOperator, err := operators.TablePlanQuery(ctx, Select)
+	if err != nil {
+		return nil, err
+	}
+	tablePlan, err = transformToLogicalPlan(ctx, tableOperator, true)
+	if err = tablePlan.WireupGen4(ctx); err != nil {
+		return tablePlan, nil
+	}
+	return tablePlan, nil
 }
