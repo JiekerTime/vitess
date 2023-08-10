@@ -10,20 +10,21 @@ import (
 
 func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 ) (plan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
+	// get split table config
+	config := plancontext.LogicTableConfig{
+		LogicTable:         "t_user",
+		ShardingColumnName: "col",
+	}
+	name := ksPlan.Primitive().GetTableName()
+	if name != config.LogicTable {
+		return ksPlan, ctx.SemTable, nil, err
+	}
+
 	// getRoutePlan
 	route, err := getRoutePlan(ksPlan)
 	if err != nil {
 		return ksPlan, nil, nil, err
 	}
-
-	// get split table config
-	name := ksPlan.Primitive().GetTableName()
-	print(name)
-	config := plancontext.LogicTableConfig{
-		LogicTable:         "user",
-		ShardingColumnName: "col",
-	}
-	print(config.ActualTableExprs)
 
 	// generate TablePlan
 	_, err = operators.TablePlanQuery(ctx, route.Select)
