@@ -4,24 +4,18 @@ import (
 	"context"
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 var _ Primitive = (*TableRoute)(nil)
 
 type TableRoute struct {
-	routeOpCode TableOpCode
+	shardRouteParam RoutingParameters
 
-	tableIndex tableindexes.TableIndex
-
-	logicTables []tableindexes.LogicTable
+	tableRouteParam TableRoutingParameters
 
 	executeEngine Primitive
 
 	orderBy []OrderByParams
-
-	values []evalengine.Expr
 }
 
 func (t TableRoute) RouteType() string {

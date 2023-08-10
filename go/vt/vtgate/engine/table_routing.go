@@ -1,6 +1,10 @@
 package engine
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+)
 
 type TableOpCode int
 
@@ -27,4 +31,16 @@ func (code TableOpCode) MarshalJSON() ([]byte, error) {
 // String returns a string presentation of this opcode
 func (code TableOpCode) String() string {
 	return tableOpName[code]
+}
+
+type TableRoutingParameters struct {
+	// Opcode is the execution opcode.
+	Opcode TableOpCode
+
+	tableIndex tableindexes.TableIndex
+
+	logicTables []tableindexes.LogicTable
+
+	// Values specifies the vindex values to use for routing.
+	Values []evalengine.Expr
 }
