@@ -1,6 +1,6 @@
 package tableindexes
 
-var _ TableIndex = (*tableRuleMod)(nil)
+var _ TableIndexRule = (*tableRuleMod)(nil)
 
 type tableRuleMod struct {
 }

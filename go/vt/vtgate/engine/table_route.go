@@ -4,16 +4,21 @@ import (
 	"context"
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
+	"vitess.io/vitess/go/vt/sqlparser"
 )
 
 var _ Primitive = (*TableRoute)(nil)
 
 type TableRoute struct {
-	shardRouteParam RoutingParameters
+	shardRouteParam *RoutingParameters
 
-	tableRouteParam TableRoutingParameters
+	tableRouteParam *TableRoutingParameters
 
-	executeEngine Primitive
+	// Query specifies the query to be executed.
+	Query sqlparser.Statement
+
+	// FieldQuery specifies the query to be executed for a GetFieldInfo request.
+	FieldQuery string
 
 	orderBy []OrderByParams
 }

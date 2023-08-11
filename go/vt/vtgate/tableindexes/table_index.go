@@ -1,5 +1,5 @@
 package tableindexes
 
-type TableIndex interface {
+type TableIndexRule interface {
 	GetIndex(value string, tablesNum int)
 }
