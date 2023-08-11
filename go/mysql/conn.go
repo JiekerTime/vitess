@@ -221,7 +221,7 @@ type Conn struct {
 	// AccountType is a flag about account authority, inlude rw ro rs
 	AccountType int
 
-	// tablet type set
+	// tablet type set for streamExecute
 	QueryTabletType string
 
 	// ClientHost is the client host addr
@@ -729,6 +729,10 @@ func (c *Conn) writeComQuit() error {
 
 // RemoteAddr returns the underlying socket RemoteAddr().
 func (c *Conn) RemoteAddr() net.Addr {
+	if c.ClientHost != "" {
+		netAddr, _ := net.ResolveTCPAddr("tcp4", c.ClientHost)
+		return netAddr
+	}
 	return c.conn.RemoteAddr()
 }
 

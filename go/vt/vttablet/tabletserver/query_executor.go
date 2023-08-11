@@ -833,7 +833,7 @@ func (qre *QueryExecutor) generateFinalSQL(parsedQuery *sqlparser.ParsedQuery, b
 		buf.WriteString(qre.marginComments.Leading)
 		qre.marginComments.Leading = buf.String()
 	}
-
+	query = qre.addUagInfoToQuery(query)
 	if qre.marginComments.Leading == "" && qre.marginComments.Trailing == "" {
 		return query, query, nil
 	}
@@ -1170,4 +1170,13 @@ func (qre *QueryExecutor) executeGetSchemaQuery(query string, callback func(sche
 		}
 		return callback(&querypb.GetSchemaResponse{TableDefinition: schemaDef})
 	})
+}
+
+// addUagInfoToQuery add ip trace route info
+func (qre *QueryExecutor) addUagInfoToQuery(sql string) string {
+	if !strings.Contains(sql, "uag::") && qre.options != nil && qre.options.UagInfo != "" {
+		sqlReset := fmt.Sprintf("%s%s", qre.options.UagInfo, sql)
+		return sqlReset
+	}
+	return sql
 }

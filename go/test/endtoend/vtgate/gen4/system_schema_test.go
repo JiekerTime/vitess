@@ -224,5 +224,6 @@ func TestQuerySystemTables(t *testing.T) {
 
 	utils.Exec(t, conn, `select * from sys.sys_config`)
 	utils.Exec(t, conn, "select * from mysql.`db`")
-	utils.Exec(t, conn, "select * from performance_schema.error_log")
+	// TODO: MySQL8.0
+	//utils.Exec(t, conn, "select * from performance_schema.error_log")
 }

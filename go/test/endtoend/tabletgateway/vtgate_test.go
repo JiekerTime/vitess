@@ -99,6 +99,7 @@ func verifyVtgateVariables(t *testing.T, url string) {
 func retryNTimes(t *testing.T, maxRetries int, f func() bool) {
 	i := 0
 	for {
+		time.Sleep(2 * time.Second)
 		res := f()
 		if res {
 			return

@@ -236,6 +236,11 @@ func (vh *vtgateHandler) ComQuery(c *mysql.Conn, query string, callback func(*sq
 		}
 	}()
 
+	//log app_user and app_host
+	if !strings.Contains(session.Options.UagInfo, "uag::") {
+		session.Options.UagInfo = fmt.Sprintf("/* uag::%v;%s;%s;%s */", c.User, c.ClientHost, c.RemoteAddr().String(), c.GetLocalAddr())
+	}
+
 	if session.Options.Workload == querypb.ExecuteOptions_OLAP {
 		session, err := vh.vtg.StreamExecute(ctx, session, query, make(map[string]*querypb.BindVariable), callback)
 		if err != nil {
@@ -387,6 +392,7 @@ func (vh *vtgateHandler) session(c *mysql.Conn) *vtgatepb.Session {
 			Options: &querypb.ExecuteOptions{
 				IncludedFields: querypb.ExecuteOptions_ALL,
 				Workload:       querypb.ExecuteOptions_Workload(mysqlDefaultWorkload),
+				UagInfo:        generateUagInfo(c),
 
 				// The collation field of ExecuteOption is set right before an execution.
 			},
@@ -802,4 +808,19 @@ func (vh *vtgateHandler) ValidUseDB(c *mysql.Conn, usedb string, authServer mysq
 	}
 	err = fmt.Errorf("keyspace %s not found in vschema", usedb)
 	return mysql.NewSQLErrorFromError(err)
+}
+func generateUagInfo(c *mysql.Conn) string {
+	buf := strings.Builder{}
+
+	buf.WriteString("/* uag::")
+	buf.WriteString(c.User)
+	buf.WriteString(";")
+	buf.WriteString(c.ClientHost)
+	buf.WriteString(";")
+	buf.WriteString(c.RemoteAddr().String())
+	buf.WriteString(";")
+	buf.WriteString(c.GetLocalAddr())
+	buf.WriteString(" */")
+
+	return buf.String()
 }

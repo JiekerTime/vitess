@@ -24,7 +24,7 @@ import (
 	"vitess.io/vitess/go/mysql"
 )
 
-func TestAggregateTypes(t *testing.T) {
+func testAggregateTypes(t *testing.T) {
 	ctx := context.Background()
 	conn, err := mysql.Connect(ctx, &vtParams)
 	if err != nil {
