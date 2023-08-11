@@ -117,9 +117,9 @@ type Table struct {
 type Keyspace struct {
 	Name         string
 	Sharded      bool
-	CrossTablet  bool
-	AttachEnable bool
-	AttachTo     string
+	CrossTablet  bool   `json:"cross_tablet,omitempty"`
+	AttachEnable bool   `json:"attach_enable,omitempty"`
+	AttachTo     string `json:"attach_to,omitempty"`
 }
 
 // ColumnVindex contains the index info for each index of a table.
