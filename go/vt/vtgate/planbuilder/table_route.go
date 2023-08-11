@@ -2,6 +2,7 @@ package planbuilder
 
 import (
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
@@ -10,42 +11,14 @@ import (
 var _ logicalPlan = (*tableRoute)(nil)
 
 type tableRoute struct {
-	logicalPlanCommon
+	gen4Plan
 
 	Select sqlparser.SelectStatement
 
 	eroute *engine.TableRoute
 }
 
-func (t tableRoute) Order() int {
-	panic("implement me")
-}
-
-func (t tableRoute) ResultColumns() []*resultColumn {
-	panic("implement me")
-}
-
-func (t tableRoute) Reorder(i int) {
-	panic("implement me")
-}
-
-func (t tableRoute) Wireup(lp logicalPlan, jt *jointab) error {
-	panic("implement me")
-}
-
 func (t tableRoute) WireupGen4(context *plancontext.PlanningContext) error {
-	panic("implement me")
-}
-
-func (t tableRoute) SupplyVar(from, to int, col *sqlparser.ColName, varname string) {
-	panic("implement me")
-}
-
-func (t tableRoute) SupplyCol(col *sqlparser.ColName) (rc *resultColumn, colNumber int) {
-	panic("implement me")
-}
-
-func (t tableRoute) SupplyWeightString(colNumber int, alsoAddToGroupBy bool) (weightcolNumber int, err error) {
 	panic("implement me")
 }
 
@@ -54,11 +27,14 @@ func (t tableRoute) Primitive() engine.Primitive {
 }
 
 func (t tableRoute) Inputs() []logicalPlan {
-	panic("implement me")
+	return []logicalPlan{}
 }
 
 func (t tableRoute) Rewrite(inputs ...logicalPlan) error {
-	panic("implement me")
+	if len(inputs) != 0 {
+		return vterrors.VT13001("route: wrong number of inputs")
+	}
+	return nil
 }
 
 func (t tableRoute) ContainsTables() semantics.TableSet {
@@ -68,4 +44,3 @@ func (t tableRoute) ContainsTables() semantics.TableSet {
 func (t tableRoute) OutputColumns() []sqlparser.SelectExpr {
 	panic("implement me")
 }
-
