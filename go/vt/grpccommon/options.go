@@ -27,7 +27,7 @@ var (
 	// maxMessageSize is the maximum message size which the gRPC server will
 	// accept. Larger messages will be rejected.
 	// Note: We're using 16 MiB as default value because that's the default in MySQL
-	maxMessageSize = 16 * 1024 * 1024
+	maxMessageSize = 256 * 1024 * 1024
 	// enablePrometheus sets a flag to enable grpc client/server grpc monitoring.
 	enablePrometheus bool
 )

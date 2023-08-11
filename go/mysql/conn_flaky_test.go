@@ -1210,3 +1210,15 @@ func (t testRun) WarningCount(c *Conn) uint16 {
 }
 
 var _ Handler = (*testRun)(nil)
+
+func (t testRun) ValidUseDB(c *Conn, db string, authServer AuthServer) error {
+	panic("implement me")
+}
+
+func (t testRun) InitCrossTabletConn(c *Conn, authServer AuthServer, ks string) error {
+	panic("implement me")
+}
+
+func (t testRun) CheckAttachedHost(c *Conn) error {
+	panic("implement me")
+}

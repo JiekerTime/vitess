@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
@@ -357,7 +359,7 @@ func testAutoRetryError(t *testing.T, tc *testCase, cells string) {
 		// update the VDiff to simulate an ephemeral error having occurred
 		for _, shard := range strings.Split(tc.targetShards, ",") {
 			tab := vc.getPrimaryTablet(t, tc.targetKs, shard)
-			res, err := tab.QueryTabletWithDB(sqlparser.BuildParsedQuery(sqlSimulateError, sidecarDBIdentifier, sidecarDBIdentifier, encodeString(uuid)).Query, "vt_"+tc.targetKs)
+			res, err := tab.QueryTabletWithDB(sqlparser.BuildParsedQuery(sqlSimulateError, sidecarDBIdentifier, sidecarDBIdentifier, encodeString(uuid)).Query, topoproto.VtDbPrefix+tc.targetKs)
 			require.NoError(t, err)
 			// should have updated the vdiff record and at least one vdiff_table record
 			require.GreaterOrEqual(t, int(res.RowsAffected), 2)

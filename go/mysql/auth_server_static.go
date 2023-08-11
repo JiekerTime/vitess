@@ -374,3 +374,13 @@ type StaticUserData struct {
 func (sud *StaticUserData) Get() *querypb.VTGateCallerID {
 	return &querypb.VTGateCallerID{Username: sud.Username, Groups: sud.Groups}
 }
+
+// GetKeyspace return the user keyspace.
+func (a *AuthServerStatic) GetKeyspace(user string) ([]string, error) {
+	return nil, nil
+}
+
+// GetPassword return the user password.
+func (a *AuthServerStatic) GetPassword(user string) (string, error) {
+	return "", nil
+}

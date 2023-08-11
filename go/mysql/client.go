@@ -598,7 +598,7 @@ func (c *Conn) writeHandshakeResponse41(capabilities uint32, scrambledPassword [
 	// DbName, only if server supports it.
 	if params.DbName != "" && (capabilities&CapabilityClientConnectWithDB != 0) {
 		pos = writeNullString(data, pos, params.DbName)
-		c.schemaName = params.DbName
+		c.SchemaName = params.DbName
 	}
 
 	// Assume native client during response

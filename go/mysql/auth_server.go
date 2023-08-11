@@ -59,6 +59,12 @@ type AuthServer interface {
 	// you must still return `mysql_native_password` or `caching_sha2_password`
 	// here and the auth switch protocol will be used to switch to clear text.
 	DefaultAuthMethodDescription() AuthMethodDescription
+
+	// GetKeyspace Get user's keyspace
+	GetKeyspace(user string) ([]string, error)
+
+	// GetPassword Get user's password
+	GetPassword(user string) (string, error)
 }
 
 // AuthMethod interface for concrete auth method implementations.

@@ -353,6 +353,9 @@ message ExecuteOptions {
   // priority specifies the priority of the query, between 0 and 100. This is leveraged by the transaction
   // throttler to determine whether, under resource contention, a query should or should not be throttled.
   string priority = 16;
+
+  // uag_info store client、proxy、mysql address
+  string uag_info = 88;
 }
 
 // Field describes a single column returned by a query

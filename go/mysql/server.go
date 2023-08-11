@@ -132,6 +132,15 @@ type Handler interface {
 	WarningCount(c *Conn) uint16
 
 	ComResetConnection(c *Conn)
+
+	// ValidUseDB is called when a connection receives a ComInitDB query.
+	ValidUseDB(c *Conn, db string, authServer AuthServer) error
+
+	//InitBackendStatus
+	InitCrossTabletConn(c *Conn, authServer AuthServer, ks string) error
+
+	//CheckAttachedHost
+	CheckAttachedHost(c *Conn) error
 }
 
 // UnimplementedHandler implemnts all of the optional callbacks so as to satisy
@@ -374,9 +383,15 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 		return
 	}
 
+	header, err := c.ReadHeaderfromHaproxyProto()
+	if err == nil {
+		if header != nil {
+			c.ClientHost = header.SourceAddr.String()
+		}
+	}
 	// Wait for the client response. This has to be a direct read,
 	// so we don't buffer the TLS negotiation packets.
-	response, err := c.readEphemeralPacketDirect()
+	response, err := c.readProxyProtoPacket()
 	if err != nil {
 		// Don't log EOF errors. They cause too much spam, same as main read loop.
 		if err != io.EOF {
@@ -486,15 +501,32 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 
 	c.User = user
 	c.UserData = userData
+	c.setAccountType()
 
 	if c.User != "" {
 		connCountPerUser.Add(c.User, 1)
 		defer connCountPerUser.Add(c.User, -1)
 	}
 
+	if err := l.handler.InitCrossTabletConn(c, l.authServer, c.SchemaName); err != nil {
+		log.Errorf("user %v init keyspace %v attached status error :%v", c.User, c.SchemaName, err)
+		if err := c.writeErrorPacketFromError(err); err != nil {
+			log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
+			return
+		}
+		return
+	}
+
+	defer func() {
+		if c.crossTabletConn != nil {
+			c.crossTabletConn.writeComQuit()
+			c.crossTabletConn.Close()
+		}
+	}()
+
 	// Set initial db name.
-	if c.schemaName != "" {
-		err = l.handler.ComQuery(c, "use "+sqlescape.EscapeID(c.schemaName), func(result *sqltypes.Result) error {
+	if c.SchemaName != "" {
+		err = l.handler.ComQuery(c, "use "+sqlescape.EscapeID(c.SchemaName), func(result *sqltypes.Result) error {
 			return nil
 		})
 		if err != nil {
@@ -761,7 +793,7 @@ func (l *Listener) parseClientHandshakePacket(c *Conn, firstTime bool, data []by
 		if !ok {
 			return "", "", nil, vterrors.Errorf(vtrpc.Code_INTERNAL, "parseClientHandshakePacket: can't read dbname")
 		}
-		c.schemaName = dbname
+		c.SchemaName = dbname
 	}
 
 	// authMethod (with default)

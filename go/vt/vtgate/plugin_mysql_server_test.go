@@ -42,6 +42,18 @@ type testHandler struct {
 	lastConn *mysql.Conn
 }
 
+func (th *testHandler) ValidUseDB(c *mysql.Conn, db string, authServer mysql.AuthServer) error {
+	return nil
+}
+
+func (th *testHandler) InitCrossTabletConn(c *mysql.Conn, authServer mysql.AuthServer, ks string) error {
+	return nil
+}
+
+func (th *testHandler) CheckAttachedHost(c *mysql.Conn) error {
+	return nil
+}
+
 func (th *testHandler) NewConnection(c *mysql.Conn) {
 	th.lastConn = c
 }

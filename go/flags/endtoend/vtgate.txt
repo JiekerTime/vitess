@@ -58,7 +58,7 @@ Usage of vtgate:
       --grpc_key string                                                  server private key to use for gRPC connections, requires grpc_cert, enables TLS
       --grpc_max_connection_age duration                                 Maximum age of a client connection before GoAway is sent. (default 2562047h47m16.854775807s)
       --grpc_max_connection_age_grace duration                           Additional grace period after grpc_max_connection_age, after which connections are forcibly closed. (default 2562047h47m16.854775807s)
-      --grpc_max_message_size int                                        Maximum allowed RPC message size. Larger messages will be rejected by gRPC with the error 'exceeding the max size'. (default 16777216)
+      --grpc_max_message_size int                                        Maximum allowed RPC message size. Larger messages will be rejected by gRPC with the error 'exceeding the max size'. (default 268435456)
       --grpc_port int                                                    Port to listen on for gRPC calls. If zero, do not listen.
       --grpc_prometheus                                                  Enable gRPC monitoring with Prometheus.
       --grpc_server_ca string                                            path to server CA in PEM format, which will be combine with server cert, return full certificate chain to clients
@@ -91,7 +91,9 @@ Usage of vtgate:
       --min_number_serving_vttablets int                                 The minimum number of vttablets for each replicating tablet_type (e.g. replica, rdonly) that will be continue to be used even with replication lag above discovery_low_replication_lag, but still below discovery_high_replication_lag_minimum_serving. (default 2)
       --mysql-server-pool-conn-read-buffers                              If set, the server will pool incoming connection read buffers
       --mysql_allow_clear_text_without_tls                               If set, the server will allow the use of a clear text password over non-SSL connections.
-      --mysql_auth_server_impl string                                    Which auth server implementation to use. Options: none, ldap, clientcert, static, vault. (default "static")
+      --mysql_auth_server_config_file string                             JSON File to read the users/passwords from.
+      --mysql_auth_server_config_string string                           SON representation of the users/passwords config.
+      --mysql_auth_server_impl string                                    Which auth server implementation to use. Options: none, ldap, clientcert, static, vault. (default "config")
       --mysql_auth_server_static_file string                             JSON File to read the users/passwords from.
       --mysql_auth_server_static_string string                           JSON representation of the users/passwords config.
       --mysql_auth_static_reload_interval duration                       Ticker to reload credentials
@@ -105,6 +107,7 @@ Usage of vtgate:
       --mysql_auth_vault_tokenfile string                                Path to file containing Vault auth token; token can also be passed using VAULT_TOKEN environment variable
       --mysql_auth_vault_ttl duration                                    How long to cache vtgate credentials from the Vault server (default 30m0s)
       --mysql_clientcert_auth_method string                              client-side authentication method to use. Supported values: mysql_clear_password, dialog. (default "mysql_clear_password")
+      --mysql_config_auth_method string                                  client-side authentication method to use. Supported values:mysql_native_password. (default "mysql_native_password")
       --mysql_default_workload string                                    Default session workload (OLTP, OLAP, DBA) (default "OLTP")
       --mysql_ldap_auth_config_file string                               JSON File from which to read LDAP server config.
       --mysql_ldap_auth_config_string string                             JSON representation of LDAP server config.
@@ -202,6 +205,7 @@ Usage of vtgate:
       --tracing-sampling-type string                                     sampling strategy to use for jaeger. possible values are 'const', 'probabilistic', 'rateLimiting', or 'remote' (default "const")
       --transaction_mode string                                          SINGLE: disallow multi-db transactions, MULTI: allow multi-db transactions with best effort commit, TWOPC: allow multi-db transactions with 2pc commit (default "MULTI")
       --truncate-error-len int                                           truncate errors sent to client if they are longer than this value (0 means do not truncate)
+      --use_configmap                                                    JSON File to read the users/passwords from. (default true)
       --v Level                                                          log level for V logs
   -v, --version                                                          print binary version
       --vmodule moduleSpec                                               comma-separated list of pattern=N settings for file-filtered logging

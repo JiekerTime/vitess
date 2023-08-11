@@ -64,7 +64,7 @@ func TestInformationSchemaQuery(t *testing.T) {
 	assertSingleRowIsReturned(t, conn, "table_schema = 'ks'", "vt_ks")
 	assertSingleRowIsReturned(t, conn, "table_schema = 'vt_ks'", "vt_ks")
 	assertResultIsEmpty(t, conn, "table_schema = 'NONE'")
-	assertSingleRowIsReturned(t, conn, "table_schema = 'performance_schema'","performance_schema")
+	assertSingleRowIsReturned(t, conn, "table_schema = 'performance_schema'", "performance_schema")
 	assertResultIsEmpty(t, conn, "table_schema = 'PERFORMANCE_SCHEMA'")
 	assertSingleRowIsReturned(t, conn, "table_schema = 'performance_schema' and table_name = 'users'", "performance_schema")
 	assertResultIsEmpty(t, conn, "table_schema = 'performance_schema' and table_name = 'foo'")

@@ -36,7 +36,7 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 		tables := []string{"t9", "aggr_test", "t3", "t7_xxhash", "aggr_test_dates", "t7_xxhash_idx", "t1", "t2", "t10"}
 		for _, table := range tables {
 			_, err = mcmp.ExecAndIgnore("delete from " + table)
-			fmt.Println(table,err)
+			fmt.Println(table, err)
 		}
 	}
 
@@ -52,7 +52,8 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 func testAggregateTypes(t *testing.T) {
 	mcmp, closer := start(t)
 	defer closer()
-	for {}
+	for {
+	}
 	mcmp.Exec("insert into aggr_test(id, val1, val2) values(1,'a',1), (2,'A',1), (3,'b',1), (4,'c',3), (5,'c',4)")
 	mcmp.Exec("insert into aggr_test(id, val1, val2) values(6,'d',null), (7,'e',null), (8,'E',1)")
 	mcmp.AssertMatches("select val1, count(distinct val2), count(*) from aggr_test group by val1", `[[VARCHAR("a") INT64(1) INT64(2)] [VARCHAR("b") INT64(1) INT64(1)] [VARCHAR("c") INT64(2) INT64(2)] [VARCHAR("d") INT64(0) INT64(1)] [VARCHAR("e") INT64(1) INT64(2)]]`)
