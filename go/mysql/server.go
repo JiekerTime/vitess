@@ -374,9 +374,15 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 		return
 	}
 
+	header, err := c.ReadHeaderfromHaproxyProto()
+	if err == nil {
+		if header != nil {
+			c.ClientHost = header.SourceAddr.String()
+		}
+	}
 	// Wait for the client response. This has to be a direct read,
 	// so we don't buffer the TLS negotiation packets.
-	response, err := c.readEphemeralPacketDirect()
+	response, err := c.readProxyProtoPacket()
 	if err != nil {
 		// Don't log EOF errors. They cause too much spam, same as main read loop.
 		if err != io.EOF {

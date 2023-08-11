@@ -39,7 +39,7 @@ import (
 
 const (
 	// VtDbPrefix + keyspace is the default name for databases.
-	VtDbPrefix = "vt_"
+	VtDbPrefix = ""
 )
 
 // cache the conversion from tablet type enum to lower case string.

@@ -31218,6 +31218,9 @@ export namespace query {
 
         /** ExecuteOptions priority */
         priority?: (string|null);
+
+        /** ExecuteOptions uag_info */
+        uag_info?: (string|null);
     }
 
     /** Represents an ExecuteOptions. */
@@ -31264,6 +31267,9 @@ export namespace query {
 
         /** ExecuteOptions priority. */
         public priority: string;
+
+        /** ExecuteOptions uag_info. */
+        public uag_info: string;
 
         /**
          * Creates a new ExecuteOptions instance using the specified properties.

@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"google.golang.org/grpc"
 
 	"vitess.io/vitess/go/vt/grpcclient"
@@ -274,7 +276,7 @@ func NewConnParams(port int, password, socketPath, keyspace string) mysql.ConnPa
 	}
 	cp.DbName = keyspace
 	if keyspace != "" && keyspace != "_vt" {
-		cp.DbName = "vt_" + keyspace
+		cp.DbName = topoproto.VtDbPrefix + keyspace
 	}
 
 	return cp
