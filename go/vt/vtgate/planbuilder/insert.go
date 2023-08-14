@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 
+	"vitess.io/vitess/go/vt/key"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -65,6 +67,10 @@ func buildInsertPlan(string) stmtPlanner {
 		if !rb.eroute.Keyspace.Sharded {
 			return buildInsertUnshardedPlan(ins, vschemaTable, reservedVars, vschema)
 		}
+
+		if vschemaTable.Pinned != nil {
+			return buildInsertUnshardedPlan(ins, vschemaTable, reservedVars, vschema)
+		}
 		if ins.Action == sqlparser.ReplaceAct {
 			return nil, vterrors.VT12001("REPLACE INTO with sharded keyspace")
 		}
@@ -78,6 +84,10 @@ func buildInsertUnshardedPlan(ins *sqlparser.Insert, table *vindexes.Table, rese
 		table,
 		table.Keyspace,
 	)
+	if table.Pinned != nil {
+		eins.Opcode = engine.InsertByDestination
+		eins.TargetDestination = key.DestinationKeyspaceID(table.Pinned)
+	}
 	applyCommentDirectives(ins, eins)
 
 	var rows sqlparser.Values

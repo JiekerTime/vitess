@@ -75,6 +75,7 @@ type FullBinlogStatement struct {
 	KeyspaceID []byte
 	PKNames    []*querypb.Field
 	PKValues   []sqltypes.Value
+	Pinned     []byte
 }
 
 // sendTransactionFunc is used to send binlog events.
