@@ -295,6 +295,81 @@ func GetShardForKeyspaceID(allShards []*topodatapb.ShardReference, keyspaceID []
 }
 
 //
+// DestinationModKeyspaceID
+//
+
+// DestinationModKeyspaceID is the destination for a single KeyspaceID.
+// It implements the Destination interface.
+type DestinationModKeyspaceID []byte
+
+// Resolve is part of the Destination interface.
+func (d DestinationModKeyspaceID) Resolve(allShards []*topodatapb.ShardReference, addShard func(shard string) error) error {
+	shard, err := GetShardForModKeyspaceID(allShards, d)
+	if err != nil {
+		return err
+	}
+	return addShard(shard)
+}
+
+// String is part of the Destination interface.
+func (d DestinationModKeyspaceID) String() string {
+	return "DestinationKeyspaceID(" + hex.EncodeToString(d) + ")"
+}
+
+// GetShardForModKeyspaceID finds the right shard for a keyspace id.
+func GetShardForModKeyspaceID(allShards []*topodatapb.ShardReference, modKeyspaceID []byte) (string, error) {
+	if len(allShards) == 0 {
+		return "", vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no shard in keyspace")
+	}
+
+	for _, shardReference := range allShards {
+		if bytes.Equal(shardReference.KeyRange.Start, modKeyspaceID) {
+			return shardReference.Name, nil
+		}
+	}
+	return "", vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "KeyspaceId %v didn't match any shards %+v", hex.EncodeToString(modKeyspaceID), allShards)
+}
+
+//
+// DestinationTableKeyspaceID
+//
+
+// DestinationTableKeyspaceID is the destination for a single  KeyspaceID.
+// It implements the Destination interface.
+type DestinationTableKeyspaceID struct {
+	Shard []byte
+	Table []byte
+}
+
+// Resolve is part of the Destination interface.
+func (d DestinationTableKeyspaceID) Resolve(allShards []*topodatapb.ShardReference, addShard func(shard, table string) error) error {
+	shard, table, err := GetShardANDTableForKeyspaceID(allShards, d)
+	if err != nil {
+		return err
+	}
+	return addShard(shard, table)
+}
+
+// String is part of the Destination interface.
+func (d DestinationTableKeyspaceID) String() string {
+	return "DestinationTableKeyspaceID(" + hex.EncodeToString(d.Shard) + ")"
+}
+
+// GetShardANDTableForKeyspaceID finds the right shard for a keyspace id.
+func GetShardANDTableForKeyspaceID(allShards []*topodatapb.ShardReference, KeyspaceID DestinationTableKeyspaceID) (string, string, error) {
+	if len(allShards) == 0 {
+		return "", "", vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no shard in keyspace")
+	}
+
+	for _, shardReference := range allShards {
+		if KeyRangeContains(shardReference.KeyRange, KeyspaceID.Shard) {
+			return shardReference.Name, "", nil
+		}
+	}
+	return "", "", vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "KeyspaceId %v didn't match any shards %+v", hex.EncodeToString(KeyspaceID.Shard), allShards)
+}
+
+//
 // DestinationKeyspaceIDs
 //
 

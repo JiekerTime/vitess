@@ -38,7 +38,10 @@
     "MysqlNativePassword": "*E361D58BFE0A57E237D51CE49E8E395E65538AA9",
     "UserData": "",
     "KeySpaces": [
-      {"Name":"commerce"}
+      {"Name":"test_keyspace"},
+      {"Name":"customer"},
+      {"Name":"commerce"},
+      {"Name":"vtd11_2"}
     ],
     "Privilege": 256
   },
