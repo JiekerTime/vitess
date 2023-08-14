@@ -51,7 +51,7 @@ create table product(pid bigint, description varbinary(128), primary key(pid));
 `,
 	}
 	legacyProductData = `
-insert into vt_product.product(pid, description) values(1, 'keyboard'), (2, 'monitor');
+insert into product.product(pid, description) values(1, 'keyboard'), (2, 'monitor');
 `
 
 	legacyCustomer = cluster.Keyspace{
@@ -62,8 +62,8 @@ create table orders(oid bigint, cid bigint, pid bigint, mname varchar(128), pric
 `,
 	}
 	legacyCustomerData = `
-insert into vt_customer.customer(cid, name) values(1, 'john'), (2, 'paul'), (3, 'ringo');
-insert into vt_customer.orders(oid, cid, mname, pid, price) values(1, 1, 'monoprice', 1, 10), (2, 1, 'newegg', 2, 15);
+insert into customer.customer(cid, name) values(1, 'john'), (2, 'paul'), (3, 'ringo');
+insert into customer.orders(oid, cid, mname, pid, price) values(1, 1, 'monoprice', 1, 10), (2, 1, 'newegg', 2, 15);
 `
 
 	commerce = cluster.Keyspace{
@@ -85,7 +85,7 @@ create table orders(oid bigint, cid bigint, pid bigint, mname varchar(128), pric
 	connFormat = `externalConnections:
   product:
     socket: %s
-    dbName: vt_product
+    dbName: product
     app:
       user: vt_app
     dba:
@@ -93,7 +93,7 @@ create table orders(oid bigint, cid bigint, pid bigint, mname varchar(128), pric
   customer:
     flavor: FilePos
     socket: %s
-    dbName: vt_customer
+    dbName: customer
     app:
       user: vt_app
     dba:
@@ -123,7 +123,7 @@ externalConnections:
 	customer:
 	  flavor: FilePos
 	  socket: /home/sougou/dev/src/vitess.io/vitess/vtdataroot/vtroot_15201/vt_0000000620/mysql.sock
-	  dbName: vt_customer
+	  dbName: customer
 	  app:
 	    user: vt_app
 	  dba:
@@ -135,9 +135,9 @@ streams from the same source. The main difference between an external source vs 
 source is that the source proto contains an "external_mysql" field instead of keyspace and shard.
 That field is the key into the externalConnections section of the input yaml.
 
-VReplicationExec: insert into _vt.vreplication (workflow, db_name, source, pos, max_tps, max_replication_lag, tablet_types, time_updated, transaction_timestamp, state) values('product', 'vt_commerce', 'filter:<rules:<match:\"product\" > > external_mysql:\"product\" ', ”, 9999, 9999, 'primary', 0, 0, 'Running')
-VReplicationExec: insert into _vt.vreplication (workflow, db_name, source, pos, max_tps, max_replication_lag, tablet_types, time_updated, transaction_timestamp, state) values('customer', 'vt_commerce', 'filter:<rules:<match:\"customer\" > > external_mysql:\"customer\" ', ”, 9999, 9999, 'primary', 0, 0, 'Running')
-VReplicationExec: insert into _vt.vreplication (workflow, db_name, source, pos, max_tps, max_replication_lag, tablet_types, time_updated, transaction_timestamp, state) values('orders', 'vt_commerce', 'filter:<rules:<match:\"orders\" > > external_mysql:\"customer\" ', ”, 9999, 9999, 'primary', 0, 0, 'Running')
+VReplicationExec: insert into _vt.vreplication (workflow, db_name, source, pos, max_tps, max_replication_lag, tablet_types, time_updated, transaction_timestamp, state) values('product', 'commerce', 'filter:<rules:<match:\"product\" > > external_mysql:\"product\" ', ”, 9999, 9999, 'primary', 0, 0, 'Running')
+VReplicationExec: insert into _vt.vreplication (workflow, db_name, source, pos, max_tps, max_replication_lag, tablet_types, time_updated, transaction_timestamp, state) values('customer', 'commerce', 'filter:<rules:<match:\"customer\" > > external_mysql:\"customer\" ', ”, 9999, 9999, 'primary', 0, 0, 'Running')
+VReplicationExec: insert into _vt.vreplication (workflow, db_name, source, pos, max_tps, max_replication_lag, tablet_types, time_updated, transaction_timestamp, state) values('orders', 'commerce', 'filter:<rules:<match:\"orders\" > > external_mysql:\"customer\" ', ”, 9999, 9999, 'primary', 0, 0, 'Running')
 */
 func TestMigration(t *testing.T) {
 	yamlFile := startCluster(t)

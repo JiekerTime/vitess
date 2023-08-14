@@ -112,7 +112,7 @@ func TestMysql56DecodeTransactionPayload(t *testing.T) {
 	// payload event.
 	want := []string{
 		"BEGIN",                     // Query event
-		"vt_commerce.customer",      // TableMap event
+		"commerce.customer",         // TableMap event
 		"[1 mlord@planetscale.com]", // WriteRows event
 		"[2 sup@planetscale.com]",   // WriteRows event
 		"COMMIT",                    // XID event
