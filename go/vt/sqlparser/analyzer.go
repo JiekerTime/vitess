@@ -62,6 +62,7 @@ const (
 	StmtPrepare
 	StmtExecute
 	StmtDeallocate
+	StmtLoadData
 )
 
 // ASTToStatementType returns a StatementType from an AST stmt
@@ -212,6 +213,8 @@ func Preview(sql string) StatementType {
 		return StmtSavepoint
 	case "lock":
 		return StmtLockTables
+	case "load":
+		return StmtLoadData
 	case "unlock":
 		return StmtUnlockTables
 	}

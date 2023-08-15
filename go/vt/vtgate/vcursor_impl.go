@@ -63,7 +63,7 @@ var _ vindexes.VCursor = (*vcursorImpl)(nil)
 
 // vcursor_impl needs these facilities to be able to be able to execute queries for vindexes
 type iExecute interface {
-	Execute(ctx context.Context, method string, session *SafeSession, s string, vars map[string]*querypb.BindVariable) (*sqltypes.Result, error)
+	Execute(ctx context.Context, c *mysql.Conn, method string, session *SafeSession, s string, vars map[string]*querypb.BindVariable) (*sqltypes.Result, error)
 	ExecuteMultiShard(ctx context.Context, primitive engine.Primitive, rss []*srvtopo.ResolvedShard, queries []*querypb.BoundQuery, session *SafeSession, autocommit bool, ignoreMaxMemoryRows bool) (qr *sqltypes.Result, errs []error)
 	StreamExecuteMulti(ctx context.Context, primitive engine.Primitive, query string, rss []*srvtopo.ResolvedShard, vars []map[string]*querypb.BindVariable, session *SafeSession, autocommit bool, callback func(reply *sqltypes.Result) error) []error
 	ExecuteLock(ctx context.Context, rs *srvtopo.ResolvedShard, query *querypb.BoundQuery, session *SafeSession, lockFuncType sqlparser.LockingFuncType) (*sqltypes.Result, error)
@@ -498,7 +498,7 @@ func (vc *vcursorImpl) Execute(ctx context.Context, method string, query string,
 		return nil, err
 	}
 
-	qr, err := vc.executor.Execute(ctx, method, session, vc.marginComments.Leading+query+vc.marginComments.Trailing, bindVars)
+	qr, err := vc.executor.Execute(ctx, nil, method, session, vc.marginComments.Leading+query+vc.marginComments.Trailing, bindVars)
 	vc.setRollbackOnPartialExecIfRequired(err != nil, rollbackOnError)
 
 	return qr, err
@@ -513,7 +513,7 @@ func (vc *vcursorImpl) markSavepoint(ctx context.Context, needsRollbackOnParialE
 	}
 	uID := fmt.Sprintf("_vt%s", strings.ReplaceAll(uuid.NewString(), "-", "_"))
 	spQuery := fmt.Sprintf("%ssavepoint %s%s", vc.marginComments.Leading, uID, vc.marginComments.Trailing)
-	_, err := vc.executor.Execute(ctx, "MarkSavepoint", vc.safeSession, spQuery, bindVars)
+	_, err := vc.executor.Execute(ctx, nil, "MarkSavepoint", vc.safeSession, spQuery, bindVars)
 	if err != nil {
 		return err
 	}

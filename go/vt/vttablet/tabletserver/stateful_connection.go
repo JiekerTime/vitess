@@ -318,3 +318,46 @@ func (sc *StatefulConnection) ApplySetting(ctx context.Context, setting *pools.S
 func (sc *StatefulConnection) resetExpiryTime() {
 	sc.expiryTime = time.Now().Add(sc.timeout)
 }
+
+// StreamLoadData Stream executes the query and streams the results.
+func (sc *StatefulConnection) StreamLoadData(ctx context.Context, lines chan string, query string) (*sqltypes.Result, error) {
+	if sc.IsClosed() {
+		if sc.IsInTransaction() {
+			return nil, vterrors.Errorf(vtrpcpb.Code_ABORTED, "transaction was aborted: %v", sc.txProps.Conclusion)
+		}
+		return nil, vterrors.New(vtrpcpb.Code_ABORTED, "connection was aborted")
+	}
+
+	for attempt := 1; attempt <= 2; attempt++ {
+		result, err := sc.StreamLoadDataOnce(
+			ctx,
+			lines,
+			query)
+		switch {
+		case err == nil:
+			// Success.
+			return result, err
+		case !mysql.IsConnErr(err):
+			// Not a connection error. Don't retry.
+			return nil, err
+		case attempt == 2:
+			// Reached the retry limit.
+			return nil, err
+		}
+
+		// Connection error. Retry if context has not expired.
+		select {
+		case <-ctx.Done():
+			return nil, err
+		default:
+			sc.env.CheckMySQL()
+		}
+
+	}
+	panic("unreachable")
+}
+
+// StreamLoadDataOnce ...
+func (sc *StatefulConnection) StreamLoadDataOnce(ctx context.Context, lines chan string, query string) (*sqltypes.Result, error) {
+	return sc.dbConn.ExecuteStreamLoadData(ctx, lines, query)
+}

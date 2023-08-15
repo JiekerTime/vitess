@@ -20,6 +20,8 @@ import (
 	"errors"
 	"fmt"
 
+	"vitess.io/vitess/go/mysql"
+
 	"context"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -42,14 +44,14 @@ func newTerminalClient() *terminalClient {
 	return &terminalClient{}
 }
 
-func (c *terminalClient) Execute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
+func (c *terminalClient) Execute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
 	if sql == "quit://" {
 		log.Fatal("Received quit:// query. Going down.")
 	}
 	return session, nil, errTerminal
 }
 
-func (c *terminalClient) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
+func (c *terminalClient) ExecuteBatch(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
 	if len(sqlList) == 1 {
 		if sqlList[0] == "quit://" {
 			log.Fatal("Received quit:// query. Going down.")
@@ -58,7 +60,7 @@ func (c *terminalClient) ExecuteBatch(ctx context.Context, session *vtgatepb.Ses
 	return session, nil, errTerminal
 }
 
-func (c *terminalClient) StreamExecute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (c *terminalClient) StreamExecute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	return session, errTerminal
 }
 

@@ -104,3 +104,8 @@ func (cp *ConnParams) EffectiveSslMode() vttls.SslMode {
 	}
 	return cp.SslMode
 }
+
+// EnableClientLocalFiles sets the flag for CLIENT_LOCAL_FILES.
+func (cp *ConnParams) EnableClientLocalFiles() {
+	cp.Flags |= ClientLocalFiles
+}

@@ -176,6 +176,8 @@ func (c *Connector) Connect(ctx context.Context) (*mysql.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
+	//support load
+	params.Flags = params.Flags | mysql.ClientLocalFiles
 	conn, err := mysql.Connect(ctx, params)
 	if err != nil {
 		return nil, err

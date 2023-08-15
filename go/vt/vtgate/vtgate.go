@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	"vitess.io/vitess/go/mysql"
+
 	"github.com/spf13/pflag"
 
 	"vitess.io/vitess/go/acl"
@@ -443,7 +445,7 @@ func (vtg *VTGate) Gateway() *TabletGateway {
 }
 
 // Execute executes a non-streaming query. This is a V3 function.
-func (vtg *VTGate) Execute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (newSession *vtgatepb.Session, qr *sqltypes.Result, err error) {
+func (vtg *VTGate) Execute(ctx context.Context, c *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (newSession *vtgatepb.Session, qr *sqltypes.Result, err error) {
 	// In this context, we don't care if we can't fully parse destination
 	destKeyspace, destTabletType, _, _ := vtg.executor.ParseDestinationTarget(session.TargetString)
 	statsKey := []string{"Execute", destKeyspace, topoproto.TabletTypeLString(destTabletType)}
@@ -453,7 +455,7 @@ func (vtg *VTGate) Execute(ctx context.Context, session *vtgatepb.Session, sql s
 		err = vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "%v", bvErr)
 	} else {
 		safeSession := NewSafeSession(session)
-		qr, err = vtg.executor.Execute(ctx, "Execute", safeSession, sql, bindVariables)
+		qr, err = vtg.executor.Execute(ctx, c, "Execute", safeSession, sql, bindVariables)
 		safeSession.RemoveInternalSavepoint()
 	}
 	if err == nil {
@@ -472,7 +474,7 @@ func (vtg *VTGate) Execute(ctx context.Context, session *vtgatepb.Session, sql s
 }
 
 // ExecuteBatch executes a batch of queries. This is a V3 function.
-func (vtg *VTGate) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
+func (vtg *VTGate) ExecuteBatch(ctx context.Context, c *mysql.Conn, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
 	// In this context, we don't care if we can't fully parse destination
 	destKeyspace, destTabletType, _, _ := vtg.executor.ParseDestinationTarget(session.TargetString)
 	statsKey := []string{"ExecuteBatch", destKeyspace, topoproto.TabletTypeLString(destTabletType)}
@@ -490,7 +492,7 @@ func (vtg *VTGate) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, 
 		if len(bindVariablesList) != 0 {
 			bv = bindVariablesList[i]
 		}
-		session, qrl[i].QueryResult, qrl[i].QueryError = vtg.Execute(ctx, session, sql, bv)
+		session, qrl[i].QueryResult, qrl[i].QueryError = vtg.Execute(ctx, c, session, sql, bv)
 		if qr := qrl[i].QueryResult; qr != nil {
 			vtg.rowsReturned.Add(statsKey, int64(len(qr.Rows)))
 			vtg.rowsAffected.Add(statsKey, int64(qr.RowsAffected))
@@ -502,7 +504,7 @@ func (vtg *VTGate) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, 
 // StreamExecute executes a streaming query. This is a V3 function.
 // Note we guarantee the callback will not be called concurrently
 // by multiple go routines.
-func (vtg *VTGate) StreamExecute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (vtg *VTGate) StreamExecute(ctx context.Context, c *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	// In this context, we don't care if we can't fully parse destination
 	destKeyspace, destTabletType, _, _ := vtg.executor.ParseDestinationTarget(session.TargetString)
 	statsKey := []string{"StreamExecute", destKeyspace, topoproto.TabletTypeLString(destTabletType)}
@@ -516,6 +518,7 @@ func (vtg *VTGate) StreamExecute(ctx context.Context, session *vtgatepb.Session,
 	} else {
 		err = vtg.executor.StreamExecute(
 			ctx,
+			c,
 			"StreamExecute",
 			safeSession,
 			sql,

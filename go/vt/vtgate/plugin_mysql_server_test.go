@@ -308,3 +308,7 @@ func testInitTLSConfig(t *testing.T, serverCA bool) {
 		t.Fatalf("init tls config should have been recreated after SIGHUP")
 	}
 }
+
+func (th *testHandler) ComFieldList(c *mysql.Conn, tableName string, callback func(*sqltypes.Result) error) error {
+	return nil
+}

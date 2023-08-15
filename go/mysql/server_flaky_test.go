@@ -75,6 +75,11 @@ type testHandler struct {
 	warnings uint16
 }
 
+func (th *testHandler) ComFieldList(c *Conn, tableName string, callback func(*sqltypes.Result) error) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (th *testHandler) LastConn() *Conn {
 	th.mu.Lock()
 	defer th.mu.Unlock()

@@ -2079,3 +2079,37 @@ func skipQueryPlanCache(options *querypb.ExecuteOptions) bool {
 	}
 	return options.SkipQueryPlanCache || options.HasCreatedTempTables
 }
+
+// ExecuteLoadData returns the QueryService part of TabletServer.
+func (tsv *TabletServer) ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, sql string, bindVariables map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (result *sqltypes.Result, err error) {
+	err = tsv.execRequest(
+		ctx, 0,
+		"ExecuteLoadData", sql, bindVariables,
+		target, options, false, /* isBegin */
+		func(ctx context.Context, logStats *tabletenv.LogStats) error {
+			if bindVariables == nil {
+				bindVariables = make(map[string]*querypb.BindVariable)
+			}
+			query, comments := sqlparser.SplitMarginComments(sql)
+			plan, err := tsv.qe.GetStreamLoadDataPlan(query)
+			if err != nil {
+				return err
+			}
+			qre := &QueryExecutor{
+				query:          query,
+				marginComments: comments,
+				bindVars:       bindVariables,
+				options:        options,
+				plan:           plan,
+				ctx:            ctx,
+				logStats:       logStats,
+				tsv:            tsv,
+				connID:         transactionID,
+			}
+			result, err = qre.execSteamLoadData(ctx, lines)
+			return err
+		},
+	)
+	return result, err
+
+}
