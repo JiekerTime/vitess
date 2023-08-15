@@ -2,6 +2,7 @@ package planbuilder
 
 import (
 	"testing"
+
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 )
 

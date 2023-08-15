@@ -13,17 +13,15 @@ var _ logicalPlan = (*tableRoute)(nil)
 type tableRoute struct {
 	gen4Plan
 
-	Select sqlparser.SelectStatement
-
-	eroute *engine.TableRoute
+	ERoute *engine.TableRoute
 }
 
 func (t tableRoute) WireupGen4(context *plancontext.PlanningContext) error {
-	panic("implement me")
+	return nil
 }
 
 func (t tableRoute) Primitive() engine.Primitive {
-	panic("implement me")
+	return t.ERoute
 }
 
 func (t tableRoute) Inputs() []logicalPlan {

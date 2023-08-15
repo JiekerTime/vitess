@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
@@ -14,9 +15,9 @@ type TableRoute struct {
 	// TableName specifies the tables to send the query to.
 	TableName string
 
-	shardRouteParam *RoutingParameters
+	ShardRouteParam *RoutingParameters
 
-	tableRouteParam *TableRoutingParameters
+	TableRouteParam *TableRoutingParameters
 
 	// Query specifies the query to be executed.
 	Query sqlparser.Statement
@@ -24,7 +25,7 @@ type TableRoute struct {
 	// FieldQuery specifies the query to be executed for a GetFieldInfo request.
 	FieldQuery string
 
-	orderBy []OrderByParams
+	OrderBy []OrderByParams
 
 	// Route does not take inputs
 	noInputs
@@ -38,7 +39,7 @@ func (tableRoute TableRoute) RouteType() string {
 }
 
 func (tableRoute TableRoute) GetKeyspaceName() string {
-	return tableRoute.shardRouteParam.Keyspace.Name
+	return tableRoute.ShardRouteParam.Keyspace.Name
 }
 
 func (tableRoute TableRoute) GetTableName() string {
@@ -51,7 +52,7 @@ func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bin
 
 func (tableRoute TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
 	// 0.计算分片，先写Scatter场景，不用计算路由发到所有分片所有表
-	rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.shardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAllShards{}})
+	rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAllShards{}})
 	if err != nil {
 		return nil, err
 	}

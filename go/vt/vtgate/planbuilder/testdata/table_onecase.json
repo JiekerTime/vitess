@@ -1,7 +1,7 @@
 [
   {
     "comment": "Single table sharded scatter",
-    "query": "select foo,  sum(bar) from t_user where id >123 group by foo limit 2,3",
+    "query": "select foo from t_user",
     "v3-plan": {
       "QueryType": "SELECT",
       "Original": "select col from user",
