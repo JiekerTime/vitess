@@ -75,7 +75,7 @@ func tempTableRoutePlan(config tableindexes.LogicTable, ksRoutePlan *routeGen4, 
 				FieldQuery:      route.eroute.FieldQuery,
 				ShardRouteParam: ksRoutePlan.eroute.RoutingParameters,
 				TableRouteParam: &engine.TableRoutingParameters{
-					Opcode:     engine.TableOpCode(route.eroute.RoutingParameters.Opcode),
+					Opcode:     engine.TableScatter,
 					LogicTable: config,
 					Values:     route.eroute.Values,
 				},
