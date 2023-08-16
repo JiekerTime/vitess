@@ -66,10 +66,34 @@ func (tableRoute TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bi
 	print(result)
 
 	// 3.结果聚合，主要是多张分表的结果聚合，可能要处理field中table name不同的场景
+	var innerQrList = []sqltypes.Result{}
 
+	// 3.结果聚合，主要是多张分表的结果聚合，可能要处理field中table name不同的场景
+	resultFinal, error := resultAggr(tableRoute.tableRouteParam.LogicTable.LogicTableName, innerQrList)
+	if (error) != nil {
+		return nil, errs[0]
+	}
+	print(resultFinal)
 	// 4.可能要处理Order by排序
 
 	panic("implement me")
+}
+
+// 分表结果聚合
+func resultAggr(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
+
+	result = &sqltypes.Result{}
+	//结果聚合
+	for _, innner := range innerResult {
+		result.AppendResult(&innner)
+	}
+
+	//field tableName处理
+	for _, field := range result.Fields {
+		field.Table = logicTableName
+	}
+
+	return result, nil
 }
 
 func (tableRoute TableRoute) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
