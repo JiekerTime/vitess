@@ -81,6 +81,8 @@ const (
 	PlanShowThrottledApps
 	PlanShowThrottlerStatus
 	NumPlans
+	PlanLoadData
+	PlanStremLoadData
 )
 
 // Must exactly match order of plan constants.
@@ -116,6 +118,8 @@ var planName = []string{
 	"ShowMigrationLogs",
 	"ShowThrottledApps",
 	"ShowThrottlerStatus",
+	"LoadData",
+	"LoadDataStream",
 }
 
 func (pt PlanType) String() string {
@@ -249,6 +253,8 @@ func Build(statement sqlparser.Statement, tables map[string]*schema.Table, dbNam
 		plan, err = &Plan{PlanID: PlanFlush, FullQuery: GenerateFullQuery(stmt)}, nil
 	case *sqlparser.CallProc:
 		plan, err = &Plan{PlanID: PlanCallProc, FullQuery: GenerateFullQuery(stmt)}, nil
+	case *sqlparser.LoadDataStmt:
+		plan, err = &Plan{PlanID: PlanLoadData, FullQuery: GenerateFullQuery(stmt)}, nil
 	default:
 		return nil, vterrors.New(vtrpcpb.Code_INVALID_ARGUMENT, "invalid SQL")
 	}
@@ -282,6 +288,29 @@ func BuildStreaming(sql string, tables map[string]*schema.Table) (*Plan, error) 
 		// pass
 	default:
 		return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "%s not allowed for streaming", sqlparser.ASTToStatementType(statement))
+	}
+
+	return plan, nil
+}
+
+// BuildStreamLoadPlan BuildStreaming builds a streaming plan based on the schema.
+func BuildStreamLoadPlan(sql string, tables map[string]*schema.Table) (*Plan, error) {
+	statement, err := sqlparser.Parse(sql)
+	if err != nil {
+		return nil, err
+	}
+
+	plan := &Plan{
+		PlanID:      PlanStremLoadData,
+		FullQuery:   GenerateFullQuery(statement),
+		Permissions: BuildPermissions(statement),
+	}
+
+	switch stmt := statement.(type) {
+	case *sqlparser.LoadDataStmt:
+		// pass
+	default:
+		return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "'%v' not allowed for streaming", sqlparser.String(stmt))
 	}
 
 	return plan, nil

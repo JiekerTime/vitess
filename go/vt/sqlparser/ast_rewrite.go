@@ -168,6 +168,8 @@ func (a *application) rewriteSQLNode(parent SQLNode, node SQLNode, replacer repl
 		return a.rewriteRefOfExtractValueExpr(parent, node, replacer)
 	case *ExtractedSubquery:
 		return a.rewriteRefOfExtractedSubquery(parent, node, replacer)
+	case *FieldsClause:
+		return a.rewriteRefOfFieldsClause(parent, node, replacer)
 	case *FirstOrLastValueExpr:
 		return a.rewriteRefOfFirstOrLastValueExpr(parent, node, replacer)
 	case *Flush:
@@ -292,6 +294,8 @@ func (a *application) rewriteSQLNode(parent SQLNode, node SQLNode, replacer repl
 		return a.rewriteRefOfLimit(parent, node, replacer)
 	case *LineStringExpr:
 		return a.rewriteRefOfLineStringExpr(parent, node, replacer)
+	case *LinesClause:
+		return a.rewriteRefOfLinesClause(parent, node, replacer)
 	case *LinestrPropertyFuncExpr:
 		return a.rewriteRefOfLinestrPropertyFuncExpr(parent, node, replacer)
 	case ListArg:
@@ -300,6 +304,8 @@ func (a *application) rewriteSQLNode(parent SQLNode, node SQLNode, replacer repl
 		return a.rewriteRefOfLiteral(parent, node, replacer)
 	case *Load:
 		return a.rewriteRefOfLoad(parent, node, replacer)
+	case *LoadDataStmt:
+		return a.rewriteRefOfLoadDataStmt(parent, node, replacer)
 	case *LocateExpr:
 		return a.rewriteRefOfLocateExpr(parent, node, replacer)
 	case *LockOption:
@@ -2832,6 +2838,33 @@ func (a *application) rewriteRefOfExtractedSubquery(parent SQLNode, node *Extrac
 	}
 	return true
 }
+func (a *application) rewriteRefOfFieldsClause(parent SQLNode, node *FieldsClause, replacer replacerFunc) bool {
+	if node == nil {
+		return true
+	}
+	if a.pre != nil {
+		a.cur.replacer = replacer
+		a.cur.parent = parent
+		a.cur.node = node
+		if !a.pre(&a.cur) {
+			return true
+		}
+	}
+	if !a.rewriteExpr(node, node.Expr, func(newNode, parent SQLNode) {
+		parent.(*FieldsClause).Expr = newNode.(Expr)
+	}) {
+		return false
+	}
+	if a.post != nil {
+		a.cur.replacer = replacer
+		a.cur.parent = parent
+		a.cur.node = node
+		if !a.post(&a.cur) {
+			return false
+		}
+	}
+	return true
+}
 func (a *application) rewriteRefOfFirstOrLastValueExpr(parent SQLNode, node *FirstOrLastValueExpr, replacer replacerFunc) bool {
 	if node == nil {
 		return true
@@ -4879,6 +4912,33 @@ func (a *application) rewriteRefOfLineStringExpr(parent SQLNode, node *LineStrin
 	}
 	return true
 }
+func (a *application) rewriteRefOfLinesClause(parent SQLNode, node *LinesClause, replacer replacerFunc) bool {
+	if node == nil {
+		return true
+	}
+	if a.pre != nil {
+		a.cur.replacer = replacer
+		a.cur.parent = parent
+		a.cur.node = node
+		if !a.pre(&a.cur) {
+			return true
+		}
+	}
+	if !a.rewriteExpr(node, node.Expr, func(newNode, parent SQLNode) {
+		parent.(*LinesClause).Expr = newNode.(Expr)
+	}) {
+		return false
+	}
+	if a.post != nil {
+		a.cur.replacer = replacer
+		a.cur.parent = parent
+		a.cur.node = node
+		if !a.post(&a.cur) {
+			return false
+		}
+	}
+	return true
+}
 func (a *application) rewriteRefOfLinestrPropertyFuncExpr(parent SQLNode, node *LinestrPropertyFuncExpr, replacer replacerFunc) bool {
 	if node == nil {
 		return true
@@ -4953,6 +5013,48 @@ func (a *application) rewriteRefOfLoad(parent SQLNode, node *Load, replacer repl
 			a.cur.parent = parent
 			a.cur.node = node
 		}
+		if !a.post(&a.cur) {
+			return false
+		}
+	}
+	return true
+}
+func (a *application) rewriteRefOfLoadDataStmt(parent SQLNode, node *LoadDataStmt, replacer replacerFunc) bool {
+	if node == nil {
+		return true
+	}
+	if a.pre != nil {
+		a.cur.replacer = replacer
+		a.cur.parent = parent
+		a.cur.node = node
+		if !a.pre(&a.cur) {
+			return true
+		}
+	}
+	if !a.rewriteTableName(node, node.Table, func(newNode, parent SQLNode) {
+		parent.(*LoadDataStmt).Table = newNode.(TableName)
+	}) {
+		return false
+	}
+	if !a.rewriteColumns(node, node.Columns, func(newNode, parent SQLNode) {
+		parent.(*LoadDataStmt).Columns = newNode.(Columns)
+	}) {
+		return false
+	}
+	if !a.rewriteRefOfFieldsClause(node, node.FieldsInfo, func(newNode, parent SQLNode) {
+		parent.(*LoadDataStmt).FieldsInfo = newNode.(*FieldsClause)
+	}) {
+		return false
+	}
+	if !a.rewriteRefOfLinesClause(node, node.LinesInfo, func(newNode, parent SQLNode) {
+		parent.(*LoadDataStmt).LinesInfo = newNode.(*LinesClause)
+	}) {
+		return false
+	}
+	if a.post != nil {
+		a.cur.replacer = replacer
+		a.cur.parent = parent
+		a.cur.node = node
 		if !a.post(&a.cur) {
 			return false
 		}
@@ -9709,6 +9811,8 @@ func (a *application) rewriteStatement(parent SQLNode, node Statement, replacer 
 		return a.rewriteRefOfInsert(parent, node, replacer)
 	case *Load:
 		return a.rewriteRefOfLoad(parent, node, replacer)
+	case *LoadDataStmt:
+		return a.rewriteRefOfLoadDataStmt(parent, node, replacer)
 	case *LockTables:
 		return a.rewriteRefOfLockTables(parent, node, replacer)
 	case *OtherAdmin:

@@ -18,6 +18,10 @@ package grpcqueryservice
 
 import (
 	"context"
+	"io"
+	"sync"
+
+	"vitess.io/vitess/go/vt/log"
 
 	"google.golang.org/grpc"
 
@@ -493,4 +497,58 @@ func (q *query) GetSchema(request *querypb.GetSchemaRequest, stream queryservice
 // Register registers the implementation on the provide gRPC Server.
 func Register(s *grpc.Server, server queryservice.QueryService) {
 	queryservicepb.RegisterQueryServer(s, &query{server: server})
+}
+
+func (q *query) LoadDataStream(qls queryservicepb.Query_LoadDataStreamServer) (err error) {
+	defer q.server.HandlePanic(&err)
+
+	//result := querypb.QueryResult{RowsAffected: 0}
+
+	lines := make(chan string, 100000)
+	var lTarget *querypb.Target
+	var sql string
+	var transactionID int64
+
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		defer close(lines)
+		isFirst := true
+		for {
+			res, err := qls.Recv()
+			if err == io.EOF {
+				break
+			}
+
+			if err != nil {
+				log.Errorf("get load data stream err:%s", err.Error())
+				break
+			}
+
+			if isFirst {
+				lTarget = res.Target
+				sql = res.Query.Sql
+				transactionID = res.TransactionId
+				isFirst = false
+				wg.Done()
+			}
+
+			for _, tmpLine := range res.Lines {
+				lines <- tmpLine
+			}
+		}
+
+	}()
+
+	wg.Wait()
+	ctx := context.Background()
+	option := querypb.ExecuteOptions{Workload: querypb.ExecuteOptions_DBA}
+
+	result, err := q.server.ExecuteLoadData(ctx, lTarget, lines, sql, nil, transactionID, &option)
+	if err != nil {
+		return err
+	}
+
+	return qls.SendAndClose(&querypb.LoadDataStreamResponse{Result: sqltypes.ResultToProto3(result)})
 }

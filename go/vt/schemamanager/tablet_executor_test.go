@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"github.com/stretchr/testify/assert"
 
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
@@ -80,7 +82,7 @@ func TestTabletExecutorOpenWithEmptyPrimaryAlias(t *testing.T) {
 func TestTabletExecutorValidate(t *testing.T) {
 	fakeTmc := newFakeTabletManagerClient()
 
-	fakeTmc.AddSchemaDefinition("vt_test_keyspace", &tabletmanagerdatapb.SchemaDefinition{
+	fakeTmc.AddSchemaDefinition(topoproto.VtDbPrefix+"test_keyspace", &tabletmanagerdatapb.SchemaDefinition{
 		DatabaseSchema: "CREATE DATABASE `{{.DatabaseName}}` /*!40100 DEFAULT CHARACTER SET utf8 */",
 		TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 			{
@@ -169,7 +171,7 @@ func TestTabletExecutorValidate(t *testing.T) {
 func TestTabletExecutorDML(t *testing.T) {
 	fakeTmc := newFakeTabletManagerClient()
 
-	fakeTmc.AddSchemaDefinition("vt_test_keyspace", &tabletmanagerdatapb.SchemaDefinition{
+	fakeTmc.AddSchemaDefinition(topoproto.VtDbPrefix+"test_keyspace", &tabletmanagerdatapb.SchemaDefinition{
 		DatabaseSchema: "CREATE DATABASE `{{.DatabaseName}}` /*!40100 DEFAULT CHARACTER SET utf8 */",
 		TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 			{

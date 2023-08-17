@@ -37994,6 +37994,236 @@ export namespace query {
          */
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
+
+    /** Properties of a LoadDataStreamRequest. */
+    interface ILoadDataStreamRequest {
+
+        /** LoadDataStreamRequest effective_caller_id */
+        effective_caller_id?: (vtrpc.ICallerID|null);
+
+        /** LoadDataStreamRequest immediate_caller_id */
+        immediate_caller_id?: (query.IVTGateCallerID|null);
+
+        /** LoadDataStreamRequest target */
+        target?: (query.ITarget|null);
+
+        /** LoadDataStreamRequest query */
+        query?: (query.IBoundQuery|null);
+
+        /** LoadDataStreamRequest transaction_id */
+        transaction_id?: (number|Long|null);
+
+        /** LoadDataStreamRequest options */
+        options?: (query.IExecuteOptions|null);
+
+        /** LoadDataStreamRequest lines */
+        lines?: (string[]|null);
+    }
+
+    /** Represents a LoadDataStreamRequest. */
+    class LoadDataStreamRequest implements ILoadDataStreamRequest {
+
+        /**
+         * Constructs a new LoadDataStreamRequest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: query.ILoadDataStreamRequest);
+
+        /** LoadDataStreamRequest effective_caller_id. */
+        public effective_caller_id?: (vtrpc.ICallerID|null);
+
+        /** LoadDataStreamRequest immediate_caller_id. */
+        public immediate_caller_id?: (query.IVTGateCallerID|null);
+
+        /** LoadDataStreamRequest target. */
+        public target?: (query.ITarget|null);
+
+        /** LoadDataStreamRequest query. */
+        public query?: (query.IBoundQuery|null);
+
+        /** LoadDataStreamRequest transaction_id. */
+        public transaction_id: (number|Long);
+
+        /** LoadDataStreamRequest options. */
+        public options?: (query.IExecuteOptions|null);
+
+        /** LoadDataStreamRequest lines. */
+        public lines: string[];
+
+        /**
+         * Creates a new LoadDataStreamRequest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns LoadDataStreamRequest instance
+         */
+        public static create(properties?: query.ILoadDataStreamRequest): query.LoadDataStreamRequest;
+
+        /**
+         * Encodes the specified LoadDataStreamRequest message. Does not implicitly {@link query.LoadDataStreamRequest.verify|verify} messages.
+         * @param message LoadDataStreamRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: query.ILoadDataStreamRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified LoadDataStreamRequest message, length delimited. Does not implicitly {@link query.LoadDataStreamRequest.verify|verify} messages.
+         * @param message LoadDataStreamRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: query.ILoadDataStreamRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a LoadDataStreamRequest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns LoadDataStreamRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): query.LoadDataStreamRequest;
+
+        /**
+         * Decodes a LoadDataStreamRequest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns LoadDataStreamRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): query.LoadDataStreamRequest;
+
+        /**
+         * Verifies a LoadDataStreamRequest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a LoadDataStreamRequest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns LoadDataStreamRequest
+         */
+        public static fromObject(object: { [k: string]: any }): query.LoadDataStreamRequest;
+
+        /**
+         * Creates a plain object from a LoadDataStreamRequest message. Also converts values to other types if specified.
+         * @param message LoadDataStreamRequest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: query.LoadDataStreamRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this LoadDataStreamRequest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for LoadDataStreamRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a LoadDataStreamResponse. */
+    interface ILoadDataStreamResponse {
+
+        /** LoadDataStreamResponse result */
+        result?: (query.IQueryResult|null);
+    }
+
+    /** Represents a LoadDataStreamResponse. */
+    class LoadDataStreamResponse implements ILoadDataStreamResponse {
+
+        /**
+         * Constructs a new LoadDataStreamResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: query.ILoadDataStreamResponse);
+
+        /** LoadDataStreamResponse result. */
+        public result?: (query.IQueryResult|null);
+
+        /**
+         * Creates a new LoadDataStreamResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns LoadDataStreamResponse instance
+         */
+        public static create(properties?: query.ILoadDataStreamResponse): query.LoadDataStreamResponse;
+
+        /**
+         * Encodes the specified LoadDataStreamResponse message. Does not implicitly {@link query.LoadDataStreamResponse.verify|verify} messages.
+         * @param message LoadDataStreamResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: query.ILoadDataStreamResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified LoadDataStreamResponse message, length delimited. Does not implicitly {@link query.LoadDataStreamResponse.verify|verify} messages.
+         * @param message LoadDataStreamResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: query.ILoadDataStreamResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a LoadDataStreamResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns LoadDataStreamResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): query.LoadDataStreamResponse;
+
+        /**
+         * Decodes a LoadDataStreamResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns LoadDataStreamResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): query.LoadDataStreamResponse;
+
+        /**
+         * Verifies a LoadDataStreamResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a LoadDataStreamResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns LoadDataStreamResponse
+         */
+        public static fromObject(object: { [k: string]: any }): query.LoadDataStreamResponse;
+
+        /**
+         * Creates a plain object from a LoadDataStreamResponse message. Also converts values to other types if specified.
+         * @param message LoadDataStreamResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: query.LoadDataStreamResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this LoadDataStreamResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for LoadDataStreamResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
 }
 
 /** Namespace replicationdata. */

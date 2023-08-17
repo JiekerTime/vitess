@@ -233,7 +233,7 @@ func newBuildSelectPlan(
 	plan = pushCommentDirectivesOnPlan(plan, selStmt)
 
 	// todo: build split table plan
-	_, _, _, err = buildTableSelectPlan(ctx, plan)
+	plan, _, _, err = buildTableSelectPlan(ctx, plan)
 	if err != nil {
 		return nil, nil, nil, err
 	}

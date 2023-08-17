@@ -23,6 +23,8 @@ import (
 	"sort"
 	"strings"
 
+	"vitess.io/vitess/go/mysql"
+
 	"context"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -98,7 +100,7 @@ func echoQueryResult(vals map[string]any) *sqltypes.Result {
 	return qr
 }
 
-func (c *echoClient) Execute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
+func (c *echoClient) Execute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
 	if strings.HasPrefix(sql, EchoPrefix) {
 		return session, echoQueryResult(map[string]any{
 			"callerId": callerid.EffectiveCallerIDFromContext(ctx),
@@ -110,7 +112,7 @@ func (c *echoClient) Execute(ctx context.Context, session *vtgatepb.Session, sql
 	return c.fallbackClient.Execute(ctx, session, sql, bindVariables)
 }
 
-func (c *echoClient) StreamExecute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (c *echoClient) StreamExecute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	if strings.HasPrefix(sql, EchoPrefix) {
 		callback(echoQueryResult(map[string]any{
 			"callerId": callerid.EffectiveCallerIDFromContext(ctx),
@@ -123,7 +125,7 @@ func (c *echoClient) StreamExecute(ctx context.Context, session *vtgatepb.Sessio
 	return c.fallbackClient.StreamExecute(ctx, session, sql, bindVariables, callback)
 }
 
-func (c *echoClient) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
+func (c *echoClient) ExecuteBatch(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
 	if len(sqlList) > 0 && strings.HasPrefix(sqlList[0], EchoPrefix) {
 		var queryResponse []sqltypes.QueryResponse
 		if bindVariablesList == nil {

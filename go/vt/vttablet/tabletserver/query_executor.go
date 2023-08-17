@@ -183,7 +183,7 @@ func (qre *QueryExecutor) Execute() (reply *sqltypes.Result, err error) {
 			return nil, err
 		}
 		return qr, nil
-	case p.PlanOtherRead, p.PlanOtherAdmin, p.PlanFlush, p.PlanSavepoint, p.PlanRelease, p.PlanSRollback:
+	case p.PlanOtherRead, p.PlanOtherAdmin, p.PlanFlush, p.PlanSavepoint, p.PlanRelease, p.PlanSRollback, p.PlanLoadData:
 		return qre.execOther()
 	case p.PlanInsert, p.PlanUpdate, p.PlanDelete, p.PlanInsertMessage, p.PlanDDL, p.PlanLoad:
 		return qre.execAutocommit(qre.txConnExec)
@@ -277,7 +277,7 @@ func (qre *QueryExecutor) txConnExec(conn *StatefulConnection) (*sqltypes.Result
 		return qre.execDMLLimit(conn)
 	case p.PlanOtherRead, p.PlanOtherAdmin, p.PlanFlush:
 		return qre.execStatefulConn(conn, qre.query, true)
-	case p.PlanSavepoint, p.PlanRelease, p.PlanSRollback:
+	case p.PlanSavepoint, p.PlanRelease, p.PlanSRollback, p.PlanLoadData:
 		return qre.execStatefulConn(conn, qre.query, true)
 	case p.PlanSelect, p.PlanSelectImpossible, p.PlanShow, p.PlanSelectLockFunc:
 		maxrows := qre.getSelectLimit()
@@ -1179,4 +1179,21 @@ func (qre *QueryExecutor) addUagInfoToQuery(sql string) string {
 		return sqlReset
 	}
 	return sql
+}
+
+// execSteamLoadData  stream load data
+func (qre *QueryExecutor) execSteamLoadData(ctx context.Context, lines chan string) (*sqltypes.Result, error) {
+	//conn, err := qre.getConn()
+	conn, err := qre.tsv.te.txPool.GetAndLock(qre.connID, "for steam load data")
+
+	if err != nil {
+		return nil, err
+	}
+	/*	for line := range lines{
+		log.Infof("%v",line)
+	}*/
+
+	defer conn.Unlock()
+	return conn.StreamLoadData(ctx, lines, qre.query)
+	//return qre.execSQL(conn, qre.query, false)
 }

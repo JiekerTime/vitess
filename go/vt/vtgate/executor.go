@@ -33,6 +33,8 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"vitess.io/vitess/go/mysql"
+
 	"vitess.io/vitess/go/acl"
 	"vitess.io/vitess/go/cache"
 	"vitess.io/vitess/go/mysql/collations"
@@ -191,14 +193,19 @@ func NewExecutor(
 }
 
 // Execute executes a non-streaming query.
-func (e *Executor) Execute(ctx context.Context, method string, safeSession *SafeSession, sql string, bindVars map[string]*querypb.BindVariable) (result *sqltypes.Result, err error) {
+func (e *Executor) Execute(ctx context.Context, c *mysql.Conn, method string, safeSession *SafeSession, sql string, bindVars map[string]*querypb.BindVariable) (result *sqltypes.Result, err error) {
 	span, ctx := trace.NewSpan(ctx, "executor.Execute")
 	span.Annotate("method", method)
 	trace.AnnotateSQL(span, sqlparser.Preview(sql))
 	defer span.Finish()
 
 	logStats := logstats.NewLogStats(ctx, method, sql, safeSession.GetSessionUUID(), bindVars)
-	stmtType, result, err := e.execute(ctx, safeSession, sql, bindVars, logStats)
+	stmtType := sqlparser.Preview(sql)
+	switch stmtType {
+	case sqlparser.StmtLoadData:
+		return e.executeLoad(ctx, c, safeSession, sql, bindVars, logStats)
+	}
+	stmtType, result, err = e.execute(ctx, safeSession, sql, bindVars, logStats, c)
 	logStats.Error = err
 	if result == nil {
 		saveSessionStats(safeSession, stmtType, 0, 0, 0, err)
@@ -218,6 +225,31 @@ func (e *Executor) Execute(ctx context.Context, method string, safeSession *Safe
 	QueryLogger.Send(logStats)
 	err = vterrors.TruncateError(err, truncateErrorLen)
 	return result, err
+}
+
+func (e *Executor) executeLoad(ctx context.Context, c *mysql.Conn, safeSession *SafeSession, sql string, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats) (result *sqltypes.Result, err error) {
+	isafeSession := safeSession
+	isafeSession.Autocommit = false
+	defer func() {
+		isafeSession.Autocommit = true
+	}()
+	destKeyspace, destTabletType, dest, err := e.ParseDestinationTarget(isafeSession.TargetString)
+	if err != nil {
+		return nil, err
+	}
+
+	if destKeyspace != "" {
+		if ks, ok := e.VSchema().Keyspaces[destKeyspace]; !ok {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "invalid keyspace provided: %s", destKeyspace)
+		} else if !ks.Keyspace.Sharded && len(bindVars) == 0 {
+			return e.handleLoadDataSimple(ctx, isafeSession, dest, c, sql, bindVars, destKeyspace, destTabletType, logStats)
+		} else {
+			//return e.handleLoadDataSimple(ctx, safeSession, dest, c, sql, bindVars, destKeyspace, destTabletType, logStats)
+
+			return e.handleLoadData(ctx, isafeSession, c, sql, destKeyspace, destTabletType, logStats)
+		}
+	}
+	return
 }
 
 type streaminResultReceiver struct {
@@ -244,6 +276,7 @@ func (s *streaminResultReceiver) storeResultStats(typ sqlparser.StatementType, q
 // StreamExecute executes a streaming query.
 func (e *Executor) StreamExecute(
 	ctx context.Context,
+	c *mysql.Conn,
 	method string,
 	safeSession *SafeSession,
 	sql string,
@@ -307,7 +340,7 @@ func (e *Executor) StreamExecute(
 		// Check if there was partial DML execution. If so, rollback the effect of the partially executed query.
 		if err != nil {
 			if !canReturnRows(plan.Type) {
-				return e.rollbackExecIfNeeded(ctx, safeSession, bindVars, logStats, err)
+				return e.rollbackExecIfNeeded(ctx, c, safeSession, bindVars, logStats, err)
 			}
 			return err
 		}
@@ -381,13 +414,13 @@ func saveSessionStats(safeSession *SafeSession, stmtType sqlparser.StatementType
 	}
 }
 
-func (e *Executor) execute(ctx context.Context, safeSession *SafeSession, sql string, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats) (sqlparser.StatementType, *sqltypes.Result, error) {
+func (e *Executor) execute(ctx context.Context, safeSession *SafeSession, sql string, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats, c *mysql.Conn) (sqlparser.StatementType, *sqltypes.Result, error) {
 	var err error
 	var qr *sqltypes.Result
 	var stmtType sqlparser.StatementType
 	err = e.newExecute(ctx, safeSession, sql, bindVars, logStats, func(ctx context.Context, plan *engine.Plan, vc *vcursorImpl, bindVars map[string]*querypb.BindVariable, time time.Time) error {
 		stmtType = plan.Type
-		qr, err = e.executePlan(ctx, safeSession, plan, vc, bindVars, logStats, time)
+		qr, err = e.executePlan(ctx, c, safeSession, plan, vc, bindVars, logStats, time)
 		return err
 	}, func(typ sqlparser.StatementType, result *sqltypes.Result) error {
 		stmtType = typ
@@ -1466,4 +1499,229 @@ func (e *Executor) planPrepareStmt(ctx context.Context, vcursor *vcursorImpl, qu
 		return nil, nil, err
 	}
 	return plan, stmt, nil
+}
+
+func (e *Executor) handleLoadDataSimple(ctx context.Context, safeSession *SafeSession, dest key.Destination, c *mysql.Conn, sql string, bindVars map[string]*querypb.BindVariable, destKeyspace string, destTabletType topodatapb.TabletType, logStats *logstats.LogStats) (*sqltypes.Result, error) {
+	if c == nil {
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "mysql connection is nil on load data")
+	}
+
+	rss, err := e.resolver.resolver.ResolveDestination(ctx, destKeyspace, destTabletType, key.DestinationAnyShard{})
+	//e.scatterConn.ExecuteMultiShard(ctx, rss)
+	if err != nil {
+		return nil, err
+	}
+	if len(rss) != 1 {
+		return nil, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "keyspace %s has no shards", destKeyspace)
+	}
+
+	query, _ := sqlparser.SplitMarginComments(sql)
+
+	stmt, err := sqlparser.Parse(query)
+	if err != nil {
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, err.Error())
+	}
+
+	loadStmt, ok := stmt.(*sqlparser.LoadDataStmt)
+	if !ok {
+		return nil, fmt.Errorf("sql :%s not a load data statement", sql)
+	}
+
+	loadData := NewLoadData(e)
+	if !loadStmt.IsLocal {
+		return nil, fmt.Errorf("load data statement only support local")
+	}
+
+	loadData.LoadDataInfo.ParseLoadDataPram(loadStmt)
+	tbName := loadStmt.Table.Name.String()
+	tb, err := e.VSchema().FindTable(destKeyspace, tbName)
+	if err != nil {
+		return nil, err
+	}
+	if tb == nil {
+		return nil, fmt.Errorf("table %s not found", tbName)
+	}
+
+	queries := make([]*querypb.BoundQuery, len(rss))
+	for i := range rss {
+		queries[i] = &querypb.BoundQuery{
+			Sql:           sql,
+			BindVariables: nil,
+		}
+	}
+
+	err = e.scatterConn.txConn.Begin(ctx, safeSession, nil)
+	if err != nil {
+		return nil, err
+	}
+	_, errs := e.scatterConn.ExecuteMultiShard(ctx, nil, rss, queries, safeSession, false, false)
+	if len(errs) != 0 {
+		return nil, errs[0]
+	}
+
+	if err := c.WriteRequestFilePacket([]byte(loadStmt.Path)); err != nil {
+		return nil, err
+	}
+
+	lines := make(chan string, 10000)
+	lErrs := make(chan error, 100)
+	//c:=queryservicepb.QueryServer()
+
+	go func() {
+		defer func() {
+			close(lErrs)
+			close(lines)
+		}()
+		err := loadData.LoadDataInfo.LoadDataInfileDataStream(ctx, nil, c, tb, safeSession, destTabletType, logStats, lines, false)
+		if err != nil {
+			lErrs <- err
+		}
+	}()
+
+	result, err := e.scatterConn.streamUpload(ctx, safeSession, rss[0], lines, sql)
+	//check LoadDataInfileDataStream  err first
+	if len(lErrs) != 0 {
+		_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+		return nil, <-lErrs
+	}
+
+	if err != nil {
+		_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+		return nil, err
+	}
+
+	err = e.scatterConn.txConn.Commit(ctx, safeSession)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, err
+
+}
+
+// for sharded table
+func (e *Executor) handleLoadData(ctx context.Context, safeSession *SafeSession, c *mysql.Conn, sql string, destKeyspace string, destTabletType topodatapb.TabletType, logStats *logstats.LogStats) (*sqltypes.Result, error) {
+	defer func() {
+		safeSession.Reset()
+	}()
+	if c == nil {
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "mysql connection is nil on load data")
+	}
+
+	query, comments := sqlparser.SplitMarginComments(sql)
+
+	stmt, err := sqlparser.Parse(query)
+	if err != nil {
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, err.Error())
+	}
+
+	loadStmt, ok := stmt.(*sqlparser.LoadDataStmt)
+	if !ok {
+		return nil, fmt.Errorf("sql :%s not a load data statement", sql)
+	}
+
+	loadData := NewLoadData(e)
+	if !loadStmt.IsLocal {
+		return nil, fmt.Errorf("load data statement only support local")
+	}
+
+	if loadStmt.Columns == nil {
+		return nil, fmt.Errorf("load data must assign columns")
+	}
+
+	loadData.LoadDataInfo.ParseLoadDataPram(loadStmt)
+	tbName := loadStmt.Table.Name.String()
+	tb, err := e.VSchema().FindTable(destKeyspace, tbName)
+	if err != nil {
+		return nil, err
+	}
+	if tb == nil {
+		return nil, fmt.Errorf("table %s not found", tbName)
+	}
+
+	var rss []*srvtopo.ResolvedShard
+	if tb.Pinned != nil {
+		rss, err = e.resolver.resolver.ResolveDestination(ctx, destKeyspace, destTabletType, key.DestinationKeyspaceID(tb.Pinned))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		rss, err = e.resolver.resolver.ResolveDestination(ctx, destKeyspace, destTabletType, key.DestinationAllShards{})
+		//e.scatterConn.ExecuteMultiShard(ctx, rss)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(rss) < 1 {
+		return nil, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "keyspace %s get  shards failed", destKeyspace)
+	}
+
+	queries := make([]*querypb.BoundQuery, len(rss))
+	for i := range rss {
+		queries[i] = &querypb.BoundQuery{
+			Sql:           sql,
+			BindVariables: nil,
+		}
+	}
+	vCursor, err := newVCursorImpl(safeSession, comments, e, logStats, e.vm, e.VSchema(), e.resolver.resolver, e.serv, e.warnShardedOnly, e.pv)
+	if err != nil {
+		return nil, err
+	}
+	execStart := time.Now()
+	logStats.PlanTime = execStart.Sub(logStats.StartTime)
+
+	if err != nil {
+		logStats.Error = err
+		return nil, err
+	}
+	err = e.scatterConn.txConn.Begin(ctx, safeSession, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	_, errs := e.scatterConn.ExecuteMultiShard(ctx, nil, rss, queries, safeSession, false, false)
+	if len(errs) != 0 {
+		return nil, errs[0]
+	}
+
+	if err := c.WriteRequestFilePacket([]byte(loadStmt.Path)); err != nil {
+		return nil, err
+	}
+
+	lines := make(chan string, 10000)
+	lErrs := make(chan error, 100)
+	//c:=queryservicepb.QueryServer()
+	go func() {
+		defer func() {
+			close(lErrs)
+			close(lines)
+		}()
+		err := loadData.LoadDataInfo.LoadDataInfileDataStream(ctx, vCursor, c, tb, safeSession, destTabletType, logStats, lines, true)
+		if err != nil {
+			log.Errorf("load data from client err:%s", err.Error())
+			lErrs <- err
+		}
+	}()
+
+	var result *sqltypes.Result
+	if tb.Pinned != nil {
+		result, err = e.scatterConn.streamUpload(ctx, safeSession, rss[0], lines, sql)
+	} else {
+		result, err = loadData.LoadDataInfo.ExecLoadDataUpstream(ctx, vCursor, c, tb, safeSession, destTabletType, logStats, lines, lErrs, false, sql)
+	}
+
+	errRead, hasErr := <-lErrs
+	if hasErr {
+		_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+		return nil, errRead
+	}
+
+	if err != nil {
+		_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+		return nil, err
+	}
+
+	err = e.scatterConn.txConn.Commit(ctx, safeSession)
+	return result, err
 }

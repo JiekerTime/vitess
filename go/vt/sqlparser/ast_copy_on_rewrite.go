@@ -168,6 +168,8 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfExtractValueExpr(n, parent)
 	case *ExtractedSubquery:
 		return c.copyOnRewriteRefOfExtractedSubquery(n, parent)
+	case *FieldsClause:
+		return c.copyOnRewriteRefOfFieldsClause(n, parent)
 	case *FirstOrLastValueExpr:
 		return c.copyOnRewriteRefOfFirstOrLastValueExpr(n, parent)
 	case *Flush:
@@ -292,6 +294,8 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfLimit(n, parent)
 	case *LineStringExpr:
 		return c.copyOnRewriteRefOfLineStringExpr(n, parent)
+	case *LinesClause:
+		return c.copyOnRewriteRefOfLinesClause(n, parent)
 	case *LinestrPropertyFuncExpr:
 		return c.copyOnRewriteRefOfLinestrPropertyFuncExpr(n, parent)
 	case ListArg:
@@ -300,6 +304,8 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfLiteral(n, parent)
 	case *Load:
 		return c.copyOnRewriteRefOfLoad(n, parent)
+	case *LoadDataStmt:
+		return c.copyOnRewriteRefOfLoadDataStmt(n, parent)
 	case *LocateExpr:
 		return c.copyOnRewriteRefOfLocateExpr(n, parent)
 	case *LockOption:
@@ -2219,6 +2225,28 @@ func (c *cow) copyOnRewriteRefOfExtractedSubquery(n *ExtractedSubquery, parent S
 	}
 	return
 }
+func (c *cow) copyOnRewriteRefOfFieldsClause(n *FieldsClause, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+		_Expr, changedExpr := c.copyOnRewriteExpr(n.Expr, n)
+		if changedExpr {
+			res := *n
+			res.Expr, _ = _Expr.(Expr)
+			out = &res
+			if c.cloned != nil {
+				c.cloned(n, out)
+			}
+			changed = true
+		}
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
 func (c *cow) copyOnRewriteRefOfFirstOrLastValueExpr(n *FirstOrLastValueExpr, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
@@ -3721,6 +3749,28 @@ func (c *cow) copyOnRewriteRefOfLineStringExpr(n *LineStringExpr, parent SQLNode
 	}
 	return
 }
+func (c *cow) copyOnRewriteRefOfLinesClause(n *LinesClause, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+		_Expr, changedExpr := c.copyOnRewriteExpr(n.Expr, n)
+		if changedExpr {
+			res := *n
+			res.Expr, _ = _Expr.(Expr)
+			out = &res
+			if c.cloned != nil {
+				c.cloned(n, out)
+			}
+			changed = true
+		}
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
 func (c *cow) copyOnRewriteRefOfLinestrPropertyFuncExpr(n *LinestrPropertyFuncExpr, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
@@ -3763,6 +3813,34 @@ func (c *cow) copyOnRewriteRefOfLoad(n *Load, parent SQLNode) (out SQLNode, chan
 	}
 	out = n
 	if c.pre == nil || c.pre(n, parent) {
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
+func (c *cow) copyOnRewriteRefOfLoadDataStmt(n *LoadDataStmt, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+		_Table, changedTable := c.copyOnRewriteTableName(n.Table, n)
+		_Columns, changedColumns := c.copyOnRewriteColumns(n.Columns, n)
+		_FieldsInfo, changedFieldsInfo := c.copyOnRewriteRefOfFieldsClause(n.FieldsInfo, n)
+		_LinesInfo, changedLinesInfo := c.copyOnRewriteRefOfLinesClause(n.LinesInfo, n)
+		if changedTable || changedColumns || changedFieldsInfo || changedLinesInfo {
+			res := *n
+			res.Table, _ = _Table.(TableName)
+			res.Columns, _ = _Columns.(Columns)
+			res.FieldsInfo, _ = _FieldsInfo.(*FieldsClause)
+			res.LinesInfo, _ = _LinesInfo.(*LinesClause)
+			out = &res
+			if c.cloned != nil {
+				c.cloned(n, out)
+			}
+			changed = true
+		}
 	}
 	if c.post != nil {
 		out, changed = c.postVisit(out, parent, changed)
@@ -7345,6 +7423,8 @@ func (c *cow) copyOnRewriteStatement(n Statement, parent SQLNode) (out SQLNode, 
 		return c.copyOnRewriteRefOfInsert(n, parent)
 	case *Load:
 		return c.copyOnRewriteRefOfLoad(n, parent)
+	case *LoadDataStmt:
+		return c.copyOnRewriteRefOfLoadDataStmt(n, parent)
 	case *LockTables:
 		return c.copyOnRewriteRefOfLockTables(n, parent)
 	case *OtherAdmin:

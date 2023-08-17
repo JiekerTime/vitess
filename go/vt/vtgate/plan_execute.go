@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"vitess.io/vitess/go/mysql"
+
 	"vitess.io/vitess/go/vt/vtgate/logstats"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -205,6 +207,7 @@ func (e *Executor) insideTransaction(ctx context.Context, safeSession *SafeSessi
 
 func (e *Executor) executePlan(
 	ctx context.Context,
+	c *mysql.Conn,
 	safeSession *SafeSession,
 	plan *engine.Plan,
 	vcursor *vcursorImpl,
@@ -221,15 +224,15 @@ func (e *Executor) executePlan(
 
 	// Check if there was partial DML execution. If so, rollback the effect of the partially executed query.
 	if err != nil {
-		return nil, e.rollbackExecIfNeeded(ctx, safeSession, bindVars, logStats, err)
+		return nil, e.rollbackExecIfNeeded(ctx, c, safeSession, bindVars, logStats, err)
 	}
 	return qr, nil
 }
 
 // rollbackExecIfNeeded rollbacks the partial execution if earlier it was detected that it needs partial query execution to be rolled back.
-func (e *Executor) rollbackExecIfNeeded(ctx context.Context, safeSession *SafeSession, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats, err error) error {
+func (e *Executor) rollbackExecIfNeeded(ctx context.Context, c *mysql.Conn, safeSession *SafeSession, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats, err error) error {
 	if safeSession.InTransaction() && safeSession.IsRollbackSet() {
-		rErr := e.rollbackPartialExec(ctx, safeSession, bindVars, logStats)
+		rErr := e.rollbackPartialExec(ctx, c, safeSession, bindVars, logStats)
 		return vterrors.Wrap(err, rErr.Error())
 	}
 	return err
@@ -238,14 +241,14 @@ func (e *Executor) rollbackExecIfNeeded(ctx context.Context, safeSession *SafeSe
 // rollbackPartialExec rollbacks to the savepoint or rollbacks transaction based on the value set on SafeSession.rollbackOnPartialExec.
 // Once, it is used the variable is reset.
 // If it fails to rollback to the previous savepoint then, the transaction is forced to be rolled back.
-func (e *Executor) rollbackPartialExec(ctx context.Context, safeSession *SafeSession, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats) error {
+func (e *Executor) rollbackPartialExec(ctx context.Context, c *mysql.Conn, safeSession *SafeSession, bindVars map[string]*querypb.BindVariable, logStats *logstats.LogStats) error {
 	var err error
 
 	// needs to rollback only once.
 	rQuery := safeSession.rollbackOnPartialExec
 	if rQuery != txRollback {
 		safeSession.SavepointRollback()
-		_, _, err := e.execute(ctx, safeSession, rQuery, bindVars, logStats)
+		_, _, err := e.execute(ctx, safeSession, rQuery, bindVars, logStats, c)
 		if err == nil {
 			return vterrors.New(vtrpcpb.Code_ABORTED, "reverted partial DML execution failure")
 		}

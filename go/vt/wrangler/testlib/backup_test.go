@@ -310,8 +310,8 @@ func testBackupRestore(t *testing.T, cDetails *compressionDetails) error {
 	// checkNoDb should return false
 	// so fake the necessary queries
 	primary.FakeMysqlDaemon.FetchSuperQueryMap = map[string]*sqltypes.Result{
-		"SHOW DATABASES":                      {Rows: [][]sqltypes.Value{{sqltypes.NewVarBinary("vt_test_keyspace")}}},
-		"SHOW TABLES FROM `vt_test_keyspace`": {Rows: [][]sqltypes.Value{{sqltypes.NewVarBinary("a")}}},
+		"SHOW DATABASES":                   {Rows: [][]sqltypes.Value{{sqltypes.NewVarBinary(topoproto.VtDbPrefix + "test_keyspace")}}},
+		"SHOW TABLES FROM `test_keyspace`": {Rows: [][]sqltypes.Value{{sqltypes.NewVarBinary("a")}}},
 	}
 
 	// Test restore with the backup timestamp

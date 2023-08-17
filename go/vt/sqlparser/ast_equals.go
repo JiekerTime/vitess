@@ -464,6 +464,12 @@ func (cmp *Comparator) SQLNode(inA, inB SQLNode) bool {
 			return false
 		}
 		return cmp.RefOfExtractedSubquery(a, b)
+	case *FieldsClause:
+		b, ok := inB.(*FieldsClause)
+		if !ok {
+			return false
+		}
+		return cmp.RefOfFieldsClause(a, b)
 	case *FirstOrLastValueExpr:
 		b, ok := inB.(*FirstOrLastValueExpr)
 		if !ok {
@@ -836,6 +842,12 @@ func (cmp *Comparator) SQLNode(inA, inB SQLNode) bool {
 			return false
 		}
 		return cmp.RefOfLineStringExpr(a, b)
+	case *LinesClause:
+		b, ok := inB.(*LinesClause)
+		if !ok {
+			return false
+		}
+		return cmp.RefOfLinesClause(a, b)
 	case *LinestrPropertyFuncExpr:
 		b, ok := inB.(*LinestrPropertyFuncExpr)
 		if !ok {
@@ -860,6 +872,12 @@ func (cmp *Comparator) SQLNode(inA, inB SQLNode) bool {
 			return false
 		}
 		return cmp.RefOfLoad(a, b)
+	case *LoadDataStmt:
+		b, ok := inB.(*LoadDataStmt)
+		if !ok {
+			return false
+		}
+		return cmp.RefOfLoadDataStmt(a, b)
 	case *LocateExpr:
 		b, ok := inB.(*LocateExpr)
 		if !ok {
@@ -2553,6 +2571,21 @@ func (cmp *Comparator) RefOfExtractedSubquery(a, b *ExtractedSubquery) bool {
 		cmp.Expr(a.alternative, b.alternative)
 }
 
+// RefOfFieldsClause does deep equals between the two objects.
+func (cmp *Comparator) RefOfFieldsClause(a, b *FieldsClause) bool {
+	if a == b {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return a.Terminated == b.Terminated &&
+		a.Enclosed == b.Enclosed &&
+		a.Escaped == b.Escaped &&
+		a.Direction == b.Direction &&
+		cmp.Expr(a.Expr, b.Expr)
+}
+
 // RefOfFirstOrLastValueExpr does deep equals between the two objects.
 func (cmp *Comparator) RefOfFirstOrLastValueExpr(a, b *FirstOrLastValueExpr) bool {
 	if a == b {
@@ -3335,6 +3368,20 @@ func (cmp *Comparator) RefOfLineStringExpr(a, b *LineStringExpr) bool {
 	return cmp.Exprs(a.PointParams, b.PointParams)
 }
 
+// RefOfLinesClause does deep equals between the two objects.
+func (cmp *Comparator) RefOfLinesClause(a, b *LinesClause) bool {
+	if a == b {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return a.Starting == b.Starting &&
+		a.Terminated == b.Terminated &&
+		a.Direction == b.Direction &&
+		cmp.Expr(a.Expr, b.Expr)
+}
+
 // RefOfLinestrPropertyFuncExpr does deep equals between the two objects.
 func (cmp *Comparator) RefOfLinestrPropertyFuncExpr(a, b *LinestrPropertyFuncExpr) bool {
 	if a == b {
@@ -3369,6 +3416,23 @@ func (cmp *Comparator) RefOfLoad(a, b *Load) bool {
 		return false
 	}
 	return true
+}
+
+// RefOfLoadDataStmt does deep equals between the two objects.
+func (cmp *Comparator) RefOfLoadDataStmt(a, b *LoadDataStmt) bool {
+	if a == b {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return a.Action == b.Action &&
+		a.IsLocal == b.IsLocal &&
+		a.Path == b.Path &&
+		cmp.TableName(a.Table, b.Table) &&
+		cmp.Columns(a.Columns, b.Columns) &&
+		cmp.RefOfFieldsClause(a.FieldsInfo, b.FieldsInfo) &&
+		cmp.RefOfLinesClause(a.LinesInfo, b.LinesInfo)
 }
 
 // RefOfLocateExpr does deep equals between the two objects.
@@ -6869,6 +6933,12 @@ func (cmp *Comparator) Statement(inA, inB Statement) bool {
 			return false
 		}
 		return cmp.RefOfLoad(a, b)
+	case *LoadDataStmt:
+		b, ok := inB.(*LoadDataStmt)
+		if !ok {
+			return false
+		}
+		return cmp.RefOfLoadDataStmt(a, b)
 	case *LockTables:
 		b, ok := inB.(*LockTables)
 		if !ok {

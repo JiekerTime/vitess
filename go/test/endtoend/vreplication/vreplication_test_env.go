@@ -33,8 +33,8 @@ var dryRunResultsSwitchWritesCustomerShard = []string{
 	"Start reverse replication streams on:",
 	"       tablet 100 ",
 	"Mark vreplication streams frozen on:",
-	"       Keyspace customer, Shard -80, Tablet 200, Workflow p2c, DbName vt_customer",
-	"       Keyspace customer, Shard 80-, Tablet 300, Workflow p2c, DbName vt_customer",
+	"       Keyspace customer, Shard -80, Tablet 200, Workflow p2c, DbName customer",
+	"       Keyspace customer, Shard 80-, Tablet 300, Workflow p2c, DbName customer",
 	"Unlock keyspace customer",
 	"Unlock keyspace product",
 }

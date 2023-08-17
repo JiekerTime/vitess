@@ -141,6 +141,9 @@ type Handler interface {
 
 	//CheckAttachedHost
 	CheckAttachedHost(c *Conn) error
+
+	// ComFieldList is called when a connection receives a field list query.
+	ComFieldList(c *Conn, tableName string, callback func(*sqltypes.Result) error) error
 }
 
 // UnimplementedHandler implemnts all of the optional callbacks so as to satisy

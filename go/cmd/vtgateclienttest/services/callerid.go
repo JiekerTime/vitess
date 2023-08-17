@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"vitess.io/vitess/go/mysql"
+
 	"context"
 
 	"google.golang.org/protobuf/proto"
@@ -77,14 +79,14 @@ func (c *callerIDClient) checkCallerID(ctx context.Context, received string) (bo
 	return true, fmt.Errorf("SUCCESS: callerid matches")
 }
 
-func (c *callerIDClient) Execute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
+func (c *callerIDClient) Execute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
 	if ok, err := c.checkCallerID(ctx, sql); ok {
 		return session, nil, err
 	}
 	return c.fallbackClient.Execute(ctx, session, sql, bindVariables)
 }
 
-func (c *callerIDClient) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
+func (c *callerIDClient) ExecuteBatch(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
 	if len(sqlList) == 1 {
 		if ok, err := c.checkCallerID(ctx, sqlList[0]); ok {
 			return session, nil, err
@@ -93,7 +95,7 @@ func (c *callerIDClient) ExecuteBatch(ctx context.Context, session *vtgatepb.Ses
 	return c.fallbackClient.ExecuteBatch(ctx, session, sqlList, bindVariablesList)
 }
 
-func (c *callerIDClient) StreamExecute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (c *callerIDClient) StreamExecute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	if ok, err := c.checkCallerID(ctx, sql); ok {
 		return session, err
 	}

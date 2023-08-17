@@ -38,7 +38,7 @@ type TableRoutingParameters struct {
 	// Opcode is the execution opcode.
 	Opcode TableOpCode
 
-	LogicTable tableindexes.LogicTable
+	LogicTable tableindexes.LogicTableConfig
 
 	// Values specifies the vindex values to use for routing.
 	Values []evalengine.Expr

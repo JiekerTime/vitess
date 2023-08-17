@@ -513,7 +513,8 @@ func (c *Conn) readComQueryResponse() (int, *PacketOK, error) {
 		return 0, nil, ParseErrorPacket(data)
 	case 0xfb:
 		// Local infile
-		return 0, nil, vterrors.Errorf(vtrpc.Code_UNIMPLEMENTED, "not implemented")
+		packetOk, err := c.parseOKPacket(data)
+		return 0, packetOk, err
 	}
 	n, pos, ok := readLenEncInt(data, 0)
 	if !ok {
@@ -894,7 +895,7 @@ func (c *Conn) sendColumnCount(count uint64) error {
 	return c.writeEphemeralPacket()
 }
 
-func (c *Conn) writeColumnDefinition(field *querypb.Field) error {
+func (c *Conn) writeColumnDefinition(field *querypb.Field, defaultVal []byte) error {
 	length := 4 + // lenEncStringSize("def")
 		lenEncStringSize(field.Database) +
 		lenEncStringSize(field.Table) +
@@ -907,7 +908,8 @@ func (c *Conn) writeColumnDefinition(field *querypb.Field) error {
 		1 + // type
 		2 + // flags
 		1 + // decimals
-		2 // filler
+		2 + // filler
+		len(defaultVal)
 
 	// Get the type and the flags back. If the Field contains
 	// non-zero flags, we use them. Otherwise use the flags we
@@ -932,6 +934,12 @@ func (c *Conn) writeColumnDefinition(field *querypb.Field) error {
 	pos = writeUint16(data, pos, uint16(flags))
 	pos = writeByte(data, pos, byte(field.Decimals))
 	pos = writeUint16(data, pos, uint16(0x0000))
+
+	if len(defaultVal) != 0 {
+		for i := range defaultVal {
+			pos = writeByte(data, pos, byte(defaultVal[i]))
+		}
+	}
 
 	if pos != len(data) {
 		return vterrors.Errorf(vtrpc.Code_INTERNAL, "packing of column definition used %v bytes instead of %v", pos, len(data))
@@ -975,7 +983,7 @@ func (c *Conn) writeFields(result *sqltypes.Result) error {
 
 	// Now send each Field.
 	for _, field := range result.Fields {
-		if err := c.writeColumnDefinition(field); err != nil {
+		if err := c.writeColumnDefinition(field, []byte{}); err != nil {
 			return err
 		}
 	}
@@ -1073,7 +1081,7 @@ func (c *Conn) writePrepare(fld []*querypb.Field, prepare *PrepareData) error {
 			if err := c.writeColumnDefinition(&querypb.Field{
 				Name:    "?",
 				Type:    sqltypes.VarBinary,
-				Charset: 63}); err != nil {
+				Charset: 63}, []byte{}); err != nil {
 				return err
 			}
 		}
@@ -1090,7 +1098,7 @@ func (c *Conn) writePrepare(fld []*querypb.Field, prepare *PrepareData) error {
 	for i, field := range fld {
 		field.Name = strings.Replace(field.Name, "'?'", "?", -1)
 		prepare.ColumnNames[i] = field.Name
-		if err := c.writeColumnDefinition(field); err != nil {
+		if err := c.writeColumnDefinition(field, []byte{}); err != nil {
 			return err
 		}
 	}
@@ -1516,4 +1524,100 @@ func val2MySQLLen(v sqltypes.Value) (int, error) {
 		return 0, err
 	}
 	return length, nil
+}
+
+// parseComFieldList
+func (c *Conn) parseComFieldList(data []byte) (string, string, error) {
+	if len(data) < 2 || data[0] != 0x04 {
+		return "", "", fmt.Errorf("command type not correct : should be COM_FIELD_LIST")
+	}
+
+	tableName := string(data[1:])
+	wild := ""
+
+	for i := 0; i < len(data); i++ {
+		if data[i] == 0 {
+			tableName = string(data[1:i])
+			if i < len(data)-1 {
+				wild = string(data[i+1:])
+			}
+			break
+		}
+	}
+
+	return tableName, wild, nil
+}
+
+// WriteRequestFilePacket  write the package of request file
+func (c *Conn) WriteRequestFilePacket(fileName []byte) error {
+
+	data, pos := c.startEphemeralPacketWithHeader(len(fileName) + 1)
+	data[pos] = 0xfb
+	pos++
+	copy(data[pos:], fileName)
+
+	if err := c.writeEphemeralPacket(); err != nil {
+		return err
+	}
+	return c.endWriterBuffering()
+}
+
+// writeFieldList writes a FieldList query Result to the wire.
+func (c *Conn) writeFieldList(result *sqltypes.Result, wilds []string) error {
+	pok := &PacketOK{
+		affectedRows: result.RowsAffected,
+		lastInsertID: result.InsertID,
+		statusFlags:  c.StatusFlags,
+		warnings:     0,
+	}
+	if len(result.Fields) == 0 {
+		// This is just an INSERT result, send an OK packet.
+		// Nothing yet in the buffer, we can use this.
+		return c.writeOKPacket(pok)
+	}
+
+	if len(wilds) == 0 {
+		// Now send each Field.
+		for _, field := range result.Fields {
+			if err := c.writeColumnDefinition(field, []byte{NullValue}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// Now send each Field.
+	for _, field := range result.Fields {
+		for _, wild := range wilds {
+			if field.Name == wild {
+				if err := c.writeColumnDefinition(field, []byte{NullValue}); err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
+
+	// And send either an EOF, or an OK packet.
+	// FIXME(alainjobart) if multi result is set, can send more after this.
+	// See doc.go.
+	if c.Capabilities&CapabilityClientDeprecateEOF == 0 {
+		if err := c.writeEOFPacket(c.StatusFlags, 0); err != nil {
+			return err
+		}
+		if err := c.endWriterBuffering(); err != nil {
+			return err
+		}
+	} else {
+		pok.affectedRows = 0
+		pok.lastInsertID = 0
+		pok.statusFlags = c.StatusFlags
+		pok.warnings = 0
+		// This will flush too.
+		if err := c.writeOKPacketWithEOFHeader(pok); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

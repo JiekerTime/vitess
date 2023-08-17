@@ -711,3 +711,8 @@ var StreamRowResult = &sqltypes.Result{
 		sqltypes.NewVarChar("foo"),
 	}},
 }
+
+// ExecuteLoadData is part of the QueryService interface.
+func (sbc *SandboxConn) ExecuteLoadData(context.Context, *querypb.Target, chan string, string, map[string]*querypb.BindVariable, int64, *querypb.ExecuteOptions) (*sqltypes.Result, error) {
+	return nil, nil
+}

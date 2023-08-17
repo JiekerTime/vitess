@@ -89,7 +89,7 @@ const (
 	// CLIENT_ODBC 1 << 6
 	// No special behavior since 3.22.
 
-	CLIENT_LOCAL_FILES = 1 << 7
+	ClientLocalFiles = 1 << 7
 	// Client can use LOCAL INFILE request of LOAD DATA|XML.
 	// We do not set it.
 
@@ -590,6 +590,9 @@ const (
 
 	// SSNetError is network related error
 	SSNetError = "08S01"
+
+	// SSUnknownComError is ER_UNKNOWN_COM_ERROR
+	SSUnknownComError = "08S01"
 
 	// SSWrongNumberOfColumns is related to columns error
 	SSWrongNumberOfColumns = "21000"

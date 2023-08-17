@@ -197,6 +197,8 @@ func markBindVariable(yylex yyLexer, bvar string) {
   jtOnResponse	*JtOnResponse
   variables      []*Variable
   variable       *Variable
+
+  item          interface{}
 }
 
 // These precedence rules are there to handle shift-reduce conflicts.
@@ -362,7 +364,7 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %token <str> MATCH AGAINST BOOLEAN LANGUAGE WITH QUERY EXPANSION WITHOUT VALIDATION
 
 // MySQL reserved words that are unused by this grammar will map to this token.
-%token <str> UNUSED ARRAY BYTE CUME_DIST DESCRIPTION DENSE_RANK EMPTY EXCEPT FIRST_VALUE GROUPING GROUPS JSON_TABLE LAG LAST_VALUE LATERAL LEAD
+%token <str> UNUSED ARRAY BYTE CUME_DIST DESCRIPTION DENSE_RANK EMPTY EXCEPT FIRST_VALUE GROUPING GROUPS JSON_TABLE LAG LAST_VALUE LATERAL LEAD INFILE
 %token <str> NTH_VALUE NTILE OF OVER PERCENT_RANK RANK RECURSIVE ROW_NUMBER SYSTEM WINDOW
 %token <str> ACTIVE ADMIN AUTOEXTEND_SIZE BUCKETS CLONE COLUMN_FORMAT COMPONENT DEFINITION ENFORCED ENGINE_ATTRIBUTE EXCLUDE FOLLOWING GET_MASTER_PUBLIC_KEY HISTOGRAM HISTORY
 %token <str> INACTIVE INVISIBLE LOCKED MASTER_COMPRESSION_ALGORITHMS MASTER_PUBLIC_KEY_PATH MASTER_TLS_CIPHERSUITES MASTER_ZSTD_COMPRESSION_LEVEL
@@ -507,7 +509,7 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %type <str> header_opt export_options manifest_opt overwrite_opt format_opt optionally_opt regexp_symbol
 %type <str> fields_opts fields_opt_list fields_opt lines_opts lines_opt lines_opt_list
 %type <lock> locking_clause
-%type <columns> ins_column_list column_list column_list_opt column_list_empty index_list
+%type <columns> ins_column_list column_list column_list_opt column_list_empty index_list ins_column_list_opt
 %type <variable> variable_expr set_variable user_defined_variable
 %type <variables> at_id_list execute_statement_list_opt
 %type <partitions> opt_partition_clause partition_list
@@ -588,6 +590,11 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %type <literal> ratio_opt
 %type <txAccessModes> tx_chacteristics_opt tx_chars
 %type <txAccessMode> tx_char
+
+%type <item> LinesLoad FieldsLoad Escaped Enclosed FieldsTerminated Starting LinesTerminated
+%type <str> LocalOpt
+%type <statement> LoadDataStmt
+
 %start any_command
 
 %%
@@ -618,6 +625,7 @@ command:
 | stream_statement
 | vstream_statement
 | insert_statement
+| LoadDataStmt
 | update_statement
 | delete_statement
 | set_statement
@@ -7794,6 +7802,134 @@ reserved_table_id:
   {
     $$ = NewIdentifierCS(string($1))
   }
+
+LocalOpt:
+  {
+    $$ = ""
+  }
+| LOCAL
+  {
+   $$ = string($1)
+  }
+
+ins_column_list_opt:
+  {
+    $$ = nil
+  }
+| openb ins_column_list closeb
+  {
+    $$ = $2
+  }
+
+FieldsLoad:
+    {
+		escape := "\\"
+		$$ = &FieldsClause{
+			Terminated: "\t",
+			Escaped:    escape[0],
+		}
+	}
+|	FieldsOrColumns FieldsTerminated Enclosed Escaped
+	{
+		escape := $4.(string)
+		if escape != "\\" && len(escape) > 1 {
+			yylex.Error("Incorrect arguments  to ESCAPE")
+			return 1
+		}
+		var enclosed byte
+		str := $3.(string)
+		if len(str) > 1 {
+			yylex.Error("Incorrect arguments  to ENCLOSED")
+			return 1
+		}else if len(str) != 0 {
+			enclosed = str[0]
+		}
+		$$ = &FieldsClause{
+			Terminated: $2.(string),
+			Enclosed:   enclosed,
+			Escaped:    escape[0],
+		}
+	}
+
+LinesLoad:
+	{
+		$$ = &LinesClause{Terminated: "\n"}
+	}
+|	LINES Starting LinesTerminated
+	{
+		$$ = &LinesClause{Starting: $2.(string), Terminated: $3.(string)}
+	}
+
+FieldsTerminated:
+	{
+		$$ = "\t"
+	}
+|	TERMINATED BY STRING
+	{
+		$$ = string($3)
+	}
+
+Enclosed:
+	{
+		$$ = ""
+	}
+|	ENCLOSED BY STRING
+	{
+		$$ = string($3)
+	}
+
+Escaped:
+	{
+		$$ = "\\"
+	}
+|	ESCAPED BY STRING
+	{
+		$$ = string($3)
+	}
+
+Starting:
+	{
+		$$ = ""
+	}
+|	STARTING BY STRING
+	{
+		$$ = string($3)
+
+	}
+
+LinesTerminated:
+	{
+		$$ = "\n"
+	}
+|	TERMINATED BY STRING
+	{
+		$$ = string($3)
+	}
+
+FieldsOrColumns:
+FIELDS | COLUMNS
+
+LoadDataStmt:
+  LOAD DATA LocalOpt INFILE STRING INTO TABLE table_name FieldsLoad LinesLoad ins_column_list_opt
+  {
+   		x := &LoadDataStmt{
+   		    Action:     string($1),
+   			Path:       string($5),
+   			Table:      $8,
+   			Columns:    $11,
+   		}
+   		if $3 != "" {
+   			x.IsLocal = true
+   		}
+   		if $9 != nil {
+   			x.FieldsInfo = $9.(*FieldsClause)
+   		}
+   		if $10 != nil {
+   			x.LinesInfo = $10.(*LinesClause)
+   		}
+   		$$ = x
+  }
+
 /*
   These are not all necessarily reserved in MySQL, but some are.
 

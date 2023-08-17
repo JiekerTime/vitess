@@ -853,3 +853,8 @@ func (db *DB) ValidUseDB(c *mysql.Conn, keyspace string, authServer mysql.AuthSe
 func (db *DB) CheckAttachedHost(c *mysql.Conn) error {
 	return nil
 }
+
+// ComFieldList is part of the mysql.Handler interface.
+func (db *DB) ComFieldList(c *mysql.Conn, tableName string, callback func(*sqltypes.Result) error) error {
+	return nil
+}

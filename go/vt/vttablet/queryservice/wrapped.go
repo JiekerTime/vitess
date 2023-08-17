@@ -338,3 +338,12 @@ func (ws *wrappedService) Close(ctx context.Context) error {
 		return false, conn.Close(ctx)
 	})
 }
+
+func (ws *wrappedService) ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, query string, bindVars map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (qr *sqltypes.Result, err error) {
+	err = ws.wrapper(ctx, target, ws.impl, "ExecuteLoadData", false, func(ctx context.Context, target *querypb.Target, conn QueryService) (bool, error) {
+		var innerErr error
+		qr, innerErr = conn.ExecuteLoadData(ctx, target, lines, query, bindVars, transactionID, options)
+		return canRetry(ctx, innerErr), innerErr
+	})
+	return qr, err
+}
