@@ -337,36 +337,35 @@ func GetShardForModKeyspaceID(allShards []*topodatapb.ShardReference, modKeyspac
 // DestinationTableKeyspaceID is the destination for a single  KeyspaceID.
 // It implements the Destination interface.
 type DestinationTableKeyspaceID struct {
-	Shard []byte
 	Table []byte
 }
 
 // Resolve is part of the Destination interface.
-func (d DestinationTableKeyspaceID) Resolve(allShards []*topodatapb.ShardReference, addShard func(shard, table string) error) error {
-	shard, table, err := GetShardANDTableForKeyspaceID(allShards, d)
+func (d DestinationTableKeyspaceID) Resolve(allShards []*topodatapb.ShardReference, addTable func(table string) error) error {
+	table, err := GetShardANDTableForKeyspaceID(allShards, d)
 	if err != nil {
 		return err
 	}
-	return addShard(shard, table)
+	return addTable(table)
 }
 
 // String is part of the Destination interface.
 func (d DestinationTableKeyspaceID) String() string {
-	return "DestinationTableKeyspaceID(" + hex.EncodeToString(d.Shard) + ")"
+	return "DestinationTableKeyspaceID(" + hex.EncodeToString(d.Table) + ")"
 }
 
 // GetShardANDTableForKeyspaceID finds the right shard for a keyspace id.
-func GetShardANDTableForKeyspaceID(allShards []*topodatapb.ShardReference, KeyspaceID DestinationTableKeyspaceID) (string, string, error) {
+func GetShardANDTableForKeyspaceID(allShards []*topodatapb.ShardReference, KeyspaceID DestinationTableKeyspaceID) (string, error) {
 	if len(allShards) == 0 {
-		return "", "", vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no shard in keyspace")
+		return "", vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no shard in keyspace")
 	}
 
 	for _, shardReference := range allShards {
-		if KeyRangeContains(shardReference.KeyRange, KeyspaceID.Shard) {
-			return shardReference.Name, "", nil
+		if KeyRangeContains(shardReference.KeyRange, KeyspaceID.Table) {
+			return shardReference.Name, nil
 		}
 	}
-	return "", "", vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "KeyspaceId %v didn't match any shards %+v", hex.EncodeToString(KeyspaceID.Shard), allShards)
+	return "", vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "KeyspaceId %v didn't match any shards %+v", hex.EncodeToString(KeyspaceID.Table), allShards)
 }
 
 //

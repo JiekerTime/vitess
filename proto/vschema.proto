@@ -49,6 +49,7 @@ message Keyspace {
   bool cross_tablet = 85;
   bool attach_enable = 86;
   string attach_to = 87;
+  map<string,Table>split_tables=88;
 }
 
 // Vindex is the vindex info for a Keyspace.

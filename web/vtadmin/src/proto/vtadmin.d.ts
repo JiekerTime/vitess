@@ -38878,6 +38878,9 @@ export namespace vschema {
 
         /** Keyspace attach_to */
         attach_to?: (string|null);
+
+        /** Keyspace split_tables */
+        split_tables?: ({ [k: string]: vschema.ITable }|null);
     }
 
     /** Represents a Keyspace. */
@@ -38909,6 +38912,9 @@ export namespace vschema {
 
         /** Keyspace attach_to. */
         public attach_to: string;
+
+        /** Keyspace split_tables. */
+        public split_tables: { [k: string]: vschema.ITable };
 
         /**
          * Creates a new Keyspace instance using the specified properties.

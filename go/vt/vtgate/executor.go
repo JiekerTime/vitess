@@ -1049,14 +1049,14 @@ func (e *Executor) cacheAndBuildStatement(
 	bindVarNeeds *sqlparser.BindVarNeeds,
 	logStats *logstats.LogStats,
 ) (*engine.Plan, error) {
-	planKey := e.hashPlan(ctx, vcursor, query)
-	planCachable := sqlparser.CachePlan(stmt) && vcursor.safeSession.cachePlan()
-	if planCachable {
-		if plan, ok := e.plans.Get(planKey); ok {
-			logStats.CachedPlan = true
-			return plan.(*engine.Plan), nil
-		}
-	}
+	//planKey := e.hashPlan(ctx, vcursor, query)
+	//planCachable := sqlparser.CachePlan(stmt) && vcursor.safeSession.cachePlan()
+	//if planCachable {
+	//	if plan, ok := e.plans.Get(planKey); ok {
+	//		logStats.CachedPlan = true
+	//		return plan.(*engine.Plan), nil
+	//	}
+	//}
 
 	plan, err := planbuilder.BuildFromStmt(ctx, query, stmt, reservedVars, vcursor, bindVarNeeds, enableOnlineDDL, enableDirectDDL)
 	if err != nil {
@@ -1068,9 +1068,9 @@ func (e *Executor) cacheAndBuildStatement(
 
 	err = e.checkThatPlanIsValid(stmt, plan)
 	// Only cache the plan if it is valid (i.e. does not scatter)
-	if err == nil && planCachable {
-		e.plans.Set(planKey, plan)
-	}
+	//if err == nil && planCachable {
+	//	e.plans.Set(planKey, plan)
+	//}
 	return plan, err
 }
 
