@@ -12,7 +12,7 @@ vtadmin_web_port=14201
 
 vtadmin \
   --addr "${hostname}:${vtadmin_api_port}" \
-  --http-origin "http://${hostname}:${vtadmin_web_port}" \
+  --http-origin "*" \
   --http-tablet-url-tmpl "http://{{ .Tablet.Hostname }}:15{{ .Tablet.Alias.Uid }}" \
   --tracer "opentracing-jaeger" \
   --grpc-tracing \

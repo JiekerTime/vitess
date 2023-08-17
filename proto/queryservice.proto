@@ -111,4 +111,6 @@ service Query {
 
   // GetSchema returns the schema information.
   rpc GetSchema(query.GetSchemaRequest) returns (stream query.GetSchemaResponse) {};
+
+  rpc LoadDataStream(stream query.LoadDataStreamRequest) returns(query.LoadDataStreamResponse) {};
 }

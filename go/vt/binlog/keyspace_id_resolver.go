@@ -73,6 +73,12 @@ func newKeyspaceIDResolverFactoryV3(ctx context.Context, ts *topo.Server, keyspa
 			return -1, nil, fmt.Errorf("no vschema definition for table %v", table.Name)
 		}
 
+		if tableSchema.Pinned != nil {
+			return -1, &keyspaceIDResolverFactoryV3{
+				pinned: tableSchema.Pinned,
+			}, nil
+		}
+
 		// use the lowest cost unique vindex as the sharding key
 		colVindex, err := vindexes.FindVindexForSharding(table.Name.String(), tableSchema.ColumnVindexes)
 		if err != nil {
@@ -99,9 +105,13 @@ func newKeyspaceIDResolverFactoryV3(ctx context.Context, ts *topo.Server, keyspa
 // keyspaceIDResolverFactoryV3 uses the Vindex to compute the value.
 type keyspaceIDResolverFactoryV3 struct {
 	vindex vindexes.SingleColumn
+	pinned []byte
 }
 
 func (r *keyspaceIDResolverFactoryV3) keyspaceID(v sqltypes.Value) ([]byte, error) {
+	if r.pinned != nil {
+		return r.pinned, nil
+	}
 	destinations, err := r.vindex.Map(context.TODO(), nil, []sqltypes.Value{v})
 	if err != nil {
 		return nil, err

@@ -168,6 +168,8 @@ func VisitSQLNode(in SQLNode, f Visit) error {
 		return VisitRefOfExtractValueExpr(in, f)
 	case *ExtractedSubquery:
 		return VisitRefOfExtractedSubquery(in, f)
+	case *FieldsClause:
+		return VisitRefOfFieldsClause(in, f)
 	case *FirstOrLastValueExpr:
 		return VisitRefOfFirstOrLastValueExpr(in, f)
 	case *Flush:
@@ -292,6 +294,8 @@ func VisitSQLNode(in SQLNode, f Visit) error {
 		return VisitRefOfLimit(in, f)
 	case *LineStringExpr:
 		return VisitRefOfLineStringExpr(in, f)
+	case *LinesClause:
+		return VisitRefOfLinesClause(in, f)
 	case *LinestrPropertyFuncExpr:
 		return VisitRefOfLinestrPropertyFuncExpr(in, f)
 	case ListArg:
@@ -300,6 +304,8 @@ func VisitSQLNode(in SQLNode, f Visit) error {
 		return VisitRefOfLiteral(in, f)
 	case *Load:
 		return VisitRefOfLoad(in, f)
+	case *LoadDataStmt:
+		return VisitRefOfLoadDataStmt(in, f)
 	case *LocateExpr:
 		return VisitRefOfLocateExpr(in, f)
 	case *LockOption:
@@ -1605,6 +1611,18 @@ func VisitRefOfExtractedSubquery(in *ExtractedSubquery, f Visit) error {
 	}
 	return nil
 }
+func VisitRefOfFieldsClause(in *FieldsClause, f Visit) error {
+	if in == nil {
+		return nil
+	}
+	if cont, err := f(in); err != nil || !cont {
+		return err
+	}
+	if err := VisitExpr(in.Expr, f); err != nil {
+		return err
+	}
+	return nil
+}
 func VisitRefOfFirstOrLastValueExpr(in *FirstOrLastValueExpr, f Visit) error {
 	if in == nil {
 		return nil
@@ -2552,6 +2570,18 @@ func VisitRefOfLineStringExpr(in *LineStringExpr, f Visit) error {
 	}
 	return nil
 }
+func VisitRefOfLinesClause(in *LinesClause, f Visit) error {
+	if in == nil {
+		return nil
+	}
+	if cont, err := f(in); err != nil || !cont {
+		return err
+	}
+	if err := VisitExpr(in.Expr, f); err != nil {
+		return err
+	}
+	return nil
+}
 func VisitRefOfLinestrPropertyFuncExpr(in *LinestrPropertyFuncExpr, f Visit) error {
 	if in == nil {
 		return nil
@@ -2581,6 +2611,27 @@ func VisitRefOfLoad(in *Load, f Visit) error {
 		return nil
 	}
 	if cont, err := f(in); err != nil || !cont {
+		return err
+	}
+	return nil
+}
+func VisitRefOfLoadDataStmt(in *LoadDataStmt, f Visit) error {
+	if in == nil {
+		return nil
+	}
+	if cont, err := f(in); err != nil || !cont {
+		return err
+	}
+	if err := VisitTableName(in.Table, f); err != nil {
+		return err
+	}
+	if err := VisitColumns(in.Columns, f); err != nil {
+		return err
+	}
+	if err := VisitRefOfFieldsClause(in.FieldsInfo, f); err != nil {
+		return err
+	}
+	if err := VisitRefOfLinesClause(in.LinesInfo, f); err != nil {
 		return err
 	}
 	return nil
@@ -5107,6 +5158,8 @@ func VisitStatement(in Statement, f Visit) error {
 		return VisitRefOfInsert(in, f)
 	case *Load:
 		return VisitRefOfLoad(in, f)
+	case *LoadDataStmt:
+		return VisitRefOfLoadDataStmt(in, f)
 	case *LockTables:
 		return VisitRefOfLockTables(in, f)
 	case *OtherAdmin:

@@ -71,6 +71,7 @@ func BenchmarkWithNormalizer(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _, err := rpcVTGate.Execute(
 			context.Background(),
+			nil,
 			&vtgatepb.Session{
 				TargetString: "@primary",
 				Options:      executeOptions,
@@ -95,6 +96,7 @@ func BenchmarkWithoutNormalizer(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _, err := rpcVTGate.Execute(
 			context.Background(),
+			nil,
 			&vtgatepb.Session{
 				TargetString: "@primary",
 				Options:      executeOptions,

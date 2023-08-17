@@ -694,6 +694,17 @@ type (
 	CommentOnly struct {
 		Comments []string
 	}
+
+	// LoadDataStmt represents an INSERT statement.
+	LoadDataStmt struct {
+		Action     string
+		IsLocal    bool
+		Path       string
+		Table      TableName
+		Columns    Columns
+		FieldsInfo *FieldsClause
+		LinesInfo  *LinesClause
+	}
 )
 
 func (*Union) iStatement()               {}
@@ -789,6 +800,8 @@ func (*Update) iSupportOptimizerHint()  {}
 func (*VStream) iSupportOptimizerHint() {}
 func (*Select) iSupportOptimizerHint()  {}
 func (*Union) iSupportOptimizerHint()   {}
+
+func (*LoadDataStmt) iStatement() {}
 
 // IsFullyParsed implements the DDLStatement interface
 func (*TruncateTable) IsFullyParsed() bool {
@@ -3482,4 +3495,84 @@ type IdentifierCI struct {
 // backquotes if necessary.
 type IdentifierCS struct {
 	v string
+}
+
+// Format formats the node.
+func (node *LoadDataStmt) Format(buf *TrackedBuffer) {
+	var localOpt string
+	if node.IsLocal {
+		localOpt = "local"
+	}
+
+	buf.Myprintf("%s data %s  infile %s into table %v %v %v%v",
+		node.Action, localOpt, node.Path, node.Table, node.Columns, node.FieldsInfo, node.LinesInfo)
+}
+
+func (node *LoadDataStmt) formatFast(buf *TrackedBuffer) {
+	// TODO
+}
+
+// WalkSubtree walks the nodes of the subtree.
+func (node *LoadDataStmt) walkSubtree(visit Visit) error {
+	return nil
+}
+
+// FieldsClause represents fields references clause in load data statement.
+type FieldsClause struct {
+	Terminated string
+	Enclosed   byte
+	Escaped    byte
+	Expr       Expr
+	Direction  string
+}
+
+// Format formats the node.
+func (node *FieldsClause) Format(buf *TrackedBuffer) {
+	prefix := "FIELDS TERMINATED BY "
+	//todo  wangyunbo
+	buf.Myprintf("%s %s  ESCAPED BY %c ", prefix, node.Terminated, node.Escaped)
+}
+
+func (node *FieldsClause) formatFast(buf *TrackedBuffer) {
+	// TODO
+}
+
+// WalkSubtree walks the nodes of the subtree.
+func (node *FieldsClause) walkSubtree(visit Visit) error {
+	if node == nil {
+		return nil
+	}
+	return Walk(
+		visit,
+		node,
+	)
+}
+
+// LinesClause represents lines references clause in load data statement.
+type LinesClause struct {
+	Starting   string
+	Terminated string
+	Expr       Expr
+	Direction  string
+}
+
+// Format formats the node.
+func (node *LinesClause) Format(buf *TrackedBuffer) {
+	prefix := "LINES STARTING BY  "
+	buf.Myprintf("%s STARTING BY TERMINATED BY %s ", prefix, node.Starting, node.Terminated)
+}
+
+func (node *LinesClause) formatFast(buf *TrackedBuffer) {
+	// TODO
+}
+
+// WalkSubtree walks the nodes of the subtree.
+func (node *LinesClause) walkSubtree(visit Visit) error {
+	if node == nil {
+		return nil
+	}
+	return Walk(
+		visit,
+		node,
+	)
 }

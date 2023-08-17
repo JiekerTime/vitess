@@ -46,7 +46,7 @@ func TestInitShardPrimary(t *testing.T) {
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmc)
 
 	primaryDb := fakesqldb.New(t)
-	primaryDb.AddQuery("create database if not exists `vt_test_keyspace`", &sqltypes.Result{InsertID: 0, RowsAffected: 0})
+	primaryDb.AddQuery("create database if not exists `test_keyspace`", &sqltypes.Result{InsertID: 0, RowsAffected: 0})
 
 	tablet1 := testlib.NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_PRIMARY, primaryDb)
 	tablet2 := testlib.NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, nil)
@@ -106,7 +106,7 @@ func TestInitShardPrimaryNoFormerPrimary(t *testing.T) {
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmc)
 
 	primaryDb := fakesqldb.New(t)
-	primaryDb.AddQuery("create database if not exists `vt_test_keyspace`", &sqltypes.Result{InsertID: 0, RowsAffected: 0})
+	primaryDb.AddQuery("create database if not exists `test_keyspace`", &sqltypes.Result{InsertID: 0, RowsAffected: 0})
 
 	tablet1 := testlib.NewFakeTablet(t, wr, "cell1", 0, topodatapb.TabletType_REPLICA, primaryDb)
 	tablet2 := testlib.NewFakeTablet(t, wr, "cell1", 1, topodatapb.TabletType_REPLICA, nil)

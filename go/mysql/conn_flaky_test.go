@@ -1157,6 +1157,11 @@ type testRun struct {
 	expStmtID      int
 }
 
+func (t testRun) ComFieldList(c *Conn, tableName string, callback func(*sqltypes.Result) error) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (t testRun) ComStmtExecute(c *Conn, prepare *PrepareData, callback func(*sqltypes.Result) error) error {
 	panic("implement me")
 }

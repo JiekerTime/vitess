@@ -959,3 +959,11 @@ func (itmc *internalTabletManagerClient) ResetReplicationParameters(context.Cont
 func (itmc *internalTabletManagerClient) ReplicaWasRestarted(context.Context, *topodatapb.Tablet, *topodatapb.TabletAlias) error {
 	return fmt.Errorf("not implemented in vtcombo")
 }
+
+func (itc *internalTabletConn) ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, sql string, bindVariables map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (*sqltypes.Result, error) {
+	result, err := itc.tablet.qsc.QueryService().ExecuteLoadData(ctx, target, lines, sql, bindVariables, transactionID, options)
+	if err != nil {
+		return nil, tabletconn.ErrorFromGRPC(vterrors.ToGRPC(err))
+	}
+	return result, nil
+}

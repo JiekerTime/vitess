@@ -1006,3 +1006,17 @@ message GetSchemaResponse {
   // this is for the schema definition for the requested tables.
   map<string, string> table_definition = 2;
 }
+
+message LoadDataStreamRequest{
+  vtrpc.CallerID effective_caller_id = 1;
+  VTGateCallerID immediate_caller_id = 2;
+  Target target = 3;
+  BoundQuery query = 4;
+  int64 transaction_id = 5;
+  ExecuteOptions options = 6;
+  repeated string lines=7;
+}
+
+message LoadDataStreamResponse{
+  QueryResult result =1;
+}

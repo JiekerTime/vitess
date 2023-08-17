@@ -242,14 +242,14 @@ func (vh *vtgateHandler) ComQuery(c *mysql.Conn, query string, callback func(*sq
 	}
 
 	if session.Options.Workload == querypb.ExecuteOptions_OLAP {
-		session, err := vh.vtg.StreamExecute(ctx, session, query, make(map[string]*querypb.BindVariable), callback)
+		session, err := vh.vtg.StreamExecute(ctx, c, session, query, make(map[string]*querypb.BindVariable), callback)
 		if err != nil {
 			return mysql.NewSQLErrorFromError(err)
 		}
 		fillInTxStatusFlags(c, session)
 		return nil
 	}
-	session, result, err := vh.vtg.Execute(ctx, session, query, make(map[string]*querypb.BindVariable))
+	session, result, err := vh.vtg.Execute(ctx, c, session, query, make(map[string]*querypb.BindVariable))
 
 	if err := mysql.NewSQLErrorFromError(err); err != nil {
 		return err
@@ -349,14 +349,14 @@ func (vh *vtgateHandler) ComStmtExecute(c *mysql.Conn, prepare *mysql.PrepareDat
 	}()
 
 	if session.Options.Workload == querypb.ExecuteOptions_OLAP {
-		_, err := vh.vtg.StreamExecute(ctx, session, prepare.PrepareStmt, prepare.BindVars, callback)
+		_, err := vh.vtg.StreamExecute(ctx, c, session, prepare.PrepareStmt, prepare.BindVars, callback)
 		if err != nil {
 			return mysql.NewSQLErrorFromError(err)
 		}
 		fillInTxStatusFlags(c, session)
 		return nil
 	}
-	_, qr, err := vh.vtg.Execute(ctx, session, prepare.PrepareStmt, prepare.BindVars)
+	_, qr, err := vh.vtg.Execute(ctx, c, session, prepare.PrepareStmt, prepare.BindVars)
 	if err != nil {
 		return mysql.NewSQLErrorFromError(err)
 	}
@@ -823,4 +823,89 @@ func generateUagInfo(c *mysql.Conn) string {
 	buf.WriteString(" */")
 
 	return buf.String()
+}
+
+func (vh *vtgateHandler) ComFieldList(c *mysql.Conn, tableName string, callback func(*sqltypes.Result) error) error {
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if mysqlQueryTimeout != 0 {
+		ctx, cancel = context.WithTimeout(context.Background(), mysqlQueryTimeout)
+		defer cancel()
+	} else {
+		ctx = context.Background()
+	}
+
+	ctx = callinfo.MysqlCallInfo(ctx, c)
+
+	// Fill in the ImmediateCallerID with the UserData returned by
+	// the AuthServer plugin for that user. If nothing was
+	// returned, use the User. This lets the plugin map a MySQL
+	// user used for authentication to a Vitess User used for
+	// Table ACLs and Vitess authentication in general.
+	im := c.UserData.Get()
+	ef := callerid.NewEffectiveCallerID(
+		c.User,                  /* principal: who */
+		c.RemoteAddr().String(), /* component: running client process */
+		"VTGate MySQL Connector" /* subcomponent: part of the client */)
+	ctx = callerid.NewContext(ctx, ef, im)
+
+	session, _ := c.ClientData.(*vtgatepb.Session)
+	if session == nil {
+		session = &vtgatepb.Session{
+			Options: &querypb.ExecuteOptions{
+				IncludedFields: querypb.ExecuteOptions_ALL,
+			},
+			Autocommit: true,
+		}
+		if c.Capabilities&mysql.CapabilityClientFoundRows != 0 {
+			session.Options.ClientFoundRows = true
+		}
+	}
+
+	if !session.InTransaction {
+		atomic.AddInt32(&busyConnections, 1)
+	}
+	defer func() {
+		if !session.InTransaction {
+			atomic.AddInt32(&busyConnections, -1)
+		}
+	}()
+
+	if c.SchemaName != "" {
+		session.TargetString = c.SchemaName
+	}
+
+	var tabletType string
+	/*	if c.AccountType == mysql.AccountTypeAdmin ||
+		c.AccountType == mysql.AccountTypeRW {
+		tabletType = "@PRIMARY"
+	}*/
+	switch {
+	case c.AccountType == mysql.AccountTypeRW:
+		tabletType = "@PRIMARY"
+	case c.AccountType == mysql.AccountTypeAdmin:
+		tabletType = "@PRIMARY"
+	case c.AccountType == mysql.AccountTypeRR:
+		tabletType = "@REPLICA"
+	case c.AccountType == mysql.AccountTypeRO:
+		tabletType = "@REPLICA"
+	case c.AccountType == mysql.AccountTypeStream:
+		tabletType = "@RDONLY"
+	default:
+		tabletType = "@REPLICA"
+	}
+
+	session.TargetString = strings.Split(session.TargetString, "@")[0] + tabletType
+
+	query := fmt.Sprintf("SELECT * FROM %s", tableName)
+	session, result, err := vh.vtg.Prepare(ctx, session, query, make(map[string]*querypb.BindVariable))
+	c.ClientData = session
+	err = mysql.NewSQLErrorFromError(err)
+	if err != nil {
+		return err
+	}
+	sqltypeResult := &sqltypes.Result{
+		Fields: result,
+	}
+	return callback(sqltypeResult)
 }

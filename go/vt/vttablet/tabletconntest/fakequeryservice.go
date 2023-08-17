@@ -760,3 +760,8 @@ func CreateFakeServer(t testing.TB) *FakeQueryService {
 		t: t,
 	}
 }
+
+// ExecuteLoadData  ...
+func (f *FakeQueryService) ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, query string, bindVars map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (qr *sqltypes.Result, err error) {
+	return nil, nil
+}

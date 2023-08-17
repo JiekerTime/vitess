@@ -15,9 +15,8 @@ import (
 func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 ) (ksAndTablePlan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
 	// get split table metadata
-	config := fakeLogicTable()
-	name := ksPlan.Primitive().GetTableName()
-	if name != config.LogicTableName {
+	config, found := getLogicTableConfig(ksPlan.Primitive().GetTableName())
+	if !found {
 		return ksPlan, ctx.SemTable, nil, nil
 	}
 
@@ -48,7 +47,7 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	return ksAndTablePlan, semTable, nil, nil
 }
 
-func doBuildTableSelectPlan(config tableindexes.LogicTable, ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement, ksPlan logicalPlan,
+func doBuildTableSelectPlan(config tableindexes.LogicTableConfig, ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement, ksPlan logicalPlan,
 ) (tablePlan logicalPlan, err error) {
 	tableOperator, err := operators.TablePlanQuery(ctx, Select)
 	if err != nil {
@@ -66,7 +65,7 @@ func doBuildTableSelectPlan(config tableindexes.LogicTable, ctx *plancontext.Pla
 	return tablePlan, nil
 }
 
-func tempTableRoutePlan(config tableindexes.LogicTable, ksRoutePlan *routeGen4, tablePlan logicalPlan) (logicalPlan, error) {
+func tempTableRoutePlan(config tableindexes.LogicTableConfig, ksRoutePlan *routeGen4, tablePlan logicalPlan) (logicalPlan, error) {
 	if route, ok := tablePlan.(*routeGen4); ok {
 		tableRoute := &tableRoute{
 			ERoute: &engine.TableRoute{
@@ -86,22 +85,55 @@ func tempTableRoutePlan(config tableindexes.LogicTable, ksRoutePlan *routeGen4, 
 	return nil, fmt.Errorf("must routeGen4 plan. %v", tablePlan)
 }
 
-func fakeLogicTable() tableindexes.LogicTable {
-	actualTableList := []tableindexes.ActualTable{
-		{
-			ActualTableName: "t_user" + "_1",
-			Index:           1,
-		},
-		{
-			ActualTableName: "t_user" + "_2",
-			Index:           2,
-		},
+func getLogicTableConfig(tableName string) (logical tableindexes.LogicTableConfig, found bool) {
+	tableMap := fakeLogicTableMap()
+	if logical, ok := tableMap[tableName]; ok {
+		return logical, true
 	}
+	return logical, false
+}
 
-	logicTable := tableindexes.LogicTable{
-		LogicTableName:   "t_user",
-		ActualTableList:  actualTableList,
+func fakeLogicTableMap() (logicTableMap map[string]tableindexes.LogicTableConfig) {
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "t_user",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "t_user" + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: "t_user" + "_2",
+				Index:           2,
+			},
+		},
 		TableIndexColumn: tableindexes.Column{ColumnName: "col", ColType: query.Type_VARCHAR},
 	}
-	return logicTable
+
+	logicTable2 := tableindexes.LogicTableConfig{
+		LogicTableName: "table_engine_test",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "table_engine_test" + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: "table_engine_test" + "_2",
+				Index:           2,
+			},
+			{
+				ActualTableName: "table_engine_test" + "_3",
+				Index:           3,
+			},
+			{
+				ActualTableName: "table_engine_test" + "_4",
+				Index:           4,
+			},
+		},
+		TableIndexColumn: tableindexes.Column{ColumnName: "f_int", ColType: query.Type_VARCHAR},
+	}
+
+	logicTableMap = make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+	logicTableMap[logicTable2.LogicTableName] = logicTable2
+	return logicTableMap
 }

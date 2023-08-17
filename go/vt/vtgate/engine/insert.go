@@ -52,6 +52,9 @@ type (
 		// Keyspace specifies the keyspace to send the query to.
 		Keyspace *vindexes.Keyspace
 
+		// TargetDestination specifies the destination to send the query to.
+		TargetDestination key.Destination
+
 		// Query specifies the query to be executed.
 		// For InsertSharded plans, this value is unused,
 		// and Prefix, Mid and Suffix are used instead.
@@ -186,12 +189,16 @@ const (
 	// InsertSelect is for routing an insert statement
 	// based on rows returned from the select statement.
 	InsertSelect
+	// InsertByDestination is to route explicitly to a given
+	// target destination.
+	InsertByDestination
 )
 
 var insName = map[InsertOpcode]string{
-	InsertUnsharded: "InsertUnsharded",
-	InsertSharded:   "InsertSharded",
-	InsertSelect:    "InsertSelect",
+	InsertUnsharded:     "InsertUnsharded",
+	InsertSharded:       "InsertSharded",
+	InsertSelect:        "InsertSelect",
+	InsertByDestination: "InsertByDestination",
 }
 
 // String returns the opcode
@@ -235,6 +242,8 @@ func (ins *Insert) TryExecute(ctx context.Context, vcursor VCursor, bindVars map
 		return ins.execInsertSharded(ctx, vcursor, bindVars)
 	case InsertSelect:
 		return ins.execInsertFromSelect(ctx, vcursor, bindVars)
+	case InsertByDestination:
+		return ins.execInsertByDestination(ctx, vcursor, bindVars, ins.TargetDestination)
 	default:
 		// Unreachable.
 		return nil, fmt.Errorf("unsupported query route: %v", ins)
@@ -1046,4 +1055,32 @@ func (ins *Insert) executeUnshardedTableQuery(ctx context.Context, vcursor VCurs
 		insertID = int64(qr.InsertID)
 	}
 	return insertID, qr, nil
+}
+
+func (ins *Insert) execInsertByDestination(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, dest key.Destination) (*sqltypes.Result, error) {
+	insertID, err := ins.processGenerateFromValues(ctx, vcursor, bindVars)
+	if err != nil {
+		return nil, vterrors.Wrap(err, "execInsertByDestination")
+	}
+
+	rss, _, err := vcursor.ResolveDestinations(ctx, ins.Keyspace.Name, nil, []key.Destination{dest})
+	if err != nil {
+		return nil, vterrors.Wrap(err, "execInsertByDestination")
+	}
+	if len(rss) != 1 {
+		return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "Keyspace does not have exactly one shard: %v", rss)
+	}
+	result, err := execShard(ctx, ins, vcursor, ins.Query, bindVars, rss[0], true, true /* canAutocommit */)
+	if err != nil {
+		return nil, vterrors.Wrap(err, "execInsertByDestination")
+	}
+
+	// If processGenerate generated new values, it supercedes
+	// any ids that MySQL might have generated. If both generated
+	// values, we don't return an error because this behavior
+	// is required to support migration.
+	if insertID != 0 {
+		result.InsertID = uint64(insertID)
+	}
+	return result, nil
 }

@@ -539,3 +539,8 @@ func (dbc *DBConn) applySameSetting(ctx context.Context) (err error) {
 	_, err = dbc.execOnce(ctx, dbc.setting, 1, false)
 	return
 }
+
+// ExecuteStreamLoadData ...
+func (dbc *DBConn) ExecuteStreamLoadData(ctx context.Context, lines chan string, query string) (*sqltypes.Result, error) {
+	return dbc.conn.ExecuteStreamLoadData(lines, query)
+}

@@ -2,7 +2,7 @@ package tableindexes
 
 import "vitess.io/vitess/go/vt/proto/query"
 
-type LogicTable struct {
+type LogicTableConfig struct {
 	LogicTableName string
 
 	ActualTableList []ActualTable

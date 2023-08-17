@@ -236,3 +236,17 @@ func Proto3ValuesEqual(v1, v2 []*querypb.Value) bool {
 	}
 	return true
 }
+
+// Proto3ToLoadResult converts a proto3 Result to an internal data structure. This function
+// should be used only if the field info is populated in qr.
+func Proto3ToLoadResult(qr *querypb.LoadDataStreamResponse) *Result {
+	if qr == nil {
+		return nil
+	}
+	return &Result{
+		Fields:       qr.Result.Fields,
+		RowsAffected: qr.Result.RowsAffected,
+		InsertID:     qr.Result.InsertId,
+		Rows:         proto3ToRows(qr.Result.Fields, qr.Result.Rows),
+	}
+}
