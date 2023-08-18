@@ -21,6 +21,8 @@ import (
 	"reflect"
 	"testing"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/mysql/binlog"
 	"vitess.io/vitess/go/vt/dbconfigs"
@@ -56,7 +58,7 @@ func TestStreamerParseRBREvents(t *testing.T) {
 	tableID := uint64(0x102030405060)
 	tm := &mysql.TableMap{
 		Flags:    0x8090,
-		Database: "vt_test_keyspace",
+		Database: topoproto.VtDbPrefix + "test_keyspace",
 		Name:     "vt_a",
 		Types: []byte{
 			binlog.TypeLong,
@@ -165,7 +167,7 @@ func TestStreamerParseRBREvents(t *testing.T) {
 		mysql.NewTableMapEvent(f, s, tableID, tm),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewWriteRowsEvent(f, s, tableID, insertRows),
 		mysql.NewUpdateRowsEvent(f, s, tableID, updateRows),
@@ -257,7 +259,7 @@ func TestStreamerParseRBREvents(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -302,7 +304,7 @@ func TestStreamerParseRBRNameEscapes(t *testing.T) {
 	tableID := uint64(0x102030405060)
 	tm := &mysql.TableMap{
 		Flags:    0x8090,
-		Database: "vt_test_keyspace",
+		Database: topoproto.VtDbPrefix + "test_keyspace",
 		Name:     "insert",
 		Types: []byte{
 			binlog.TypeLong,
@@ -411,7 +413,7 @@ func TestStreamerParseRBRNameEscapes(t *testing.T) {
 		mysql.NewTableMapEvent(f, s, tableID, tm),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewWriteRowsEvent(f, s, tableID, insertRows),
 		mysql.NewUpdateRowsEvent(f, s, tableID, updateRows),
@@ -503,7 +505,7 @@ func TestStreamerParseRBRNameEscapes(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 

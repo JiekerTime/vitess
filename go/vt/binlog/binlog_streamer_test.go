@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
@@ -87,10 +89,10 @@ func TestStreamerParseEventsXID(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -122,7 +124,7 @@ func TestStreamerParseEventsXID(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -149,13 +151,13 @@ func TestStreamerParseEventsCommit(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "COMMIT"}),
 	}
 
@@ -184,7 +186,7 @@ func TestStreamerParseEventsCommit(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -212,7 +214,7 @@ func TestStreamerStop(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -247,10 +249,10 @@ func TestStreamerParseEventsClientEOF(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -265,7 +267,7 @@ func TestStreamerParseEventsClientEOF(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -290,7 +292,7 @@ func TestStreamerParseEventsServerEOF(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -316,7 +318,7 @@ func TestStreamerParseEventsGTIDPurged(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -347,10 +349,10 @@ func TestStreamerParseEventsSendErrorXID(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -365,7 +367,7 @@ func TestStreamerParseEventsSendErrorXID(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -391,13 +393,13 @@ func TestStreamerParseEventsSendErrorCommit(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "COMMIT"}),
 	}
 	want := "send reply error: foobar"
@@ -411,7 +413,7 @@ func TestStreamerParseEventsSendErrorCommit(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -436,7 +438,7 @@ func TestStreamerParseEventsInvalid(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewInvalidEvent(),
 		mysql.NewXIDEvent(f, s),
@@ -452,7 +454,7 @@ func TestStreamerParseEventsInvalid(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -477,10 +479,10 @@ func TestStreamerParseEventsInvalidFormat(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewInvalidFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -495,7 +497,7 @@ func TestStreamerParseEventsInvalidFormat(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -520,10 +522,10 @@ func TestStreamerParseEventsNoFormat(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		//mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -538,7 +540,7 @@ func TestStreamerParseEventsNoFormat(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -563,7 +565,7 @@ func TestStreamerParseEventsInvalidQuery(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewInvalidQueryEvent(f, s),
 		mysql.NewXIDEvent(f, s),
@@ -579,7 +581,7 @@ func TestStreamerParseEventsInvalidQuery(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -606,22 +608,22 @@ func TestStreamerParseEventsRollback(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "ROLLBACK"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -667,7 +669,7 @@ func TestStreamerParseEventsRollback(t *testing.T) {
 	var got binlogStatements
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -693,7 +695,7 @@ func TestStreamerParseEventsDMLWithoutBegin(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -740,7 +742,7 @@ func TestStreamerParseEventsDMLWithoutBegin(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -766,10 +768,10 @@ func TestStreamerParseEventsBeginWithoutCommit(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -816,7 +818,7 @@ func TestStreamerParseEventsBeginWithoutCommit(t *testing.T) {
 
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -842,11 +844,11 @@ func TestStreamerParseEventsSetInsertID(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewIntVarEvent(f, s, mysql.IntVarInsertID, 101),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -878,7 +880,7 @@ func TestStreamerParseEventsSetInsertID(t *testing.T) {
 	var got binlogStatements
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -902,11 +904,11 @@ func TestStreamerParseEventsInvalidIntVar(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewIntVarEvent(f, s, mysql.IntVarInvalidInt, 0), // Invalid intvar.
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -920,7 +922,7 @@ func TestStreamerParseEventsInvalidIntVar(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -947,13 +949,13 @@ func TestStreamerParseEventsOtherDB(t *testing.T) {
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewMariaDBGTIDEvent(f, s, mysql.MariadbGTID{Domain: 0, Sequence: 0xd}, false /* hasBegin */),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
 			Database: "other",
 			SQL:      "INSERT INTO test values (3, 4)"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -984,7 +986,7 @@ func TestStreamerParseEventsOtherDB(t *testing.T) {
 	var got binlogStatements
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -1016,7 +1018,7 @@ func TestStreamerParseEventsOtherDBBegin(t *testing.T) {
 			Database: "other",
 			SQL:      "INSERT INTO test values (3, 4)"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewXIDEvent(f, s),
 	}
@@ -1047,7 +1049,7 @@ func TestStreamerParseEventsOtherDBBegin(t *testing.T) {
 	var got binlogStatements
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -1071,13 +1073,13 @@ func TestStreamerParseEventsBeginAgain(t *testing.T) {
 		mysql.NewRotateEvent(f, s, 0, ""),
 		mysql.NewFormatDescriptionEvent(f, s),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "insert into vt_a(eid, id) values (1, 1) /* _stream vt_a (eid id ) (1 1 ); */"}),
 		mysql.NewQueryEvent(f, s, mysql.Query{
-			Database: "vt_test_keyspace",
+			Database: topoproto.VtDbPrefix + "test_keyspace",
 			SQL:      "BEGIN"}),
 	}
 
@@ -1089,7 +1091,7 @@ func TestStreamerParseEventsBeginAgain(t *testing.T) {
 	}
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -1159,7 +1161,7 @@ func TestStreamerParseEventsMariadbBeginGTID(t *testing.T) {
 	var got binlogStatements
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 
@@ -1219,7 +1221,7 @@ func TestStreamerParseEventsMariadbStandaloneGTID(t *testing.T) {
 	var got binlogStatements
 	// Set mock mysql.ConnParams and dbconfig
 	mcp := &mysql.ConnParams{
-		DbName: "vt_test_keyspace",
+		DbName: topoproto.VtDbPrefix + "test_keyspace",
 	}
 	dbcfgs := dbconfigs.New(mcp)
 

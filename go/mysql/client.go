@@ -483,7 +483,8 @@ func (c *Conn) writeSSLRequest(capabilities uint32, characterSet uint8, params *
 		// CapabilityClientSessionTrack, we also support it.
 		c.Capabilities&CapabilityClientSessionTrack |
 		// Pass-through ClientFoundRows flag.
-		CapabilityClientFoundRows&uint32(params.Flags)
+		CapabilityClientFoundRows&uint32(params.Flags) |
+		ClientLocalFiles&uint32(params.Flags)
 
 	length :=
 		4 + // Client capability flags.
@@ -541,7 +542,8 @@ func (c *Conn) writeHandshakeResponse41(capabilities uint32, scrambledPassword [
 		CapabilityClientFoundRows&uint32(params.Flags) |
 		// If the server supported
 		// CapabilityClientSessionTrack, we also support it.
-		c.Capabilities&CapabilityClientSessionTrack
+		c.Capabilities&CapabilityClientSessionTrack |
+		ClientLocalFiles&uint32(params.Flags)
 
 	// FIXME(alainjobart) add multi statement.
 

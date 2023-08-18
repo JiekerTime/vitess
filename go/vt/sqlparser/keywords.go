@@ -324,7 +324,7 @@ var keywords = []keyword{
 	{"in", IN},
 	{"index", INDEX},
 	{"indexes", INDEXES},
-	{"infile", UNUSED},
+	{"infile", INFILE},
 	{"inout", UNUSED},
 	{"inner", INNER},
 	{"inplace", INPLACE},

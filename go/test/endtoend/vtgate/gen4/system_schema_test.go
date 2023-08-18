@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"testing"
 
+	"vitess.io/vitess/go/vt/topo/topoproto"
+
 	"vitess.io/vitess/go/test/endtoend/utils"
 
 	"github.com/stretchr/testify/assert"
@@ -43,7 +45,7 @@ func TestDbNameOverride(t *testing.T) {
 
 	require.Nil(t, err)
 	assert.Equal(t, 1, len(qr.Rows), "did not get enough rows back")
-	assert.Equal(t, "vt_ks", qr.Rows[0][0].ToString())
+	assert.Equal(t, topoproto.VtDbPrefix+"ks", qr.Rows[0][0].ToString())
 
 	// Test again in OLAP workload (default).
 	utils.Exec(t, conn, "SET workload=OLAP")
@@ -51,7 +53,7 @@ func TestDbNameOverride(t *testing.T) {
 
 	require.Nil(t, err)
 	assert.Equal(t, 1, len(qr.Rows), "did not get enough rows back")
-	assert.Equal(t, "vt_ks", qr.Rows[0][0].ToString())
+	assert.Equal(t, topoproto.VtDbPrefix+"ks", qr.Rows[0][0].ToString())
 }
 
 func TestInformationSchemaQuery(t *testing.T) {
@@ -61,15 +63,13 @@ func TestInformationSchemaQuery(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	assertSingleRowIsReturned(t, conn, "table_schema = 'ks'", "vt_ks")
-	assertSingleRowIsReturned(t, conn, "table_schema = 'vt_ks'", "vt_ks")
+	assertSingleRowIsReturned(t, conn, "table_schema = 'ks'", topoproto.VtDbPrefix+"ks")
 	assertResultIsEmpty(t, conn, "table_schema = 'NONE'")
 	assertSingleRowIsReturned(t, conn, "table_schema = 'performance_schema'", "performance_schema")
 	assertResultIsEmpty(t, conn, "table_schema = 'PERFORMANCE_SCHEMA'")
 	assertSingleRowIsReturned(t, conn, "table_schema = 'performance_schema' and table_name = 'users'", "performance_schema")
 	assertResultIsEmpty(t, conn, "table_schema = 'performance_schema' and table_name = 'foo'")
-	assertSingleRowIsReturned(t, conn, "table_schema = 'vt_ks' and table_name = 't1'", "vt_ks")
-	assertSingleRowIsReturned(t, conn, "table_schema = 'ks' and table_name = 't1'", "vt_ks")
+	assertSingleRowIsReturned(t, conn, "table_schema = 'ks' and table_name = 't1'", topoproto.VtDbPrefix+"ks")
 }
 
 func assertResultIsEmpty(t *testing.T, conn *mysql.Conn, pre string) {

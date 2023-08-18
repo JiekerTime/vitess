@@ -656,3 +656,19 @@ func unicoded(in string) (out string) {
 	}
 	return in
 }
+
+// GetStreamLoadDataPlan is similar to GetPlan, but doesn't use the cache
+// and doesn't enforce a limit. It just returns the parsed query.
+func (qe *QueryEngine) GetStreamLoadDataPlan(sql string) (*TabletPlan, error) {
+	qe.mu.RLock()
+	defer qe.mu.RUnlock()
+	splan, err := planbuilder.BuildStreamLoadPlan(sql, qe.tables)
+
+	if err != nil {
+		return nil, err
+	}
+	plan := &TabletPlan{Plan: splan}
+	plan.Rules = qe.queryRuleSources.FilterByPlan(sql, plan.PlanID, plan.TableName().String())
+	plan.buildAuthorized()
+	return plan, nil
+}

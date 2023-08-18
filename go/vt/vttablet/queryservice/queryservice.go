@@ -122,6 +122,8 @@ type QueryService interface {
 
 	// Close must be called for releasing resources.
 	Close(ctx context.Context) error
+
+	ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, sql string, bindVariables map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (*sqltypes.Result, error)
 }
 
 type TransactionState struct {

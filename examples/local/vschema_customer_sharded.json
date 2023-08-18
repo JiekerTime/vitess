@@ -18,6 +18,9 @@
                 "sequence": "customer_seq"
             }
         },
+        "messages": {
+	    "pinned": "00"        
+        },
         "corder": {
             "column_vindexes": [
                 {

@@ -19,6 +19,8 @@ package planbuilder
 import (
 	"fmt"
 
+	"vitess.io/vitess/go/vt/key"
+
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -346,6 +348,13 @@ func buildDMLPlan(
 	if err != nil {
 		return nil, nil, nil, err
 	}
+
+	if edml.Table[0].Pinned != nil {
+		edml.Opcode = engine.ByDestination
+		edml.TargetDestination = key.DestinationKeyspaceID(edml.Table[0].Pinned)
+		return edml, nil, nil, nil
+	}
+
 	routingType, ksidVindex, vindex, values, err := getDMLRouting(where, edmlTable)
 	if err != nil {
 		return nil, nil, nil, err

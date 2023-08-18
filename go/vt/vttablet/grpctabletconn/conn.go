@@ -1077,3 +1077,58 @@ func (conn *gRPCQueryClient) Close(ctx context.Context) error {
 func (conn *gRPCQueryClient) Tablet() *topodatapb.Tablet {
 	return conn.tablet
 }
+
+// Execute sends the query to VTTablet.
+func (conn *gRPCQueryClient) ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, query string, bindVars map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (*sqltypes.Result, error) {
+	conn.mu.RLock()
+	defer conn.mu.RUnlock()
+	if conn.cc == nil {
+		return nil, tabletconn.ConnClosed
+	}
+	Query := &querypb.BoundQuery{
+		Sql:           query,
+		BindVariables: bindVars,
+	}
+	stream, err := conn.c.LoadDataStream(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &querypb.LoadDataStreamRequest{
+		Target:            target,
+		EffectiveCallerId: callerid.EffectiveCallerIDFromContext(ctx),
+		ImmediateCallerId: callerid.ImmediateCallerIDFromContext(ctx),
+		Query:             Query,
+		TransactionId:     transactionID,
+		Options:           options,
+	}
+
+	inLines := make([]string, 0)
+	length := 0
+	count := 0
+	for line := range lines {
+		inLines = append(inLines, line)
+		length = length + len([]byte(line))
+		count = count + 1
+		if length >= 32*1024 {
+			//log.Infof("count:%d->length:%d\n", count, length)
+			req.Lines = inLines
+			err := stream.Send(req)
+			if err != nil {
+				return nil, err
+			}
+			inLines = inLines[:0]
+			length = 0
+			count = 0
+		}
+	}
+	req.Lines = inLines
+
+	err = stream.Send(req)
+	if err != nil {
+		return nil, err
+	}
+	response, err := stream.CloseAndRecv()
+
+	return sqltypes.Proto3ToLoadResult(response), err
+}

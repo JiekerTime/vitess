@@ -880,3 +880,40 @@ func (stc *ScatterConn) GetHealthCheckHealthyStatus(target *querypb.Target) []*d
 	//return stc.gateway.TabletsHealthyStatus(target)
 	return stc.gateway.hc.GetHealthyTabletStats(target)
 }
+
+// UpdateStream just sends the query to the ResolvedShard,
+// and sends the results back.
+func (stc *ScatterConn) streamUpload(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines chan string, sql string) (*sqltypes.Result, error) {
+	_, transactionID := transactionInfo(rs.Target, safeSession, false, stc.txConn.mode)
+	return rs.Gateway.ExecuteLoadData(ctx, rs.Target, lines, sql, nil, transactionID, nil)
+}
+
+// transactionInfo looks at the current session, and returns:
+// - shouldBegin: if we should call 'Begin' to get a transactionID
+// - transactionID: the transactionID to use, or 0 if not in a transaction.
+func transactionInfo(
+	target *querypb.Target,
+	session *SafeSession,
+	notInTransaction bool,
+	txMode vtgatepb.TransactionMode,
+) (shouldBegin bool, transactionID int64) {
+	if !session.InTransaction() {
+		return false, 0
+	}
+	// No need to protect ourselves from the race condition between
+	// Find and Append. The higher level functions ensure that no
+	// duplicate (target) tuples can execute
+	// this at the same time.
+	transactionID, _, _, _ = session.FindAndChangeSessionIfInSingleTxMode(target.Keyspace, target.Shard, target.TabletType, txMode)
+	if transactionID != 0 {
+		return false, transactionID
+	}
+	// We are in a transaction at higher level,
+	// but client requires not to start a transaction for this query.
+	// If a transaction was started on this conn, we will use it (as above).
+	if notInTransaction {
+		return false, 0
+	}
+
+	return true, 0
+}

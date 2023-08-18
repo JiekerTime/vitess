@@ -169,6 +169,8 @@ func CloneSQLNode(in SQLNode) SQLNode {
 		return CloneRefOfExtractValueExpr(in)
 	case *ExtractedSubquery:
 		return CloneRefOfExtractedSubquery(in)
+	case *FieldsClause:
+		return CloneRefOfFieldsClause(in)
 	case *FirstOrLastValueExpr:
 		return CloneRefOfFirstOrLastValueExpr(in)
 	case *Flush:
@@ -293,6 +295,8 @@ func CloneSQLNode(in SQLNode) SQLNode {
 		return CloneRefOfLimit(in)
 	case *LineStringExpr:
 		return CloneRefOfLineStringExpr(in)
+	case *LinesClause:
+		return CloneRefOfLinesClause(in)
 	case *LinestrPropertyFuncExpr:
 		return CloneRefOfLinestrPropertyFuncExpr(in)
 	case ListArg:
@@ -301,6 +305,8 @@ func CloneSQLNode(in SQLNode) SQLNode {
 		return CloneRefOfLiteral(in)
 	case *Load:
 		return CloneRefOfLoad(in)
+	case *LoadDataStmt:
+		return CloneRefOfLoadDataStmt(in)
 	case *LocateExpr:
 		return CloneRefOfLocateExpr(in)
 	case *LockOption:
@@ -1338,6 +1344,16 @@ func CloneRefOfExtractedSubquery(n *ExtractedSubquery) *ExtractedSubquery {
 	return &out
 }
 
+// CloneRefOfFieldsClause creates a deep clone of the input.
+func CloneRefOfFieldsClause(n *FieldsClause) *FieldsClause {
+	if n == nil {
+		return nil
+	}
+	out := *n
+	out.Expr = CloneExpr(n.Expr)
+	return &out
+}
+
 // CloneRefOfFirstOrLastValueExpr creates a deep clone of the input.
 func CloneRefOfFirstOrLastValueExpr(n *FirstOrLastValueExpr) *FirstOrLastValueExpr {
 	if n == nil {
@@ -2023,6 +2039,16 @@ func CloneRefOfLineStringExpr(n *LineStringExpr) *LineStringExpr {
 	return &out
 }
 
+// CloneRefOfLinesClause creates a deep clone of the input.
+func CloneRefOfLinesClause(n *LinesClause) *LinesClause {
+	if n == nil {
+		return nil
+	}
+	out := *n
+	out.Expr = CloneExpr(n.Expr)
+	return &out
+}
+
 // CloneRefOfLinestrPropertyFuncExpr creates a deep clone of the input.
 func CloneRefOfLinestrPropertyFuncExpr(n *LinestrPropertyFuncExpr) *LinestrPropertyFuncExpr {
 	if n == nil {
@@ -2049,6 +2075,19 @@ func CloneRefOfLoad(n *Load) *Load {
 		return nil
 	}
 	out := *n
+	return &out
+}
+
+// CloneRefOfLoadDataStmt creates a deep clone of the input.
+func CloneRefOfLoadDataStmt(n *LoadDataStmt) *LoadDataStmt {
+	if n == nil {
+		return nil
+	}
+	out := *n
+	out.Table = CloneTableName(n.Table)
+	out.Columns = CloneColumns(n.Columns)
+	out.FieldsInfo = CloneRefOfFieldsClause(n.FieldsInfo)
+	out.LinesInfo = CloneRefOfLinesClause(n.LinesInfo)
 	return &out
 }
 
@@ -4162,6 +4201,8 @@ func CloneStatement(in Statement) Statement {
 		return CloneRefOfInsert(in)
 	case *Load:
 		return CloneRefOfLoad(in)
+	case *LoadDataStmt:
+		return CloneRefOfLoadDataStmt(in)
 	case *LockTables:
 		return CloneRefOfLockTables(in)
 	case *OtherAdmin:

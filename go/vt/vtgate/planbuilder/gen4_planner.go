@@ -19,6 +19,8 @@ package planbuilder
 import (
 	"fmt"
 
+	"vitess.io/vitess/go/vt/key"
+
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -231,7 +233,7 @@ func newBuildSelectPlan(
 	plan = pushCommentDirectivesOnPlan(plan, selStmt)
 
 	// todo: build split table plan
-	_, _, _, err = buildTableSelectPlan(ctx, plan)
+	plan, _, _, err = buildTableSelectPlan(ctx, plan)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -293,6 +295,17 @@ func gen4UpdateStmtPlanner(
 		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
 	}
 
+	if len(semTable.Tables) > 0 && semTable.Tables[0].GetVindexTable().Pinned != nil {
+		ks, err := vschema.DefaultKeyspace()
+		if err != nil {
+			return nil, err
+		}
+		var tables []*vindexes.Table
+		tables = append(tables, semTable.Tables[0].GetVindexTable())
+		plan := updateDestinationShortcut(updStmt, ks, tables)
+		plan = pushCommentDirectivesOnPlan(plan, updStmt)
+		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
+	}
 	if semTable.NotUnshardedErr != nil {
 		return nil, semTable.NotUnshardedErr
 	}
@@ -367,9 +380,20 @@ func gen4DeleteStmtPlanner(
 	if err != nil {
 		return nil, err
 	}
-
 	if ks, tables := semTable.SingleUnshardedKeyspace(); ks != nil {
 		plan := deleteUnshardedShortcut(deleteStmt, ks, tables)
+		plan = pushCommentDirectivesOnPlan(plan, deleteStmt)
+		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
+	}
+
+	if len(semTable.Tables) > 0 && semTable.Tables[0].GetVindexTable().Pinned != nil {
+		ks, err := vschema.DefaultKeyspace()
+		if err != nil {
+			return nil, err
+		}
+		var tables []*vindexes.Table
+		tables = append(tables, semTable.Tables[0].GetVindexTable())
+		plan := deleteDestinationShortcut(deleteStmt, ks, tables)
 		plan = pushCommentDirectivesOnPlan(plan, deleteStmt)
 		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
 	}
@@ -446,6 +470,15 @@ func gen4InsertStmtPlanner(version querypb.ExecuteOptions_PlannerVersion, insStm
 	tblInfo, err := semTable.TableInfoFor(semTable.TableSetFor(insStmt.Table))
 	if err != nil {
 		return nil, err
+	}
+	if tblInfo.GetVindexTable().Pinned != nil {
+		ks, err := vschema.DefaultKeyspace()
+		if err != nil {
+			return nil, err
+		}
+		plan := insertDestinationShortcut(insStmt, ks, tblInfo.GetVindexTable())
+		plan = pushCommentDirectivesOnPlan(plan, insStmt)
+		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
 	}
 	if tblInfo.GetVindexTable().Keyspace.Sharded && semTable.NotUnshardedErr != nil {
 		return nil, semTable.NotUnshardedErr
@@ -691,4 +724,34 @@ func checkIfDeleteSupported(del *sqlparser.Delete, semTable *semantics.SemTable)
 	}
 
 	return nil
+}
+
+func insertDestinationShortcut(stmt *sqlparser.Insert, ks *vindexes.Keyspace, tables *vindexes.Table) logicalPlan {
+	eIns := &engine.Insert{}
+	eIns.Keyspace = ks
+	eIns.Table = tables
+	eIns.Opcode = engine.InsertByDestination
+	eIns.TargetDestination = key.DestinationKeyspaceID(tables.Pinned)
+	eIns.Query = generateQuery(stmt)
+	return &insert{eInsert: eIns}
+}
+
+func updateDestinationShortcut(stmt *sqlparser.Update, ks *vindexes.Keyspace, tables []*vindexes.Table) logicalPlan {
+	edml := engine.NewDML()
+	edml.Keyspace = ks
+	edml.Table = tables
+	edml.Opcode = engine.ByDestination
+	edml.TargetDestination = key.DestinationKeyspaceID(tables[0].Pinned)
+	edml.Query = generateQuery(stmt)
+	return &primitiveWrapper{prim: &engine.Update{DML: edml}}
+}
+
+func deleteDestinationShortcut(stmt *sqlparser.Delete, ks *vindexes.Keyspace, tables []*vindexes.Table) logicalPlan {
+	edml := engine.NewDML()
+	edml.Keyspace = ks
+	edml.Table = tables
+	edml.Opcode = engine.ByDestination
+	edml.TargetDestination = key.DestinationKeyspaceID(tables[0].Pinned)
+	edml.Query = generateQuery(stmt)
+	return &primitiveWrapper{prim: &engine.Delete{DML: edml}}
 }

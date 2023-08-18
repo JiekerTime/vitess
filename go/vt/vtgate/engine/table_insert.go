@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 )
@@ -46,5 +47,3 @@ func (t TableInsert) Inputs() []Primitive {
 func (t TableInsert) description() PrimitiveDescription {
 	panic("implement me")
 }
-
-

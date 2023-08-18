@@ -1016,10 +1016,7 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 		c.handleComResetConnection(handler)
 		return true
 	case ComFieldList:
-		c.recycleReadPacket()
-		if !c.writeErrorAndLog(ERUnknownComError, SSNetError, "command handling not implemented yet: %v", data[0]) {
-			return false
-		}
+		return c.handleComFieldList(handler, data)
 	case ComBinlogDump:
 		return c.handleComBinlogDump(handler, data)
 	case ComBinlogDumpGTID:
@@ -1837,7 +1834,7 @@ func (c *Conn) ReConnectCrossTablet() error {
 		Uname:   c.CtMysql.UserName,
 		Pass:    c.CtMysql.Password,
 		Port:    int(c.CtMysql.MysqlPort),
-		Flags:   uint64(c.StatusFlags | CLIENT_LOCAL_FILES),
+		Flags:   uint64(c.StatusFlags | ClientLocalFiles),
 		Charset: "utf8mb4",
 		DbName:  schema}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -2396,4 +2393,89 @@ func (c *Conn) ptComStmtExecute(data []byte, clientConn *Conn) error {
 // GetLocalAddr get local address
 func (c *Conn) GetLocalAddr() string {
 	return c.conn.LocalAddr().String()
+}
+
+func (c *Conn) handleComFieldList(handler Handler, data []byte) bool {
+	tableName, _, err := c.parseComFieldList(data)
+	c.recycleReadPacket()
+	if tableName == "" || err != nil {
+		log.Error("Got unhandled packet from client %v, returning error: %s", c.ConnectionID, data)
+		if err := c.writeErrorPacket(ERUnknownComError, SSUnknownComError, "command handling not implemented yet: %v", data[0]); err != nil {
+			log.Error("Error writing error packet to client: %v", err)
+			return false
+		}
+	}
+	//if c.AttachEnable || c.CrossEnable {
+	//	err := c.crossTabletConn.ptComFieldList(data, c)
+	//	if err != nil {
+	//		log.Errorf("Error ptComFieldList :%v", err)
+	//		if err := c.writeErrorPacket(ERUnknownComError, SSUnknownComError, "command handling not implmented yet: %v", data[0]); err != nil {
+	//			log.Errorf("Error writing error packet to client :%v", err)
+	//		}
+	//		return false
+	//	}
+	//	return true
+	//}
+
+	fieldSent := false
+	// sendFinished is set if the response should just be an OK packet.
+	sendFinished := false
+	err = handler.ComFieldList(c, tableName, func(qr *sqltypes.Result) error {
+		if sendFinished {
+			// Failsafe: Unreachable if server is well-behaved.
+			return io.EOF
+		}
+
+		if !fieldSent {
+			fieldSent = true
+
+			if len(qr.Fields) == 0 {
+				sendFinished = true
+				pok := &PacketOK{
+					affectedRows: qr.RowsAffected,
+					lastInsertID: qr.InsertID,
+					statusFlags:  c.StatusFlags,
+					warnings:     0,
+				}
+				// We should not send any more packets after this.
+				return c.writeOKPacket(pok)
+			}
+			if err := c.writeFieldList(qr, []string{}); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	// If no field was sent, we expect an error.
+	if !fieldSent {
+		// This is just a failsafe. Should never happen.
+		if err == nil || err == io.EOF {
+			log.Error("unexpected: query ended without no results and no error")
+			return false
+		}
+		if werr := c.writeErrorPacketFromError(err); werr != nil {
+			// If we can't even write the error, we're done.
+			log.Error("Error writing query error to %s: %v", c, werr)
+			return false
+		}
+		return true
+	}
+
+	if err != nil {
+		// We can't send an error in the middle of a stream.
+		// All we can do is abort the send, which will cause a 2013.
+		log.Error("Error in the middle of a stream to %s: %v", c, err)
+		return false
+	}
+
+	// Send the end packet only sendFinished is false (results were streamed).
+	if !sendFinished {
+		if err := c.writeEndResult(false, 0, 0, handler.WarningCount(c)); err != nil {
+			log.Error("Error writing result to %s: %v", c, err)
+			return false
+		}
+	}
+	return true
 }

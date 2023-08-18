@@ -10,7 +10,6 @@ import (
 var _ Primitive = (*TableDML)(nil)
 
 type TableDML struct {
-
 }
 
 func (t TableDML) RouteType() string {
@@ -48,4 +47,3 @@ func (t TableDML) Inputs() []Primitive {
 func (t TableDML) description() PrimitiveDescription {
 	panic("implement me")
 }
-

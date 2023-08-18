@@ -148,3 +148,41 @@ func (c *Conn) CloseResult() {
 		}
 	}
 }
+
+// ExecuteStreamLoadData ...
+func (c *Conn) ExecuteStreamLoadData(lines chan string, query string) (result *sqltypes.Result, err error) {
+	defer func() {
+		if err != nil {
+			if sqlerr, ok := err.(*SQLError); ok {
+				sqlerr.Query = query
+			}
+		}
+	}()
+
+	for line := range lines {
+		dataLen := len(line)
+
+		data, pos := c.startEphemeralPacketWithHeader(dataLen)
+		copy(data[pos:], line)
+		err = c.writeEphemeralPacket()
+		if err != nil {
+			return result, err
+		}
+	}
+
+	empData := []byte{}
+	dataLen := len(empData)
+	dataWithHeader := make([]byte, packetHeaderSize+dataLen)
+	copy(dataWithHeader[packetHeaderSize:], empData)
+	c.writePacket(dataWithHeader)
+
+	err = c.endWriterBuffering()
+	if err != nil {
+		return result, err
+	}
+	//c.readComQueryResponse()
+	//c.readComQueryResponse()
+	result, _, _, err = c.ReadQueryResult(0, false)
+
+	return result, err
+}

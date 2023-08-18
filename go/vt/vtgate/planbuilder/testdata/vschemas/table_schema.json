@@ -213,6 +213,14 @@
             }
           ]
         },
+        "table_engine_test": {
+          "column_vindexes": [
+            {
+              "column": "f_key",
+              "name": "user_index"
+            }
+          ]
+        },
         "user_metadata": {
           "column_vindexes": [
             {
