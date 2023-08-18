@@ -67,7 +67,7 @@ func TestResultAggr(t *testing.T) {
 		},
 	}
 
-	finalResult, _ := resultAggr("testHello", resultSlice)
+	finalResult, _ := resultMerge("testHello", resultSlice)
 	printResult(*finalResult)
 
 }

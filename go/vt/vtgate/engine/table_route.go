@@ -79,7 +79,7 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	var innerQrList = []sqltypes.Result{}
 
 	// 3.结果聚合，主要是多张分表的结果聚合，可能要处理field中table name不同的场景
-	resultFinal, error := resultAggr(tableRoute.TableRouteParam.LogicTable.LogicTableName, innerQrList)
+	resultFinal, error := resultMerge(tableRoute.TableRouteParam.LogicTable.LogicTableName, innerQrList)
 	if (error) != nil {
 		return nil, errs[0]
 	}
@@ -94,8 +94,8 @@ func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCur
 	panic("implement me")
 }
 
-// 分表结果聚合
-func resultAggr(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
+// 分表结果
+func resultMerge(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
 
 	result = &sqltypes.Result{}
 	//结果聚合
