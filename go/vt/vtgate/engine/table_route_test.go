@@ -60,7 +60,7 @@ func TestResultAggr(t *testing.T) {
 					sqltypes.NewVarChar("Sto"),
 				},
 				{
-					sqltypes.NewInt64(2),
+					sqltypes.NewInt64(4),
 					sqltypes.NewVarChar("Uve"),
 				},
 			},

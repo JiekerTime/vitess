@@ -43,7 +43,7 @@ type TableRoute struct {
 	TruncateColumnCount int
 }
 
-func (tableRoute TableRoute) RouteType() string {
+func (tableRoute *TableRoute) RouteType() string {
 	panic("implement me")
 }
 
