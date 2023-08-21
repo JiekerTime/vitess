@@ -106,11 +106,11 @@ func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCu
 	}
 
 	// And use the Resolver to map to ResolvedShards.
-	return rp.tableTransform(ctx, ids, destinations)
+	return rp.tableTransform(ctx, destinations)
 }
 
 // tableTransformation Logical Table to Physical Tables
-func (rp *TableRoutingParameters) tableTransform(ctx context.Context, ids []*querypb.Value, destinations []key.TableDestination) (tables []string, err error) {
+func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinations []key.TableDestination) (tables []string, err error) {
 
 	for _, destination := range destinations {
 		if err = destination.Resolve(&rp.LogicTable, func(table uint64) error {

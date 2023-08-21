@@ -24,7 +24,7 @@ func TestTableRoutingParameters_findTableRoute(t *testing.T) {
 		bindVars map[string]*querypb.BindVariable
 	}
 	params := map[string]string{"table_count": "2", "column_type": "int32"}
-	hash, _ := vindexes.CreateVindex("splittableHash", "splittableHash", params)
+	hash, _ := vindexes.CreateVindex("tableHashMod", "tableHashMod", params)
 	logicTable := tableindexes.LogicTableConfig{LogicTableName: "t_user",
 		ActualTableList:  []tableindexes.ActualTable{{"t_user_1", 0}, {"t_user_2", 1}},
 		TableIndexColumn: tableindexes.Column{"id", querypb.Type_INT64},

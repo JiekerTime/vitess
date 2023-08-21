@@ -137,7 +137,7 @@ func (m *SplitTable) PartialVindex() bool {
 }
 
 func init() {
-	Register("splittableHash", NewSplitTable)
+	Register("tableHashMod", NewSplitTable)
 }
 
 func getTableColumnVindex(m map[string]string, colCount int) (map[int]Hashing, int, error) {
