@@ -3,9 +3,9 @@ package tableindexes
 import "vitess.io/vitess/go/vt/proto/query"
 
 type LogicTableConfig struct {
-	LogicTableName string
-
-	ActualTableList []ActualTable
+	LogicTableName   string
+	ActualTableCount uint64
+	ActualTableList  []ActualTable
 
 	TableIndexColumn Column
 

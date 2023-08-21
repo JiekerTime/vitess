@@ -86,8 +86,31 @@ type (
 		Verify(ctx context.Context, vcursor VCursor, ids []sqltypes.Value, ksids [][]byte) ([]bool, error)
 	}
 
+	// TableSingleColumn defines the interface for a single column vindex.
+	TableSingleColumn interface {
+		Vindex
+		// Map can map ids to key.Destination objects.
+		// If the Vindex is unique, each id would map to either
+		// a KeyRange, or a single KeyspaceID.
+		// If the Vindex is non-unique, each id would map to either
+		// a KeyRange, or a list of KeyspaceID.
+		Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.TableDestination, error)
+
+		// Verify returns true for every id that successfully maps to the
+		// specified keyspace id.
+		Verify(ctx context.Context, vcursor VCursor, ids []sqltypes.Value, ksids [][]byte) ([]bool, error)
+	}
+
 	// MultiColumn defines the interface for a multi-column vindex.
 	MultiColumn interface {
+		Vindex
+		Map(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value) ([]key.Destination, error)
+		Verify(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value, ksids [][]byte) ([]bool, error)
+		// PartialVindex returns true if subset of columns can be passed in to the vindex Map and Verify function.
+		PartialVindex() bool
+	}
+	// TableMultiColumn defines the interface for a multi-column vindex.
+	TableMultiColumn interface {
 		Vindex
 		Map(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value) ([]key.Destination, error)
 		Verify(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value, ksids [][]byte) ([]bool, error)

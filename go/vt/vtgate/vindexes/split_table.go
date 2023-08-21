@@ -88,8 +88,8 @@ func (m *SplitTable) NeedsVCursor() bool {
 }
 
 // Map can map ids to key.Destination objects.
-func (m *SplitTable) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.Destination, error) {
-	out := make([]key.Destination, len(ids))
+func (m *SplitTable) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.TableDestination, error) {
+	out := make([]key.TableDestination, len(ids))
 	for i, id := range ids {
 		var num uint64
 		var err error
@@ -108,13 +108,13 @@ func (m *SplitTable) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Va
 			h64 := New64()
 			_, err = h64.Write([]byte(strings.ToLower(strings.TrimSpace(string(id.Raw())))))
 			if err != nil {
-				out[i] = key.DestinationNone{}
+				out[i] = key.TableDestinationNone{}
 				continue
 			}
 			num = h64.Sum64()
 		}
 
-		out[i] = key.DestinationKeyspaceID(vhash(num))
+		out[i] = key.TableDestinationKeyspaceID(vhash(num))
 	}
 	return out, nil
 }
@@ -137,7 +137,7 @@ func (m *SplitTable) PartialVindex() bool {
 }
 
 func init() {
-	Register("splittable", NewSplitTable)
+	Register("splittableHash", NewSplitTable)
 }
 
 func getTableColumnVindex(m map[string]string, colCount int) (map[int]Hashing, int, error) {
