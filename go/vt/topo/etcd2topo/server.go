@@ -53,6 +53,8 @@ var (
 	clientCertPath string
 	clientKeyPath  string
 	serverCaPath   string
+	username       string
+	password       string
 )
 
 // Factory is the consul topo.Factory implementation.
@@ -90,6 +92,8 @@ func registerEtcd2TopoFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&clientCertPath, "topo_etcd_tls_cert", clientCertPath, "path to the client cert to use to connect to the etcd topo server, requires topo_etcd_tls_key, enables TLS")
 	fs.StringVar(&clientKeyPath, "topo_etcd_tls_key", clientKeyPath, "path to the client key to use to connect to the etcd topo server, enables TLS")
 	fs.StringVar(&serverCaPath, "topo_etcd_tls_ca", serverCaPath, "path to the ca to use to validate the server cert when connecting to the etcd topo server")
+	fs.StringVar(&username, "topo_etcd_username", username, "username to use to validate the server cert when connecting to the etcd topo server")
+	fs.StringVar(&password, "topo_etcd_password", password, "password to use to validate the server cert when connecting to the etcd topo server")
 }
 
 // Close implements topo.Server.Close.
@@ -136,12 +140,17 @@ func newTLSConfig(certPath, keyPath, caPath string) (*tls.Config, error) {
 }
 
 // NewServerWithOpts creates a new server with the provided TLS options
-func NewServerWithOpts(serverAddr, root, certPath, keyPath, caPath string) (*Server, error) {
+func NewServerWithOpts(serverAddr, root, certPath, keyPath, caPath, username, password string) (*Server, error) {
 	// TODO: Rename this to NewServer and change NewServer to a name that signifies it uses the process-wide TLS settings.
 	config := clientv3.Config{
 		Endpoints:   strings.Split(serverAddr, ","),
 		DialTimeout: 5 * time.Second,
 		DialOptions: []grpc.DialOption{grpc.WithBlock()},
+	}
+
+	if username != "" && password != "" {
+		config.Username = username
+		config.Password = password
 	}
 
 	tlscfg, err := newTLSConfig(certPath, keyPath, caPath)
@@ -167,5 +176,5 @@ func NewServerWithOpts(serverAddr, root, certPath, keyPath, caPath string) (*Ser
 func NewServer(serverAddr, root string) (*Server, error) {
 	// TODO: Rename this to a name to signifies this function uses the process-wide TLS settings.
 
-	return NewServerWithOpts(serverAddr, root, clientCertPath, clientKeyPath, serverCaPath)
+	return NewServerWithOpts(serverAddr, root, clientCertPath, clientKeyPath, serverCaPath, username, password)
 }
