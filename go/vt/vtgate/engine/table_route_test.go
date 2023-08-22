@@ -14,14 +14,14 @@ func TestGetTableQueries(t *testing.T) {
 	tests := []struct {
 		name     string
 		query    string
-		logicTb  tableindexes.LogicTable
+		logicTb  tableindexes.LogicTableConfig
 		bv       map[string]*querypb.BindVariable
 		expected []*querypb.BoundQuery
 	}{
 		{
 			name:  "Update query",
 			query: `UPDATE my_table SET my_column = 'new_value' WHERE id = 1`,
-			logicTb: tableindexes.LogicTable{
+			logicTb: tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -47,7 +47,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Delete query",
 			query: `DELETE FROM my_table WHERE id = 1`,
-			logicTb: tableindexes.LogicTable{
+			logicTb: tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -73,7 +73,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Insert query",
 			query: `INSERT INTO my_table (my_column) VALUES ('new_value')`,
-			logicTb: tableindexes.LogicTable{
+			logicTb: tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -99,7 +99,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with table alias",
 			query: `SELECT * FROM my_table AS t WHERE t.id = 1`,
-			logicTb: tableindexes.LogicTable{
+			logicTb: tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -125,7 +125,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with table name",
 			query: `SELECT * FROM my_table WHERE id = 1`,
-			logicTb: tableindexes.LogicTable{
+			logicTb: tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
