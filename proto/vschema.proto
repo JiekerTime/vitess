@@ -49,7 +49,8 @@ message Keyspace {
   bool cross_tablet = 85;
   bool attach_enable = 86;
   string attach_to = 87;
-  map<string,Table>split_tables=88;
+  map<string,SplitTable>splittable_tables=88;
+  map<string,Vindex>splittable_vindexes=89;
 }
 
 // Vindex is the vindex info for a Keyspace.
@@ -101,6 +102,19 @@ message Table {
   string source = 7;
 }
 
+// SplitTable is the table info for a Keyspace.
+message SplitTable {
+
+  string LogicTableName = 1;
+  string TableVIndex =2;
+  TableVIndexColumn TableVIndexColumn = 3;
+  uint32 TableCount = 4;
+}
+message TableVIndexColumn {
+   uint32   Index     =1;
+   string  Column     =2;
+   string  ColumnType =3;
+}
 // ColumnVindex is used to associate a column to a vindex.
 message ColumnVindex {
   // Legacy implementation, moving forward all vindexes should define a list of columns.

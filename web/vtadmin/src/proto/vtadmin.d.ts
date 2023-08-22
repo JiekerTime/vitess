@@ -39109,8 +39109,11 @@ export namespace vschema {
         /** Keyspace attach_to */
         attach_to?: (string|null);
 
-        /** Keyspace split_tables */
-        split_tables?: ({ [k: string]: vschema.ITable }|null);
+        /** Keyspace splittable_tables */
+        splittable_tables?: ({ [k: string]: vschema.ISplitTable }|null);
+
+        /** Keyspace splittable_vindexes */
+        splittable_vindexes?: ({ [k: string]: vschema.IVindex }|null);
     }
 
     /** Represents a Keyspace. */
@@ -39143,8 +39146,11 @@ export namespace vschema {
         /** Keyspace attach_to. */
         public attach_to: string;
 
-        /** Keyspace split_tables. */
-        public split_tables: { [k: string]: vschema.ITable };
+        /** Keyspace splittable_tables. */
+        public splittable_tables: { [k: string]: vschema.ISplitTable };
+
+        /** Keyspace splittable_vindexes. */
+        public splittable_vindexes: { [k: string]: vschema.IVindex };
 
         /**
          * Creates a new Keyspace instance using the specified properties.
@@ -39460,6 +39466,230 @@ export namespace vschema {
 
         /**
          * Gets the default type url for Table
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SplitTable. */
+    interface ISplitTable {
+
+        /** SplitTable LogicTableName */
+        LogicTableName?: (string|null);
+
+        /** SplitTable TableVIndex */
+        TableVIndex?: (string|null);
+
+        /** SplitTable TableVIndexColumn */
+        TableVIndexColumn?: (vschema.ITableVIndexColumn|null);
+
+        /** SplitTable TableCount */
+        TableCount?: (number|null);
+    }
+
+    /** Represents a SplitTable. */
+    class SplitTable implements ISplitTable {
+
+        /**
+         * Constructs a new SplitTable.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: vschema.ISplitTable);
+
+        /** SplitTable LogicTableName. */
+        public LogicTableName: string;
+
+        /** SplitTable TableVIndex. */
+        public TableVIndex: string;
+
+        /** SplitTable TableVIndexColumn. */
+        public TableVIndexColumn?: (vschema.ITableVIndexColumn|null);
+
+        /** SplitTable TableCount. */
+        public TableCount: number;
+
+        /**
+         * Creates a new SplitTable instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SplitTable instance
+         */
+        public static create(properties?: vschema.ISplitTable): vschema.SplitTable;
+
+        /**
+         * Encodes the specified SplitTable message. Does not implicitly {@link vschema.SplitTable.verify|verify} messages.
+         * @param message SplitTable message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: vschema.ISplitTable, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SplitTable message, length delimited. Does not implicitly {@link vschema.SplitTable.verify|verify} messages.
+         * @param message SplitTable message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: vschema.ISplitTable, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SplitTable message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SplitTable
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): vschema.SplitTable;
+
+        /**
+         * Decodes a SplitTable message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SplitTable
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): vschema.SplitTable;
+
+        /**
+         * Verifies a SplitTable message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SplitTable message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SplitTable
+         */
+        public static fromObject(object: { [k: string]: any }): vschema.SplitTable;
+
+        /**
+         * Creates a plain object from a SplitTable message. Also converts values to other types if specified.
+         * @param message SplitTable
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: vschema.SplitTable, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SplitTable to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SplitTable
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a TableVIndexColumn. */
+    interface ITableVIndexColumn {
+
+        /** TableVIndexColumn Index */
+        Index?: (number|null);
+
+        /** TableVIndexColumn Column */
+        Column?: (string|null);
+
+        /** TableVIndexColumn ColumnType */
+        ColumnType?: (string|null);
+    }
+
+    /** Represents a TableVIndexColumn. */
+    class TableVIndexColumn implements ITableVIndexColumn {
+
+        /**
+         * Constructs a new TableVIndexColumn.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: vschema.ITableVIndexColumn);
+
+        /** TableVIndexColumn Index. */
+        public Index: number;
+
+        /** TableVIndexColumn Column. */
+        public Column: string;
+
+        /** TableVIndexColumn ColumnType. */
+        public ColumnType: string;
+
+        /**
+         * Creates a new TableVIndexColumn instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns TableVIndexColumn instance
+         */
+        public static create(properties?: vschema.ITableVIndexColumn): vschema.TableVIndexColumn;
+
+        /**
+         * Encodes the specified TableVIndexColumn message. Does not implicitly {@link vschema.TableVIndexColumn.verify|verify} messages.
+         * @param message TableVIndexColumn message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: vschema.ITableVIndexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified TableVIndexColumn message, length delimited. Does not implicitly {@link vschema.TableVIndexColumn.verify|verify} messages.
+         * @param message TableVIndexColumn message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: vschema.ITableVIndexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a TableVIndexColumn message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns TableVIndexColumn
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): vschema.TableVIndexColumn;
+
+        /**
+         * Decodes a TableVIndexColumn message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns TableVIndexColumn
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): vschema.TableVIndexColumn;
+
+        /**
+         * Verifies a TableVIndexColumn message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a TableVIndexColumn message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns TableVIndexColumn
+         */
+        public static fromObject(object: { [k: string]: any }): vschema.TableVIndexColumn;
+
+        /**
+         * Creates a plain object from a TableVIndexColumn message. Also converts values to other types if specified.
+         * @param message TableVIndexColumn
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: vschema.TableVIndexColumn, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this TableVIndexColumn to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for TableVIndexColumn
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */

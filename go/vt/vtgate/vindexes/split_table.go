@@ -30,9 +30,9 @@ import (
 	"vitess.io/vitess/go/vt/vterrors"
 )
 
-var _ Vindex = (*SplitTable)(nil)
+var _ Vindex = (*SplitTableHashMod)(nil)
 
-type SplitTable struct {
+type SplitTableHashMod struct {
 	name       string
 	cost       int
 	tableCount int
@@ -47,7 +47,7 @@ const (
 	defaultTableVindex     = "hash"
 )
 
-// NewSplitTable creates a new SplitTable.
+// NewSplitTable creates a new SplitTableHashMod.
 func NewSplitTable(name string, m map[string]string) (Vindex, error) {
 	tableCount, err := getTableCount(m)
 	if err != nil {
@@ -62,7 +62,7 @@ func NewSplitTable(name string, m map[string]string) (Vindex, error) {
 		return nil, err
 	}
 
-	return &SplitTable{
+	return &SplitTableHashMod{
 		name:       name,
 		cost:       vindexCost,
 		tableCount: tableCount,
@@ -71,24 +71,24 @@ func NewSplitTable(name string, m map[string]string) (Vindex, error) {
 	}, nil
 }
 
-func (m *SplitTable) String() string {
+func (m *SplitTableHashMod) String() string {
 	return m.name
 }
 
-func (m *SplitTable) Cost() int {
+func (m *SplitTableHashMod) Cost() int {
 	return m.cost
 }
 
-func (m *SplitTable) IsUnique() bool {
+func (m *SplitTableHashMod) IsUnique() bool {
 	return true
 }
 
-func (m *SplitTable) NeedsVCursor() bool {
+func (m *SplitTableHashMod) NeedsVCursor() bool {
 	return false
 }
 
 // Map can map ids to key.Destination objects.
-func (m *SplitTable) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.TableDestination, error) {
+func (m *SplitTableHashMod) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.TableDestination, error) {
 	out := make([]key.TableDestination, len(ids))
 	for i, id := range ids {
 		var num uint64
@@ -120,7 +120,7 @@ func (m *SplitTable) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Va
 }
 
 // Verify returns true if ids maps to ksids.
-func (m *SplitTable) Verify(ctx context.Context, vcursor VCursor, ids []sqltypes.Value, ksids [][]byte) ([]bool, error) {
+func (m *SplitTableHashMod) Verify(ctx context.Context, vcursor VCursor, ids []sqltypes.Value, ksids [][]byte) ([]bool, error) {
 	out := make([]bool, len(ids))
 	for i := range ids {
 		num, err := evalengine.ToUint64(ids[i])
@@ -132,7 +132,7 @@ func (m *SplitTable) Verify(ctx context.Context, vcursor VCursor, ids []sqltypes
 	return out, nil
 }
 
-func (m *SplitTable) PartialVindex() bool {
+func (m *SplitTableHashMod) PartialVindex() bool {
 	return true
 }
 
