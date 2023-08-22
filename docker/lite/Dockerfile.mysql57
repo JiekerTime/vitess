@@ -33,14 +33,14 @@ USER vitess
 RUN make install PREFIX=/vt/install
 
 # Start over and build the final image.
-FROM debian:buster-slim
+FROM is.jd.com/vitesss/stardb_base57:centos8.4.2105
 
 # Install dependencies
-COPY docker/lite/install_dependencies.sh /vt/dist/install_dependencies.sh
-RUN /vt/dist/install_dependencies.sh mysql57
+#COPY docker/lite/install_dependencies.sh /vt/dist/install_dependencies.sh
+#RUN /vt/dist/install_dependencies.sh mysql57
 
 # Set up Vitess user and directory tree.
-RUN groupadd -r vitess && useradd -r -g vitess vitess
+#RUN groupadd -r vitess && useradd -r -g vitess vitess
 RUN mkdir -p /vt/vtdataroot && chown -R vitess:vitess /vt
 
 # Set up Vitess environment (just enough to run pre-built Go binaries)
@@ -50,8 +50,8 @@ ENV PATH $VTROOT/bin:$PATH
 
 # Copy artifacts from builder layer.
 COPY --from=builder --chown=vitess:vitess /vt/install /vt
-COPY --from=builder --chown=vitess:vitess /vt/src/vitess.io/vitess/web/vtadmin /vt/web/vtadmin
+#COPY --from=builder --chown=vitess:vitess /vt/src/vitess.io/vitess/web/vtadmin /vt/web/vtadmin
 
 # Create mount point for actual data (e.g. MySQL data dir)
-VOLUME /vt/vtdataroot
+#VOLUME /vt/vtdataroot
 USER vitess

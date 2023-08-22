@@ -305,6 +305,15 @@ define build_docker_image
 	fi
 endef
 
+stardb_release:
+	#build for mysql57
+	$(call build_docker_iamge,docker/base/Dockerfile.mysql57,vitess/base57)
+	${call build_docker_image,docker/lite/Dockerfile.mysql57,vitess/lite57}
+
+	#build for mysql80
+	$(call build_docker_iamge,docker/base/Dockerfile,vitess/base80)
+	${call build_docker_image,docker/lite/Dockerfile,vitess/lite80}
+
 docker_base:
 	${call build_docker_image,docker/base/Dockerfile,vitess/base}
 
