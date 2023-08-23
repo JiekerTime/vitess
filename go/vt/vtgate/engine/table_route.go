@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strings"
+	"vitess.io/vitess/go/vt/log"
 
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
@@ -80,7 +81,15 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	}
 	print(result)
 
-	// 3.结果聚合，主要是多张分表的结果聚合，可能要处理field中table name不同的场景
+	var innerQrList = []sqltypes.Result{}
+
+	// 3.结果merge，主要是多张分表的结果merge，可能要处理field中table name不同的场景
+	resultFinal, err := resultMerge(tableRoute.TableRouteParam.LogicTable.LogicTableName, innerQrList)
+
+	if err != nil {
+		return nil, err
+	}
+	log.Info(resultFinal)
 
 	// 4.可能要处理Order by排序
 
@@ -120,6 +129,21 @@ func rewriteQuery(stmt sqlparser.Statement, act tableindexes.ActualTable, logicT
 
 func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
 	panic("implement me")
+}
+
+func resultMerge(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
+
+	result = &sqltypes.Result{}
+	for _, innner := range innerResult {
+		result.AppendResult(&innner)
+	}
+
+	//field tableName处理，从分表名修改为逻辑表名
+	for _, field := range result.Fields {
+		field.Table = logicTableName
+	}
+
+	return result, nil
 }
 
 func (tableRoute *TableRoute) description() PrimitiveDescription {

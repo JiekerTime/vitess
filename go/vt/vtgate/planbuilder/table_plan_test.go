@@ -2,12 +2,14 @@ package planbuilder
 
 import (
 	"encoding/json"
-	"github.com/nsf/jsondiff"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/nsf/jsondiff"
+	"github.com/stretchr/testify/require"
+
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 )
