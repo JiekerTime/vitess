@@ -67,8 +67,49 @@ func TestResultAggr(t *testing.T) {
 		},
 	}
 
-	finalResult, _ := resultMerge("testHello", resultSlice)
-	printResult(*finalResult)
+	wantResult := &sqltypes.Result{
+
+		Fields: []*querypb.Field{
+			// 定义字段
+			{
+				Name:  "id",
+				Type:  sqltypes.Int64,
+				Table: "test",
+			},
+			{
+				Name:  "name",
+				Type:  sqltypes.VarChar,
+				Table: "test",
+			},
+		},
+		RowsAffected: 4,
+		Rows: [][]sqltypes.Value{
+			// 定义行数据
+			{
+				sqltypes.NewInt64(1),
+				sqltypes.NewVarChar("John"),
+			},
+			{
+				sqltypes.NewInt64(2),
+				sqltypes.NewVarChar("Jane"),
+			},
+			// 定义行数据
+			{
+				sqltypes.NewInt64(3),
+				sqltypes.NewVarChar("Sto"),
+			},
+			{
+				sqltypes.NewInt64(4),
+				sqltypes.NewVarChar("Uve"),
+			},
+		},
+	}
+
+	finalResult, _ := resultMerge("test", resultSlice)
+
+	if !finalResult.Equal(wantResult) {
+		t.Errorf("merge error !")
+	}
 
 }
 
