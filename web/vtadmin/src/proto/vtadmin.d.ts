@@ -1,5 +1,6 @@
 import * as $protobuf from "protobufjs";
 import Long = require("long");
+
 /** Namespace vtadmin. */
 export namespace vtadmin {
 
@@ -39475,17 +39476,17 @@ export namespace vschema {
     /** Properties of a SplitTable. */
     interface ISplitTable {
 
-        /** SplitTable LogicTableName */
-        LogicTableName?: (string|null);
+        /** SplitTable logic_table_name */
+        logic_table_name?: (string|null);
 
-        /** SplitTable TableVIndex */
-        TableVIndex?: (string|null);
+        /** SplitTable table_vindex */
+        table_vindex?: (string|null);
 
-        /** SplitTable TableVIndexColumn */
-        TableVIndexColumn?: (vschema.ITableVIndexColumn|null);
+        /** SplitTable table_vindex_column */
+        table_vindex_column?: (vschema.ITableVIndexColumn[]|null);
 
-        /** SplitTable TableCount */
-        TableCount?: (number|null);
+        /** SplitTable table_count */
+        table_count?: (number|null);
     }
 
     /** Represents a SplitTable. */
@@ -39497,17 +39498,17 @@ export namespace vschema {
          */
         constructor(properties?: vschema.ISplitTable);
 
-        /** SplitTable LogicTableName. */
-        public LogicTableName: string;
+        /** SplitTable logic_table_name. */
+        public logic_table_name: string;
 
-        /** SplitTable TableVIndex. */
-        public TableVIndex: string;
+        /** SplitTable table_vindex. */
+        public table_vindex: string;
 
-        /** SplitTable TableVIndexColumn. */
-        public TableVIndexColumn?: (vschema.ITableVIndexColumn|null);
+        /** SplitTable table_vindex_column. */
+        public table_vindex_column: vschema.ITableVIndexColumn[];
 
-        /** SplitTable TableCount. */
-        public TableCount: number;
+        /** SplitTable table_count. */
+        public table_count: number;
 
         /**
          * Creates a new SplitTable instance using the specified properties.
@@ -39590,14 +39591,14 @@ export namespace vschema {
     /** Properties of a TableVIndexColumn. */
     interface ITableVIndexColumn {
 
-        /** TableVIndexColumn Index */
-        Index?: (number|null);
+        /** TableVIndexColumn index */
+        index?: (number|null);
 
-        /** TableVIndexColumn Column */
-        Column?: (string|null);
+        /** TableVIndexColumn column */
+        column?: (string|null);
 
-        /** TableVIndexColumn ColumnType */
-        ColumnType?: (string|null);
+        /** TableVIndexColumn column_type */
+        column_type?: (string|null);
     }
 
     /** Represents a TableVIndexColumn. */
@@ -39609,14 +39610,14 @@ export namespace vschema {
          */
         constructor(properties?: vschema.ITableVIndexColumn);
 
-        /** TableVIndexColumn Index. */
-        public Index: number;
+        /** TableVIndexColumn index. */
+        public index: number;
 
-        /** TableVIndexColumn Column. */
-        public Column: string;
+        /** TableVIndexColumn column. */
+        public column: string;
 
-        /** TableVIndexColumn ColumnType. */
-        public ColumnType: string;
+        /** TableVIndexColumn column_type. */
+        public column_type: string;
 
         /**
          * Creates a new TableVIndexColumn instance using the specified properties.

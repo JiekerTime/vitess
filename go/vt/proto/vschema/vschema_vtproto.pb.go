@@ -490,20 +490,22 @@ func (m *SplitTable) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x20
 	}
-	if m.TableVIndexColumn != nil {
-		size, err := m.TableVIndexColumn.MarshalToSizedBufferVT(dAtA[:i])
-		if err != nil {
-			return 0, err
+	if len(m.TableVindexColumn) > 0 {
+		for iNdEx := len(m.TableVindexColumn) - 1; iNdEx >= 0; iNdEx-- {
+			size, err := m.TableVindexColumn[iNdEx].MarshalToSizedBufferVT(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarint(dAtA, i, uint64(size))
+			i--
+			dAtA[i] = 0x1a
 		}
-		i -= size
-		i = encodeVarint(dAtA, i, uint64(size))
-		i--
-		dAtA[i] = 0x1a
 	}
-	if len(m.TableVIndex) > 0 {
-		i -= len(m.TableVIndex)
-		copy(dAtA[i:], m.TableVIndex)
-		i = encodeVarint(dAtA, i, uint64(len(m.TableVIndex)))
+	if len(m.TableVindex) > 0 {
+		i -= len(m.TableVindex)
+		copy(dAtA[i:], m.TableVindex)
+		i = encodeVarint(dAtA, i, uint64(len(m.TableVindex)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -1093,13 +1095,15 @@ func (m *SplitTable) SizeVT() (n int) {
 	if l > 0 {
 		n += 1 + l + sov(uint64(l))
 	}
-	l = len(m.TableVIndex)
+	l = len(m.TableVindex)
 	if l > 0 {
 		n += 1 + l + sov(uint64(l))
 	}
-	if m.TableVIndexColumn != nil {
-		l = m.TableVIndexColumn.SizeVT()
-		n += 1 + l + sov(uint64(l))
+	if len(m.TableVindexColumn) > 0 {
+		for _, e := range m.TableVindexColumn {
+			l = e.SizeVT()
+			n += 1 + l + sov(uint64(l))
+		}
 	}
 	if m.TableCount != 0 {
 		n += 1 + sov(uint64(m.TableCount))
@@ -2718,7 +2722,7 @@ func (m *SplitTable) UnmarshalVT(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableVIndex", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TableVindex", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2746,11 +2750,11 @@ func (m *SplitTable) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TableVIndex = string(dAtA[iNdEx:postIndex])
+			m.TableVindex = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TableVIndexColumn", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TableVindexColumn", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2777,10 +2781,8 @@ func (m *SplitTable) UnmarshalVT(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.TableVIndexColumn == nil {
-				m.TableVIndexColumn = &TableVIndexColumn{}
-			}
-			if err := m.TableVIndexColumn.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+			m.TableVindexColumn = append(m.TableVindexColumn, &TableVIndexColumn{})
+			if err := m.TableVindexColumn[len(m.TableVindexColumn)-1].UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

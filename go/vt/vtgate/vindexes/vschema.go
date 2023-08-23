@@ -113,16 +113,16 @@ type Table struct {
 	Source *Source `json:"source,omitempty"`
 }
 type SplitTable struct {
-	LogicTableName    string              `json:"logic_table_name,omitempty"`
-	TableVIndex       string              `json:"table_vindex,omitempty"`
-	TableVIndexColumn []TableVIndexColumn `json:"table_vindex_column,omitempty"`
-	TableCount        int                 `json:"table_count,omitempty"`
+	LogicTableName    sqlparser.IdentifierCS `json:"logic_table_name,omitempty"`
+	TableVIndex       string                 `json:"table_vindex,omitempty"`
+	TableVIndexColumn []*TableVindexColumn   `json:"table_vindex_column,omitempty"`
+	TableCount        uint32                 `json:"table_count,omitempty"`
 }
 
-type TableVIndexColumn struct {
-	Index      int    `json:"index"`
-	Column     string `json:"column"`
-	ColumnType string `json:"column_type"`
+type TableVindexColumn struct {
+	Index      uint32                 `json:"index"`
+	Column     sqlparser.IdentifierCI `json:"column"`
+	ColumnType string                 `json:"column_type"`
 }
 
 // Keyspace contains the keyspcae info for each Table.
@@ -190,20 +190,21 @@ func (col *Column) MarshalJSON() ([]byte, error) {
 
 // KeyspaceSchema contains the schema(table) for a keyspace.
 type KeyspaceSchema struct {
-	Keyspace    *Keyspace
-	Tables      map[string]*Table
-	SplitTables map[string]*SplitTable
-	Vindexes    map[string]Vindex
-	Views       map[string]sqlparser.SelectStatement
-	Error       error
+	Keyspace           *Keyspace
+	Tables             map[string]*Table
+	Vindexes           map[string]Vindex
+	SplitTableTables   map[string]*SplitTable
+	SplitTableVindexes map[string]Vindex
+	Views              map[string]sqlparser.SelectStatement
+	Error              error
 }
 
 type ksJSON struct {
 	Sharded            bool                   `json:"sharded,omitempty"`
 	Tables             map[string]*Table      `json:"tables,omitempty"`
-	SplitTables        map[string]*SplitTable `json:"splittable_tables,omitempty"`
 	Vindexes           map[string]Vindex      `json:"vindexes,omitempty"`
-	SplitTableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
+	SplittableTables   map[string]*SplitTable `json:"splittable_tables,omitempty"`
+	SplittableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
 	Views              map[string]string      `json:"views,omitempty"`
 	Error              string                 `json:"error,omitempty"`
 }
@@ -230,14 +231,24 @@ func (ks *KeyspaceSchema) findTable(
 
 	return nil
 }
+func (ks *KeyspaceSchema) findSplitTable(
+	tableName string,
+) *SplitTable {
+	table := ks.SplitTableTables[tableName]
+	if table != nil {
+		return table
+	}
+	return nil
+}
 
 // MarshalJSON returns a JSON representation of KeyspaceSchema.
 func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 	ksJ := ksJSON{
-		Sharded:     ks.Keyspace.Sharded,
-		Tables:      ks.Tables,
-		SplitTables: ks.SplitTables,
-		Vindexes:    ks.Vindexes,
+		Sharded:            ks.Keyspace.Sharded,
+		Tables:             ks.Tables,
+		Vindexes:           ks.Vindexes,
+		SplittableTables:   ks.SplitTableTables,
+		SplittableVindexes: ks.SplitTableVindexes,
 	}
 	if ks.Error != nil {
 		ksJ.Error = ks.Error.Error()
@@ -326,12 +337,17 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 				AttachEnable: ks.AttachEnable,
 				AttachTo:     ks.AttachTo,
 			},
-			Tables:      make(map[string]*Table),
-			SplitTables: make(map[string]*SplitTable),
-			Vindexes:    make(map[string]Vindex),
+			Tables:             make(map[string]*Table),
+			Vindexes:           make(map[string]Vindex),
+			SplitTableTables:   make(map[string]*SplitTable),
+			SplitTableVindexes: make(map[string]Vindex),
 		}
 		vschema.Keyspaces[ksname] = ksvschema
 		ksvschema.Error = buildTables(ks, vschema, ksvschema)
+		err := buildSplitTables(ks, vschema, ksvschema)
+		if err != nil && ksvschema.Error != nil {
+			ksvschema.Error = err
+		}
 	}
 }
 
@@ -728,210 +744,51 @@ func buildTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSc
 		ksvschema.Tables[tname] = t
 	}
 
-	return buildSplitTables(ks, vschema, ksvschema)
+	return nil
 }
 
 func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSchema) error {
-	//keyspace := ksvschema.Keyspace
-	//for tname, table := range ks.SplitTables {
-	//	t := &SplitTable{
-	//		LogicTableName:                    sqlparser.NewIdentifierCS(tname),
-	//		Keyspace:                keyspace,
-	//		ColumnListAuthoritative: table.ColumnListAuthoritative,
-	//	}
-	//	switch table.Type {
-	//	case "":
-	//		t.Type = table.Type
-	//	case TypeReference:
-	//		if table.Source != "" {
-	//			tableName, err := parseTable(table.Source)
-	//			if err != nil {
-	//				return vterrors.Errorf(
-	//					vtrpcpb.Code_INVALID_ARGUMENT,
-	//					"invalid source %q for reference table: %s; %v",
-	//					table.Source,
-	//					tname,
-	//					err,
-	//				)
-	//			}
-	//			t.Source = &Source{TableName: tableName}
-	//		}
-	//		t.Type = table.Type
-	//	case TypeSequence:
-	//		if keyspace.Sharded && table.Pinned == "" {
-	//			return vterrors.Errorf(
-	//				vtrpcpb.Code_FAILED_PRECONDITION,
-	//				"sequence table has to be in an unsharded keyspace or must be pinned: %s",
-	//				tname,
-	//			)
-	//		}
-	//		t.Type = table.Type
-	//	default:
-	//		return vterrors.Errorf(
-	//			vtrpcpb.Code_NOT_FOUND,
-	//			"unidentified table type %s",
-	//			table.Type,
-	//		)
-	//	}
-	//	if table.Pinned != "" {
-	//		decoded, err := hex.DecodeString(table.Pinned)
-	//		if err != nil {
-	//			return vterrors.Errorf(
-	//				vtrpcpb.Code_INVALID_ARGUMENT,
-	//				"could not decode the keyspace id for pin: %v",
-	//				err,
-	//			)
-	//		}
-	//		t.Pinned = decoded
-	//	}
-	//
-	//	// If keyspace is sharded, then any table that's not a reference or pinned must have vindexes.
-	//	if keyspace.Sharded && t.Type != TypeReference && table.Pinned == "" && len(table.ColumnVindexes) == 0 {
-	//		return vterrors.Errorf(
-	//			vtrpcpb.Code_NOT_FOUND,
-	//			"missing primary col vindex for table: %s",
-	//			tname,
-	//		)
-	//	}
-	//
-	//	// Initialize Columns.
-	//	colNames := make(map[string]bool)
-	//	for _, col := range table.Columns {
-	//		name := sqlparser.NewIdentifierCI(col.Name)
-	//		if colNames[name.Lowered()] {
-	//			return vterrors.Errorf(
-	//				vtrpcpb.Code_INVALID_ARGUMENT,
-	//				"duplicate column name '%v' for table: %s",
-	//				name,
-	//				tname,
-	//			)
-	//		}
-	//		colNames[name.Lowered()] = true
-	//		t.Columns = append(t.Columns, Column{Name: name, Type: col.Type})
-	//	}
-	//
-	//	// Initialize ColumnVindexes.
-	//	for i, ind := range table.ColumnVindexes {
-	//		vindexInfo, ok := ks.Vindexes[ind.Name]
-	//		if !ok {
-	//			return vterrors.Errorf(
-	//				vtrpcpb.Code_NOT_FOUND,
-	//				"vindex %s not found for table %s",
-	//				ind.Name,
-	//				tname,
-	//			)
-	//		}
-	//		vindex := ksvschema.Vindexes[ind.Name]
-	//		owned := false
-	//		if _, ok := vindex.(Lookup); ok && vindexInfo.Owner == tname {
-	//			owned = true
-	//		}
-	//		var columns []sqlparser.IdentifierCI
-	//		if ind.Column != "" {
-	//			if len(ind.Columns) > 0 {
-	//				return vterrors.Errorf(
-	//					vtrpcpb.Code_INVALID_ARGUMENT,
-	//					"can't use column and columns at the same time in vindex (%s) and table (%s)",
-	//					ind.Name,
-	//					tname,
-	//				)
-	//			}
-	//			columns = []sqlparser.IdentifierCI{sqlparser.NewIdentifierCI(ind.Column)}
-	//		} else {
-	//			if len(ind.Columns) == 0 {
-	//				return vterrors.Errorf(
-	//					vtrpcpb.Code_INVALID_ARGUMENT,
-	//					"must specify at least one column for vindex (%s) and table (%s)",
-	//					ind.Name,
-	//					tname,
-	//				)
-	//			}
-	//			for _, indCol := range ind.Columns {
-	//				columns = append(columns, sqlparser.NewIdentifierCI(indCol))
-	//			}
-	//		}
-	//		backfill := false
-	//		if lkpBackfill, ok := vindex.(LookupBackfill); ok {
-	//			backfill = lkpBackfill.IsBackfilling()
-	//		}
-	//		columnVindex := &ColumnVindex{
-	//			Columns:  columns,
-	//			Type:     vindexInfo.Type,
-	//			Name:     ind.Name,
-	//			Owned:    owned,
-	//			Vindex:   vindex,
-	//			isUnique: vindex.IsUnique(),
-	//			cost:     vindex.Cost(),
-	//			backfill: backfill,
-	//		}
-	//		if i == 0 {
-	//			// Perform Primary vindex check.
-	//			if !columnVindex.Vindex.IsUnique() {
-	//				return vterrors.Errorf(
-	//					vtrpcpb.Code_INVALID_ARGUMENT,
-	//					"primary vindex %s is not Unique for table %s",
-	//					ind.Name,
-	//					tname,
-	//				)
-	//			}
-	//			if owned {
-	//				return vterrors.Errorf(
-	//					vtrpcpb.Code_INVALID_ARGUMENT,
-	//					"primary vindex %s cannot be owned for table %s",
-	//					ind.Name,
-	//					tname,
-	//				)
-	//			}
-	//		}
-	//		t.ColumnVindexes = append(t.ColumnVindexes, columnVindex)
-	//		if owned {
-	//			if setter, ok := vindex.(WantOwnerInfo); ok {
-	//				if err := setter.SetOwnerInfo(keyspace.Name, tname, columns); err != nil {
-	//					return err
-	//				}
-	//			}
-	//			t.Owned = append(t.Owned, columnVindex)
-	//		}
-	//
-	//		mcv, isMultiColumn := vindex.(MultiColumn)
-	//		if !isMultiColumn {
-	//			continue
-	//		}
-	//		if i != 0 {
-	//			return vterrors.Errorf(
-	//				vtrpcpb.Code_UNIMPLEMENTED,
-	//				"multi-column vindex %s should be a primary vindex for table %s",
-	//				ind.Name,
-	//				tname,
-	//			)
-	//		}
-	//		if !mcv.PartialVindex() {
-	//			// Partial column selection not allowed.
-	//			// Do not create subset column vindex.
-	//			continue
-	//		}
-	//		cost := vindex.Cost()
-	//		for i := len(columns) - 1; i > 0; i-- {
-	//			columnSubset := columns[:i]
-	//			cost++
-	//			columnVindex = &ColumnVindex{
-	//				Columns:  columnSubset,
-	//				Type:     vindexInfo.Type,
-	//				Name:     ind.Name,
-	//				Owned:    owned,
-	//				Vindex:   vindex,
-	//				cost:     cost,
-	//				partial:  true,
-	//				backfill: backfill,
-	//			}
-	//			t.ColumnVindexes = append(t.ColumnVindexes, columnVindex)
-	//		}
-	//	}
-	//	t.Ordered = colVindexSorted(t.ColumnVindexes)
-	//
-	//	// Add the table to the map entries.
-	//	ksvschema.SplitTables[tname] = t
-	//}
+	for vname, vindexInfo := range ks.SplittableVindexes {
+		vindex, err := CreateVindex(vindexInfo.Type, vname, vindexInfo.Params)
+		if err != nil {
+			return err
+		}
+
+		// If the keyspace requires explicit routing, don't include its indexes
+		// in global routing.
+		if !ks.RequireExplicitRouting {
+			if _, ok := vschema.uniqueVindexes[vname]; ok {
+				vschema.uniqueVindexes[vname] = nil
+			} else {
+				vschema.uniqueVindexes[vname] = vindex
+			}
+		}
+		ksvschema.SplitTableVindexes[vname] = vindex
+	}
+	for tname, table := range ks.SplittableTables {
+		t := &SplitTable{
+			LogicTableName: sqlparser.NewIdentifierCS(tname),
+			TableVIndex:    table.TableVindex,
+			TableCount:     table.TableCount,
+		}
+		// Initialize Columns.
+		colNames := make(map[string]bool)
+		for _, col := range table.TableVindexColumn {
+			name := sqlparser.NewIdentifierCI(col.Column)
+			if colNames[name.Lowered()] {
+				return vterrors.Errorf(
+					vtrpcpb.Code_INVALID_ARGUMENT,
+					"duplicate column name '%v' for table: %s",
+					name,
+					tname,
+				)
+			}
+			colNames[name.Lowered()] = true
+			t.TableVIndexColumn = append(t.TableVIndexColumn, &TableVindexColumn{Column: name, Index: col.Index, ColumnType: col.ColumnType})
+		}
+		// Add the table to the map entries.
+		ksvschema.SplitTableTables[tname] = t
+	}
 
 	return nil
 }
@@ -1206,6 +1063,20 @@ func (vschema *VSchema) findTable(
 	table := ks.findTable(tablename, constructUnshardedIfNotFound)
 	return table, nil
 }
+func (vschema *VSchema) findSplitTable(
+	keyspace,
+	tablename string,
+) (*SplitTable, error) {
+	ks, ok := vschema.Keyspaces[keyspace]
+	if !ok {
+		return nil, vterrors.VT05003(keyspace)
+	}
+	table := ks.findSplitTable(tablename)
+	if table == nil {
+		return nil, vterrors.VT05004(tablename)
+	}
+	return table, nil
+}
 
 func (vschema *VSchema) FirstKeyspace() *Keyspace {
 	var first string
@@ -1261,6 +1132,25 @@ func (vschema *VSchema) FindTableOrVindex(keyspace, name string, tabletType topo
 		return tables, nil, nil
 	}
 	v, err := vschema.FindVindex(keyspace, name)
+	if err != nil {
+		return nil, nil, err
+	}
+	if v != nil {
+		return nil, v, nil
+	}
+	return nil, nil, NotFoundError{TableName: name}
+}
+
+// FindSplitTableOrVindex finds a table or a Vindex by name using Find and FindVindex.
+func (vschema *VSchema) FindSplitTableOrVindex(keyspace, name string) (*SplitTable, Vindex, error) {
+	tables, err := vschema.findSplitTable(keyspace, name)
+	if err != nil {
+		return nil, nil, err
+	}
+	if tables != nil {
+		return tables, nil, nil
+	}
+	v, err := vschema.FindSplitTableVindex(keyspace, name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1342,6 +1232,29 @@ func (vschema *VSchema) FindVindex(keyspace, name string) (Vindex, error) {
 		return nil, vterrors.VT05003(keyspace)
 	}
 	return ks.Vindexes[name], nil
+}
+
+// FindSplitTableVindex finds a split table  vindex by name. If a keyspace is specified, only
+// split table vindexes from that keyspace are searched. If no kesypace is specified, then a split table
+// vindex is returned only if its name is unique across all keyspaces. The function
+// returns an error only if the split table vindex name is ambiguous.
+func (vschema *VSchema) FindSplitTableVindex(keyspace, name string) (Vindex, error) {
+	if keyspace == "" {
+		vindex, ok := vschema.uniqueVindexes[name]
+		if vindex == nil && ok {
+			return nil, vterrors.Errorf(
+				vtrpcpb.Code_FAILED_PRECONDITION,
+				"ambiguous split table vindex reference: %s",
+				name,
+			)
+		}
+		return vindex, nil
+	}
+	splitTableVindex, ok := vschema.Keyspaces[keyspace].SplitTableVindexes[name]
+	if !ok {
+		return nil, vterrors.VT05003(keyspace)
+	}
+	return splitTableVindex, nil
 }
 
 func getShardRoutingRulesKey(keyspace, shard string) string {
