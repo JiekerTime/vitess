@@ -90,6 +90,7 @@ func executorStreamMessages(executor *Executor, sql string) (qr *sqltypes.Result
 	defer cancel()
 	err = executor.StreamExecute(
 		ctx,
+		nil,
 		"TestExecuteStream",
 		NewSafeSession(primarySession),
 		sql,
