@@ -88,7 +88,7 @@ var (
 	VT14004 = errorWithoutState("VT14004", vtrpcpb.Code_UNAVAILABLE, "cannot find keyspace for: %s", "The specified keyspace could not be found.")
 	VT14005 = errorWithoutState("VT14005", vtrpcpb.Code_UNAVAILABLE, "cannot lookup sidecar database for keyspace: %s", "Failed to read sidecar database identifier.")
 
-	VT15001 = errorWithoutState("15001", vtrpcpb.Code_UNAVAILABLE, "No table Route available : %s", "No table Route available.")
+	VT15001 = errorWithoutState("VT15001", vtrpcpb.Code_UNAVAILABLE, "No table Route available : %s", "No table Route available.")
 
 	Errors = []func(args ...any) *VitessError{
 		VT03001,
