@@ -67,26 +67,22 @@ func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bin
 	}
 
 	//计算逻辑分表,取其中一个获取Field信息，其中需要进行SQL表名改写
-
 	actualTableList := tableRoute.TableRouteParam.LogicTable.ActualTableList
-
 	if actualTableList == nil || len(actualTableList) <= 0 {
 		return nil, vterrors.VT15001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
 	}
-
 	actualTable := actualTableList[0]
 
 	fieldQuery, err := rewriteSql(tableRoute.FieldQuery, tableRoute.TableRouteParam.LogicTable.LogicTableName, actualTable)
-
 	if err != nil {
 		return nil, err
 	}
 
 	resolvedShards, mapBindVariables, errFindRout := tableRoute.ShardRouteParam.findRoute(ctx, vcursor, bindVars)
-
 	if errFindRout != nil {
 		return nil, errFindRout
 	}
+
 	qr, err := execShard(ctx, &tableRoute, vcursor, fieldQuery, mapBindVariables[0], resolvedShards[0], false /* rollbackOnError */, false /* canAutocommit */)
 	if err != nil {
 		return nil, err
