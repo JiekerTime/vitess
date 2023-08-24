@@ -82,6 +82,7 @@ func TestVStreamSQLUnsharded(t *testing.T) {
 	go func() {
 		err := executor.StreamExecute(
 			ctx,
+			nil,
 			"TestExecuteStream",
 			NewAutocommitSession(&vtgatepb.Session{TargetString: KsTestUnsharded}),
 			sql,

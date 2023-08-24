@@ -48,7 +48,8 @@
     "KeySpaces": [
       {"Name":"test_keyspace"},
       {"Name":"customer"},
-      {"Name":"commerce"}
+      {"Name":"commerce"},
+      {"Name":"vtd11_2"}
     ]
   },
   "mysql_auth_test": {
