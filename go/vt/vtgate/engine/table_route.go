@@ -61,21 +61,8 @@ func (tableRoute *TableRoute) GetTableName() string {
 }
 
 func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
-
 	if tableRoute.TableRouteParam == nil {
 		return nil, vterrors.VT15001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
-	}
-
-	//计算逻辑分表,取其中一个获取Field信息，其中需要进行SQL表名改写
-	actualTableList := tableRoute.TableRouteParam.LogicTable.ActualTableList
-	if actualTableList == nil || len(actualTableList) <= 0 {
-		return nil, vterrors.VT15001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
-	}
-	actualTable := actualTableList[0]
-
-	fieldQuery, err := rewriteSql(tableRoute.FieldQuery, tableRoute.TableRouteParam.LogicTable.LogicTableName, actualTable)
-	if err != nil {
-		return nil, err
 	}
 
 	resolvedShards, mapBindVariables, errFindRout := tableRoute.ShardRouteParam.findRoute(ctx, vcursor, bindVars)
@@ -83,25 +70,11 @@ func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bin
 		return nil, errFindRout
 	}
 
-	qr, err := execShard(ctx, &tableRoute, vcursor, fieldQuery, mapBindVariables[0], resolvedShards[0], false /* rollbackOnError */, false /* canAutocommit */)
+	qr, err := execShard(ctx, &tableRoute, vcursor, tableRoute.FieldQuery, mapBindVariables[0], resolvedShards[0], false /* rollbackOnError */, false /* canAutocommit */)
 	if err != nil {
 		return nil, err
 	}
 	return qr, nil
-}
-
-func rewriteSql(query string, logicalTableName string, actualTable tableindexes.ActualTable) (string, error) {
-	stmt, _, err := sqlparser.Parse2(query)
-	if err != nil {
-		return query, err
-	}
-
-	queryRewrite, err := rewriteQuery(stmt, actualTable, logicalTableName)
-	if err != nil {
-		return query, err
-	}
-
-	return queryRewrite, nil
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
