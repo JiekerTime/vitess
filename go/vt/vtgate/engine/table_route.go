@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"vitess.io/vitess/go/vt/log"
-
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
@@ -49,7 +47,7 @@ type TableRoute struct {
 }
 
 func (tableRoute *TableRoute) RouteType() string {
-	panic("implement me")
+	return tableRoute.TableRouteParam.Opcode.String()
 }
 
 func (tableRoute *TableRoute) GetKeyspaceName() string {
@@ -89,22 +87,26 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	if err != nil {
 		return nil, err
 	}
-	// 2.执行SQL
-	result, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, queries, false /* rollbackOnError */, false /* canAutocommit */)
-	if errs != nil {
-		return nil, errs[0]
+
+	result := &sqltypes.Result{}
+	for _, query := range queries {
+		rssqueries := make([]*querypb.BoundQuery, 0, len(rss))
+		for range rss {
+			rssqueries = append(rssqueries, query)
+		}
+
+		// 2.执行SQL
+		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssqueries, false /* rollbackOnError */, false /* canAutocommit */)
+		if errs != nil {
+			return nil, errs[0]
+		}
+		result.AppendResult(innerResult)
 	}
-	log.Info(result)
 
-	var innerQrList = []sqltypes.Result{}
-
-	// 3.结果merge，主要是多张分表的结果merge，可能要处理field中table name不同的场景
-	resultFinal, err := resultMerge(tableRoute.TableRouteParam.LogicTable.LogicTableName, innerQrList)
-
-	if err != nil {
-		return nil, err
+	// field tableName处理，从分表名修改为逻辑表名
+	for _, field := range result.Fields {
+		field.Table = tableRoute.TableRouteParam.LogicTable.LogicTableName
 	}
-	log.Info(resultFinal)
 
 	// 4.可能要处理Order by排序
 	if len(tableRoute.OrderBy) == 0 {
