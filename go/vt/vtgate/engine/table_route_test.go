@@ -1,11 +1,15 @@
 package engine
 
 import (
+	"context"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
@@ -373,4 +377,82 @@ func printResult(result sqltypes.Result) {
 		}
 		fmt.Println()
 	}
+}
+
+func TestTableRouteGetFields(t *testing.T) {
+	vindex, _ := vindexes.NewLookupUnique("", map[string]string{
+		"table": "lkp",
+		"f1":    "f1",
+		"f2":    "f2",
+	})
+	sel := NewRoute(
+		Equal,
+		&vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		"dummy_select",
+		"dummy_select_field",
+	)
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           2,
+			},
+		},
+		TableIndexColumn: tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
+	}
+
+	routingParameters := &RoutingParameters{
+		Opcode: Scatter,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+	}
+
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	Values := []evalengine.Expr{
+		evalengine.TupleExpr{
+			evalengine.NewLiteralInt(1),
+			evalengine.NewLiteralInt(2),
+			evalengine.NewLiteralInt(4),
+		},
+	}
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "dummy_select_field",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     TableScatter,
+			LogicTable: logicTable,
+			Values:     Values,
+		},
+	}
+
+	sel.Vindex = vindex.(vindexes.SingleColumn)
+	sel.Values = []evalengine.Expr{
+		evalengine.NewLiteralInt(1),
+	}
+
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
+	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
+	require.NoError(t, err)
+	vc.ExpectLog(t, []string{
+		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
+		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
+	})
+	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
+
 }
