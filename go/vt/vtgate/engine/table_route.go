@@ -165,6 +165,14 @@ func (tableRoute *TableRoute) description() PrimitiveDescription {
 		}
 		other["Values"] = formattedValues
 	}
+	if tableRoute.TableRouteParam.Values != nil {
+		formattedValues := make([]string, 0, len(tableRoute.TableRouteParam.Values))
+		for _, value := range tableRoute.TableRouteParam.Values {
+			formattedValues = append(formattedValues, evalengine.FormatExpr(value))
+		}
+		other["TableValues"] = formattedValues
+	}
+
 	if len(tableRoute.ShardRouteParam.SysTableTableSchema) != 0 {
 		sysTabSchema := "["
 		for idx, tableSchema := range tableRoute.ShardRouteParam.SysTableTableSchema {
