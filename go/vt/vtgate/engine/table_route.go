@@ -4,16 +4,15 @@ import (
 	"context"
 	"sort"
 	"strings"
-	"vitess.io/vitess/go/vt/log"
-
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
+	"vitess.io/vitess/go/vt/log"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 var _ Primitive = (*TableRoute)(nil)
@@ -63,6 +62,11 @@ func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bi
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
+	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
+	if !found {
+		return nil, vterrors.VT13001("not found %s splitTableConfig", tableRoute.TableName)
+	}
+
 	// 0.计算分片，先写Scatter场景，不用计算路由发到所有分片所有表
 	rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAllShards{}})
 	if err != nil {
@@ -70,7 +74,7 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	}
 
 	// 1.SQL改写 改写表名（逻辑表->实际表）
-	queries, err := getTableQueries(tableRoute.Query, tableRoute.TableRouteParam.LogicTable, bindVars)
+	queries, err := getTableQueries(tableRoute.Query, splitTableConfig, bindVars)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +88,7 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	var innerQrList = []sqltypes.Result{}
 
 	// 3.结果merge，主要是多张分表的结果merge，可能要处理field中table name不同的场景
-	resultFinal, err := resultMerge(tableRoute.TableRouteParam.LogicTable.LogicTableName, innerQrList)
+	resultFinal, err := resultMerge(tableRoute.TableName, innerQrList)
 
 	if err != nil {
 		return nil, err
@@ -132,7 +136,6 @@ func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCur
 }
 
 func resultMerge(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
-
 	result = &sqltypes.Result{}
 	for _, innner := range innerResult {
 		result.AppendResult(&innner)

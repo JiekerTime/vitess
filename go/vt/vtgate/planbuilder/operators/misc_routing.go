@@ -70,6 +70,10 @@ func (tr *TargetedRouting) UpdateRoutingParams(_ *plancontext.PlanningContext, r
 	return nil
 }
 
+func (tr *TargetedRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
+	return nil
+}
+
 func (tr *TargetedRouting) Clone() Routing {
 	newTr := *tr
 	return &newTr
@@ -96,6 +100,10 @@ func (n *NoneRouting) UpdateRoutingParams(_ *plancontext.PlanningContext, rp *en
 	return nil
 }
 
+func (n *NoneRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
+	return nil
+}
+
 func (n *NoneRouting) Clone() Routing {
 	return n
 }
@@ -118,6 +126,10 @@ func (n *NoneRouting) Keyspace() *vindexes.Keyspace {
 
 func (rr *AnyShardRouting) UpdateRoutingParams(_ *plancontext.PlanningContext, rp *engine.RoutingParameters) error {
 	rp.Keyspace = rr.keyspace
+	return nil
+}
+
+func (rr *AnyShardRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
 	return nil
 }
 
@@ -163,6 +175,10 @@ func (dr *DualRouting) UpdateRoutingParams(*plancontext.PlanningContext, *engine
 	return nil
 }
 
+func (dr *DualRouting) UpdateTableRoutingParams(*plancontext.PlanningContext, *engine.TableRoutingParameters) error {
+	return nil
+}
+
 func (dr *DualRouting) Clone() Routing {
 	return &DualRouting{}
 }
@@ -186,6 +202,10 @@ func (dr *DualRouting) Keyspace() *vindexes.Keyspace {
 func (sr *SequenceRouting) UpdateRoutingParams(_ *plancontext.PlanningContext, rp *engine.RoutingParameters) error {
 	rp.Opcode = engine.Next
 	rp.Keyspace = sr.keyspace
+	return nil
+}
+
+func (sr *SequenceRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
 	return nil
 }
 

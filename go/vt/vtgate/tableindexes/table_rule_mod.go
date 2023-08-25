@@ -8,5 +8,3 @@ type tableRuleMod struct {
 func (t tableRuleMod) GetIndex(value string, tablesNum int) {
 	panic("implement me")
 }
-
-
