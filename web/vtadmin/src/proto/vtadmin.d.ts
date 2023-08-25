@@ -39598,7 +39598,7 @@ export namespace vschema {
         column?: (string|null);
 
         /** TableVIndexColumn column_type */
-        column_type?: (string|null);
+        column_type?: (query.Type|null);
     }
 
     /** Represents a TableVIndexColumn. */
@@ -39617,7 +39617,7 @@ export namespace vschema {
         public column: string;
 
         /** TableVIndexColumn column_type. */
-        public column_type: string;
+        public column_type: query.Type;
 
         /**
          * Creates a new TableVIndexColumn instance using the specified properties.

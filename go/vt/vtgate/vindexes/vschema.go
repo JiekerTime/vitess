@@ -22,7 +22,9 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/sqlescape"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
@@ -116,13 +118,14 @@ type SplitTable struct {
 	LogicTableName    sqlparser.IdentifierCS `json:"logic_table_name,omitempty"`
 	TableVIndex       string                 `json:"table_vindex,omitempty"`
 	TableVIndexColumn []*TableVindexColumn   `json:"table_vindex_column,omitempty"`
-	TableCount        uint32                 `json:"table_count,omitempty"`
+	TableCount        int32                  `json:"table_count,omitempty"`
+	ActualTables      []*tableindexes.ActualTable
 }
 
 type TableVindexColumn struct {
-	Index      uint32                 `json:"index"`
+	Index      int32                  `json:"index"`
 	Column     sqlparser.IdentifierCI `json:"column"`
-	ColumnType string                 `json:"column_type"`
+	ColumnType querypb.Type           `json:"column_type"`
 }
 
 // Keyspace contains the keyspcae info for each Table.
@@ -203,7 +206,7 @@ type ksJSON struct {
 	Sharded            bool                   `json:"sharded,omitempty"`
 	Tables             map[string]*Table      `json:"tables,omitempty"`
 	Vindexes           map[string]Vindex      `json:"vindexes,omitempty"`
-	SplittableTables   map[string]*SplitTable `json:"splittable_tables,omitempty"`
+	SplittableTables   map[string]*SplitTable `json:"splitable_tables,omitempty"`
 	SplittableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
 	Views              map[string]string      `json:"views,omitempty"`
 	Error              string                 `json:"error,omitempty"`
@@ -345,7 +348,10 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 		vschema.Keyspaces[ksname] = ksvschema
 		ksvschema.Error = buildTables(ks, vschema, ksvschema)
 		err := buildSplitTables(ks, vschema, ksvschema)
-		if err != nil && ksvschema.Error != nil {
+		if err != nil {
+			if ksvschema.Error != nil {
+				ksvschema.Error = fmt.Errorf(ksvschema.Error.Error(), err.Error())
+			}
 			ksvschema.Error = err
 		}
 	}
@@ -786,13 +792,47 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 			colNames[name.Lowered()] = true
 			t.TableVIndexColumn = append(t.TableVIndexColumn, &TableVindexColumn{Column: name, Index: col.Index, ColumnType: col.ColumnType})
 		}
+		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
+			if err := logicToActualTable(t.LogicTableName.String(), int(tableIndex), t); err != nil {
+				return err
+			}
+		}
+
 		// Add the table to the map entries.
 		ksvschema.SplitTableTables[tname] = t
 	}
 
 	return nil
 }
-
+func logicToActualTable(logicTableName string, tableIndex int, table *SplitTable) error {
+	if len(logicTableName) == 0 {
+		return vterrors.Errorf(
+			vtrpcpb.Code_INVALID_ARGUMENT,
+			"logic to actual table name failed table name is:%v",
+			logicTableName,
+		)
+	}
+	if tableIndex < 0 || int(table.TableCount) < tableIndex {
+		return vterrors.Errorf(
+			vtrpcpb.Code_INVALID_ARGUMENT,
+			"logic to actual table name failed '%v' for table index: %v TableCount: %v",
+			logicTableName,
+			tableIndex,
+			table.TableCount,
+		)
+	}
+	splitTableIndex := "_" + strconv.Itoa(tableIndex)
+	position := len(logicTableName)
+	if logicTableName[0] == '`' && logicTableName[len(logicTableName)-1] == '`' {
+		position = len(logicTableName) - 1
+	}
+	var builder strings.Builder
+	builder.WriteString(logicTableName[:position])
+	builder.WriteString(splitTableIndex)
+	builder.WriteString(logicTableName[position:])
+	table.ActualTables = append(table.ActualTables, &tableindexes.ActualTable{ActualTableName: builder.String(), Index: tableIndex})
+	return nil
+}
 func (vschema *VSchema) addTableName(t *Table) {
 	tname := t.Name.String()
 	if _, ok := vschema.globalTables[tname]; ok {
@@ -1063,7 +1103,7 @@ func (vschema *VSchema) findTable(
 	table := ks.findTable(tablename, constructUnshardedIfNotFound)
 	return table, nil
 }
-func (vschema *VSchema) findSplitTable(
+func (vschema *VSchema) FindSplitTable(
 	keyspace,
 	tablename string,
 ) (*SplitTable, error) {
@@ -1076,6 +1116,22 @@ func (vschema *VSchema) findSplitTable(
 		return nil, vterrors.VT05004(tablename)
 	}
 	return table, nil
+}
+func (vschema *VSchema) FindActualTable(
+	keyspace,
+	logicTableName string,
+) (*tableindexes.LogicTableConfig, error) {
+	ks, ok := vschema.Keyspaces[keyspace]
+	if !ok {
+		return nil, vterrors.VT05003(keyspace)
+	}
+	table := ks.findSplitTable(logicTableName)
+	if table == nil {
+		return nil, vterrors.VT05004(logicTableName)
+	}
+	//table.
+	//return table, nil
+	return nil, nil
 }
 
 func (vschema *VSchema) FirstKeyspace() *Keyspace {
@@ -1143,7 +1199,7 @@ func (vschema *VSchema) FindTableOrVindex(keyspace, name string, tabletType topo
 
 // FindSplitTableOrVindex finds a table or a Vindex by name using Find and FindVindex.
 func (vschema *VSchema) FindSplitTableOrVindex(keyspace, name string) (*SplitTable, Vindex, error) {
-	tables, err := vschema.findSplitTable(keyspace, name)
+	tables, err := vschema.FindSplitTable(keyspace, name)
 	if err != nil {
 		return nil, nil, err
 	}

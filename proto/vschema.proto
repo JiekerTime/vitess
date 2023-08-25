@@ -107,12 +107,12 @@ message SplitTable {
   string logic_table_name = 1;
   string table_vindex =2;
   repeated TableVIndexColumn table_vindex_column = 3;
-  uint32 table_count = 4;
+  int32 table_count = 4;
 }
 message TableVIndexColumn {
-   uint32 index       =1;
-   string column      =2;
-   string column_type =3;
+   int32     index       =1;
+   string     column      =2;
+   query.Type column_type =3;
 }
 // ColumnVindex is used to associate a column to a vindex.
 message ColumnVindex {
