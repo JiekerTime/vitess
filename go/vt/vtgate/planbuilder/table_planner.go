@@ -107,8 +107,32 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 		TableIndexColumn: tableindexes.Column{ColumnName: "f_int", ColType: query.Type_VARCHAR},
 	}
 
+	logicTable3 := tableindexes.LogicTableConfig{
+		LogicTableName: "t_authoritative",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "t_authoritative" + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: "t_authoritative" + "_2",
+				Index:           2,
+			},
+			{
+				ActualTableName: "t_authoritative" + "_3",
+				Index:           3,
+			},
+			{
+				ActualTableName: "t_authoritative" + "_4",
+				Index:           4,
+			},
+		},
+		TableIndexColumn: tableindexes.Column{ColumnName: "col1", ColType: query.Type_VARCHAR},
+	}
+
 	logicTableMap = make(map[string]tableindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 	logicTableMap[logicTable2.LogicTableName] = logicTable2
+	logicTableMap[logicTable3.LogicTableName] = logicTable3
 	return logicTableMap
 }
