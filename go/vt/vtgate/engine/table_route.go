@@ -116,7 +116,7 @@ func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableCo
 }
 
 func rewriteQuery(stmt sqlparser.Statement, act tableindexes.ActualTable, logicTbName string) (string, error) {
-	cloneStmt := sqlparser.CloneStatement(stmt)
+	cloneStmt := sqlparser.DeepCloneStatement(stmt)
 	sqlparser.SafeRewrite(cloneStmt, nil, func(cursor *sqlparser.Cursor) bool {
 		switch node := cursor.Node().(type) {
 		case sqlparser.TableName:

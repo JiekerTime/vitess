@@ -24,7 +24,7 @@ type tableRoute struct {
 func (t *tableRoute) WireupGen4(context *plancontext.PlanningContext) error {
 
 	t.eroute.Query = t.Select
-	nodeClone, _ := sqlparser.CloneStatement(t.Select).(*sqlparser.Select)
+	nodeClone, _ := sqlparser.DeepCloneStatement(t.Select).(*sqlparser.Select)
 	logicTable := t.eroute.TableRouteParam.LogicTable
 	tableMap := tableindexes.GetFirstActualTableMap(logicTable)
 	sqlparser.RewirteSplitTableName(nodeClone, tableMap)
