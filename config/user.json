@@ -41,8 +41,6 @@
       {"Name":"test_keyspace"},
       {"Name":"customer"},
       {"Name":"commerce"},
-      {"Name":"vtd11_2"},
-      {"Name":"vindexs_new"}
     ],
     "Privilege": 256
   },
