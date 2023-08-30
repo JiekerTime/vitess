@@ -17,38 +17,40 @@ import (
 
 type TableRoutingParameters struct {
 	// Opcode is the execution opcode.
-	Vindex     vindexes.Vindex
 	Opcode     Opcode
 	LogicTable tableindexes.SplitTableMap
 	// Values specifies the vindex values to use for routing.
 	Values []evalengine.Expr
 }
+type LogicTableName string
+type ActualTableName []string
 
-func (rp *TableRoutingParameters) findTableRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) ([]string, error) {
-	switch rp.Opcode {
-	case Scatter:
-		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
-	case EqualUnique:
-		switch rp.Vindex.(type) {
-		case vindexes.TableMultiColumn:
+func (rp *TableRoutingParameters) findTableRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (map[string]ActualTableName, error) {
+
+	logicTableMap := make(map[string]ActualTableName)
+	var err error
+	for logicTable, _ := range rp.LogicTable {
+		switch rp.Opcode {
+		case Scatter:
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
+		case EqualUnique:
+			logicTableMap[logicTable], err = rp.equal(ctx, vcursor, bindVars)
+			if err != nil {
+				return nil, err
+			}
+		case IN:
+
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 		default:
-			return rp.equal(ctx, vcursor, bindVars)
-		}
-	case IN:
-		switch rp.Vindex.(type) {
-		case vindexes.TableMultiColumn:
-			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
-		default:
+			// Unreachable.
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 		}
-	default:
-		// Unreachable.
-		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 	}
+	return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
+
 }
 
-func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) ([]string, error) {
+func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (ActualTableName, error) {
 
 	//env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	//value, err := env.Evaluate(rp.Values[0])
