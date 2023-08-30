@@ -380,6 +380,86 @@ func printResult(result sqltypes.Result) {
 }
 
 func TestTableRouteGetFields(t *testing.T) {
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           2,
+			},
+		},
+		TableIndexColumn: tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
+	}
+
+	routingParameters := &RoutingParameters{
+		Opcode: Scatter,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+	}
+
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	Values := []evalengine.Expr{
+		evalengine.TupleExpr{
+			evalengine.NewLiteralInt(1),
+			evalengine.NewLiteralInt(2),
+			evalengine.NewLiteralInt(4),
+		},
+	}
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "dummy_select_field",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     TableScatter,
+			LogicTable: logicTable,
+			Values:     Values,
+		},
+	}
+
+	resultSlice := make([]*sqltypes.Result, 0)
+
+	result1 := &sqltypes.Result{
+
+		Fields: []*querypb.Field{
+			// 定义字段
+			{
+				Name: "id",
+				Type: sqltypes.Int64,
+			},
+			{
+				Name: "name",
+				Type: sqltypes.VarChar,
+			},
+		},
+	}
+
+	resultSlice = append(resultSlice, result1)
+
+	vc := &loggingVCursor{
+		shards:  []string{"-20", "20-"},
+		results: resultSlice,
+	}
+
+	got, err := TableRoute.GetFields(context.Background(), vc, map[string]*querypb.BindVariable{})
+
+	require.NoError(t, err)
+	if !got.Equal(result1) {
+		t.Errorf("l.GetFields:\n%v, want\n%v", got, result1)
+	}
+
+}
+
+func TestTableRouteTryExecute(t *testing.T) {
 	vindex, _ := vindexes.NewLookupUnique("", map[string]string{
 		"table": "lkp",
 		"f1":    "f1",
