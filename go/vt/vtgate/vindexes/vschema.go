@@ -206,8 +206,8 @@ type ksJSON struct {
 	Sharded            bool                   `json:"sharded,omitempty"`
 	Tables             map[string]*Table      `json:"tables,omitempty"`
 	Vindexes           map[string]Vindex      `json:"vindexes,omitempty"`
-	SplittableTables   map[string]*SplitTable `json:"splitable_tables,omitempty"`
-	SplittableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
+	SplitTableTables   map[string]*SplitTable `json:"splitable_tables,omitempty"`
+	SplitTableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
 	Views              map[string]string      `json:"views,omitempty"`
 	Error              string                 `json:"error,omitempty"`
 }
@@ -250,8 +250,8 @@ func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 		Sharded:            ks.Keyspace.Sharded,
 		Tables:             ks.Tables,
 		Vindexes:           ks.Vindexes,
-		SplittableTables:   ks.SplitTableTables,
-		SplittableVindexes: ks.SplitTableVindexes,
+		SplitTableTables:   ks.SplitTableTables,
+		SplitTableVindexes: ks.SplitTableVindexes,
 	}
 	if ks.Error != nil {
 		ksJ.Error = ks.Error.Error()
