@@ -11,6 +11,7 @@ import (
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
+	"vitess.io/vitess/go/vt/log"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -76,6 +77,11 @@ func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bin
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
+	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
+	if !found {
+		return nil, vterrors.VT13001("not found %s splitTableConfig", tableRoute.TableName)
+	}
+
 	// 0.计算分片，先写Scatter场景，不用计算路由发到所有分片所有表
 	rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAllShards{}})
 	if err != nil {
@@ -83,29 +89,28 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	}
 
 	// 1.SQL改写 改写表名（逻辑表->实际表）
-	queries, err := getTableQueries(tableRoute.Query, tableRoute.TableRouteParam.LogicTable, bindVars)
+	queries, err := getTableQueries(tableRoute.Query, splitTableConfig, bindVars)
 	if err != nil {
 		return nil, err
 	}
-
-	result := &sqltypes.Result{}
-	for _, query := range queries {
-		rssqueries := make([]*querypb.BoundQuery, 0, len(rss))
-		for range rss {
-			rssqueries = append(rssqueries, query)
-		}
-
-		// 2.执行SQL
-		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssqueries, false /* rollbackOnError */, false /* canAutocommit */)
-		if errs != nil {
-			return nil, errs[0]
-		}
-		result.AppendResult(innerResult)
+	// 2.执行SQL
+	result, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, queries, false /* rollbackOnError */, false /* canAutocommit */)
+	if errs != nil {
+		return nil, errs[0]
 	}
+	print(result)
 
-	// field tableName处理，从分表名修改为逻辑表名
-	for _, field := range result.Fields {
-		field.Table = tableRoute.TableRouteParam.LogicTable.LogicTableName
+	var innerQrList = []sqltypes.Result{}
+
+	// 3.结果merge，主要是多张分表的结果merge，可能要处理field中table name不同的场景
+	resultFinal, err := resultMerge(tableRoute.TableName, innerQrList)
+
+	if err != nil {
+		return nil, err
+	}
+	log.Info(resultFinal)
+	if err != nil {
+		return nil, err
 	}
 
 	// 4.可能要处理Order by排序
@@ -167,7 +172,7 @@ func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableCo
 }
 
 func rewriteQuery(stmt sqlparser.Statement, act tableindexes.ActualTable, logicTbName string) (string, error) {
-	cloneStmt := sqlparser.CloneStatement(stmt)
+	cloneStmt := sqlparser.DeepCloneStatement(stmt)
 	sqlparser.SafeRewrite(cloneStmt, nil, func(cursor *sqlparser.Cursor) bool {
 		switch node := cursor.Node().(type) {
 		case sqlparser.TableName:
@@ -187,7 +192,6 @@ func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCur
 }
 
 func resultMerge(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
-
 	result = &sqltypes.Result{}
 	for _, innner := range innerResult {
 		result.AppendResult(&innner)
@@ -217,6 +221,14 @@ func (tableRoute *TableRoute) description() PrimitiveDescription {
 		}
 		other["Values"] = formattedValues
 	}
+	if tableRoute.TableRouteParam.Values != nil {
+		formattedValues := make([]string, 0, len(tableRoute.TableRouteParam.Values))
+		for _, value := range tableRoute.TableRouteParam.Values {
+			formattedValues = append(formattedValues, evalengine.FormatExpr(value))
+		}
+		other["TableValues"] = formattedValues
+	}
+
 	if len(tableRoute.ShardRouteParam.SysTableTableSchema) != 0 {
 		sysTabSchema := "["
 		for idx, tableSchema := range tableRoute.ShardRouteParam.SysTableTableSchema {

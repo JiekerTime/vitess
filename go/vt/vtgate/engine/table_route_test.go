@@ -396,6 +396,9 @@ func TestTableRouteGetFields(t *testing.T) {
 		TableIndexColumn: tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
 	}
 
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
 	routingParameters := &RoutingParameters{
 		Opcode: Scatter,
 		Keyspace: &vindexes.Keyspace{
@@ -420,8 +423,8 @@ func TestTableRouteGetFields(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     TableScatter,
-			LogicTable: logicTable,
+			Opcode:     Scatter,
+			LogicTable: logicTableMap,
 			Values:     Values,
 		},
 	}
@@ -490,6 +493,9 @@ func TestTableRouteTryExecute(t *testing.T) {
 		TableIndexColumn: tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
 	}
 
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
 	routingParameters := &RoutingParameters{
 		Opcode: Scatter,
 		Keyspace: &vindexes.Keyspace{
@@ -514,8 +520,8 @@ func TestTableRouteTryExecute(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     TableScatter,
-			LogicTable: logicTable,
+			Opcode:     Scatter,
+			LogicTable: logicTableMap,
 			Values:     Values,
 		},
 	}
@@ -530,8 +536,7 @@ func TestTableRouteTryExecute(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
-		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
-		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
+		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
