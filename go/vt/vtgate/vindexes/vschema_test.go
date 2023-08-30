@@ -312,11 +312,11 @@ func TestVSchemaSplitTableColumns(t *testing.T) {
 					"t1": {
 						TableVindex:       "splitTableHashMod",
 						TableCount:        10,
-						TableVindexColumn: []*vschemapb.TableVIndexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
 					"`t2`": {
 						TableVindex:       "splitTableHashMod",
 						TableCount:        20,
-						TableVindexColumn: []*vschemapb.TableVIndexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
 				}}}}
 
 	got := BuildVSchema(&good)
@@ -324,8 +324,8 @@ func TestVSchemaSplitTableColumns(t *testing.T) {
 
 	t1, err := got.FindSplitTable("unsharded", "t1")
 	require.NoError(t, err)
-	assertSplitTableColumn(t, *t1.TableVIndexColumn[0], "col1", sqltypes.VarChar)
-	assertSplitTableColumn(t, *t1.TableVIndexColumn[1], "`col2`", sqltypes.Int32)
+	assertSplitTableColumn(t, *t1.TableVindexColumn[0], "col1", sqltypes.VarChar)
+	assertSplitTableColumn(t, *t1.TableVindexColumn[1], "`col2`", sqltypes.Int32)
 }
 
 func TestVSchemaViews(t *testing.T) {
@@ -428,11 +428,11 @@ func TestSplitTableVSchemaColumnsFail(t *testing.T) {
 					"t1": {
 						TableVindex:       "splitTableHashMod",
 						TableCount:        10,
-						TableVindexColumn: []*vschemapb.TableVIndexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "col1", ColumnType: sqltypes.Int32}}},
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "col1", ColumnType: sqltypes.Int32}}},
 					"`t2`": {
 						TableVindex:       "splitTableHashMod",
 						TableCount:        20,
-						TableVindexColumn: []*vschemapb.TableVIndexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
 				}}}}
 
 	got := BuildVSchema(&good)

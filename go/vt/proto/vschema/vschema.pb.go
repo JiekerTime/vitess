@@ -457,7 +457,7 @@ type SplitTable struct {
 
 	LogicTableName    string               `protobuf:"bytes,1,opt,name=logic_table_name,json=logicTableName,proto3" json:"logic_table_name,omitempty"`
 	TableVindex       string               `protobuf:"bytes,2,opt,name=table_vindex,json=tableVindex,proto3" json:"table_vindex,omitempty"`
-	TableVindexColumn []*TableVIndexColumn `protobuf:"bytes,3,rep,name=table_vindex_column,json=tableVindexColumn,proto3" json:"table_vindex_column,omitempty"`
+	TableVindexColumn []*TableVindexColumn `protobuf:"bytes,3,rep,name=table_vindex_column,json=tableVindexColumn,proto3" json:"table_vindex_column,omitempty"`
 	TableCount        int32                `protobuf:"varint,4,opt,name=table_count,json=tableCount,proto3" json:"table_count,omitempty"`
 }
 
@@ -507,7 +507,7 @@ func (x *SplitTable) GetTableVindex() string {
 	return ""
 }
 
-func (x *SplitTable) GetTableVindexColumn() []*TableVIndexColumn {
+func (x *SplitTable) GetTableVindexColumn() []*TableVindexColumn {
 	if x != nil {
 		return x.TableVindexColumn
 	}
@@ -521,7 +521,7 @@ func (x *SplitTable) GetTableCount() int32 {
 	return 0
 }
 
-type TableVIndexColumn struct {
+type TableVindexColumn struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -531,8 +531,8 @@ type TableVIndexColumn struct {
 	ColumnType query.Type `protobuf:"varint,3,opt,name=column_type,json=columnType,proto3,enum=query.Type" json:"column_type,omitempty"`
 }
 
-func (x *TableVIndexColumn) Reset() {
-	*x = TableVIndexColumn{}
+func (x *TableVindexColumn) Reset() {
+	*x = TableVindexColumn{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vschema_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -540,13 +540,13 @@ func (x *TableVIndexColumn) Reset() {
 	}
 }
 
-func (x *TableVIndexColumn) String() string {
+func (x *TableVindexColumn) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TableVIndexColumn) ProtoMessage() {}
+func (*TableVindexColumn) ProtoMessage() {}
 
-func (x *TableVIndexColumn) ProtoReflect() protoreflect.Message {
+func (x *TableVindexColumn) ProtoReflect() protoreflect.Message {
 	mi := &file_vschema_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -558,26 +558,26 @@ func (x *TableVIndexColumn) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TableVIndexColumn.ProtoReflect.Descriptor instead.
-func (*TableVIndexColumn) Descriptor() ([]byte, []int) {
+// Deprecated: Use TableVindexColumn.ProtoReflect.Descriptor instead.
+func (*TableVindexColumn) Descriptor() ([]byte, []int) {
 	return file_vschema_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *TableVIndexColumn) GetIndex() int32 {
+func (x *TableVindexColumn) GetIndex() int32 {
 	if x != nil {
 		return x.Index
 	}
 	return 0
 }
 
-func (x *TableVIndexColumn) GetColumn() string {
+func (x *TableVindexColumn) GetColumn() string {
 	if x != nil {
 		return x.Column
 	}
 	return ""
 }
 
-func (x *TableVIndexColumn) GetColumnType() query.Type {
+func (x *TableVindexColumn) GetColumnType() query.Type {
 	if x != nil {
 		return x.ColumnType
 	}
@@ -1044,11 +1044,11 @@ var file_vschema_proto_rawDesc = []byte{
 	0x6c, 0x65, 0x56, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x4a, 0x0a, 0x13, 0x74, 0x61, 0x62, 0x6c,
 	0x65, 0x5f, 0x76, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x5f, 0x63, 0x6f, 0x6c, 0x75, 0x6d, 0x6e, 0x18,
 	0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x76, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x2e,
-	0x54, 0x61, 0x62, 0x6c, 0x65, 0x56, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x43, 0x6f, 0x6c, 0x75, 0x6d,
+	0x54, 0x61, 0x62, 0x6c, 0x65, 0x56, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x43, 0x6f, 0x6c, 0x75, 0x6d,
 	0x6e, 0x52, 0x11, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x56, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x43, 0x6f,
 	0x6c, 0x75, 0x6d, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x63, 0x6f,
 	0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x74, 0x61, 0x62, 0x6c, 0x65,
-	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x6f, 0x0a, 0x11, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x56, 0x49,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x6f, 0x0a, 0x11, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x56, 0x69,
 	0x6e, 0x64, 0x65, 0x78, 0x43, 0x6f, 0x6c, 0x75, 0x6d, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e,
 	0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78,
 	0x12, 0x16, 0x0a, 0x06, 0x63, 0x6f, 0x6c, 0x75, 0x6d, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
@@ -1124,7 +1124,7 @@ var file_vschema_proto_goTypes = []interface{}{
 	(*Vindex)(nil),            // 3: vschema.Vindex
 	(*Table)(nil),             // 4: vschema.Table
 	(*SplitTable)(nil),        // 5: vschema.SplitTable
-	(*TableVIndexColumn)(nil), // 6: vschema.TableVIndexColumn
+	(*TableVindexColumn)(nil), // 6: vschema.TableVindexColumn
 	(*ColumnVindex)(nil),      // 7: vschema.ColumnVindex
 	(*AutoIncrement)(nil),     // 8: vschema.AutoIncrement
 	(*Column)(nil),            // 9: vschema.Column
@@ -1149,8 +1149,8 @@ var file_vschema_proto_depIdxs = []int32{
 	7,  // 6: vschema.Table.column_vindexes:type_name -> vschema.ColumnVindex
 	8,  // 7: vschema.Table.auto_increment:type_name -> vschema.AutoIncrement
 	9,  // 8: vschema.Table.columns:type_name -> vschema.Column
-	6,  // 9: vschema.SplitTable.table_vindex_column:type_name -> vschema.TableVIndexColumn
-	19, // 10: vschema.TableVIndexColumn.column_type:type_name -> query.Type
+	6,  // 9: vschema.SplitTable.table_vindex_column:type_name -> vschema.TableVindexColumn
+	19, // 10: vschema.TableVindexColumn.column_type:type_name -> query.Type
 	19, // 11: vschema.Column.type:type_name -> query.Type
 	18, // 12: vschema.SrvVSchema.keyspaces:type_name -> vschema.SrvVSchema.KeyspacesEntry
 	0,  // 13: vschema.SrvVSchema.routing_rules:type_name -> vschema.RoutingRules
@@ -1247,7 +1247,7 @@ func file_vschema_proto_init() {
 			}
 		}
 		file_vschema_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TableVIndexColumn); i {
+			switch v := v.(*TableVindexColumn); i {
 			case 0:
 				return &v.state
 			case 1:

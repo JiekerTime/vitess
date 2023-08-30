@@ -39483,7 +39483,7 @@ export namespace vschema {
         table_vindex?: (string|null);
 
         /** SplitTable table_vindex_column */
-        table_vindex_column?: (vschema.ITableVIndexColumn[]|null);
+        table_vindex_column?: (vschema.ITableVindexColumn[]|null);
 
         /** SplitTable table_count */
         table_count?: (number|null);
@@ -39505,7 +39505,7 @@ export namespace vschema {
         public table_vindex: string;
 
         /** SplitTable table_vindex_column. */
-        public table_vindex_column: vschema.ITableVIndexColumn[];
+        public table_vindex_column: vschema.ITableVindexColumn[];
 
         /** SplitTable table_count. */
         public table_count: number;
@@ -39588,109 +39588,109 @@ export namespace vschema {
         public static getTypeUrl(typeUrlPrefix?: string): string;
     }
 
-    /** Properties of a TableVIndexColumn. */
-    interface ITableVIndexColumn {
+    /** Properties of a TableVindexColumn. */
+    interface ITableVindexColumn {
 
-        /** TableVIndexColumn index */
+        /** TableVindexColumn index */
         index?: (number|null);
 
-        /** TableVIndexColumn column */
+        /** TableVindexColumn column */
         column?: (string|null);
 
-        /** TableVIndexColumn column_type */
+        /** TableVindexColumn column_type */
         column_type?: (query.Type|null);
     }
 
-    /** Represents a TableVIndexColumn. */
-    class TableVIndexColumn implements ITableVIndexColumn {
+    /** Represents a TableVindexColumn. */
+    class TableVindexColumn implements ITableVindexColumn {
 
         /**
-         * Constructs a new TableVIndexColumn.
+         * Constructs a new TableVindexColumn.
          * @param [properties] Properties to set
          */
-        constructor(properties?: vschema.ITableVIndexColumn);
+        constructor(properties?: vschema.ITableVindexColumn);
 
-        /** TableVIndexColumn index. */
+        /** TableVindexColumn index. */
         public index: number;
 
-        /** TableVIndexColumn column. */
+        /** TableVindexColumn column. */
         public column: string;
 
-        /** TableVIndexColumn column_type. */
+        /** TableVindexColumn column_type. */
         public column_type: query.Type;
 
         /**
-         * Creates a new TableVIndexColumn instance using the specified properties.
+         * Creates a new TableVindexColumn instance using the specified properties.
          * @param [properties] Properties to set
-         * @returns TableVIndexColumn instance
+         * @returns TableVindexColumn instance
          */
-        public static create(properties?: vschema.ITableVIndexColumn): vschema.TableVIndexColumn;
+        public static create(properties?: vschema.ITableVindexColumn): vschema.TableVindexColumn;
 
         /**
-         * Encodes the specified TableVIndexColumn message. Does not implicitly {@link vschema.TableVIndexColumn.verify|verify} messages.
-         * @param message TableVIndexColumn message or plain object to encode
+         * Encodes the specified TableVindexColumn message. Does not implicitly {@link vschema.TableVindexColumn.verify|verify} messages.
+         * @param message TableVindexColumn message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encode(message: vschema.ITableVIndexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encode(message: vschema.ITableVindexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Encodes the specified TableVIndexColumn message, length delimited. Does not implicitly {@link vschema.TableVIndexColumn.verify|verify} messages.
-         * @param message TableVIndexColumn message or plain object to encode
+         * Encodes the specified TableVindexColumn message, length delimited. Does not implicitly {@link vschema.TableVindexColumn.verify|verify} messages.
+         * @param message TableVindexColumn message or plain object to encode
          * @param [writer] Writer to encode to
          * @returns Writer
          */
-        public static encodeDelimited(message: vschema.ITableVIndexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
+        public static encodeDelimited(message: vschema.ITableVindexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
 
         /**
-         * Decodes a TableVIndexColumn message from the specified reader or buffer.
+         * Decodes a TableVindexColumn message from the specified reader or buffer.
          * @param reader Reader or buffer to decode from
          * @param [length] Message length if known beforehand
-         * @returns TableVIndexColumn
+         * @returns TableVindexColumn
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): vschema.TableVIndexColumn;
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): vschema.TableVindexColumn;
 
         /**
-         * Decodes a TableVIndexColumn message from the specified reader or buffer, length delimited.
+         * Decodes a TableVindexColumn message from the specified reader or buffer, length delimited.
          * @param reader Reader or buffer to decode from
-         * @returns TableVIndexColumn
+         * @returns TableVindexColumn
          * @throws {Error} If the payload is not a reader or valid buffer
          * @throws {$protobuf.util.ProtocolError} If required fields are missing
          */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): vschema.TableVIndexColumn;
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): vschema.TableVindexColumn;
 
         /**
-         * Verifies a TableVIndexColumn message.
+         * Verifies a TableVindexColumn message.
          * @param message Plain object to verify
          * @returns `null` if valid, otherwise the reason why it is not
          */
         public static verify(message: { [k: string]: any }): (string|null);
 
         /**
-         * Creates a TableVIndexColumn message from a plain object. Also converts values to their respective internal types.
+         * Creates a TableVindexColumn message from a plain object. Also converts values to their respective internal types.
          * @param object Plain object
-         * @returns TableVIndexColumn
+         * @returns TableVindexColumn
          */
-        public static fromObject(object: { [k: string]: any }): vschema.TableVIndexColumn;
+        public static fromObject(object: { [k: string]: any }): vschema.TableVindexColumn;
 
         /**
-         * Creates a plain object from a TableVIndexColumn message. Also converts values to other types if specified.
-         * @param message TableVIndexColumn
+         * Creates a plain object from a TableVindexColumn message. Also converts values to other types if specified.
+         * @param message TableVindexColumn
          * @param [options] Conversion options
          * @returns Plain object
          */
-        public static toObject(message: vschema.TableVIndexColumn, options?: $protobuf.IConversionOptions): { [k: string]: any };
+        public static toObject(message: vschema.TableVindexColumn, options?: $protobuf.IConversionOptions): { [k: string]: any };
 
         /**
-         * Converts this TableVIndexColumn to JSON.
+         * Converts this TableVindexColumn to JSON.
          * @returns JSON object
          */
         public toJSON(): { [k: string]: any };
 
         /**
-         * Gets the default type url for TableVIndexColumn
+         * Gets the default type url for TableVindexColumn
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */

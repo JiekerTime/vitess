@@ -117,7 +117,7 @@ type Table struct {
 type SplitTable struct {
 	LogicTableName    sqlparser.IdentifierCS `json:"logic_table_name,omitempty"`
 	TableVindex       string                 `json:"table_vindex,omitempty"`
-	TableVIndexColumn []*TableVindexColumn   `json:"table_vindex_column,omitempty"`
+	TableVindexColumn []*TableVindexColumn   `json:"table_vindex_column,omitempty"`
 	TableCount        int32                  `json:"table_count,omitempty"`
 	ActualTables      []*tableindexes.ActualTable
 }
@@ -790,7 +790,7 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 				)
 			}
 			colNames[name.Lowered()] = true
-			t.TableVIndexColumn = append(t.TableVIndexColumn, &TableVindexColumn{Column: name, Index: col.Index, ColumnType: col.ColumnType})
+			t.TableVindexColumn = append(t.TableVindexColumn, &TableVindexColumn{Column: name, Index: col.Index, ColumnType: col.ColumnType})
 		}
 		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
 			if err := logicToActualTable(t.LogicTableName.String(), int(tableIndex), t); err != nil {
