@@ -110,8 +110,8 @@ message SplitTable {
   int32 table_count = 4;
 }
 message TableVIndexColumn {
-   int32     index       =1;
-   string     column      =2;
+   int32 index       =1;
+   string column      =2;
    query.Type column_type =3;
 }
 // ColumnVindex is used to associate a column to a vindex.

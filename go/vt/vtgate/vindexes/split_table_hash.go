@@ -74,6 +74,7 @@ func (m *SplitTableHash) Map(ctx context.Context, vcursor VCursor, ids []sqltype
 		}
 
 		if err != nil {
+
 			h64 := New64()
 			_, err = h64.Write([]byte(strings.ToLower(strings.TrimSpace(string(id.Raw())))))
 			if err != nil {
