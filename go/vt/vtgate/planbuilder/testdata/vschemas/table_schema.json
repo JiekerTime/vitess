@@ -275,7 +275,7 @@
             }
           ]
         },
-        "authoritative": {
+        "t_authoritative": {
           "column_vindexes": [
             {
               "column": "user_id",

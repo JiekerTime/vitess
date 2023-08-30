@@ -75,7 +75,7 @@ elif [ "${TOPO}" = "consul" ]; then
     mkdir -p "${VTDATAROOT}/consul"
 else
     ETCD_SERVER="localhost:2379"
-    TOPOLOGY_FLAGS="--topo_implementation etcd2 --topo_global_server_address $ETCD_SERVER --topo_global_root /vitess/global"
+    TOPOLOGY_FLAGS="--topo_implementation etcd2 --topo_global_server_address $ETCD_SERVER --topo_global_root /vitess/global --topo_etcd_username root --topo_etcd_password rootpass"
 
     mkdir -p "${VTDATAROOT}/etcd"
 fi

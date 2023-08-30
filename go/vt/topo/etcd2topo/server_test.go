@@ -195,7 +195,7 @@ func TestEtcd2TLS(t *testing.T) {
 	testRoot := fmt.Sprintf("/test-%v", testIndex)
 
 	// Create the server on the new root.
-	server, err := NewServerWithOpts(clientAddr, testRoot, certs.ClientCert, certs.ClientKey, certs.ServerCA)
+	server, err := NewServerWithOpts(clientAddr, testRoot, certs.ClientCert, certs.ClientKey, certs.ServerCA, "", "")
 	if err != nil {
 		t.Fatalf("NewServerWithOpts failed: %v", err)
 	}

@@ -17,9 +17,8 @@ limitations under the License.
 package sqlparser
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -108,5 +107,68 @@ func TestChangeValueTypeGivesError(t *testing.T) {
 		}
 		return true
 	}, nil)
+
+}
+
+func TestRewriteSplitTableName(t *testing.T) {
+
+	type testCase struct {
+		originSql string
+		expect    string
+		tableMap  map[string]string
+	}
+	ts := []testCase{{
+		originSql: "select * from t_user",
+		expect:    "select * from t_user_1",
+		tableMap: map[string]string{
+			"t_user": "t_user_1",
+		},
+	}, {
+		originSql: "select * from `user`.t_user",
+		expect:    "select * from `user`.t_user_2",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select * from `user`.t_user join t_msg",
+		expect:    "select * from `user`.t_user_2 join t_msg_2",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+			"t_msg":  "t_msg_2",
+		},
+	}, {
+		originSql: "select * from `user`.t_user join t_msg",
+		expect:    "select * from `user`.t_user_2 join t_msg",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select * from `user`.t_user as a join t_msg",
+		expect:    "select * from `user`.t_user_2 as a join t_msg",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select * from `user`.t_user as a join t_msg as b",
+		expect:    "select * from `user`.t_user_2 as a join t_msg_2 as b",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+			"t_msg":  "t_msg_2",
+		},
+	},
+	}
+
+	for _, tc := range ts {
+		t.Run(tc.originSql, func(t *testing.T) {
+			sqlNode, err := Parse(tc.originSql)
+			if err != nil {
+				t.Errorf("SQL parse error")
+			}
+			RewirteSplitTableName(sqlNode, tc.tableMap)
+			assert.Equal(t, tc.expect, String(sqlNode))
+
+		})
+
+	}
 
 }

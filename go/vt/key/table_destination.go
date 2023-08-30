@@ -119,7 +119,7 @@ func (d TableDestinationKeyspaceID) String() string {
 
 // GetTableIndexForKeyspaceID finds the right shard for a keyspace id.
 func GetTableIndexForKeyspaceID(tables *tableindexes.LogicTableConfig, keyspaceID []byte) (uint64, error) {
-	return binary.BigEndian.Uint64(keyspaceID) % tables.ActualTableCount, nil
+	return binary.BigEndian.Uint64(keyspaceID), nil
 }
 
 //

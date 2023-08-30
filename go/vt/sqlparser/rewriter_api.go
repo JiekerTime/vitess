@@ -145,3 +145,18 @@ type application struct {
 	pre, post ApplyFunc
 	cur       Cursor
 }
+
+func RewirteSplitTableName(in SQLNode, tableMap map[string]string) {
+	SafeRewrite(in, nil, func(cursor *Cursor) bool {
+		switch node := cursor.Node().(type) {
+		case TableName:
+			if actName, ok := tableMap[node.Name.String()]; ok {
+				cursor.Replace(TableName{
+					Name:      NewIdentifierCS(actName),
+					Qualifier: node.Qualifier,
+				})
+			}
+		}
+		return true
+	})
+}

@@ -35,6 +35,16 @@ etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/global &
 echo "add /vitess/$cell"
 etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/$cell &
 
+export ETCDCTL_API=3
+echo "add role"
+etcdctl role add root
+echo "add user"
+etcdctl user add root:rootpass
+echo "role grant"
+etcdctl user grant-role root root
+echo "auth enable"
+etcdctl auth enable
+
 # And also add the CellInfo description for the cell.
 # If the node already exists, it's fine, means we used existing data.
 echo "add $cell CellInfo"
