@@ -98,7 +98,6 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	if errs != nil {
 		return nil, errs[0]
 	}
-	print(result)
 
 	var innerQrList = []sqltypes.Result{}
 
@@ -117,7 +116,6 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	if len(tableRoute.OrderBy) == 0 {
 		return result, nil
 	}
-
 	return tableRoute.sort(result)
 }
 
