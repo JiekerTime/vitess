@@ -153,7 +153,7 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 		return true
 	})
 
-	return out, err
+	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
 func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable) ([]*querypb.BoundQuery, error) {
