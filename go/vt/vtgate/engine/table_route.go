@@ -59,7 +59,7 @@ func (tableRoute *TableRoute) GetTableName() string {
 	return tableRoute.TableName
 }
 
-func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
+func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
 	if tableRoute.TableRouteParam == nil {
 		return nil, vterrors.VT15001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
 	}
@@ -69,7 +69,7 @@ func (tableRoute TableRoute) GetFields(ctx context.Context, vcursor VCursor, bin
 		return nil, errFindRout
 	}
 
-	qr, err := execShard(ctx, &tableRoute, vcursor, tableRoute.FieldQuery, mapBindVariables[0], resolvedShards[0], false /* rollbackOnError */, false /* canAutocommit */)
+	qr, err := execShard(ctx, tableRoute, vcursor, tableRoute.FieldQuery, mapBindVariables[0], resolvedShards[0], false /* rollbackOnError */, false /* canAutocommit */)
 	if err != nil {
 		return nil, err
 	}
@@ -108,12 +108,11 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 		result.AppendResult(innerResult)
 	}
 
-	var innerQrList = []sqltypes.Result{}
+	for _, field := range result.Fields {
+		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
+	}
 
-	// 3.结果merge，主要是多张分表的结果merge，可能要处理field中table name不同的场景
-	resultFinal, err := resultMerge(tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName, innerQrList)
-
-	log.Info(resultFinal)
+	log.Info(result)
 
 	// 4.可能要处理Order by排序
 	if len(tableRoute.OrderBy) == 0 {
