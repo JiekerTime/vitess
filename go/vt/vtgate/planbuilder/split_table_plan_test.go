@@ -14,7 +14,20 @@ import (
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 )
 
-func TestTableOne(t *testing.T) {
+func TestSplitTablePlan(t *testing.T) {
+	oprewriters.DebugOperatorTree = true
+	vschema := &vschemaWrapper{
+		v:             loadSchema(t, "vschemas/table_schema.json", true),
+		tabletType:    topodatapb.TabletType_PRIMARY,
+		sysVarEnabled: true,
+		version:       Gen4,
+	}
+	output := makeTestOutput(t)
+	testTableFile(t, "table_select_case.json", output, vschema, false)
+	testTableFile(t, "table_filter_cases.json", output, vschema, false)
+}
+
+func TestSplitTableOne(t *testing.T) {
 	t.Skip()
 	oprewriters.DebugOperatorTree = true
 	vschema := &vschemaWrapper{
@@ -25,17 +38,6 @@ func TestTableOne(t *testing.T) {
 	}
 	output := makeTestOutput(t)
 	testTableFile(t, "table_onecase.json", output, vschema, false)
-}
-
-func TestTable(t *testing.T) {
-	vschema := &vschemaWrapper{
-		v:             loadSchema(t, "vschemas/table_schema.json", true),
-		tabletType:    topodatapb.TabletType_PRIMARY,
-		sysVarEnabled: true,
-		version:       Gen4,
-	}
-	output := makeTestOutput(t)
-	testTableFile(t, "table_select_case.json", output, vschema, false)
 }
 
 func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemaWrapper, render bool) {

@@ -46,9 +46,12 @@ func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *
 	}
 
 	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
-	err = op.Routing.UpdateTableRoutingParams(ctx, rp)
-	if err != nil {
-		return nil, err
+	tableRouting, ok := op.Routing.(*operators.TableShardedRouting)
+	if ok {
+		err = tableRouting.UpdateTableRoutingParams(ctx, rp)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &engine.TableRoute{

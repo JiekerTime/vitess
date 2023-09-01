@@ -7,7 +7,7 @@ type SplitTableMap map[string]LogicTableConfig
 type LogicTableConfig struct {
 	LogicTableName     string
 	ActualTableList    []ActualTable
-	TableIndexColumn   Column
+	TableIndexColumn   *Column
 	TableIndexRule     TableIndexRule
 	SequenceColumnName string
 }
@@ -22,7 +22,7 @@ type Column struct {
 	ColType    query.Type
 }
 
-// Gets the first table mapping of the splitable
+// GetFirstActualTableMap Gets the first table mapping of the splitable
 // It is used in filedquery
 func GetFirstActualTableMap(logicTable SplitTableMap) map[string]string {
 	firstActualTable := make(map[string]string)
