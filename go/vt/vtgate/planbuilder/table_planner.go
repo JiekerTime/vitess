@@ -81,7 +81,7 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 				Index:           2,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "col", ColType: query.Type_VARCHAR},
+		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: query.Type_VARCHAR}},
 	}
 
 	logicTable2 := tableindexes.LogicTableConfig{
@@ -104,7 +104,7 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 				Index:           4,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "f_int", ColType: query.Type_VARCHAR},
+		TableIndexColumn: []*tableindexes.Column{{Column: "f_int", ColumnType: query.Type_VARCHAR}},
 	}
 
 	logicTable3 := tableindexes.LogicTableConfig{
@@ -127,7 +127,7 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 				Index:           4,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "col1", ColType: query.Type_VARCHAR},
+		TableIndexColumn: []*tableindexes.Column{{Column: "col1", ColumnType: query.Type_VARCHAR}},
 	}
 
 	logicTableMap = make(map[string]tableindexes.LogicTableConfig)
