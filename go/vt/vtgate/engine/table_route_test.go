@@ -429,7 +429,7 @@ func TestTableRouteGetFields(t *testing.T) {
 				Index:           2,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
+		TableIndexColumn: &tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
 	}
 
 	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
@@ -526,7 +526,7 @@ func TestTableRouteTryExecute(t *testing.T) {
 				Index:           2,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
+		TableIndexColumn: &tableindexes.Column{ColumnName: "f1", ColType: querypb.Type_VARCHAR},
 	}
 
 	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
