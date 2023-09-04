@@ -102,7 +102,7 @@ func (tableRoute *TableRoute) executeInternal(
 	}
 
 	//1. 计算分表
-	err = tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars, *tableRoute.ShardRouteParam)
+	err = tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars, *tableRoute.ShardRouteParam, tableRoute.TableName)
 	if err != nil {
 		return nil, err
 	}

@@ -24,7 +24,7 @@ type LogicTableName string
 
 type ActualTableName []string
 
-func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, routingParameters RoutingParameters) error {
+func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, routingParameters RoutingParameters, tableName string) error {
 	switch rp.Opcode {
 	case None:
 		return nil
@@ -35,7 +35,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 	case Reference:
 	//	return rp.anyShard(ctx, vcursor, bindVars)
 	case Scatter:
-		return rp.byDestination(ctx, vcursor, bindVars, key.DestinationAllShards{}, routingParameters)
+		return rp.byDestination(ctx, vcursor, bindVars, key.DestinationAllShards{}, routingParameters, tableName)
 	case ByDestination:
 	//	return rp.byDestination(ctx, vcursor, bindVars, rp.TargetDestination)
 	case Equal, EqualUnique, SubShard:
@@ -67,22 +67,15 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 	return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 }
 
-func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, destination key.Destination, routingParameters RoutingParameters) error {
+func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, destination key.Destination, routingParameters RoutingParameters, tableName string) error {
 
-	for logicTableName, logicTableConfig := range rp.LogicTable {
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
 
-		splitTable, err := vcursor.FindSplitTable(logicTableName)
-		if err != nil {
-			return err
-		}
-
-		actualTableList := make([]tableindexes.ActualTable, 0)
-
-		for _, actualTable := range splitTable.ActualTables {
-			actualTableList = append(actualTableList, *actualTable)
-		}
-		logicTableConfig.ActualTableList = actualTableList
+	logicTableConfig, err := vcursor.FindSplitTable(tableName)
+	if err != nil {
+		return err
 	}
+	logicTableMap[tableName] = *logicTableConfig
 
 	return nil
 }

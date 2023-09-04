@@ -266,7 +266,7 @@ func (t *noopVCursor) SetWorkload(querypb.ExecuteOptions_Workload) {
 	panic("implement me")
 }
 
-func (f *noopVCursor) FindSplitTable(name string) (*vindexes.SplitTable, error) {
+func (f *noopVCursor) FindSplitTable(name string) (*tableindexes.LogicTableConfig, error) {
 	return nil, nil
 }
 
@@ -429,17 +429,8 @@ func (f *loggingVCursor) InTransactionAndIsDML() bool {
 	return false
 }
 
-func (f *loggingVCursor) FindSplitTable(name string) (*vindexes.SplitTable, error) {
-
-	actualTableList := make([]*tableindexes.ActualTable, 0)
-
-	for _, a := range f.logicTableConfig.ActualTableList {
-		var actualTableTemp = a
-		actualTableList = append(actualTableList, &actualTableTemp)
-	}
-
-	splitTable := &vindexes.SplitTable{ActualTables: actualTableList}
-	return splitTable, nil
+func (f *loggingVCursor) FindSplitTable(name string) (*tableindexes.LogicTableConfig, error) {
+	return &f.logicTableConfig, nil
 }
 
 func (f *loggingVCursor) LookupRowLockShardSession() vtgatepb.CommitOrder {

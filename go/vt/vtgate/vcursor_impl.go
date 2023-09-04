@@ -24,6 +24,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/vt/vtgate/logstats"
 
@@ -264,7 +265,7 @@ func (vc *vcursorImpl) FindRoutedTable(name sqlparser.TableName) (*vindexes.Tabl
 	return table, nil
 }
 
-func (vc *vcursorImpl) FindSplitTable(name string) (*vindexes.SplitTable, error) {
+func (vc *vcursorImpl) FindSplitTable(name string) (*tableindexes.LogicTableConfig, error) {
 	destKeyspace, _, _, err := vc.executor.ParseDestinationTarget(name)
 	if err != nil {
 		return nil, err
