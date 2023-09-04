@@ -341,7 +341,7 @@ type DestinationTableKeyspaceID struct {
 
 // Resolve is part of the Destination interface.
 func (d DestinationTableKeyspaceID) Resolve(allShards []*topodatapb.ShardReference, addTable func(table string) error) error {
-	table, err := GetShardANDTableForKeyspaceID(allShards, d)
+	table, err := GetShardAndTableForKeyspaceID(allShards, d)
 	if err != nil {
 		return err
 	}
@@ -353,8 +353,8 @@ func (d DestinationTableKeyspaceID) String() string {
 	return "DestinationTableKeyspaceID(" + hex.EncodeToString(d.Table) + ")"
 }
 
-// GetShardANDTableForKeyspaceID finds the right shard for a keyspace id.
-func GetShardANDTableForKeyspaceID(allShards []*topodatapb.ShardReference, KeyspaceID DestinationTableKeyspaceID) (string, error) {
+// GetShardAndTableForKeyspaceID finds the right shard for a keyspace id.
+func GetShardAndTableForKeyspaceID(allShards []*topodatapb.ShardReference, KeyspaceID DestinationTableKeyspaceID) (string, error) {
 	if len(allShards) == 0 {
 		return "", vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no shard in keyspace")
 	}
