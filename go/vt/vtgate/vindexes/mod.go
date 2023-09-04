@@ -22,7 +22,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strconv"
-	"strings"
+	"vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -37,12 +38,14 @@ var (
 // Mod defines vindex that hashes an int64 to a KeyspaceId
 // It's Unique, Reversible and Functional.
 type Mod struct {
-	name string
+	name    string
 	modSize uint64
 }
+
 const (
-	paramModSize  = "mod_size"
+	paramModSize = "mod_size"
 )
+
 // NewMod creates a new Mod.
 func NewMod(name string, _ map[string]string) (Vindex, error) {
 	return &Mod{name: name}, nil
@@ -86,16 +89,11 @@ func (vind *Mod) Map(ctx context.Context, cursor VCursor, ids []sqltypes.Value) 
 		}
 
 		if err != nil {
-			h64 := New64()
-			_, err = h64.Write([]byte(strings.ToLower(strings.TrimSpace(string(id.Raw())))))
-			if err != nil {
-				out[i] = key.DestinationNone{}
-				continue
-			}
-			num = h64.Sum64()
+			out[i] = key.DestinationNone{}
+			return nil, vterrors.Errorf(vtrpc.Code_OUT_OF_RANGE, "column data %s out of range for modulo operation ", id.String())
 		}
 		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf,num%vind.modSize)
+		binary.BigEndian.PutUint64(buf, num%vind.modSize)
 		out[i] = key.DestinationModKeyspaceID(buf)
 	}
 	return out, nil

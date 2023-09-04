@@ -22,10 +22,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-
 	"vitess.io/vitess/go/sqlescape"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -113,19 +110,6 @@ type Table struct {
 	// Source is a keyspace-qualified table name that points to the source of a
 	// reference table. Only applicable for tables with Type set to "reference".
 	Source *Source `json:"source,omitempty"`
-}
-type SplitTable struct {
-	LogicTableName    sqlparser.IdentifierCS `json:"logic_table_name,omitempty"`
-	TableVindex       string                 `json:"table_vindex,omitempty"`
-	TableVindexColumn []*TableVindexColumn   `json:"table_vindex_column,omitempty"`
-	TableCount        int32                  `json:"table_count,omitempty"`
-	ActualTables      []*tableindexes.ActualTable
-}
-
-type TableVindexColumn struct {
-	Index      int32                  `json:"index"`
-	Column     sqlparser.IdentifierCI `json:"column"`
-	ColumnType querypb.Type           `json:"column_type"`
 }
 
 // Keyspace contains the keyspcae info for each Table.
@@ -232,15 +216,6 @@ func (ks *KeyspaceSchema) findTable(
 		return &Table{Name: sqlparser.NewIdentifierCS(tablename), Keyspace: ks.Keyspace}
 	}
 
-	return nil
-}
-func (ks *KeyspaceSchema) findSplitTable(
-	tableName string,
-) *SplitTable {
-	table := ks.SplitTableTables[tableName]
-	if table != nil {
-		return table
-	}
 	return nil
 }
 
@@ -752,87 +727,6 @@ func buildTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSc
 
 	return nil
 }
-
-func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSchema) error {
-	for vname, vindexInfo := range ks.SplittableVindexes {
-		vindex, err := CreateVindex(vindexInfo.Type, vname, vindexInfo.Params)
-		if err != nil {
-			return err
-		}
-
-		// If the keyspace requires explicit routing, don't include its indexes
-		// in global routing.
-		if !ks.RequireExplicitRouting {
-			if _, ok := vschema.uniqueVindexes[vname]; ok {
-				vschema.uniqueVindexes[vname] = nil
-			} else {
-				vschema.uniqueVindexes[vname] = vindex
-			}
-		}
-		ksvschema.SplitTableVindexes[vname] = vindex
-	}
-	for tname, table := range ks.SplittableTables {
-		t := &SplitTable{
-			LogicTableName: sqlparser.NewIdentifierCS(tname),
-			TableVindex:    table.TableVindex,
-			TableCount:     table.TableCount,
-		}
-		// Initialize Columns.
-		colNames := make(map[string]bool)
-		for _, col := range table.TableVindexColumn {
-			name := sqlparser.NewIdentifierCI(col.Column)
-			if colNames[name.Lowered()] {
-				return vterrors.Errorf(
-					vtrpcpb.Code_INVALID_ARGUMENT,
-					"duplicate column name '%v' for table: %s",
-					name,
-					tname,
-				)
-			}
-			colNames[name.Lowered()] = true
-			t.TableVindexColumn = append(t.TableVindexColumn, &TableVindexColumn{Column: name, Index: col.Index, ColumnType: col.ColumnType})
-		}
-		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
-			if err := logicToActualTable(t.LogicTableName.String(), int(tableIndex), t); err != nil {
-				return err
-			}
-		}
-
-		// Add the table to the map entries.
-		ksvschema.SplitTableTables[tname] = t
-	}
-
-	return nil
-}
-func logicToActualTable(logicTableName string, tableIndex int, table *SplitTable) error {
-	if len(logicTableName) == 0 {
-		return vterrors.Errorf(
-			vtrpcpb.Code_INVALID_ARGUMENT,
-			"logic to actual table name failed table name is:%v",
-			logicTableName,
-		)
-	}
-	if tableIndex < 0 || int(table.TableCount) < tableIndex {
-		return vterrors.Errorf(
-			vtrpcpb.Code_INVALID_ARGUMENT,
-			"logic to actual table name failed '%v' for table index: %v TableCount: %v",
-			logicTableName,
-			tableIndex,
-			table.TableCount,
-		)
-	}
-	splitTableIndex := "_" + strconv.Itoa(tableIndex)
-	position := len(logicTableName)
-	if logicTableName[0] == '`' && logicTableName[len(logicTableName)-1] == '`' {
-		position = len(logicTableName) - 1
-	}
-	var builder strings.Builder
-	builder.WriteString(logicTableName[:position])
-	builder.WriteString(splitTableIndex)
-	builder.WriteString(logicTableName[position:])
-	table.ActualTables = append(table.ActualTables, &tableindexes.ActualTable{ActualTableName: builder.String(), Index: tableIndex})
-	return nil
-}
 func (vschema *VSchema) addTableName(t *Table) {
 	tname := t.Name.String()
 	if _, ok := vschema.globalTables[tname]; ok {
@@ -1103,36 +997,6 @@ func (vschema *VSchema) findTable(
 	table := ks.findTable(tablename, constructUnshardedIfNotFound)
 	return table, nil
 }
-func (vschema *VSchema) FindSplitTable(
-	keyspace,
-	tablename string,
-) (*SplitTable, error) {
-	ks, ok := vschema.Keyspaces[keyspace]
-	if !ok {
-		return nil, vterrors.VT05003(keyspace)
-	}
-	table := ks.findSplitTable(tablename)
-	if table == nil {
-		return nil, vterrors.VT05004(tablename)
-	}
-	return table, nil
-}
-func (vschema *VSchema) FindActualTable(
-	keyspace,
-	logicTableName string,
-) (*tableindexes.LogicTableConfig, error) {
-	ks, ok := vschema.Keyspaces[keyspace]
-	if !ok {
-		return nil, vterrors.VT05003(keyspace)
-	}
-	table := ks.findSplitTable(logicTableName)
-	if table == nil {
-		return nil, vterrors.VT05004(logicTableName)
-	}
-	//table.
-	//return table, nil
-	return nil, nil
-}
 
 func (vschema *VSchema) FirstKeyspace() *Keyspace {
 	var first string
@@ -1188,25 +1052,6 @@ func (vschema *VSchema) FindTableOrVindex(keyspace, name string, tabletType topo
 		return tables, nil, nil
 	}
 	v, err := vschema.FindVindex(keyspace, name)
-	if err != nil {
-		return nil, nil, err
-	}
-	if v != nil {
-		return nil, v, nil
-	}
-	return nil, nil, NotFoundError{TableName: name}
-}
-
-// FindSplitTableOrVindex finds a table or a Vindex by name using Find and FindVindex.
-func (vschema *VSchema) FindSplitTableOrVindex(keyspace, name string) (*SplitTable, Vindex, error) {
-	tables, err := vschema.FindSplitTable(keyspace, name)
-	if err != nil {
-		return nil, nil, err
-	}
-	if tables != nil {
-		return tables, nil, nil
-	}
-	v, err := vschema.FindSplitTableVindex(keyspace, name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1288,29 +1133,6 @@ func (vschema *VSchema) FindVindex(keyspace, name string) (Vindex, error) {
 		return nil, vterrors.VT05003(keyspace)
 	}
 	return ks.Vindexes[name], nil
-}
-
-// FindSplitTableVindex finds a split table  vindex by name. If a keyspace is specified, only
-// split table vindexes from that keyspace are searched. If no kesypace is specified, then a split table
-// vindex is returned only if its name is unique across all keyspaces. The function
-// returns an error only if the split table vindex name is ambiguous.
-func (vschema *VSchema) FindSplitTableVindex(keyspace, name string) (Vindex, error) {
-	if keyspace == "" {
-		vindex, ok := vschema.uniqueVindexes[name]
-		if vindex == nil && ok {
-			return nil, vterrors.Errorf(
-				vtrpcpb.Code_FAILED_PRECONDITION,
-				"ambiguous split table vindex reference: %s",
-				name,
-			)
-		}
-		return vindex, nil
-	}
-	splitTableVindex, ok := vschema.Keyspaces[keyspace].SplitTableVindexes[name]
-	if !ok {
-		return nil, vterrors.VT05003(keyspace)
-	}
-	return splitTableVindex, nil
 }
 
 func getShardRoutingRulesKey(keyspace, shard string) string {
