@@ -4,27 +4,51 @@ import (
 	"fmt"
 	"strings"
 
-	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
+
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
-type TableRoute struct {
-	Source ops.Operator
+type (
+	TableRoute struct {
+		Source ops.Operator
 
-	// Routes that have been merged into this one.
-	MergedWith []*TableRoute
+		// Routes that have been merged into this one.
+		MergedWith []*TableRoute
 
-	Routing Routing
+		Routing Routing
 
-	Ordering []RouteOrdering
+		Ordering []RouteOrdering
 
-	ResultColumns int
-}
+		ResultColumns int
+	}
+
+	// TindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
+	TindexPlusPredicates struct {
+		TableID   semantics.TableSet
+		ColVindex *tableindexes.Column
+
+		// during planning, we store the alternatives found for this route in this slice
+		Options []*TindexOption
+	}
+
+	// TindexOption stores the information needed to know if we have all the information needed to use a vindex
+	TindexOption struct {
+		Ready       bool
+		Values      []evalengine.Expr
+		ValueExprs  []sqlparser.Expr
+		Predicates  []sqlparser.Expr
+		OpCode      engine.Opcode
+		FoundVindex tableindexes.TableIndexRule
+	}
+)
 
 // Cost implements the Operator interface
 func (r *TableRoute) Cost() int {
@@ -128,7 +152,7 @@ func (r *TableRoute) TablesUsed() []string {
 	return collect()
 }
 
-func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
+func (r *TableRoute) planOffsets(_ *plancontext.PlanningContext) (err error) {
 	return fmt.Errorf("todo: TableRoute.planOffsets")
 }
 
@@ -211,49 +235,36 @@ func findVSchemaTableAndCreateTableRoute(
 	if err != nil {
 		return nil, err
 	}
+	config := ctx.SplitTableConfig[tableName.Name.String()]
 
 	return createTableRouteFromVSchemaTable(
 		ctx,
 		queryTable,
 		vschemaTable,
+		config,
 		solves,
 		planAlternates,
 	)
 }
 
-// createRouteFromTable creates a route from the given VSchema table.
+// createTableRouteFromVSchemaTable creates a route from the given VSchema table.
 func createTableRouteFromVSchemaTable(
 	ctx *plancontext.PlanningContext,
 	queryTable *QueryTable,
 	vschemaTable *vindexes.Table,
+	logicTableConfig tableindexes.LogicTableConfig,
 	solves semantics.TableSet,
-	planAlternates bool,
+	_ bool,
 ) (*TableRoute, error) {
-	if vschemaTable.Name.String() != queryTable.Table.Name.String() {
-		// we are dealing with a routed table
-		queryTable = queryTable.Clone()
-		name := queryTable.Table.Name
-		queryTable.Table.Name = vschemaTable.Name
-		astTable, ok := queryTable.Alias.Expr.(sqlparser.TableName)
-		if !ok {
-			return nil, vterrors.VT13001("a derived table should never be a routed table")
-		}
-		realTableName := sqlparser.NewIdentifierCS(vschemaTable.Name.String())
-		astTable.Name = realTableName
-		if queryTable.Alias.As.IsEmpty() {
-			// if the user hasn't specified an alias, we'll insert one here so the old table name still works
-			queryTable.Alias.As = sqlparser.NewIdentifierCS(name.String())
-		}
-	}
 	plan := &TableRoute{
 		Source: &Table{
 			QTable: queryTable,
-			VTable: vschemaTable,
+			VTable: nil,
 		},
 	}
 
 	// We create the appropiate Routing struct here, depending on the type of table we are dealing with.
-	routing := createRoutingForVTable(vschemaTable, solves)
+	routing := newTableShardedRouting(vschemaTable, logicTableConfig, solves)
 	for _, predicate := range queryTable.Predicates {
 		var err error
 		routing, err = UpdateRoutingLogic(ctx, predicate, routing)
@@ -264,25 +275,16 @@ func createTableRouteFromVSchemaTable(
 
 	plan.Routing = routing
 
-	switch routing := routing.(type) {
-	case *ShardedRouting:
-		if routing.isScatter() && len(queryTable.Predicates) > 0 {
+	tableShardedRouting, ok := routing.(*TableShardedRouting)
+	if ok {
+		if tableShardedRouting.isScatter() && len(queryTable.Predicates) > 0 {
 			var err error
 			// If we have a scatter query, it's worth spending a little extra time seeing if we can't improve it
-			plan.Routing, err = routing.tryImprove(ctx, queryTable)
+			plan.Routing, err = tableShardedRouting.tryImprove(ctx, queryTable)
 			if err != nil {
 				return nil, err
 			}
-		}
-	case *AnyShardRouting:
-		if planAlternates {
-			alternates, err := createAlternateRoutesFromVSchemaTable(ctx, queryTable, vschemaTable, solves)
-			if err != nil {
-				return nil, err
-			}
-			routing.Alternates = alternates
 		}
 	}
-
 	return plan, nil
 }

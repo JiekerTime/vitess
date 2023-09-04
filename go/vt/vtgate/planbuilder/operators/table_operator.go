@@ -51,6 +51,15 @@ func createOperatorFromSelectForSplitTable(ctx *plancontext.PlanningContext, sel
 	if err != nil {
 		return nil, err
 	}
+	if sel.Where != nil {
+		exprs := sqlparser.SplitAndExpression(nil, sel.Where.Expr)
+		for _, expr := range exprs {
+			op, err = op.AddPredicate(ctx, expr)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &Horizon{
 		Source: op,
 		Select: sel,

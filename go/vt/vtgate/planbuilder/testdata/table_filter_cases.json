@@ -1,0 +1,871 @@
+[
+  {
+    "comment": "No where clause",
+    "query": "select id from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Query that always return empty",
+    "query": "select id from t_user where someColumn = null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where someColumn = null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where someColumn = null",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Null Safe Equality Operator is handled correctly",
+    "query": "SELECT id from t_user where someColumn <=> null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT id from t_user where someColumn <=> null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where someColumn <=> null",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Composite IN clause vs equality",
+    "query": "select id from t_user where (col, name) in (('aa', 'bb')) and id = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where (col, name) in (('aa', 'bb')) and id = 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-MultiEqual",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where (col, `name`) in (('aa', 'bb')) and id = 5",
+        "Table": "t_user",
+        "TableValues": [
+          "(VARCHAR(\"aa\"))"
+        ],
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Composite IN: tuple inside tuple, mismiatched values",
+    "query": "select id from t_user where ((col1, name), col2) in (('aa', 'bb', 'cc'), (('dd', 'ee'), 'ff'))",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where ((col1, name), col2) in (('aa', 'bb', 'cc'), (('dd', 'ee'), 'ff'))",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where ((col1, `name`), col2) in (('aa', 'bb', 'cc'), (('dd', 'ee'), 'ff'))",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "IN clause: LHS is neither column nor composite tuple",
+    "query": "select Id from t_user where 1 in ('aa', 'bb')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select Id from t_user where 1 in ('aa', 'bb')",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select Id from t_user_1 where 1 != 1",
+        "Query": "select Id from t_user where 1 in ('aa', 'bb')",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Single table complex in clause",
+    "query": "select id from t_user where name in (col, 'bb')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where name in (col, 'bb')",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where `name` in (col, 'bb')",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Single table unique vindex route",
+    "query": "select id from t_user where t_user.id = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.id = 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.id = 5",
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Single table unique vindex route, but complex expr",
+    "query": "select id from t_user where t_user.id = 5+5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.id = 5+5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.id = 5 + 5",
+        "Table": "t_user",
+        "Values": [
+          "INT64(10)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Route with multiple route constraints, SelectIN is the best constraint.",
+    "query": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col = 5 and t_user.id in ::__vals",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ],
+        "Values": [
+          "(INT64(1), INT64(2))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Route with multiple route constraints and boolean, SelectIN is the best constraint.",
+    "query": "select id from t_user where t_user.col = case t_user.col when 'foo' then true else false end and t_user.id in (1, 2)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col = case t_user.col when 'foo' then true else false end and t_user.id in (1, 2)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col = case t_user.col when 'foo' then true else false end and t_user.id in ::__vals",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(1), INT64(2))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Route with multiple route constraints, SelectEqualUnique is the best constraint.",
+    "query": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2) and t_user.name = 'aa' and t_user.id = 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2) and t_user.name = 'aa' and t_user.id = 1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2) and t_user.`name` = 'aa' and t_user.id = 1",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ],
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Route with multiple route constraints, SelectEqualUnique is the best constraint, order reversed.",
+    "query": "select id from t_user where t_user.id = 1 and t_user.name = 'aa' and t_user.id in (1, 2) and t_user.col = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.id = 1 and t_user.name = 'aa' and t_user.id in (1, 2) and t_user.col = 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.id = 1 and t_user.`name` = 'aa' and t_user.id in (1, 2) and t_user.col = 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ],
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Route with OR and AND clause, must parenthesize correctly.",
+    "query": "select id from t_user where t_user.id = 1 or t_user.name = 'aa' and t_user.id in (1, 2)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.id = 1 or t_user.name = 'aa' and t_user.id in (1, 2)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where (t_user.id = 1 or t_user.`name` = 'aa') and t_user.id in ::__vals",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(1), INT64(2))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "database() call in where clause.",
+    "query": "select id from t_user where database()",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where database()",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where database()",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "non unique predicate on vindex",
+    "query": "select id from t_user where t_user.id > 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.id > 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.id > 5",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "transitive closures for the win",
+    "query": "select id from t_user where t_user.id = t_user.col and t_user.col = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.id = t_user.col and t_user.col = 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.id = t_user.col and t_user.col = 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ],
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "deconstruct tuple equality comparisons",
+    "query": "select id from t_user where (id, name) = (34, 'apa')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where (id, name) = (34, 'apa')",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where id = 34 and `name` = 'apa'",
+        "Table": "t_user",
+        "Values": [
+          "INT64(34)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "optimize ORs to IN route op codes #1",
+    "query": "select col from t_user where id = 1 or id = 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where id = 1 or id = 2",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user where id in ::__vals",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(1), INT64(2))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "optimize ORs to IN route op codes #2",
+    "query": "select col from t_user where id = 1 or id = 2 or id = 3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where id = 1 or id = 2 or id = 3",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user where id in ::__vals",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(1), INT64(2), INT64(3))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "optimize ORs to IN route op codes #3",
+    "query": "select col from t_user where (id = 1 or id = 2) or (id = 3 or id = 4)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where (id = 1 or id = 2) or (id = 3 or id = 4)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user where id in ::__vals",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(1), INT64(2), INT64(3), INT64(4))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Self referencing columns in HAVING should work",
+    "query": "select a+2 as a from t_user having a = 42",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a+2 as a from t_user having a = 42",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a + 2 as a from t_user_1 where 1 != 1",
+        "Query": "select a + 2 as a from t_user where a + 2 = 42",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "HAVING predicates that use table columns are safe to rewrite if we can move them to the WHERE clause",
+    "query": "select t_user.col + 2 as a from t_user having a = 42",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col + 2 as a from t_user having a = 42",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_1.col + 2 as a from t_user_1 where 1 != 1",
+        "Query": "select t_user.col + 2 as a from t_user where t_user.col + 2 = 42",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Single table unique vindex route hiding behind a silly OR",
+    "query": "select id from t_user where (id = 5 and name ='apa') or (id = 5 and foo = 'bar')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where (id = 5 and name ='apa') or (id = 5 and foo = 'bar')",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where id = 5 and (`name` = 'apa' or foo = 'bar')",
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Single table IN vindex route hiding behind OR",
+    "query": "select id from t_user where (id = 5 and name ='foo') or (id = 12 and name = 'bar')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where (id = 5 and name ='foo') or (id = 12 and name = 'bar')",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where id = 5 and `name` = 'foo' or id = 12 and `name` = 'bar'",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(5), INT64(12))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "two predicates that mean the same thing",
+    "query": "select textcol1 from t_user where foo = 42 and t_user.foo = 42",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select textcol1 from t_user where foo = 42 and t_user.foo = 42",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select textcol1 from t_user_1 where 1 != 1",
+        "Query": "select textcol1 from t_user where foo = 42",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute Equal",
+    "query": "select id from t_user where t_user.col = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col = 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col = 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute Equal Swap left and right positions",
+    "query": "select id from t_user where 5 = col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where 5 = col",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where col = 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute In to Equal",
+    "query": "select id from t_user where t_user.col in (5)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col in (5)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col in (5)",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute In",
+    "query": "select id from t_user where t_user.col in (5, 6, 7)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col in (5, 6, 7)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-IN",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col in (5, 6, 7)",
+        "Table": "t_user",
+        "TableValues": [
+          "(INT64(5), INT64(6), INT64(7))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute In & Equal PickBestAvailableTindex",
+    "query": "select id from t_user where t_user.col in (5, 6, 7) and col = 9",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col in (5, 6, 7) and col = 9",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col in (5, 6, 7) and col = 9",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(9)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute is null",
+    "query": "select id from t_user where t_user.col is null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col is null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col is null",
+        "Table": "t_user",
+        "TableValues": [
+          "NULL"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute = null",
+    "query": "select id from t_user where t_user.col = null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col = null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col = null",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute simplifyExpression",
+    "query": "select id from t_user where not (not col = 3)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where not (not col = 3)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where col = 3",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(3)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute or to IN",
+    "query": "select id from t_user where (col in (1, 5) and B or C and col in (5, 7))",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where (col in (1, 5) and B or C and col in (5, 7))",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-IN",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where col in (1, 5) and B or C and col in (5, 7)",
+        "Table": "t_user",
+        "TableValues": [
+          "(INT64(1), INT64(5), INT64(7))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

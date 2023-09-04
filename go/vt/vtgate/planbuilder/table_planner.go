@@ -20,9 +20,8 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 
 	ctx.SplitTableConfig[config.LogicTableName] = config
 
-	// get routePlan of ksPlan
-	// The routePlan is used as input to generate the tableRoutePlan
-	// Replace routePlan with tableRoutePlan
+	// The routePlan is used as input to generate the tablePlan
+	// Replace routePlan with tablePlan
 	ksAndTablePlan, err = visit(ksPlan, func(logicalPlan logicalPlan) (bool, logicalPlan, error) {
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
@@ -81,7 +80,7 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 				Index:           2,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "col", ColType: query.Type_VARCHAR},
+		TableIndexColumn: &tableindexes.Column{ColumnName: "col", ColType: query.Type_VARCHAR},
 	}
 
 	logicTable2 := tableindexes.LogicTableConfig{
@@ -104,7 +103,7 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 				Index:           4,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "f_int", ColType: query.Type_VARCHAR},
+		TableIndexColumn: &tableindexes.Column{ColumnName: "f_int", ColType: query.Type_VARCHAR},
 	}
 
 	logicTable3 := tableindexes.LogicTableConfig{
@@ -127,7 +126,7 @@ func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
 				Index:           4,
 			},
 		},
-		TableIndexColumn: tableindexes.Column{ColumnName: "col1", ColType: query.Type_VARCHAR},
+		TableIndexColumn: &tableindexes.Column{ColumnName: "col1", ColType: query.Type_VARCHAR},
 	}
 
 	logicTableMap = make(map[string]tableindexes.LogicTableConfig)
