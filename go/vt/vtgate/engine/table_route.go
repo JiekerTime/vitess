@@ -11,7 +11,6 @@ import (
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
-	"vitess.io/vitess/go/vt/log"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -112,8 +111,6 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
 	}
 
-	log.Info(result)
-
 	// 4.可能要处理Order by排序
 	if len(tableRoute.OrderBy) == 0 {
 		return result, nil
@@ -189,20 +186,6 @@ func rewriteQuery(stmt sqlparser.Statement, act tableindexes.ActualTable, logicT
 
 func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
 	panic("implement me")
-}
-
-func resultMerge(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
-	result = &sqltypes.Result{}
-	for _, innner := range innerResult {
-		result.AppendResult(&innner)
-	}
-
-	//field tableName处理，从分表名修改为逻辑表名
-	for _, field := range result.Fields {
-		field.Table = logicTableName
-	}
-
-	return result, nil
 }
 
 func (tableRoute *TableRoute) description() PrimitiveDescription {
