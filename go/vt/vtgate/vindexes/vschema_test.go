@@ -267,6 +267,24 @@ func TestUnshardedVSchema(t *testing.T) {
 	assert.NotNil(t, table)
 }
 
+func TestUnshardedButSplitTableVSchema(t *testing.T) {
+	good := vschemapb.SrvVSchema{
+		Keyspaces: map[string]*vschemapb.Keyspace{
+			"unsharded": {
+				Tables: map[string]*vschemapb.Table{
+					"t1": {}},
+				SplittableTables: map[string]*vschemapb.SplitTable{"t2": {}}}}}
+
+	got := BuildVSchema(&good)
+	require.NoError(t, got.Keyspaces["unsharded"].Error)
+
+	table, err := got.FindSplitTable("unsharded", "t2")
+	require.NoError(t, err)
+	assert.NotNil(t, table)
+	require.NoError(t, err)
+	assert.NotNil(t, table)
+}
+
 func TestVSchemaColumns(t *testing.T) {
 	good := vschemapb.SrvVSchema{
 		Keyspaces: map[string]*vschemapb.Keyspace{
@@ -285,6 +303,29 @@ func TestVSchemaColumns(t *testing.T) {
 	require.NoError(t, err)
 	assertColumn(t, t1.Columns[0], "c1", sqltypes.Null)
 	assertColumn(t, t1.Columns[1], "c2", sqltypes.VarChar)
+}
+func TestVSchemaSplitTableColumns(t *testing.T) {
+	good := vschemapb.SrvVSchema{
+		Keyspaces: map[string]*vschemapb.Keyspace{
+			"unsharded": {
+				SplittableTables: map[string]*vschemapb.SplitTable{
+					"t1": {
+						TableVindex:       "splitTableHashMod",
+						TableCount:        10,
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
+					"`t2`": {
+						TableVindex:       "splitTableHashMod",
+						TableCount:        20,
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
+				}}}}
+
+	got := BuildVSchema(&good)
+	require.NoError(t, got.Keyspaces["unsharded"].Error)
+
+	t1, err := got.FindSplitTable("unsharded", "t1")
+	require.NoError(t, err)
+	assertSplitTableColumn(t, *t1.TableVindexColumn[0], "col1", sqltypes.VarChar)
+	assertSplitTableColumn(t, *t1.TableVindexColumn[1], "`col2`", sqltypes.Int32)
 }
 
 func TestVSchemaViews(t *testing.T) {
@@ -378,6 +419,24 @@ func TestVSchemaColumnsFail(t *testing.T) {
 
 	got := BuildVSchema(&good)
 	require.EqualError(t, got.Keyspaces["unsharded"].Error, "duplicate column name 'c1' for table: t1")
+}
+func TestSplitTableVSchemaColumnsFail(t *testing.T) {
+	good := vschemapb.SrvVSchema{
+		Keyspaces: map[string]*vschemapb.Keyspace{
+			"unsharded": {
+				SplittableTables: map[string]*vschemapb.SplitTable{
+					"t1": {
+						TableVindex:       "splitTableHashMod",
+						TableCount:        10,
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "col1", ColumnType: sqltypes.Int32}}},
+					"`t2`": {
+						TableVindex:       "splitTableHashMod",
+						TableCount:        20,
+						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
+				}}}}
+
+	got := BuildVSchema(&good)
+	require.EqualError(t, got.Keyspaces["unsharded"].Error, "duplicate column name 'col1' for table: t1")
 }
 
 func TestVSchemaPinned(t *testing.T) {
@@ -2914,5 +2973,10 @@ func assertVindexMatches(t *testing.T, cv *ColumnVindex, v Vindex, name string, 
 func assertColumn(t *testing.T, col Column, expectedName string, expectedType querypb.Type) {
 	assert.True(t, col.Name.EqualString(expectedName), "column name does not match")
 	assert.Equal(t, expectedType, col.Type, "column type does not match")
+
+}
+func assertSplitTableColumn(t *testing.T, col TableVindexColumn, expectedName string, expectedType querypb.Type) {
+	assert.True(t, col.Column.EqualString(expectedName), "column name does not match")
+	assert.Equal(t, expectedType, col.ColumnType, "column type does not match")
 
 }

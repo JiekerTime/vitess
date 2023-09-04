@@ -24,10 +24,10 @@ type LogicTableName string
 
 type ActualTableName []string
 
-func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, routingParameters RoutingParameters) (map[string]ActualTableName, error) {
+func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, routingParameters RoutingParameters) error {
 	switch rp.Opcode {
 	case None:
-		return nil, nil
+		return nil
 	case DBA:
 		//return rp.systemQuery(ctx, vcursor, bindVars)
 	case Unsharded, Next:
@@ -61,21 +61,28 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 		//}
 	default:
 		// Unreachable.
-		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
+		return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 	}
 
-	return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
+	return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 }
 
-func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, destination key.Destination, routingParameters RoutingParameters) (map[string]ActualTableName, error) {
-	//rss, _, err := vcursor.ResolveDestinations(ctx, routingParameters.Keyspace.Name, nil, []key.Destination{destination})
-	//if err != nil {
-	//	return nil, nil, err
-	//}
-	//multiBindVars := make([]map[string]*querypb.BindVariable, len(rss))
-	//for i := range multiBindVars {
-	//	multiBindVars[i] = bindVars
-	//}
-	//return rss, multiBindVars, err
-	return nil, nil
+func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, destination key.Destination, routingParameters RoutingParameters) error {
+
+	for logicTableName, logicTableConfig := range rp.LogicTable {
+
+		splitTable, err := vcursor.FindSplitTable(logicTableName)
+		if err != nil {
+			return err
+		}
+
+		actualTableList := make([]tableindexes.ActualTable, 0)
+
+		for _, actualTable := range splitTable.ActualTables {
+			actualTableList = append(actualTableList, *actualTable)
+		}
+		logicTableConfig.ActualTableList = actualTableList
+	}
+
+	return nil
 }

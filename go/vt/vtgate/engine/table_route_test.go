@@ -568,7 +568,7 @@ func TestTableRouteTryExecute(t *testing.T) {
 		evalengine.NewLiteralInt(1),
 	}
 
-	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
 	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{

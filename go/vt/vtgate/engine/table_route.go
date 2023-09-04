@@ -102,12 +102,11 @@ func (tableRoute *TableRoute) executeInternal(
 	}
 
 	//1. 计算分表
-	acualTableMap, err := tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars, *tableRoute.ShardRouteParam)
+	err = tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars, *tableRoute.ShardRouteParam)
 	if err != nil {
 		return nil, err
 	}
 
-	print(acualTableMap)
 	return tableRoute.executeShards(ctx, vcursor, bindVars, wantfields, rss, bvs)
 }
 

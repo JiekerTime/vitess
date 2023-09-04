@@ -264,6 +264,24 @@ func (vc *vcursorImpl) FindRoutedTable(name sqlparser.TableName) (*vindexes.Tabl
 	return table, nil
 }
 
+func (vc *vcursorImpl) FindSplitTable(name string) (*vindexes.SplitTable, error) {
+	destKeyspace, _, _, err := vc.executor.ParseDestinationTarget(name)
+	if err != nil {
+		return nil, err
+	}
+	if destKeyspace == "" {
+		destKeyspace = vc.keyspace
+	}
+
+	splitTable, err := vc.vschema.FindSplitTable(destKeyspace, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return splitTable, nil
+
+}
+
 // FindTableOrVindex finds the specified table or vindex.
 func (vc *vcursorImpl) FindTableOrVindex(name sqlparser.TableName) (*vindexes.Table, vindexes.Vindex, string, topodatapb.TabletType, key.Destination, error) {
 	if name.Qualifier.IsEmpty() && name.Name.String() == "dual" {

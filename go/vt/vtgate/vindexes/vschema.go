@@ -23,7 +23,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-
 	"vitess.io/vitess/go/sqlescape"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -178,19 +177,23 @@ func (col *Column) MarshalJSON() ([]byte, error) {
 
 // KeyspaceSchema contains the schema(table) for a keyspace.
 type KeyspaceSchema struct {
-	Keyspace *Keyspace
-	Tables   map[string]*Table
-	Vindexes map[string]Vindex
-	Views    map[string]sqlparser.SelectStatement
-	Error    error
+	Keyspace           *Keyspace
+	Tables             map[string]*Table
+	Vindexes           map[string]Vindex
+	SplitTableTables   map[string]*SplitTable
+	SplitTableVindexes map[string]Vindex
+	Views              map[string]sqlparser.SelectStatement
+	Error              error
 }
 
 type ksJSON struct {
-	Sharded  bool              `json:"sharded,omitempty"`
-	Tables   map[string]*Table `json:"tables,omitempty"`
-	Vindexes map[string]Vindex `json:"vindexes,omitempty"`
-	Views    map[string]string `json:"views,omitempty"`
-	Error    string            `json:"error,omitempty"`
+	Sharded            bool                   `json:"sharded,omitempty"`
+	Tables             map[string]*Table      `json:"tables,omitempty"`
+	Vindexes           map[string]Vindex      `json:"vindexes,omitempty"`
+	SplitTableTables   map[string]*SplitTable `json:"splitable_tables,omitempty"`
+	SplitTableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
+	Views              map[string]string      `json:"views,omitempty"`
+	Error              string                 `json:"error,omitempty"`
 }
 
 // findTable looks for the table with the requested tablename in the keyspace.
@@ -219,9 +222,11 @@ func (ks *KeyspaceSchema) findTable(
 // MarshalJSON returns a JSON representation of KeyspaceSchema.
 func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 	ksJ := ksJSON{
-		Sharded:  ks.Keyspace.Sharded,
-		Tables:   ks.Tables,
-		Vindexes: ks.Vindexes,
+		Sharded:            ks.Keyspace.Sharded,
+		Tables:             ks.Tables,
+		Vindexes:           ks.Vindexes,
+		SplitTableTables:   ks.SplitTableTables,
+		SplitTableVindexes: ks.SplitTableVindexes,
 	}
 	if ks.Error != nil {
 		ksJ.Error = ks.Error.Error()
@@ -310,11 +315,20 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 				AttachEnable: ks.AttachEnable,
 				AttachTo:     ks.AttachTo,
 			},
-			Tables:   make(map[string]*Table),
-			Vindexes: make(map[string]Vindex),
+			Tables:             make(map[string]*Table),
+			Vindexes:           make(map[string]Vindex),
+			SplitTableTables:   make(map[string]*SplitTable),
+			SplitTableVindexes: make(map[string]Vindex),
 		}
 		vschema.Keyspaces[ksname] = ksvschema
 		ksvschema.Error = buildTables(ks, vschema, ksvschema)
+		err := buildSplitTables(ks, vschema, ksvschema)
+		if err != nil {
+			if ksvschema.Error != nil {
+				ksvschema.Error = fmt.Errorf(ksvschema.Error.Error(), err.Error())
+			}
+			ksvschema.Error = err
+		}
 	}
 }
 
@@ -713,7 +727,6 @@ func buildTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSc
 
 	return nil
 }
-
 func (vschema *VSchema) addTableName(t *Table) {
 	tname := t.Name.String()
 	if _, ok := vschema.globalTables[tname]; ok {
