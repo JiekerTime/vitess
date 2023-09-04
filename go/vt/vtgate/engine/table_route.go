@@ -93,10 +93,9 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 		return nil, err
 	}
 
-	rssqueries := make([]*querypb.BoundQuery, 0, len(rss))
-
 	result := &sqltypes.Result{}
 	for _, query := range queries {
+		rssqueries := make([]*querypb.BoundQuery, 0, len(rss))
 		for range rss {
 			rssqueries = append(rssqueries, query)
 		}
