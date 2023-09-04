@@ -87,6 +87,8 @@ type (
 		// OpCode is already set, and the default keyspace is set for read queries
 		UpdateRoutingParams(ctx *plancontext.PlanningContext, rp *engine.RoutingParameters) error
 
+		UpdateTableRoutingParams(ctx *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error
+
 		// Clone returns a copy of the routing. Since we are trying different variation of merging,
 		// one Routing can be used in different constellations.
 		// We don't want these different alternatives to influence each other, and cloning allows this

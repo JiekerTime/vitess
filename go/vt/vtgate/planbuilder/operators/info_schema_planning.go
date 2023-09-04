@@ -64,6 +64,10 @@ func (isr *InfoSchemaRouting) UpdateRoutingParams(_ *plancontext.PlanningContext
 	return nil
 }
 
+func (isr *InfoSchemaRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
+	return nil
+}
+
 func (isr *InfoSchemaRouting) Clone() Routing {
 	return &InfoSchemaRouting{
 		SysTableTableSchema: slices.Clone(isr.SysTableTableSchema),

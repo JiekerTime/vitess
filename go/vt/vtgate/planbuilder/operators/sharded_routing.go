@@ -148,6 +148,13 @@ func (tr *ShardedRouting) UpdateRoutingParams(_ *plancontext.PlanningContext, rp
 	return nil
 }
 
+func (tr *ShardedRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
+	if tr.Selected != nil {
+		rp.Values = tr.Selected.Values
+	}
+	return nil
+}
+
 func (tr *ShardedRouting) Clone() Routing {
 	var selected *VindexOption
 	if tr.Selected != nil {

@@ -27,12 +27,6 @@ func TablePlanQuery(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) 
 		return nil, err
 	}
 
-	_, isRoute := op.(*Route)
-	if !isRoute && ctx.SemTable.NotSingleRouteErr != nil {
-		// If we got here, we don't have a single shard plan
-		return nil, ctx.SemTable.NotSingleRouteErr
-	}
-
 	return op, err
 }
 
@@ -56,6 +50,15 @@ func createOperatorFromSelectForSplitTable(ctx *plancontext.PlanningContext, sel
 	op, err := crossJoinForSplitTable(ctx, sel.From)
 	if err != nil {
 		return nil, err
+	}
+	if sel.Where != nil {
+		exprs := sqlparser.SplitAndExpression(nil, sel.Where.Expr)
+		for _, expr := range exprs {
+			op, err = op.AddPredicate(ctx, expr)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	return &Horizon{
 		Source: op,
@@ -138,7 +141,7 @@ func optimizeQueryGraphForSplitTable(ctx *plancontext.PlanningContext, op *Query
 }
 
 func greedySolveForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGraph) (ops.Operator, error) {
-	routeOps, err := seedOperatorList(ctx, qg)
+	routeOps, err := seedOperatorListForSplitTable(ctx, qg)
 	planCache := opCacheMap{}
 	if err != nil {
 		return nil, err
@@ -149,6 +152,28 @@ func greedySolveForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGraph) 
 		return nil, err
 	}
 	return op, nil
+}
+
+// seedOperatorListForSplitTable returns a route for each table in the qg
+func seedOperatorListForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGraph) ([]ops.Operator, error) {
+	plans := make([]ops.Operator, len(qg.Tables))
+
+	// we start by seeding the table with the single routes
+	for i, table := range qg.Tables {
+		solves := ctx.SemTable.TableSetFor(table.Alias)
+		plan, err := createTableRoute(ctx, table, solves)
+		if err != nil {
+			return nil, err
+		}
+		if qg.NoDeps != nil {
+			plan, err = plan.AddPredicate(ctx, qg.NoDeps)
+			if err != nil {
+				return nil, err
+			}
+		}
+		plans[i] = plan
+	}
+	return plans, nil
 }
 
 func mergeRoutesForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGraph, physicalOps []ops.Operator, planCache opCacheMap, crossJoinsOK bool) (ops.Operator, error) {
@@ -180,10 +205,12 @@ func planHorizonsForSplitTable(ctx *plancontext.PlanningContext, root ops.Operat
 	// Adding Group by - This is needed if the grouping is performed on a join with a join condition then
 	//                   aggregation happening at route needs a group by to ensure only matching rows returns
 	//                   the aggregations otherwise returns no result.
-	root, err = addOrderBysAndGroupBysForAggregations(ctx, root)
-	if err != nil {
-		return nil, err
-	}
+
+	// todo(jinyue): 处理聚合操作
+	//root, err = addOrderBysAndGroupBysForAggregations(ctx, root)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	root, err = optimizeHorizonPlanningForSplitTable(ctx, root)
 	if err != nil {
@@ -196,13 +223,13 @@ func optimizeHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root
 	visitor := func(in ops.Operator, _ semantics.TableSet, isRoot bool) (ops.Operator, *rewrite.ApplyResult, error) {
 		switch in := in.(type) {
 		case horizonLike:
-			return pushOrExpandHorizon(ctx, in)
+			return pushOrExpandHorizonForSplitTable(ctx, in)
 		default:
 			return in, rewrite.SameTree, nil
 		}
 	}
 
-	newOp, err := rewrite.FixedPointBottomUp(root, TableID, visitor, stopAtRoute)
+	newOp, err := rewrite.FixedPointBottomUp(root, TableID, visitor, stopAtTableRoute)
 	if err != nil {
 		if vterr, ok := err.(*vterrors.VitessError); ok && vterr.ID == "VT13001" {
 			// we encountered a bug. let's try to back out
