@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
 	"vitess.io/vitess/go/sqltypes"
-	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -44,6 +44,9 @@ type TableRoute struct {
 	// in the final result. Rest of the columns are truncated
 	// from the result received. If 0, no truncation happens.
 	TruncateColumnCount int
+
+	// QueryTimeout contains the optional timeout (in milliseconds) to apply to this query
+	QueryTimeout int
 }
 
 func (tableRoute *TableRoute) RouteType() string {
@@ -76,18 +79,53 @@ func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bi
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
+	ctx, cancelFunc := addQueryTimeout(ctx, vcursor, tableRoute.QueryTimeout)
+	defer cancelFunc()
+	qr, err := tableRoute.executeInternal(ctx, vcursor, bindVars, wantfields)
+	if err != nil {
+		return nil, err
+	}
+	return qr.Truncate(tableRoute.TruncateColumnCount), nil
+}
+
+func (tableRoute *TableRoute) executeInternal(
+	ctx context.Context,
+	vcursor VCursor,
+	bindVars map[string]*querypb.BindVariable,
+	wantfields bool,
+) (*sqltypes.Result, error) {
+
+	// 0.计算分片
+	rss, bvs, err := tableRoute.ShardRouteParam.findRoute(ctx, vcursor, bindVars)
+	if err != nil {
+		return nil, err
+	}
+
+	//1. 计算分表
+	acualTableMap, err := tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars, *tableRoute.ShardRouteParam)
+	if err != nil {
+		return nil, err
+	}
+
+	print(acualTableMap)
+	return tableRoute.executeShards(ctx, vcursor, bindVars, wantfields, rss, bvs)
+}
+
+func (tableRoute *TableRoute) executeShards(
+	ctx context.Context,
+	vcursor VCursor,
+	bindVars map[string]*querypb.BindVariable,
+	wantfields bool,
+	rss []*srvtopo.ResolvedShard,
+	bvs []map[string]*querypb.BindVariable,
+) (*sqltypes.Result, error) {
+
 	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
 	if !found {
 		return nil, vterrors.VT13001("not found %s splitTableConfig", tableRoute.TableName)
 	}
 
-	// 0.计算分片，先写Scatter场景，不用计算路由发到所有分片所有表
-	rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAllShards{}})
-	if err != nil {
-		return nil, err
-	}
-
-	// 1.SQL改写 改写表名（逻辑表->实际表）
+	// 2.SQL改写 改写表名（逻辑表->实际表）
 	queries, err := getTableQueries(tableRoute.Query, splitTableConfig, bindVars)
 	if err != nil {
 		return nil, err
@@ -100,7 +138,7 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 			rssqueries = append(rssqueries, query)
 		}
 
-		// 2.执行SQL
+		// 3.执行SQL
 		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssqueries, false /* rollbackOnError */, false /* canAutocommit */)
 		if errs != nil {
 			return nil, errs[0]
@@ -117,6 +155,7 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 		return result, nil
 	}
 	return tableRoute.sort(result)
+
 }
 
 func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error) {
