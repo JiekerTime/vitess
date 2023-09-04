@@ -23,9 +23,11 @@ import (
 	"os"
 	"sort"
 	"strings"
+
 	"vitess.io/vitess/go/sqlescape"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/json2"
 	"vitess.io/vitess/go/sqltypes"
@@ -180,20 +182,20 @@ type KeyspaceSchema struct {
 	Keyspace           *Keyspace
 	Tables             map[string]*Table
 	Vindexes           map[string]Vindex
-	SplitTableTables   map[string]*SplitTable
+	SplitTableTables   map[string]*tableindexes.LogicTableConfig
 	SplitTableVindexes map[string]Vindex
 	Views              map[string]sqlparser.SelectStatement
 	Error              error
 }
 
 type ksJSON struct {
-	Sharded            bool                   `json:"sharded,omitempty"`
-	Tables             map[string]*Table      `json:"tables,omitempty"`
-	Vindexes           map[string]Vindex      `json:"vindexes,omitempty"`
-	SplitTableTables   map[string]*SplitTable `json:"splitable_tables,omitempty"`
-	SplitTableVindexes map[string]Vindex      `json:"splittable_vindexes,omitempty"`
-	Views              map[string]string      `json:"views,omitempty"`
-	Error              string                 `json:"error,omitempty"`
+	Sharded            bool                                      `json:"sharded,omitempty"`
+	Tables             map[string]*Table                         `json:"tables,omitempty"`
+	Vindexes           map[string]Vindex                         `json:"vindexes,omitempty"`
+	SplitTableTables   map[string]*tableindexes.LogicTableConfig `json:"splitable_tables,omitempty"`
+	SplitTableVindexes map[string]Vindex                         `json:"splittable_vindexes,omitempty"`
+	Views              map[string]string                         `json:"views,omitempty"`
+	Error              string                                    `json:"error,omitempty"`
 }
 
 // findTable looks for the table with the requested tablename in the keyspace.
@@ -317,7 +319,7 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 			},
 			Tables:             make(map[string]*Table),
 			Vindexes:           make(map[string]Vindex),
-			SplitTableTables:   make(map[string]*SplitTable),
+			SplitTableTables:   make(map[string]*tableindexes.LogicTableConfig),
 			SplitTableVindexes: make(map[string]Vindex),
 		}
 		vschema.Keyspaces[ksname] = ksvschema

@@ -24,6 +24,8 @@ import (
 	"strings"
 	"testing"
 
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -324,8 +326,8 @@ func TestVSchemaSplitTableColumns(t *testing.T) {
 
 	t1, err := got.FindSplitTable("unsharded", "t1")
 	require.NoError(t, err)
-	assertSplitTableColumn(t, *t1.TableVindexColumn[0], "col1", sqltypes.VarChar)
-	assertSplitTableColumn(t, *t1.TableVindexColumn[1], "`col2`", sqltypes.Int32)
+	assertSplitTableColumn(t, *t1.TableIndexColumn[0], "col1", sqltypes.VarChar)
+	assertSplitTableColumn(t, *t1.TableIndexColumn[1], "`col2`", sqltypes.Int32)
 }
 
 func TestVSchemaViews(t *testing.T) {
@@ -2975,8 +2977,8 @@ func assertColumn(t *testing.T, col Column, expectedName string, expectedType qu
 	assert.Equal(t, expectedType, col.Type, "column type does not match")
 
 }
-func assertSplitTableColumn(t *testing.T, col TableVindexColumn, expectedName string, expectedType querypb.Type) {
-	assert.True(t, col.Column.EqualString(expectedName), "column name does not match")
+func assertSplitTableColumn(t *testing.T, col tableindexes.Column, expectedName string, expectedType querypb.Type) {
+	assert.Equal(t, expectedName, col.Column, "column name does not match")
 	assert.Equal(t, expectedType, col.ColumnType, "column type does not match")
 
 }
