@@ -67,6 +67,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 	return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
 }
 
+// 1种情况是去元数据取，另外1种情况是上游执行计划直接传整个map数据，则scatter 无需处理
 func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, destination key.Destination, routingParameters RoutingParameters, tableName string) error {
 
 	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
