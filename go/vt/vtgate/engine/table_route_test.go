@@ -17,11 +17,12 @@ import (
 
 func TestGetTableQueries(t *testing.T) {
 	tests := []struct {
-		name     string
-		query    string
-		logicTb  tableindexes.LogicTableConfig
-		bv       map[string]*querypb.BindVariable
-		expected []*querypb.BoundQuery
+		name               string
+		query              string
+		logicTb            tableindexes.LogicTableConfig
+		bv                 map[string]*querypb.BindVariable
+		expected           []*querypb.BoundQuery
+		actualTableNameMap map[string]ActualTableName
 	}{
 		{
 			name:  "Select query with table alias",
@@ -48,6 +49,9 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1"},
+			},
 		},
 		{
 			name:  "Select query with table name",
@@ -73,6 +77,9 @@ func TestGetTableQueries(t *testing.T) {
 					Sql:           `SELECT * FROM my_actual_table_2 WHERE id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
+			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1"},
 			},
 		},
 		{
@@ -291,7 +298,7 @@ func TestGetTableQueries(t *testing.T) {
 				t.Fatalf("Failed to parse query: %v", err)
 			}
 
-			actual, err := getTableQueries(stmt, test.logicTb, test.bv)
+			actual, err := getTableQueries(stmt, test.logicTb, test.bv, test.actualTableNameMap)
 			if err != nil {
 				t.Fatalf(err.Error())
 			}
@@ -313,86 +320,66 @@ func TestRewriteQuery(t *testing.T) {
 	tests := []struct {
 		name     string
 		query    string
-		act      tableindexes.ActualTable
+		act      string
 		expected string
 	}{
 		{
-			name:  "Select query with table alias",
-			query: `SELECT * FROM my_table AS t WHERE t.id = 1`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with table alias",
+			query:    `SELECT * FROM my_table AS t WHERE t.id = 1`,
+			act:      "my_actual_table_1",
 			expected: `SELECT * FROM my_actual_table_1 AS t WHERE t.id = 1`,
 		},
 		{
-			name:  "Select query with table name",
-			query: `SELECT * FROM my_table WHERE id = 1`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with table name",
+			query:    `SELECT * FROM my_table WHERE id = 1`,
+			act:      "my_actual_table_1",
 			expected: `SELECT * FROM my_actual_table_1 WHERE id = 1`,
 		},
 		{
-			name:  "Select query with subquery",
-			query: "SELECT * FROM (SELECT * FROM my_table) AS t WHERE t.id = 1",
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with subquery",
+			query:    "SELECT * FROM (SELECT * FROM my_table) AS t WHERE t.id = 1",
+			act:      "my_actual_table_1",
 			expected: `SELECT * FROM (SELECT * FROM my_actual_table_1) AS t WHERE t.id = 1`,
 		},
 		{
-			name:  "Select query with multiple subqueries",
-			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 WHERE t2.id = 1`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries",
+			query:    `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 WHERE t2.id = 1`,
+			act:      "my_actual_table_1",
 			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 WHERE t2.id = 1`,
 		},
 		{
-			name:  "Select query with multiple subqueries and aliases",
-			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 WHERE t3.id = 1`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries and aliases",
+			query:    `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 WHERE t3.id = 1`,
+			act:      "my_actual_table_1",
 			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
 		},
 		{
-			name:  "Select query with multiple subqueries and table aliases",
-			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 JOIN my_table AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries and table aliases",
+			query:    `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 JOIN my_table AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
+			act:      "my_actual_table_1",
 			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 JOIN my_actual_table_1 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
 		},
 		{
-			name:  "Select query with multiple subqueries and table aliases and column aliases",
-			query: `SELECT t1.id, t2.name FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries and table aliases and column aliases",
+			query:    `SELECT t1.id, t2.name FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1`,
+			act:      "my_actual_table_1",
 			expected: "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
 		},
 		{
-			name:  "Select query with multiple subqueries and table aliases and column aliases and functions",
-			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries and table aliases and column aliases and functions",
+			query:    `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name`,
+			act:      "my_actual_table_1",
 			expected: "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
 		}, {
-			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
-			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
+			query:    `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
+			act:      "my_actual_table_1",
 			expected: "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2) as t3 join my_actual_table_1 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 		},
 		{
-			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset and subquery with limit and offset",
-			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2 LIMIT 10 OFFSET 5) AS t3 LIMIT 10 OFFSET 5) AS t4 JOIN my_table AS t5 ON t4.id = t5.id WHERE t4.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			act: tableindexes.ActualTable{
-				ActualTableName: "my_actual_table_1",
-			},
+			name:     "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset and subquery with limit and offset",
+			query:    `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2 LIMIT 10 OFFSET 5) AS t3 LIMIT 10 OFFSET 5) AS t4 JOIN my_table AS t5 ON t4.id = t5.id WHERE t4.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
+			act:      "my_actual_table_1",
 			expected: "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_1 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 		},
 	}
@@ -500,20 +487,6 @@ func TestTableRouteGetFields(t *testing.T) {
 }
 
 func TestTableRouteTryExecute(t *testing.T) {
-	vindex, _ := vindexes.NewLookupUnique("", map[string]string{
-		"table": "lkp",
-		"f1":    "f1",
-		"f2":    "f2",
-	})
-	sel := NewRoute(
-		Equal,
-		&vindexes.Keyspace{
-			Name:    "ks",
-			Sharded: true,
-		},
-		"dummy_select",
-		"dummy_select_field",
-	)
 
 	logicTable := tableindexes.LogicTableConfig{
 		LogicTableName: "lkp",
@@ -539,16 +512,15 @@ func TestTableRouteTryExecute(t *testing.T) {
 			Name:    "ks",
 			Sharded: true,
 		},
+		//Values: []evalengine.Expr{
+		//	evalengine.NewLiteralInt(1),
+		//},
 	}
 
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
 	Values := []evalengine.Expr{
-		evalengine.TupleExpr{
-			evalengine.NewLiteralInt(1),
-			evalengine.NewLiteralInt(2),
-			evalengine.NewLiteralInt(4),
-		},
+		evalengine.NewLiteralInt(1),
 	}
 
 	TableRoute := TableRoute{
@@ -557,15 +529,11 @@ func TestTableRouteTryExecute(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     Scatter,
+			Opcode:     EqualUnique,
 			LogicTable: logicTableMap,
 			Values:     Values,
+			//Vindex:     vindexes.CreateVindex("binaryhash", "binaryhash", nil),
 		},
-	}
-
-	sel.Vindex = vindex.(vindexes.SingleColumn)
-	sel.Values = []evalengine.Expr{
-		evalengine.NewLiteralInt(1),
 	}
 
 	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
