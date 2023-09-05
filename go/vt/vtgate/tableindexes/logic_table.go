@@ -1,13 +1,17 @@
 package tableindexes
 
-import "vitess.io/vitess/go/vt/proto/query"
+import (
+	"vitess.io/vitess/go/vt/proto/query"
+)
 
 type SplitTableMap map[string]LogicTableConfig
 
 type LogicTableConfig struct {
-	LogicTableName     string
+	LogicTableName     string    `json:"logic_table_name,omitempty"`
+	TableVindex        string    `json:"table_vindex,omitempty"`
+	TableCount         int32     `json:"table_count,omitempty"`
+	TableIndexColumn   []*Column `json:"table_vindex_column,omitempty"`
 	ActualTableList    []ActualTable
-	TableIndexColumn   *Column
 	TableIndexRule     TableIndexRule
 	SequenceColumnName string
 }
@@ -18,8 +22,9 @@ type ActualTable struct {
 }
 
 type Column struct {
-	ColumnName string
-	ColType    query.Type
+	Column     string     `json:"column"`
+	ColumnType query.Type `json:"column_type"`
+	Index      int32      `json:"index"`
 }
 
 // GetFirstActualTableMap Gets the first table mapping of the splitable

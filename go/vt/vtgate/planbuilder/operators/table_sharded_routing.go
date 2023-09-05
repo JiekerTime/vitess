@@ -267,9 +267,12 @@ func (tableRouting *TableShardedRouting) planCompositeInOpRecursive(
 
 func (tableRouting *TableShardedRouting) hasVindex(column *sqlparser.ColName) bool {
 	for _, v := range tableRouting.TindexPreds {
-		if column.Name.Equal(sqlparser.NewIdentifierCI(v.ColVindex.ColumnName)) {
-			return true
+		for _, col := range v.ColVindex {
+			if column.Name.Equal(sqlparser.NewIdentifierCI(col.Column)) {
+				return true
+			}
 		}
+
 	}
 	return false
 }
@@ -304,11 +307,11 @@ func (tableRouting *TableShardedRouting) processSingleColumnVindex(
 	tindexPlusPredicates *TindexPlusPredicates,
 	newVindexFound bool,
 ) bool {
-	col := tindexPlusPredicates.ColVindex.ColumnName
-	if !column.Name.Equal(sqlparser.NewIdentifierCI(col)) {
-		return newVindexFound
+	for _, col := range tindexPlusPredicates.ColVindex {
+		if !column.Name.Equal(sqlparser.NewIdentifierCI(col.Column)) {
+			return newVindexFound
+		}
 	}
-
 	routeOpcode := opcode
 	if routeOpcode == engine.Scatter {
 		return newVindexFound

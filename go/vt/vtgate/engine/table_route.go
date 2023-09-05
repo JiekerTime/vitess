@@ -4,7 +4,6 @@ import (
 	"context"
 	"sort"
 	"strings"
-
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	"vitess.io/vitess/go/vt/log"

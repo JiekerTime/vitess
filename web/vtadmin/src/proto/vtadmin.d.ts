@@ -1,5 +1,6 @@
 import * as $protobuf from "protobufjs";
 import Long = require("long");
+
 /** Namespace vtadmin. */
 export namespace vtadmin {
 
@@ -39108,6 +39109,12 @@ export namespace vschema {
 
         /** Keyspace attach_to */
         attach_to?: (string|null);
+
+        /** Keyspace splittable_tables */
+        splittable_tables?: ({ [k: string]: vschema.ISplitTable }|null);
+
+        /** Keyspace splittable_vindexes */
+        splittable_vindexes?: ({ [k: string]: vschema.IVindex }|null);
     }
 
     /** Represents a Keyspace. */
@@ -39139,6 +39146,12 @@ export namespace vschema {
 
         /** Keyspace attach_to. */
         public attach_to: string;
+
+        /** Keyspace splittable_tables. */
+        public splittable_tables: { [k: string]: vschema.ISplitTable };
+
+        /** Keyspace splittable_vindexes. */
+        public splittable_vindexes: { [k: string]: vschema.IVindex };
 
         /**
          * Creates a new Keyspace instance using the specified properties.
@@ -39454,6 +39467,230 @@ export namespace vschema {
 
         /**
          * Gets the default type url for Table
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a SplitTable. */
+    interface ISplitTable {
+
+        /** SplitTable logic_table_name */
+        logic_table_name?: (string|null);
+
+        /** SplitTable table_vindex */
+        table_vindex?: (string|null);
+
+        /** SplitTable table_vindex_column */
+        table_vindex_column?: (vschema.ITableVindexColumn[]|null);
+
+        /** SplitTable table_count */
+        table_count?: (number|null);
+    }
+
+    /** Represents a SplitTable. */
+    class SplitTable implements ISplitTable {
+
+        /**
+         * Constructs a new SplitTable.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: vschema.ISplitTable);
+
+        /** SplitTable logic_table_name. */
+        public logic_table_name: string;
+
+        /** SplitTable table_vindex. */
+        public table_vindex: string;
+
+        /** SplitTable table_vindex_column. */
+        public table_vindex_column: vschema.ITableVindexColumn[];
+
+        /** SplitTable table_count. */
+        public table_count: number;
+
+        /**
+         * Creates a new SplitTable instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns SplitTable instance
+         */
+        public static create(properties?: vschema.ISplitTable): vschema.SplitTable;
+
+        /**
+         * Encodes the specified SplitTable message. Does not implicitly {@link vschema.SplitTable.verify|verify} messages.
+         * @param message SplitTable message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: vschema.ISplitTable, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified SplitTable message, length delimited. Does not implicitly {@link vschema.SplitTable.verify|verify} messages.
+         * @param message SplitTable message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: vschema.ISplitTable, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a SplitTable message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns SplitTable
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): vschema.SplitTable;
+
+        /**
+         * Decodes a SplitTable message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns SplitTable
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): vschema.SplitTable;
+
+        /**
+         * Verifies a SplitTable message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a SplitTable message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns SplitTable
+         */
+        public static fromObject(object: { [k: string]: any }): vschema.SplitTable;
+
+        /**
+         * Creates a plain object from a SplitTable message. Also converts values to other types if specified.
+         * @param message SplitTable
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: vschema.SplitTable, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this SplitTable to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for SplitTable
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a TableVindexColumn. */
+    interface ITableVindexColumn {
+
+        /** TableVindexColumn index */
+        index?: (number|null);
+
+        /** TableVindexColumn column */
+        column?: (string|null);
+
+        /** TableVindexColumn column_type */
+        column_type?: (query.Type|null);
+    }
+
+    /** Represents a TableVindexColumn. */
+    class TableVindexColumn implements ITableVindexColumn {
+
+        /**
+         * Constructs a new TableVindexColumn.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: vschema.ITableVindexColumn);
+
+        /** TableVindexColumn index. */
+        public index: number;
+
+        /** TableVindexColumn column. */
+        public column: string;
+
+        /** TableVindexColumn column_type. */
+        public column_type: query.Type;
+
+        /**
+         * Creates a new TableVindexColumn instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns TableVindexColumn instance
+         */
+        public static create(properties?: vschema.ITableVindexColumn): vschema.TableVindexColumn;
+
+        /**
+         * Encodes the specified TableVindexColumn message. Does not implicitly {@link vschema.TableVindexColumn.verify|verify} messages.
+         * @param message TableVindexColumn message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: vschema.ITableVindexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified TableVindexColumn message, length delimited. Does not implicitly {@link vschema.TableVindexColumn.verify|verify} messages.
+         * @param message TableVindexColumn message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: vschema.ITableVindexColumn, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a TableVindexColumn message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns TableVindexColumn
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): vschema.TableVindexColumn;
+
+        /**
+         * Decodes a TableVindexColumn message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns TableVindexColumn
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): vschema.TableVindexColumn;
+
+        /**
+         * Verifies a TableVindexColumn message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a TableVindexColumn message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns TableVindexColumn
+         */
+        public static fromObject(object: { [k: string]: any }): vschema.TableVindexColumn;
+
+        /**
+         * Creates a plain object from a TableVindexColumn message. Also converts values to other types if specified.
+         * @param message TableVindexColumn
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: vschema.TableVindexColumn, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this TableVindexColumn to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for TableVindexColumn
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */
