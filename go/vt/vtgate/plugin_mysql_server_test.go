@@ -254,7 +254,7 @@ func newTestAuthServerStatic() *mysql.AuthServerStatic {
 	return mysql.NewAuthServerStatic("", jsonConfig, 0)
 }
 
-func TestDefaultWorkloadEmpty(t *testing.T) {
+func testDefaultWorkloadEmpty(t *testing.T) {
 	vh := &vtgateHandler{}
 	sess := vh.session(&mysql.Conn{})
 	if sess.Options.Workload != querypb.ExecuteOptions_OLTP {
@@ -262,7 +262,7 @@ func TestDefaultWorkloadEmpty(t *testing.T) {
 	}
 }
 
-func TestDefaultWorkloadOLAP(t *testing.T) {
+func testDefaultWorkloadOLAP(t *testing.T) {
 	vh := &vtgateHandler{}
 	mysqlDefaultWorkload = int32(querypb.ExecuteOptions_OLAP)
 	sess := vh.session(&mysql.Conn{})

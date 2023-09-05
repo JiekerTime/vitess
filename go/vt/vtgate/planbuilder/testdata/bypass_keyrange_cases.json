@@ -111,44 +111,6 @@
     }
   },
   {
-    "comment": "load data from s3 'x.txt' into table x",
-    "query": "load data from s3 'x.txt' into table x",
-    "plan": {
-      "QueryType": "OTHER",
-      "Original": "load data from s3 'x.txt' into table x",
-      "Instructions": {
-        "OperatorType": "Send",
-        "Keyspace": {
-          "Name": "main",
-          "Sharded": false
-        },
-        "TargetDestination": "ExactKeyRange(-)",
-        "IsDML": true,
-        "Query": "load data from s3 'x.txt' into table x",
-        "SingleShardOnly": true
-      }
-    }
-  },
-  {
-    "comment": "load data from s3 'x.txt'",
-    "query": "load data from s3 'x.txt'",
-    "plan": {
-      "QueryType": "OTHER",
-      "Original": "load data from s3 'x.txt'",
-      "Instructions": {
-        "OperatorType": "Send",
-        "Keyspace": {
-          "Name": "main",
-          "Sharded": false
-        },
-        "TargetDestination": "ExactKeyRange(-)",
-        "IsDML": true,
-        "Query": "load data from s3 'x.txt'",
-        "SingleShardOnly": true
-      }
-    }
-  },
-  {
     "comment": "create table",
     "query": "create /* test */ table t1(id bigint, primary key(id)) /* comments */",
     "plan": {

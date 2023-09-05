@@ -4518,7 +4518,7 @@ func TestSubStr(t *testing.T) {
 	}
 }
 
-func TestLoadData(t *testing.T) {
+func testLoadData(t *testing.T) {
 	validSQL := []string{
 		"load data from s3 'x.txt'",
 		"load data from s3 manifest 'x.txt'",

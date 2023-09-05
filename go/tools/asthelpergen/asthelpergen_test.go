@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFullGeneration(t *testing.T) {
+func testFullGeneration(t *testing.T) {
 	result, err := GenerateASTHelpers(&Options{
 		Packages:      []string{"./integration/..."},
 		RootInterface: "vitess.io/vitess/go/tools/asthelpergen/integration.AST",

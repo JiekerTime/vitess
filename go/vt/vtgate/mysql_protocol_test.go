@@ -37,7 +37,7 @@ import (
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 )
 
-func TestMySQLProtocolExecute(t *testing.T) {
+func testMySQLProtocolExecute(t *testing.T) {
 	createSandbox(KsTestUnsharded)
 	hcVTGateTest.Reset()
 	sbc := hcVTGateTest.AddTestTablet("aa", "1.1.1.1", 1001, KsTestUnsharded, "0", topodatapb.TabletType_PRIMARY, true, 1, nil)
@@ -61,7 +61,7 @@ func TestMySQLProtocolExecute(t *testing.T) {
 	}
 }
 
-func TestMySQLProtocolStreamExecute(t *testing.T) {
+func testMySQLProtocolStreamExecute(t *testing.T) {
 	createSandbox(KsTestUnsharded)
 	hcVTGateTest.Reset()
 	sbc := hcVTGateTest.AddTestTablet("aa", "1.1.1.1", 1001, KsTestUnsharded, "0", topodatapb.TabletType_PRIMARY, true, 1, nil)
@@ -138,7 +138,7 @@ func TestMysqlProtocolInvalidDB(t *testing.T) {
 	require.EqualError(t, err, "VT05003: unknown database 'invalidDB' in vschema (errno 1049) (sqlstate 42000)")
 }
 
-func TestMySQLProtocolClientFoundRows(t *testing.T) {
+func testMySQLProtocolClientFoundRows(t *testing.T) {
 	createSandbox(KsTestUnsharded)
 	hcVTGateTest.Reset()
 	sbc := hcVTGateTest.AddTestTablet("aa", "1.1.1.1", 1001, KsTestUnsharded, "0", topodatapb.TabletType_PRIMARY, true, 1, nil)

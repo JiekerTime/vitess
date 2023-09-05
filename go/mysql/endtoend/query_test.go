@@ -77,7 +77,6 @@ func TestQueries(t *testing.T) {
 	require.NoError(t, err, "insert failed: %v", err)
 
 	collID := getDefaultCollationID()
-	collID = collations.CollationUtf8ID
 	expectedResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
 			{

@@ -65,7 +65,7 @@ var (
 	shardName              = "0"
 	shard0Name             = "-80"
 	shard1Name             = "80-"
-	dbName                 = "vt_ks"
+	dbName                 = "ks"
 	mysqlUserName          = "vt_dba"
 	mysqlPassword          = "VtDbaPass"
 	dbCredentialFile       = ""

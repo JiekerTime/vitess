@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	"vitess.io/vitess/go/vt/topo/topoproto"
-
 	binlogdatapb "vitess.io/vitess/go/vt/proto/binlogdata"
 
 	"github.com/stretchr/testify/assert"
@@ -255,7 +253,7 @@ func TestBinlogEventQuery(t *testing.T) {
 
 	input := binlogEvent(googleQueryEvent)
 	want := Query{
-		Database: topoproto.VtDbPrefix + "test_keyspace",
+		Database: "vt_test_keyspace",
 		Charset:  &binlogdatapb.Charset{Client: 8, Conn: 8, Server: 33},
 		SQL: `create table if not exists vt_a (
 eid bigint,

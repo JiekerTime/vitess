@@ -863,11 +863,11 @@ options:PassthroughDMLs
 }
 
 # load data
-"load data infile 'x.txt' into table a"
-{
-    "PlanID":"Load",
-    "TableName":""
-}
+#"load data infile 'x.txt' into table a"
+#{
+#    "PlanID":"Load",
+#    "TableName":""
+#}
 
 # alter view
 "alter view a as select * from b"

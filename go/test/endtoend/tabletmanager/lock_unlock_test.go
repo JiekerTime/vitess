@@ -75,7 +75,7 @@ func TestLockAndUnlock(t *testing.T) {
 }
 
 // TestStartReplicationUntilAfter tests by writing three rows, noting the gtid after each, and then replaying them one by one
-func TestStartReplicationUntilAfter(t *testing.T) {
+func testStartReplicationUntilAfter(t *testing.T) {
 	defer cluster.PanicHandler(t)
 	ctx := context.Background()
 

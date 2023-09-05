@@ -115,7 +115,7 @@ externalConnections:
 
 	product:
 	  socket: /home/sougou/dev/src/vitess.io/vitess/vtdataroot/vtroot_15201/vt_0000000622/mysql.sock
-	  dbName: vt_product
+	  dbName: product
 	  app:
 	    user: vt_app
 	  dba:

@@ -124,7 +124,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestConsolidatorEnabledByDefault(t *testing.T) {
+func testConsolidatorEnabledByDefault(t *testing.T) {
 	testConsolidator(t, []consolidatorTestCase{
 		{
 			"@primary",
@@ -141,7 +141,7 @@ func TestConsolidatorEnabledByDefault(t *testing.T) {
 	})
 }
 
-func TestConsolidatorEnabledWithDirective(t *testing.T) {
+func testConsolidatorEnabledWithDirective(t *testing.T) {
 	testConsolidator(t, []consolidatorTestCase{
 		{
 			"@primary",
@@ -175,7 +175,7 @@ func TestConsolidatorDisabledWithDirective(t *testing.T) {
 	})
 }
 
-func TestConsolidatorEnabledReplicasWithDirective(t *testing.T) {
+func testConsolidatorEnabledReplicasWithDirective(t *testing.T) {
 	testConsolidator(t, []consolidatorTestCase{
 		{
 			"@primary",

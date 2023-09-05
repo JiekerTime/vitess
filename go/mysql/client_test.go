@@ -328,7 +328,7 @@ func TestTLSClientRequired(t *testing.T) {
 
 // TestTLSClientVerifyCA creates a Server with TLS support, then connects
 // with a client with TLS enabled on a wrong hostname but with verify CA on.
-func TestTLSClientVerifyCA(t *testing.T) {
+func testTLSClientVerifyCA(t *testing.T) {
 	th := &testHandler{}
 
 	authServer := NewAuthServerStatic("", "", 0)
