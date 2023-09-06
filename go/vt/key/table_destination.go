@@ -21,7 +21,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math/rand"
-	"strings"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/vt/vterrors"
@@ -108,19 +107,14 @@ func (d DestinationAnyTables) String() string {
 	return "DestinationAnyTables()"
 }
 
-//
-// DestinationShards
-//
-
 // DestinationTables is the destination for multiple shards.
 // It implements the Destination interface.
-type DestinationTables []string
+type DestinationTables []uint64
 
-// lingxiao TODO 验证 到底是 range d 还是range tables
 // Resolve is part of the Destination interface.
-func (d DestinationTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
-	for _, shard := range tables.ActualTableList {
-		if err := addTable(uint64(shard.Index)); err != nil {
+func (d DestinationTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(table uint64) error) error {
+	for _, shard := range d {
+		if err := addTable(shard); err != nil {
 			return err
 		}
 	}
@@ -129,7 +123,7 @@ func (d DestinationTables) Resolve(tables *tableindexes.LogicTableConfig, addTab
 
 // String is part of the Destination interface.
 func (d DestinationTables) String() string {
-	return "DestinationTables(" + strings.Join(d, ",") + ")"
+	return "DestinationTables"
 }
 
 //
