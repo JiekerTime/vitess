@@ -26,7 +26,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
@@ -266,10 +265,6 @@ func (t *noopVCursor) SetWorkload(querypb.ExecuteOptions_Workload) {
 	panic("implement me")
 }
 
-func (f *noopVCursor) FindSplitTable(name string) (*tableindexes.LogicTableConfig, error) {
-	return nil, nil
-}
-
 func (t *noopVCursor) SetWorkloadName(string) {
 	panic("implement me")
 }
@@ -380,8 +375,6 @@ type loggingVCursor struct {
 	ksShardMap map[string][]string
 
 	shardSession []*srvtopo.ResolvedShard
-
-	logicTableConfig tableindexes.LogicTableConfig
 }
 
 func (f *loggingVCursor) GetUDV(key string) *querypb.BindVariable {
@@ -427,10 +420,6 @@ func (f *loggingVCursor) SetFoundRows(u uint64) {
 
 func (f *loggingVCursor) InTransactionAndIsDML() bool {
 	return false
-}
-
-func (f *loggingVCursor) FindSplitTable(name string) (*tableindexes.LogicTableConfig, error) {
-	return &f.logicTableConfig, nil
 }
 
 func (f *loggingVCursor) LookupRowLockShardSession() vtgatepb.CommitOrder {

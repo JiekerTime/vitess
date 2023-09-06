@@ -2,9 +2,10 @@ package engine
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 	"vitess.io/vitess/go/sqltypes"
 
 	querypb "vitess.io/vitess/go/vt/proto/query"
@@ -558,7 +559,7 @@ func TestTableRouteSelectScatter(t *testing.T) {
 		},
 	}
 
-	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
 	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
@@ -635,7 +636,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 		},
 	}
 
-	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
 	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
@@ -716,7 +717,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 		},
 	}
 
-	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
 	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{

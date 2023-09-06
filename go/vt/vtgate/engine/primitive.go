@@ -19,8 +19,6 @@ package engine
 import (
 	"context"
 	"time"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
@@ -118,8 +116,6 @@ type (
 
 		// ReleaseLock releases all the held advisory locks.
 		ReleaseLock(ctx context.Context) error
-
-		FindSplitTable(name string) (*tableindexes.LogicTableConfig, error)
 	}
 
 	// SessionActions gives primitives ability to interact with the session state

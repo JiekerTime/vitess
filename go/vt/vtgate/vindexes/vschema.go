@@ -322,10 +322,8 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 				AttachEnable: ks.AttachEnable,
 				AttachTo:     ks.AttachTo,
 			},
-			Tables:             make(map[string]*Table),
-			Vindexes:           make(map[string]Vindex),
-			SplitTableTables:   make(map[string]*tableindexes.LogicTableConfig),
-			SplitTableVindexes: make(map[string]Vindex),
+			Tables:   make(map[string]*Table),
+			Vindexes: make(map[string]Vindex),
 		}
 		if len(ks.SplittableTables) > 0 {
 			ksvschema.SplitTableTables = make(map[string]*tableindexes.LogicTableConfig)

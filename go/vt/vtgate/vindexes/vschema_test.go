@@ -23,7 +23,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
