@@ -116,6 +116,7 @@ func (d DestinationAnyTables) String() string {
 // It implements the Destination interface.
 type DestinationTables []string
 
+// lingxiao TODO 验证 到底是 range d 还是range tables
 // Resolve is part of the Destination interface.
 func (d DestinationTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
 	for _, shard := range tables.ActualTableList {

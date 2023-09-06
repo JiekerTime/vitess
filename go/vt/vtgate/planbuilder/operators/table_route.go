@@ -33,7 +33,7 @@ type (
 	// TindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
 	TindexPlusPredicates struct {
 		TableID   semantics.TableSet
-		ColVindex *tableindexes.Column
+		ColVindex []*tableindexes.Column
 
 		// during planning, we store the alternatives found for this route in this slice
 		Options []*TindexOption

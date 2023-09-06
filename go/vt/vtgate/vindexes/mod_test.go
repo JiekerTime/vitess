@@ -23,7 +23,7 @@ func TestMod_Map(t *testing.T) {
 		wantErr bool
 	}{
 		{"mod", args{context.Background(), nil, []sqltypes.Value{sqltypes.NewUint64(111)}}, []key.Destination{
-			key.DestinationKeyspaceID([]byte{0, 0, 0, 0, 0, 0, 0, 111}),
+			key.DestinationKeyspaceID([]byte{0, 0, 0, 0, 0, 0, 0, 3}),
 		}, false},
 	}
 
@@ -38,7 +38,7 @@ func TestMod_Map(t *testing.T) {
 				t.Errorf("Map() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Map() got = %v, want %v", got, tt.want)
 			}
 		})

@@ -23,7 +23,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-
 	"vitess.io/vitess/go/sqlescape"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -236,6 +235,12 @@ func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 	if len(ks.Views) > 0 {
 		ksJ.Views = make(map[string]string, len(ks.Views))
 	}
+	if len(ks.SplitTableTables) > 0 {
+		ksJ.SplitTableTables = make(map[string]*tableindexes.LogicTableConfig, len(ks.SplitTableTables))
+	}
+	if len(ks.SplitTableVindexes) > 0 {
+		ksJ.SplitTableVindexes = make(map[string]Vindex, len(ks.SplitTableVindexes))
+	}
 	for view, def := range ks.Views {
 		ksJ.Views[view] = sqlparser.String(def)
 	}
@@ -321,6 +326,12 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 			Vindexes:           make(map[string]Vindex),
 			SplitTableTables:   make(map[string]*tableindexes.LogicTableConfig),
 			SplitTableVindexes: make(map[string]Vindex),
+		}
+		if len(ks.SplittableTables) > 0 {
+			ksvschema.SplitTableTables = make(map[string]*tableindexes.LogicTableConfig)
+		}
+		if len(ks.SplittableVindexes) > 0 {
+			ksvschema.SplitTableVindexes = make(map[string]Vindex)
 		}
 		vschema.Keyspaces[ksname] = ksvschema
 		ksvschema.Error = buildTables(ks, vschema, ksvschema)

@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"vitess.io/vitess/go/vt/srvtopo"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-
 	"vitess.io/vitess/go/sqltypes"
+	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 var _ Primitive = (*TableRoute)(nil)
@@ -63,19 +62,42 @@ func (tableRoute *TableRoute) GetTableName() string {
 
 func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
 	if tableRoute.TableRouteParam == nil {
-		return nil, vterrors.VT15001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
+		return nil, vterrors.VT13001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
 	}
 
-	resolvedShards, mapBindVariables, errFindRout := tableRoute.ShardRouteParam.findRoute(ctx, vcursor, bindVars)
-	if errFindRout != nil {
-		return nil, errFindRout
+	var rs *srvtopo.ResolvedShard
+
+	// Use an existing shard session
+	sss := vcursor.Session().ShardSession()
+	for _, ss := range sss {
+		if ss.Target.Keyspace == tableRoute.ShardRouteParam.Keyspace.Name {
+			rs = ss
+			break
+		}
 	}
 
-	qr, err := execShard(ctx, tableRoute, vcursor, tableRoute.FieldQuery, mapBindVariables[0], resolvedShards[0], false /* rollbackOnError */, false /* canAutocommit */)
+	// If not find, then pick any shard.
+	if rs == nil {
+		rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAnyShard{}})
+		if err != nil {
+			return nil, err
+		}
+		if len(rss) != 1 {
+			// This code is unreachable. It's just a sanity check.
+			return nil, fmt.Errorf("no shards for keyspace: %s", tableRoute.ShardRouteParam.Keyspace.Name)
+		}
+		rs = rss[0]
+	}
+
+	qr, err := execShard(ctx, tableRoute, vcursor, tableRoute.FieldQuery, bindVars, rs, false /* rollbackOnError */, false /* canAutocommit */)
 	if err != nil {
 		return nil, err
 	}
-	return qr, nil
+
+	for _, field := range qr.Fields {
+		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
+	}
+	return qr.Truncate(tableRoute.TruncateColumnCount), nil
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
@@ -155,7 +177,6 @@ func (tableRoute *TableRoute) executeShards(
 		return result, nil
 	}
 	return tableRoute.sort(result)
-
 }
 
 func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error) {

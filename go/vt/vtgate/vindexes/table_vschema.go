@@ -19,7 +19,6 @@ package vindexes
 import (
 	"strconv"
 	"strings"
-
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"

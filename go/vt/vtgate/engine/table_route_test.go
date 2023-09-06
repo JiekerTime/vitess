@@ -417,7 +417,7 @@ func TestTableRouteGetFields(t *testing.T) {
 				Index:           2,
 			},
 		},
-		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
 	}
 
 	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
@@ -444,7 +444,7 @@ func TestTableRouteGetFields(t *testing.T) {
 	TableRoute := TableRoute{
 		TableName:       "lkp",
 		Query:           statement,
-		FieldQuery:      "dummy_select_field",
+		FieldQuery:      "select f1, f2 from lkp",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
 			Opcode:     Scatter,

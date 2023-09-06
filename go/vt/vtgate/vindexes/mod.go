@@ -47,8 +47,16 @@ const (
 )
 
 // NewMod creates a new Mod.
-func NewMod(name string, _ map[string]string) (Vindex, error) {
-	return &Mod{name: name}, nil
+func NewMod(name string, para map[string]string) (Vindex, error) {
+	modSize, ok := para[paramModSize]
+	if !ok {
+		return nil, vterrors.Errorf(vtrpc.Code_INVALID_ARGUMENT, "mod size not found ")
+	}
+	num, err := strconv.ParseUint(modSize, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &Mod{name: name, modSize: num}, nil
 }
 
 // String returns the name of the vindex.
