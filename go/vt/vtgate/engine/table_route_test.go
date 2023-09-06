@@ -1,12 +1,14 @@
 package engine
 
 import (
-	"fmt"
+	"context"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
-
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
@@ -413,124 +415,166 @@ func TestRewriteQuery(t *testing.T) {
 	}
 }
 
-func TestResultMerge(t *testing.T) {
-	resultSlice := []sqltypes.Result{
-		{
-			Fields: []*querypb.Field{
-				// 定义字段
-				{
-					Name:  "id",
-					Type:  sqltypes.Int64,
-					Table: "test_001",
-				},
-				{
-					Name:  "name",
-					Type:  sqltypes.VarChar,
-					Table: "test_002",
-				},
+func TestTableRouteGetFields(t *testing.T) {
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           1,
 			},
-			RowsAffected: 2,
-			Rows: [][]sqltypes.Value{
-				// 定义行数据
-				{
-					sqltypes.NewInt64(1),
-					sqltypes.NewVarChar("John"),
-				},
-				{
-					sqltypes.NewInt64(2),
-					sqltypes.NewVarChar("Jane"),
-				},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           2,
 			},
 		},
+		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
+	}
 
-		{
-			Fields: []*querypb.Field{
-				// 定义字段
-				{
-					Name:  "id",
-					Type:  sqltypes.Int64,
-					Table: "test_003",
-				},
-				{
-					Name:  "name",
-					Type:  sqltypes.VarChar,
-					Table: "test_004",
-				},
-			},
-			RowsAffected: 2,
-			Rows: [][]sqltypes.Value{
-				// 定义行数据
-				{
-					sqltypes.NewInt64(3),
-					sqltypes.NewVarChar("Sto"),
-				},
-				{
-					sqltypes.NewInt64(4),
-					sqltypes.NewVarChar("Uve"),
-				},
-			},
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
+	routingParameters := &RoutingParameters{
+		Opcode: Scatter,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
 		},
 	}
 
-	wantResult := &sqltypes.Result{
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	Values := []evalengine.Expr{
+		evalengine.TupleExpr{
+			evalengine.NewLiteralInt(1),
+			evalengine.NewLiteralInt(2),
+			evalengine.NewLiteralInt(4),
+		},
+	}
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "select f1, f2 from lkp",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     Scatter,
+			LogicTable: logicTableMap,
+			Values:     Values,
+		},
+	}
+
+	resultSlice := make([]*sqltypes.Result, 0)
+
+	result1 := &sqltypes.Result{
 
 		Fields: []*querypb.Field{
 			// 定义字段
 			{
-				Name:  "id",
-				Type:  sqltypes.Int64,
-				Table: "test",
+				Name: "id",
+				Type: sqltypes.Int64,
 			},
 			{
-				Name:  "name",
-				Type:  sqltypes.VarChar,
-				Table: "test",
-			},
-		},
-		RowsAffected: 4,
-		Rows: [][]sqltypes.Value{
-			// 定义行数据
-			{
-				sqltypes.NewInt64(1),
-				sqltypes.NewVarChar("John"),
-			},
-			{
-				sqltypes.NewInt64(2),
-				sqltypes.NewVarChar("Jane"),
-			},
-			// 定义行数据
-			{
-				sqltypes.NewInt64(3),
-				sqltypes.NewVarChar("Sto"),
-			},
-			{
-				sqltypes.NewInt64(4),
-				sqltypes.NewVarChar("Uve"),
+				Name: "name",
+				Type: sqltypes.VarChar,
 			},
 		},
 	}
 
-	finalResult, _ := resultMerge("test", resultSlice)
+	resultSlice = append(resultSlice, result1)
 
-	if !finalResult.Equal(wantResult) {
-		t.Errorf("merge error !")
+	vc := &loggingVCursor{
+		shards:  []string{"-20", "20-"},
+		results: resultSlice,
+	}
+
+	got, err := TableRoute.GetFields(context.Background(), vc, map[string]*querypb.BindVariable{})
+
+	require.NoError(t, err)
+	if !got.Equal(result1) {
+		t.Errorf("l.GetFields:\n%v, want\n%v", got, result1)
 	}
 
 }
 
-func printResult(result sqltypes.Result) {
-	// 打印字段名称
-	for _, field := range result.Fields {
-		fmt.Printf("%s(%s)\t", field.Name, field.Table)
+func TestTableRouteTryExecute(t *testing.T) {
+	vindex, _ := vindexes.NewLookupUnique("", map[string]string{
+		"table": "lkp",
+		"f1":    "f1",
+		"f2":    "f2",
+	})
+	sel := NewRoute(
+		Equal,
+		&vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		"dummy_select",
+		"dummy_select_field",
+	)
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           2,
+			},
+		},
+		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	fmt.Println()
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
 
-	// 打印行数据
-	for _, row := range result.Rows {
-		for _, value := range row {
-			fmt.Printf("%s\t", value.String())
-		}
-		fmt.Println()
+	routingParameters := &RoutingParameters{
+		Opcode: Scatter,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
 	}
+
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	Values := []evalengine.Expr{
+		evalengine.TupleExpr{
+			evalengine.NewLiteralInt(1),
+			evalengine.NewLiteralInt(2),
+			evalengine.NewLiteralInt(4),
+		},
+	}
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "dummy_select_field",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     Scatter,
+			LogicTable: logicTableMap,
+			Values:     Values,
+		},
+	}
+
+	sel.Vindex = vindex.(vindexes.SingleColumn)
+	sel.Values = []evalengine.Expr{
+		evalengine.NewLiteralInt(1),
+	}
+
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
+	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
+	require.NoError(t, err)
+	vc.ExpectLog(t, []string{
+		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
+		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
+	})
+	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
+
 }

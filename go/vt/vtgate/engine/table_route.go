@@ -2,16 +2,19 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
+	"vitess.io/vitess/go/vt/srvtopo"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
-	"vitess.io/vitess/go/vt/log"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 var _ Primitive = (*TableRoute)(nil)
@@ -45,7 +48,7 @@ type TableRoute struct {
 }
 
 func (tableRoute *TableRoute) RouteType() string {
-	panic("implement me")
+	return tableRoute.TableRouteParam.Opcode.String()
 }
 
 func (tableRoute *TableRoute) GetKeyspaceName() string {
@@ -57,7 +60,43 @@ func (tableRoute *TableRoute) GetTableName() string {
 }
 
 func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
-	panic("implement me")
+	if tableRoute.TableRouteParam == nil {
+		return nil, vterrors.VT13001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
+	}
+
+	var rs *srvtopo.ResolvedShard
+
+	// Use an existing shard session
+	sss := vcursor.Session().ShardSession()
+	for _, ss := range sss {
+		if ss.Target.Keyspace == tableRoute.ShardRouteParam.Keyspace.Name {
+			rs = ss
+			break
+		}
+	}
+
+	// If not find, then pick any shard.
+	if rs == nil {
+		rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAnyShard{}})
+		if err != nil {
+			return nil, err
+		}
+		if len(rss) != 1 {
+			// This code is unreachable. It's just a sanity check.
+			return nil, fmt.Errorf("no shards for keyspace: %s", tableRoute.ShardRouteParam.Keyspace.Name)
+		}
+		rs = rss[0]
+	}
+
+	qr, err := execShard(ctx, tableRoute, vcursor, tableRoute.FieldQuery, bindVars, rs, false /* rollbackOnError */, false /* canAutocommit */)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, field := range qr.Fields {
+		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
+	}
+	return qr.Truncate(tableRoute.TruncateColumnCount), nil
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
@@ -77,26 +116,66 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 	if err != nil {
 		return nil, err
 	}
-	// 2.执行SQL
-	result, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, queries, false /* rollbackOnError */, false /* canAutocommit */)
-	if errs != nil {
-		return nil, errs[0]
+
+	result := &sqltypes.Result{}
+	for _, query := range queries {
+		rssqueries := make([]*querypb.BoundQuery, 0, len(rss))
+		for range rss {
+			rssqueries = append(rssqueries, query)
+		}
+
+		// 2.执行SQL
+		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssqueries, false /* rollbackOnError */, false /* canAutocommit */)
+		if errs != nil {
+			return nil, errs[0]
+		}
+		result.AppendResult(innerResult)
 	}
-	print(result)
 
-	var innerQrList = []sqltypes.Result{}
-
-	// 3.结果merge，主要是多张分表的结果merge，可能要处理field中table name不同的场景
-	resultFinal, err := resultMerge(tableRoute.TableName, innerQrList)
-
-	if err != nil {
-		return nil, err
+	for _, field := range result.Fields {
+		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
 	}
-	log.Info(resultFinal)
 
 	// 4.可能要处理Order by排序
+	if len(tableRoute.OrderBy) == 0 {
+		return result, nil
+	}
+	return tableRoute.sort(result)
+}
 
-	panic("implement me")
+func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error) {
+	var err error
+	// Since Result is immutable, we make a copy.
+	// The copy can be shallow because we won't be changing
+	// the contents of any row.
+	out := in.ShallowCopy()
+
+	compares := extractSlices(tableRoute.OrderBy)
+
+	sort.Slice(out.Rows, func(i, j int) bool {
+		var cmp int
+		if err != nil {
+			return true
+		}
+		// If there are any errors below, the function sets
+		// the external err and returns true. Once err is set,
+		// all subsequent calls return true. This will make
+		// Slice think that all elements are in the correct
+		// order and return more quickly.
+		for _, c := range compares {
+			cmp, err = c.compare(out.Rows[i], out.Rows[j])
+			if err != nil {
+				return true
+			}
+			if cmp == 0 {
+				continue
+			}
+			return cmp < 0
+		}
+		return true
+	})
+
+	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
 func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable) ([]*querypb.BoundQuery, error) {
@@ -132,20 +211,6 @@ func rewriteQuery(stmt sqlparser.Statement, act tableindexes.ActualTable, logicT
 
 func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
 	panic("implement me")
-}
-
-func resultMerge(logicTableName string, innerResult []sqltypes.Result) (result *sqltypes.Result, err error) {
-	result = &sqltypes.Result{}
-	for _, innner := range innerResult {
-		result.AppendResult(&innner)
-	}
-
-	//field tableName处理，从分表名修改为逻辑表名
-	for _, field := range result.Fields {
-		field.Table = logicTableName
-	}
-
-	return result, nil
 }
 
 func (tableRoute *TableRoute) description() PrimitiveDescription {
