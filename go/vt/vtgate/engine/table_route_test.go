@@ -486,20 +486,21 @@ func TestTableRouteGetFields(t *testing.T) {
 
 }
 
-func TestTableRouteTryExecute(t *testing.T) {
+func TestTableRouteSelectScatter(t *testing.T) {
 
 	logicTable := tableindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []tableindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_1",
-				Index:           1,
+				Index:           0,
 			},
 			{
 				ActualTableName: "lkp" + "_2",
-				Index:           2,
+				Index:           1,
 			},
 		},
+		TableCount:       2,
 		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
 	}
 
@@ -512,16 +513,11 @@ func TestTableRouteTryExecute(t *testing.T) {
 			Name:    "ks",
 			Sharded: true,
 		},
-		//Values: []evalengine.Expr{
-		//	evalengine.NewLiteralInt(1),
-		//},
 	}
 
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
-	Values := []evalengine.Expr{
-		evalengine.NewLiteralInt(1),
-	}
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 
 	TableRoute := TableRoute{
 		TableName:       "lkp",
@@ -529,10 +525,12 @@ func TestTableRouteTryExecute(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     EqualUnique,
+			Opcode:     Scatter,
 			LogicTable: logicTableMap,
-			Values:     Values,
-			//Vindex:     vindexes.CreateVindex("binaryhash", "binaryhash", nil),
+			Values: []evalengine.Expr{
+				evalengine.NewLiteralInt(1),
+			},
+			Vindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
@@ -543,6 +541,164 @@ func TestTableRouteTryExecute(t *testing.T) {
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
 		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
 		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
+	})
+	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
+
+}
+
+func TestTableRouteSelectEqualUnique(t *testing.T) {
+
+	selvIndex, _ := vindexes.NewHash("", nil)
+	sel := NewRoute(
+		EqualUnique,
+		&vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		"dummy_select",
+		"dummy_select_field",
+	)
+
+	sel.Vindex = selvIndex.(vindexes.SingleColumn)
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           0,
+			},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           1,
+			},
+		},
+		TableCount:       2,
+		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+	}
+
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
+	routingParameters := &RoutingParameters{
+		Opcode: EqualUnique,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		Values: []evalengine.Expr{
+			evalengine.NewLiteralInt(1),
+		},
+		Vindex: selvIndex.(vindexes.SingleColumn),
+	}
+
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "dummy_select_field",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     EqualUnique,
+			LogicTable: logicTableMap,
+			Values: []evalengine.Expr{
+				evalengine.NewLiteralInt(1),
+			},
+			Vindex: vindex.(vindexes.TableSingleColumn),
+		},
+	}
+
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
+	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
+	require.NoError(t, err)
+	vc.ExpectLog(t, []string{
+		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6)`,
+		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} false false`,
+	})
+	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
+
+}
+
+func TestTableRouteSelectEqual(t *testing.T) {
+
+	selvIndex, _ := vindexes.NewLookup("", map[string]string{
+		"table": "lkp",
+		"from":  "from",
+		"to":    "toc",
+	})
+
+	sel := NewRoute(
+		Equal,
+		&vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		"dummy_select",
+		"dummy_select_field",
+	)
+
+	sel.Vindex = selvIndex.(vindexes.SingleColumn)
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           0,
+			},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           1,
+			},
+		},
+		TableCount:       2,
+		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+	}
+
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
+	routingParameters := &RoutingParameters{
+		Opcode: Equal,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		Values: []evalengine.Expr{
+			evalengine.NewLiteralInt(1),
+		},
+		Vindex: selvIndex.(vindexes.SingleColumn),
+	}
+
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "dummy_select_field",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     Equal,
+			LogicTable: logicTableMap,
+			Values: []evalengine.Expr{
+				evalengine.NewLiteralInt(1),
+			},
+			Vindex: vindex.(vindexes.TableSingleColumn),
+		},
+	}
+
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}, logicTableConfig: logicTable}
+	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
+	require.NoError(t, err)
+	vc.ExpectLog(t, []string{
+		`Execute select from, toc from lkp where from in ::from from: type:TUPLE values:{type:INT64 value:"1"} false`,
+		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationNone()`,
+		`ExecuteMultiShard false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
