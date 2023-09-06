@@ -50,7 +50,7 @@ func TestGetTableQueries(t *testing.T) {
 				},
 			},
 			actualTableNameMap: map[string]ActualTableName{
-				"my_table": {"my_actual_table_1"},
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
 			},
 		},
 		{
@@ -79,7 +79,7 @@ func TestGetTableQueries(t *testing.T) {
 				},
 			},
 			actualTableNameMap: map[string]ActualTableName{
-				"my_table": {"my_actual_table_1"},
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
 			},
 		},
 		{
@@ -107,6 +107,9 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			},
 		},
 		{
 			name:  "Select query with multiple subqueries",
@@ -132,6 +135,9 @@ func TestGetTableQueries(t *testing.T) {
 					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_2) AS t1) AS t2 WHERE t2.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
+			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
 			},
 		},
 		{
@@ -159,6 +165,9 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			},
 		},
 		{
 			name:  "Select query with multiple subqueries and table aliases",
@@ -184,6 +193,9 @@ func TestGetTableQueries(t *testing.T) {
 					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_2) AS t1) AS t2 JOIN my_actual_table_2 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
+			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
 			},
 		},
 		{
@@ -211,6 +223,9 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			},
 		},
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions",
@@ -237,6 +252,9 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			},
 		}, {
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
@@ -261,6 +279,9 @@ func TestGetTableQueries(t *testing.T) {
 					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_2 as t1 limit 5, 10) as t2) as t3 join my_actual_table_2 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
+			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
 			},
 		},
 		{
@@ -287,6 +308,9 @@ func TestGetTableQueries(t *testing.T) {
 					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_2 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_2 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
+			},
+			actualTableNameMap: map[string]ActualTableName{
+				"my_table": {"my_actual_table_1", "my_actual_table_2"},
 			},
 		},
 	}
@@ -410,11 +434,11 @@ func TestTableRouteGetFields(t *testing.T) {
 		ActualTableList: []tableindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_1",
-				Index:           1,
+				Index:           0,
 			},
 			{
 				ActualTableName: "lkp" + "_2",
-				Index:           2,
+				Index:           1,
 			},
 		},
 		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
