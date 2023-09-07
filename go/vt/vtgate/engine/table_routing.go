@@ -41,7 +41,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 		case Unsharded, Next:
 		//	return rp.unsharded(ctx, vcursor, bindVars)
 		case Reference:
-			logicTableMap[logicTable], err = rp.anyTable(ctx, vcursor, logicTable, key.DestinationAnyTables{})
+			logicTableMap[logicTable], err = rp.anyTable(ctx, vcursor, logicTable, key.DestinationAnyTable{})
 			if err != nil {
 				return nil, err
 			}

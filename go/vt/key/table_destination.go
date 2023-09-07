@@ -74,8 +74,8 @@ type DestinationAllTables struct{}
 
 // Resolve is part of the Destination interface.
 func (d DestinationAllTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
-	for _, shard := range tables.ActualTableList {
-		if err := addTable(uint64(shard.Index)); err != nil {
+	for _, table := range tables.ActualTableList {
+		if err := addTable(uint64(table.Index)); err != nil {
 			return err
 		}
 	}
@@ -87,11 +87,10 @@ func (d DestinationAllTables) String() string {
 	return "DestinationAllTables()"
 }
 
-// DestinationAnyTables
-type DestinationAnyTables struct{}
+type DestinationAnyTable struct{}
 
 // Resolve is part of the Destination interface.
-func (d DestinationAnyTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
+func (d DestinationAnyTable) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
 	if len(tables.ActualTableList) == 0 {
 		return vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no table in keyspace")
 	}
@@ -100,18 +99,18 @@ func (d DestinationAnyTables) Resolve(tables *tableindexes.LogicTableConfig, add
 }
 
 // String is part of the Destination interface.
-func (d DestinationAnyTables) String() string {
-	return "DestinationAnyTables()"
+func (d DestinationAnyTable) String() string {
+	return "DestinationAnyTable()"
 }
 
-// DestinationTables is the destination for multiple shards.
+// DestinationTables is the destination for multiple tables.
 // It implements the Destination interface.
 type DestinationTables []uint64
 
 // Resolve is part of the Destination interface.
-func (d DestinationTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(table uint64) error) error {
-	for _, shard := range d {
-		if err := addTable(shard); err != nil {
+func (d DestinationTables) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
+	for _, table := range d {
+		if err := addTable(table); err != nil {
 			return err
 		}
 	}
@@ -123,16 +122,12 @@ func (d DestinationTables) String() string {
 	return "DestinationTables"
 }
 
-//
-// DestinationKeyspaceID
-//
-
 // TableDestinationKeyspaceID is the destination for a single KeyspaceID.
 // It implements the Destination interface.
 type TableDestinationKeyspaceID []byte
 
 // Resolve is part of the Destination interface.
-func (d TableDestinationKeyspaceID) Resolve(tables *tableindexes.LogicTableConfig, addTable func(table uint64) error) error {
+func (d TableDestinationKeyspaceID) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex uint64) error) error {
 	table, err := GetTableIndexForKeyspaceID(tables, d)
 	if err != nil {
 		return err
@@ -147,20 +142,15 @@ func (d TableDestinationKeyspaceID) String() string {
 
 // GetTableIndexForKeyspaceID finds the right shard for a keyspace id.
 func GetTableIndexForKeyspaceID(tables *tableindexes.LogicTableConfig, keyspaceID []byte) (uint64, error) {
-	//return binary.BigEndian.Uint64(keyspaceID), nil
 	return binary.BigEndian.Uint64(keyspaceID) % uint64(tables.TableCount), nil
 }
-
-//
-// DestinationModKeyspaceID
-//
 
 // TableDestinationModKeyspaceID is the destination for a single KeyspaceID.
 // It implements the Destination interface.
 type TableDestinationModKeyspaceID []byte
 
 // Resolve is part of the Destination interface.
-func (d TableDestinationModKeyspaceID) Resolve(tables *tableindexes.LogicTableConfig, addTable func(table string) error) error {
+func (d TableDestinationModKeyspaceID) Resolve(tables *tableindexes.LogicTableConfig, addTable func(actualTableIndex string) error) error {
 	table, err := GetTableForModKeyspaceID(tables, d)
 	if err != nil {
 		return err
