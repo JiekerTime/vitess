@@ -19,6 +19,7 @@ package engine
 import (
 	"context"
 	"time"
+
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
