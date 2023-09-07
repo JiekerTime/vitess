@@ -27,7 +27,7 @@ type Column struct {
 	Index      int32      `json:"index"`
 }
 
-// Gets the first table mapping of the splitable
+// GetFirstActualTableMap Gets the first table mapping of the splitable
 // It is used in filedquery
 func GetFirstActualTableMap(logicTable SplitTableMap) map[string]string {
 	firstActualTable := make(map[string]string)
