@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
 	"github.com/stretchr/testify/assert"
