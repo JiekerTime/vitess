@@ -129,8 +129,19 @@ func (tableRoute *TableRoute) executeInternal(
 	if err != nil {
 		return nil, err
 	}
+	//排序分表
+	SortTableList(actualTableMap)
 
 	return tableRoute.executeShards(ctx, vcursor, bindVars, wantfields, rss, bvs, actualTableMap)
+}
+
+func SortTableList(tables map[string][]tableindexes.ActualTable) {
+	for _, ActualTableList := range tables {
+		sort.Slice(ActualTableList, func(i, j int) bool {
+			return ActualTableList[i].Index < ActualTableList[j].Index
+		})
+	}
+
 }
 
 func (tableRoute *TableRoute) executeShards(
@@ -140,7 +151,7 @@ func (tableRoute *TableRoute) executeShards(
 	wantfields bool,
 	rss []*srvtopo.ResolvedShard,
 	bvs []map[string]*querypb.BindVariable,
-	actualTableNameMap map[string]ActualTableNames,
+	actualTableNameMap map[string][]tableindexes.ActualTable,
 ) (*sqltypes.Result, error) {
 
 	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
@@ -215,12 +226,12 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string]ActualTableNames) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]tableindexes.ActualTable) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
 	actualTableName := actualTableNameMap[logicTb.LogicTableName]
 
 	for _, act := range actualTableName {
-		sql, err := rewriteQuery(stmt, act, logicTb.LogicTableName)
+		sql, err := rewriteQuery(stmt, act.ActualTableName, logicTb.LogicTableName)
 		if err != nil {
 			return nil, err
 		}

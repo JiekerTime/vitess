@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"vitess.io/vitess/go/sqltypes"
 
 	querypb "vitess.io/vitess/go/vt/proto/query"
@@ -23,7 +24,7 @@ func TestGetTableQueries(t *testing.T) {
 		logicTb            tableindexes.LogicTableConfig
 		bv                 map[string]*querypb.BindVariable
 		expected           []*querypb.BoundQuery
-		actualTableNameMap map[string]ActualTableNames
+		actualTableNameMap map[string][]tableindexes.ActualTable
 	}{
 		{
 			name:  "Select query with table alias",
@@ -50,8 +51,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -79,8 +83,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -108,8 +115,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -137,8 +147,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -166,8 +179,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -195,8 +211,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -224,8 +243,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -253,8 +275,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		}, {
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
@@ -281,8 +306,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 		{
@@ -310,8 +338,11 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string]ActualTableNames{
-				"my_table": {"my_actual_table_1", "my_actual_table_2"},
+			actualTableNameMap: map[string][]tableindexes.ActualTable{
+				"my_table": {
+					{ActualTableName: "my_actual_table_1", Index: 0},
+					{ActualTableName: "my_actual_table_2", Index: 1},
+				},
 			},
 		},
 	}
@@ -727,4 +758,17 @@ func TestTableRouteSelectEqual(t *testing.T) {
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
+}
+
+func TestSortTableList(t *testing.T) {
+
+	actualTableNameMap := map[string][]tableindexes.ActualTable{
+		"my_table": {{ActualTableName: "my_actual_table_1", Index: 1}, {ActualTableName: "my_actual_table_0", Index: 0}, {ActualTableName: "my_actual_table_3", Index: 3}},
+	}
+
+	SortTableList(actualTableNameMap)
+
+	for _, table := range actualTableNameMap {
+		print(table)
+	}
 }

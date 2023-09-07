@@ -2,7 +2,9 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,8 +46,8 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 		},
 		Vindex: vindex.(vindexes.TableSingleColumn),
 	}
-	wantResult := map[string]ActualTableNames{
-		"lkp": {"lkp_0"},
+	wantResult := map[string]tableindexes.ActualTable{
+		"lkp": {ActualTableName: "lkp_0", Index: 0},
 	}
 
 	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
@@ -55,4 +57,26 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 		t.Errorf("find table routing error")
 	}
 
+}
+
+func TestOrderbyIndex(t *testing.T) {
+
+	ActualTable := []tableindexes.ActualTable{
+		{
+			ActualTableName: "lpk_1",
+			Index:           1,
+		},
+		{
+			ActualTableName: "lpk_2",
+			Index:           0,
+		},
+	}
+
+	sort.Slice(ActualTable, func(i, j int) bool {
+		return ActualTable[i].Index < ActualTable[j].Index
+	})
+
+	for _, table := range ActualTable {
+		fmt.Println(table.ActualTableName, table.Index)
+	}
 }
