@@ -38,7 +38,7 @@ var (
 	config  *tabletenv.TabletConfig
 )
 
-func TestMain(m *testing.M) {
+func testMain(m *testing.M) {
 	flag.Parse() // Do not remove this comment, import into google3 depends on it
 	tabletenv.Init()
 

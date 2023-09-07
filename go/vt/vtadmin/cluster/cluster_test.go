@@ -1862,7 +1862,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -1877,7 +1877,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000200": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2010,7 +2010,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2025,7 +2025,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000200": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2040,7 +2040,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000300": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2175,7 +2175,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2190,7 +2190,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000200": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2290,7 +2290,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2305,7 +2305,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000200": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2438,7 +2438,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2512,7 +2512,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2527,7 +2527,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000200": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2622,7 +2622,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000100": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2637,7 +2637,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000200": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_testkeyspcae",
+										DatabaseSchema: "CREATE DATABASE testkeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "foo",
@@ -2652,7 +2652,7 @@ func TestGetSchema(t *testing.T) {
 							"zone1-0000000300": {
 								Response: &vtctldatapb.GetSchemaResponse{
 									Schema: &tabletmanagerdatapb.SchemaDefinition{
-										DatabaseSchema: "CREATE DATABASE vt_otherkeyspacekeyspcae",
+										DatabaseSchema: "CREATE DATABASE otherkeyspacekeyspcae",
 										TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 											{
 												Name:       "bar",

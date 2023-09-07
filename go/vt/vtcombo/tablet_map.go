@@ -256,7 +256,7 @@ func DeleteKs(
 	}
 	defer conn.Close()
 	for _, shard := range ks.Shards {
-		q := fmt.Sprintf("DROP DATABASE IF EXISTS `vt_%s_%s`", ksName, shard.GetName())
+		q := fmt.Sprintf("DROP DATABASE IF EXISTS `%s%s_%s`", topoproto.VtDbPrefix, ksName, shard.GetName())
 		if _, err = conn.ExecuteFetch(q, 1, false); err != nil {
 			return err
 		}
@@ -328,7 +328,7 @@ func CreateKs(
 			for _, cell := range tpb.Cells {
 				dbname := spb.DbNameOverride
 				if dbname == "" {
-					dbname = fmt.Sprintf("vt_%v_%v", keyspace, shard)
+					dbname = fmt.Sprintf("%s%v_%v", topoproto.VtDbPrefix, keyspace, shard)
 				}
 
 				replicas := int(kpb.ReplicaCount)

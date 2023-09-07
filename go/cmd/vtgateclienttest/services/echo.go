@@ -18,6 +18,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -25,8 +26,7 @@ import (
 
 	"vitess.io/vitess/go/mysql"
 
-	"context"
-
+	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/callerid"
 	"vitess.io/vitess/go/vt/vtgate/vtgateservice"
@@ -80,13 +80,13 @@ func echoQueryResult(vals map[string]any) *sqltypes.Result {
 	// The first two returned fields are always a field with a MySQL NULL value,
 	// and another field with a zero-length string.
 	// Client tests can use this to check that they correctly distinguish the two.
-	qr.Fields = append(qr.Fields, &querypb.Field{Name: "null", Type: sqltypes.VarBinary})
+	qr.Fields = append(qr.Fields, &querypb.Field{Name: "null", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)})
 	row = append(row, sqltypes.NULL)
-	qr.Fields = append(qr.Fields, &querypb.Field{Name: "emptyString", Type: sqltypes.VarBinary})
+	qr.Fields = append(qr.Fields, &querypb.Field{Name: "emptyString", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)})
 	row = append(row, sqltypes.NewVarBinary(""))
 
 	for k, v := range vals {
-		qr.Fields = append(qr.Fields, &querypb.Field{Name: k, Type: sqltypes.VarBinary})
+		qr.Fields = append(qr.Fields, &querypb.Field{Name: k, Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)})
 
 		val := reflect.ValueOf(v)
 		if val.Kind() == reflect.Map {

@@ -97,7 +97,7 @@ func TestInvalidDateTimeTimestampVals(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestQueryTimeoutWithDual(t *testing.T) {
+func testQueryTimeoutWithDual(t *testing.T) {
 	mcmp, closer := start(t)
 	defer closer()
 

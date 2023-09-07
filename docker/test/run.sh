@@ -171,6 +171,7 @@ if [[ -z "$existing_cache_image" ]]; then
 fi
 
 # Reset the environment if this was an old bootstrap. We can detect this from VTTOP presence.
+bashcmd=$(append_cmd "$bashcmd" "export GOPROXY=https://goproxy.cn")
 bashcmd=$(append_cmd "$bashcmd" "export VTROOT=/vt/src/vitess.io/vitess")
 bashcmd=$(append_cmd "$bashcmd" "export VTDATAROOT=/vt/vtdataroot")
 bashcmd=$(append_cmd "$bashcmd" "export EXTRA_BIN=/tmp/bin")

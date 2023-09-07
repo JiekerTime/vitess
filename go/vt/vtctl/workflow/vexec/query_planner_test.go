@@ -95,12 +95,12 @@ func TestVReplicationQueryPlanner_planSelect(t *testing.T) {
 		{
 			name:                 "simple select",
 			query:                "SELECT id FROM _vt.vreplication WHERE id > 10",
-			expectedPlannedQuery: "SELECT id FROM _vt.vreplication WHERE id > 10 AND db_name = 'vt_testkeyspace' AND workflow = 'testworkflow'",
+			expectedPlannedQuery: "SELECT id FROM _vt.vreplication WHERE id > 10 AND db_name = 'testkeyspace' AND workflow = 'testworkflow'",
 		},
 		{
 			name:                 "select with workflow and dbname columns already in WHERE",
-			query:                "SELECT id FROM _vt.vreplication WHERE id > 10 AND db_name = 'vt_testkeyspace' AND workflow = 'testworkflow'",
-			expectedPlannedQuery: "SELECT id FROM _vt.vreplication WHERE id > 10 AND db_name = 'vt_testkeyspace' AND workflow = 'testworkflow'",
+			query:                "SELECT id FROM _vt.vreplication WHERE id > 10 AND db_name = 'testkeyspace' AND workflow = 'testworkflow'",
+			expectedPlannedQuery: "SELECT id FROM _vt.vreplication WHERE id > 10 AND db_name = 'testkeyspace' AND workflow = 'testworkflow'",
 		},
 		{
 			// In this case, the QueryParams for the planner (which have
@@ -112,7 +112,7 @@ func TestVReplicationQueryPlanner_planSelect(t *testing.T) {
 		},
 	}
 
-	planner := NewVReplicationQueryPlanner(nil, "testworkflow", "vt_testkeyspace")
+	planner := NewVReplicationQueryPlanner(nil, "testworkflow", "testkeyspace")
 
 	for _, tt := range tests {
 		tt := tt
@@ -143,9 +143,9 @@ func TestVReplicationQueryPlanner_planUpdate(t *testing.T) {
 	}{
 		{
 			name:                 "simple update",
-			planner:              NewVReplicationQueryPlanner(nil, "testworkflow", "vt_testkeyspace"),
+			planner:              NewVReplicationQueryPlanner(nil, "testworkflow", "testkeyspace"),
 			query:                "UPDATE _vt.vreplication SET state = 'Running'",
-			expectedPlannedQuery: "UPDATE _vt.vreplication SET state = 'Running' WHERE db_name = 'vt_testkeyspace' AND workflow = 'testworkflow'",
+			expectedPlannedQuery: "UPDATE _vt.vreplication SET state = 'Running' WHERE db_name = 'testkeyspace' AND workflow = 'testworkflow'",
 			expectedErr:          nil,
 		},
 		{
@@ -162,7 +162,7 @@ func TestVReplicationQueryPlanner_planUpdate(t *testing.T) {
 		},
 		{
 			name:        "cannot update id column",
-			planner:     NewVReplicationQueryPlanner(nil, "", "vt_testkeyspace"),
+			planner:     NewVReplicationQueryPlanner(nil, "", "testkeyspace"),
 			query:       "UPDATE _vt.vreplication SET id = 5",
 			expectedErr: ErrCannotUpdateImmutableColumn,
 		},
@@ -202,7 +202,7 @@ func TestVReplicationQueryPlanner_planDelete(t *testing.T) {
 		{
 			name:                 "simple delete",
 			query:                "DELETE FROM _vt.vreplication WHERE id = 1",
-			expectedPlannedQuery: "DELETE FROM _vt.vreplication WHERE id = 1 AND db_name = 'vt_testkeyspace'",
+			expectedPlannedQuery: "DELETE FROM _vt.vreplication WHERE id = 1 AND db_name = 'testkeyspace'",
 			expectedErr:          nil,
 		},
 		{
@@ -227,7 +227,7 @@ func TestVReplicationQueryPlanner_planDelete(t *testing.T) {
 		},
 	}
 
-	planner := NewVReplicationQueryPlanner(nil, "", "vt_testkeyspace")
+	planner := NewVReplicationQueryPlanner(nil, "", "testkeyspace")
 
 	for _, tt := range tests {
 		tt := tt

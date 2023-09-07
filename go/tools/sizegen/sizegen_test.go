@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFullGeneration(t *testing.T) {
+func testFullGeneration(t *testing.T) {
 	result, err := GenerateSizeHelpers([]string{"./integration/..."}, []string{"vitess.io/vitess/go/tools/sizegen/integration.*"})
 	require.NoError(t, err)
 

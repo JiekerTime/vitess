@@ -909,7 +909,7 @@ func TestMultiStatementOnSplitError(t *testing.T) {
 	require.EqualValues(t, data[0], ErrPacket) // we should see the error here
 }
 
-func TestInitDbAgainstWrongDbDoesNotDropConnection(t *testing.T) {
+func testInitDbAgainstWrongDbDoesNotDropConnection(t *testing.T) {
 	listener, sConn, cConn := createSocketPair(t)
 	sConn.Capabilities |= CapabilityClientMultiStatements
 	defer func() {

@@ -286,7 +286,7 @@ func takeBackup(ctx context.Context, topoServer *topo.Server, backupStorage back
 	}
 	dbName := initDbNameOverride
 	if dbName == "" {
-		dbName = fmt.Sprintf("vt_%s", initKeyspace)
+		dbName = fmt.Sprintf("%s%s", topoproto.VtDbPrefix, initKeyspace)
 	}
 
 	backupParams := mysqlctl.BackupParams{

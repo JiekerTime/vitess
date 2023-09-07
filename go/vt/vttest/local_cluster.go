@@ -450,7 +450,7 @@ func (db *LocalCluster) shardNames(keyspace *vttestpb.Keyspace) (names []string)
 	for _, spb := range keyspace.Shards {
 		dbname := spb.DbNameOverride
 		if dbname == "" {
-			dbname = fmt.Sprintf("vt_%s_%s", keyspace.Name, spb.Name)
+			dbname = fmt.Sprintf("%s_%s", keyspace.Name, spb.Name)
 		}
 		names = append(names, dbname)
 	}

@@ -15,6 +15,7 @@ Usage of vtexplain:
       --keep_logs_by_mtime duration                                 keep logs for this long (using mtime) (zero to keep forever)
       --ks-shard-map string                                         JSON map of keyspace name -> shard name -> ShardReference object. The inner map is the same as the output of FindAllShardsInKeyspace
       --ks-shard-map-file string                                    File containing json blob of keyspace name -> shard name -> ShardReference object
+      --load_max_rows_in_batch int                                  max insert rows in batch of load data (default 2000)
       --log_backtrace_at traceLocation                              when logging hits line file:N, emit a stack trace (default :0)
       --log_dir string                                              If non-empty, write log files in this directory
       --log_err_stacks                                              log stack traces for errors

@@ -302,7 +302,7 @@ func resetTabletDirectory(t *testing.T, tablet cluster.Vttablet, initMysql bool)
 
 func tearDown(t *testing.T, initMysql bool) {
 	// reset replication
-	for _, db := range []string{"_vt", "vt_insert_test"} {
+	for _, db := range []string{"_vt", "insert_test"} {
 		_, err := primary.VttabletProcess.QueryTablet(fmt.Sprintf("drop database if exists %s", db), keyspaceName, true)
 		require.Nil(t, err)
 	}

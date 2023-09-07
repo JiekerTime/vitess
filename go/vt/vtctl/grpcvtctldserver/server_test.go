@@ -4648,7 +4648,7 @@ func TestGetSchema(t *testing.T) {
 			Error  error
 		}{
 			Schema: &tabletmanagerdatapb.SchemaDefinition{
-				DatabaseSchema: "CREATE DATABASE vt_testkeyspace",
+				DatabaseSchema: "CREATE DATABASE testkeyspace",
 				TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 					{
 						Name: "t1",
@@ -4686,7 +4686,7 @@ func TestGetSchema(t *testing.T) {
 			},
 			expected: &vtctldatapb.GetSchemaResponse{
 				Schema: &tabletmanagerdatapb.SchemaDefinition{
-					DatabaseSchema: "CREATE DATABASE vt_testkeyspace",
+					DatabaseSchema: "CREATE DATABASE testkeyspace",
 					TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 						{
 							Name: "t1",
@@ -4718,7 +4718,7 @@ func TestGetSchema(t *testing.T) {
 			},
 			expected: &vtctldatapb.GetSchemaResponse{
 				Schema: &tabletmanagerdatapb.SchemaDefinition{
-					DatabaseSchema: "CREATE DATABASE vt_testkeyspace",
+					DatabaseSchema: "CREATE DATABASE testkeyspace",
 					TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 						{
 							Name: "t1",
@@ -4736,7 +4736,7 @@ func TestGetSchema(t *testing.T) {
 			},
 			expected: &vtctldatapb.GetSchemaResponse{
 				Schema: &tabletmanagerdatapb.SchemaDefinition{
-					DatabaseSchema: "CREATE DATABASE vt_testkeyspace",
+					DatabaseSchema: "CREATE DATABASE testkeyspace",
 					TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 						{
 							Name:       "t1",
@@ -4758,7 +4758,7 @@ func TestGetSchema(t *testing.T) {
 			},
 			expected: &vtctldatapb.GetSchemaResponse{
 				Schema: &tabletmanagerdatapb.SchemaDefinition{
-					DatabaseSchema: "CREATE DATABASE vt_testkeyspace",
+					DatabaseSchema: "CREATE DATABASE testkeyspace",
 					TableDefinitions: []*tabletmanagerdatapb.TableDefinition{
 						{
 							Name: "t1",
