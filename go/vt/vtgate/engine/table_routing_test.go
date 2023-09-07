@@ -1,69 +1,58 @@
 package engine
 
-//func TestTableRoutingParameters_findTableRoute(t *testing.T) {
-//	type fields struct {
-//		Opcode     TableOpCode
-//		Vindex     vindexes.Vindex
-//		LogicTable tableindexes.LogicTableConfig
-//		Values     []evalengine.Expr
-//	}
-//	type args struct {
-//		ctx      context.Context
-//		vcursor  VCursor
-//		bindVars map[string]*querypb.BindVariable
-//	}
-//	params := map[string]string{"table_count": "2", "column_type": "int32"}
-//	hash, _ := vindexes.CreateVindex("splitTableHashMod", "tableHashMod", params)
-//	logicTable := tableindexes.LogicTableConfig{LogicTableName: "t_user",
-//		ActualTableList:  []tableindexes.ActualTable{{"t_user_1", 0}, {"t_user_2", 1}},
-//		TableIndexColumn: tableindexes.Column{"id", querypb.Type_INT64},
-//		ActualTableCount: 2,
-//	}
-//	//vc := &loggingVCursor{
-//	//	shards:  []string{"0"},
-//	//	results: []*sqltypes.Result{defaultSelectResult},
-//	//}
-//	bindVars := map[string]*querypb.BindVariable{
-//		"id":   sqltypes.Int64BindVariable(1),
-//		"name": sqltypes.Int64BindVariable(2),
-//	}
-//	values := []evalengine.Expr{
-//		evalengine.NewLiteralInt(3),
-//	}
-//	tests := []struct {
-//		name    string
-//		fields  fields
-//		args    args
-//		want    []string
-//		wantErr bool
-//	}{
-//		{name: "findTableRoute",
-//			fields: fields{Opcode: TableEqualUnique,
-//				Vindex:     hash,
-//				LogicTable: logicTable,
-//				Values:     values,
-//			},
-//			args: args{ctx: context.Background(),
-//				vcursor:  nil,
-//				bindVars: bindVars},
-//			want: []string{"t_user_1"}},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			rp := &TableRoutingParameters{
-//				Opcode:     tt.fields.Opcode,
-//				Vindex:     tt.fields.Vindex,
-//				LogicTable: tt.fields.LogicTable,
-//				Values:     tt.fields.Values,
-//			}
-//			got, err := rp.findTableRoute(tt.args.ctx, tt.args.vcursor, tt.args.bindVars)
-//			if (err != nil) != tt.wantErr {
-//				t.Errorf("findTableRoute() error = %v, wantErr %v", err, tt.wantErr)
-//				return
-//			}
-//			if !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("findTableRoute() got = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
+import (
+	"context"
+	"reflect"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	querypb "vitess.io/vitess/go/vt/proto/query"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
+)
+
+func TestFindTableRouteSelectEqual(t *testing.T) {
+
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_0",
+				Index:           0,
+			},
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           1,
+			},
+		},
+		TableCount:       2,
+		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+	}
+
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+
+	TableRouteParam := &TableRoutingParameters{
+		Opcode:     Equal,
+		LogicTable: logicTableMap,
+		Values: []evalengine.Expr{
+			evalengine.NewLiteralInt(1),
+		},
+		Vindex: vindex.(vindexes.TableSingleColumn),
+	}
+	wantResult := map[string]ActualTableNames{
+		"lkp": {"lkp_0"},
+	}
+
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
+	result, err := TableRouteParam.findRoute(context.Background(), vc, map[string]*querypb.BindVariable{})
+	require.NoError(t, err)
+	if !reflect.DeepEqual(result, wantResult) {
+		t.Errorf("find table routing error")
+	}
+
+}

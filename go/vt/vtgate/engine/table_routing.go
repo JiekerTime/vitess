@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
@@ -26,11 +27,11 @@ type TableRoutingParameters struct {
 
 type LogicTableName string
 
-type ActualTableName []string
+type ActualTableNames []string
 
-func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string]ActualTableName, err error) {
+func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string]ActualTableNames, err error) {
 
-	logicTableMap = make(map[string]ActualTableName)
+	logicTableMap = make(map[string]ActualTableNames)
 
 	for logicTable := range rp.LogicTable {
 		switch rp.Opcode {
@@ -95,7 +96,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 
 }
 
-func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) (ActualTableName, error) {
+func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) (ActualTableNames, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	value, err := env.Evaluate(rp.Values[0])
 	if err != nil {
@@ -108,7 +109,7 @@ func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bi
 	return actualTableName, nil
 }
 
-func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) (ActualTableName, error) {
+func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) (ActualTableNames, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	value, err := env.Evaluate(rp.Values[0])
 	if err != nil {
@@ -135,7 +136,7 @@ func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor,
 	return tables, nil
 }
 
-func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) (ActualTableName, error) {
+func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) (ActualTableNames, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	value, err := env.Evaluate(rp.Values[0])
 	if err != nil {

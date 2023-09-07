@@ -140,7 +140,7 @@ func (tableRoute *TableRoute) executeShards(
 	wantfields bool,
 	rss []*srvtopo.ResolvedShard,
 	bvs []map[string]*querypb.BindVariable,
-	actualTableNameMap map[string]ActualTableName,
+	actualTableNameMap map[string]ActualTableNames,
 ) (*sqltypes.Result, error) {
 
 	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
@@ -215,7 +215,7 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string]ActualTableName) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string]ActualTableNames) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
 	actualTableName := actualTableNameMap[logicTb.LogicTableName]
 

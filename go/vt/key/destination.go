@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"sort"
 	"strings"
+
 	"vitess.io/vitess/go/vt/vterrors"
 
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
