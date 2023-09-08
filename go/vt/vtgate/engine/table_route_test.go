@@ -2,16 +2,17 @@ package engine
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
-
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func TestGetTableQueries(t *testing.T) {
@@ -577,4 +578,151 @@ func TestTableRouteTryExecute(t *testing.T) {
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
+}
+
+func TestTableRouteSort(t *testing.T) {
+	shardRouteParam := &RoutingParameters{
+		Opcode: Unsharded,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: false,
+		},
+	}
+	tableIndexColumn := []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+	tableName := "t_user"
+	sel := newTestTableRoute(shardRouteParam, tableName, tableIndexColumn, Scatter)
+	sqlStmt, _, _ := sqlparser.Parse2("select id from t_user order by id")
+	sel.Query = sqlStmt
+	sel.FieldQuery = "select col1 from t_user where 1 != 1"
+	sel.OrderBy = []OrderByParams{{
+		Col:             0,
+		WeightStringCol: -1,
+	}}
+
+	vc := &loggingVCursor{
+		shards: []string{"0"},
+		results: []*sqltypes.Result{
+			sqltypes.MakeTestResult(
+				sqltypes.MakeTestFields(
+					"id",
+					"int64",
+				),
+				"1",
+				"1",
+				"3",
+				"2",
+			),
+		},
+	}
+
+	wantResult := sqltypes.MakeTestResult(
+		sqltypes.MakeTestFieldsWithTableName(
+			"id",
+			"int64",
+			tableName,
+		),
+		"1",
+		"1",
+		"2",
+		"3",
+	)
+	result, err := sel.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, false)
+	require.NoError(t, err)
+	expectResult(t, "sel.Execute", result, wantResult)
+
+	sel.OrderBy[0].Desc = true
+	vc.Rewind()
+	result, err = sel.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, false)
+	require.NoError(t, err)
+	wantResult = sqltypes.MakeTestResult(
+		sqltypes.MakeTestFieldsWithTableName(
+			"id",
+			"int64",
+			tableName,
+		),
+		"3",
+		"2",
+		"1",
+		"1",
+	)
+	expectResult(t, "sel.Execute", result, wantResult)
+}
+
+func TestTableRouteSortTruncate(t *testing.T) {
+	shardRouteParam := &RoutingParameters{
+		Opcode: Unsharded,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: false,
+		},
+	}
+	tableIndexColumn := []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+	tableName := "t_user"
+	sel := newTestTableRoute(shardRouteParam, tableName, tableIndexColumn, Scatter)
+	sqlStmt, _, _ := sqlparser.Parse2("dummy_select")
+	sel.Query = sqlStmt
+	sel.FieldQuery = "dummy_select_field"
+	sel.OrderBy = []OrderByParams{{
+		Col: 0,
+	}}
+	sel.TruncateColumnCount = 1
+
+	vc := &loggingVCursor{
+		shards: []string{"0"},
+		results: []*sqltypes.Result{
+			sqltypes.MakeTestResult(
+				sqltypes.MakeTestFields(
+					"id|col",
+					"int64|int64",
+				),
+				"1|1",
+				"1|1",
+				"3|1",
+				"2|1",
+			),
+		},
+	}
+	result, err := sel.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, false)
+	require.NoError(t, err)
+
+	wantResult := sqltypes.MakeTestResult(
+		sqltypes.MakeTestFieldsWithTableName(
+			"id",
+			"int64",
+			tableName,
+		),
+		"1",
+		"1",
+		"2",
+		"3",
+	)
+	expectResult(t, "sel.Execute", result, wantResult)
+}
+
+func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tableIndexColumn []*tableindexes.Column, tableOpcode Opcode) *TableRoute {
+	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTable := tableindexes.LogicTableConfig{
+		LogicTableName: tableName,
+		ActualTableList: []tableindexes.ActualTable{
+			{
+				ActualTableName: tableName + "_1",
+				Index:           1,
+			},
+			{
+				ActualTableName: tableName + "_2",
+				Index:           2,
+			},
+		},
+		TableIndexColumn: tableIndexColumn,
+	}
+	logicTableMap[tableName] = logicTable
+
+	return &TableRoute{
+		TableName:       tableName,
+		ShardRouteParam: shardRouteParam,
+		TableRouteParam: &TableRoutingParameters{
+			Opcode:     tableOpcode,
+			LogicTable: logicTableMap,
+		},
+	}
 }

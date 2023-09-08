@@ -114,6 +114,10 @@ func (d *Distinct) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return d.Source.GetColumns()
 }
 
+func (d *Distinct) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return d.Source.GetSelectExprs(ctx)
+}
+
 func (d *Distinct) Description() ops.OpDescription {
 	return ops.OpDescription{
 		OperatorType: "Distinct",

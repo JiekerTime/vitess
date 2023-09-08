@@ -2,17 +2,15 @@ package engine
 
 import (
 	"context"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
-
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
-
 	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
-
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 type TableRoutingParameters struct {
@@ -29,7 +27,7 @@ func (rp *TableRoutingParameters) findTableRoute(ctx context.Context, vcursor VC
 
 	logicTableMap := make(map[string]ActualTableName)
 	var err error
-	for logicTable, _ := range rp.LogicTable {
+	for logicTable := range rp.LogicTable {
 		switch rp.Opcode {
 		case Scatter:
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)

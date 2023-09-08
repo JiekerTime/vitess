@@ -1,0 +1,630 @@
+[
+  {
+    "comment": "ORDER BY, reference col from local table with shard key",
+    "query": "select predef1 from t_user where id = 5 order by predef2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select predef1 from t_user where id = 5 order by predef2",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Vindex": "user_index",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select predef1, predef2 from t_user_1 where 1 != 1",
+        "Query": "select predef1, predef2 from t_user where id = 5 order by predef2 asc",
+        "OrderBy": "1 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY, reference col from local table with shard key and split table key",
+    "query": "select predef1 from t_user where id = 5 and col = 6 order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select predef1 from t_user where id = 5 and col = 6 order by col",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Vindex": "user_index",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select predef1 from t_user_1 where 1 != 1",
+        "Query": "select predef1 from t_user where id = 5 and col = 6 order by col asc",
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY on scatter",
+    "query": "select col from t_user order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by col",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user order by col asc",
+        "OrderBy": "0 ASC",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY unknown type on scatter",
+    "query": "select id from t_user order by id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user order by id",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id, weight_string(id) from t_user_1 where 1 != 1",
+        "Query": "select id, weight_string(id) from t_user order by id asc",
+        "OrderBy": "0 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY column not in selectExprs",
+    "query": "select col from t_user order by id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by id",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col, id, weight_string(id) from t_user_1 where 1 != 1",
+        "Query": "select col, id, weight_string(id) from t_user order by id asc",
+        "OrderBy": "1 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY uses column numbers",
+    "query": "select col from t_user order by 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by 1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user order by col asc",
+        "OrderBy": "0 ASC",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY column numbers",
+    "query": "select id as foo from t_user order by 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id as foo from t_user order by 1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id as foo, weight_string(id) from t_user_1 where 1 != 1",
+        "Query": "select id as foo, weight_string(id) from t_user order by foo asc",
+        "OrderBy": "0 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY invalid col number on scatter",
+    "query": "select col from t_user order by 2",
+    "plan": "Unknown column '2' in 'order clause'"
+  },
+  {
+    "comment": "ORDER BY NULL",
+    "query": "select col from t_user order by null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user order by null",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, '*' expression",
+    "query": "select * from t_user where id = 5 and col = 6 order by a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 5 and col = 6 order by a",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Vindex": "user_index",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 5 and col = 6 order by a asc",
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, qualified '*' expression",
+    "query": "select t_user.* from t_user where id = 5 and col = 6 order by t_user.a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.* from t_user where id = 5 and col = 6 order by t_user.a",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Vindex": "user_index",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_1.* from t_user_1 where 1 != 1",
+        "Query": "select t_user.* from t_user where id = 5 and col = 6 order by t_user.a asc",
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, '*' expression with qualified reference",
+    "query": "select * from t_user where id = 5 and col = 6 order by t_user.a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 5 and col = 6 order by t_user.a",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Vindex": "user_index",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 5 and col = 6 order by t_user.a asc",
+        "Table": "t_user",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY on select t.*",
+    "query": "select t.*, t.col from t_user t order by t.col",
+    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+  },
+  {
+    "comment": "ORDER BY on select *",
+    "query": "select *, col from t_user order by col",
+    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+  },
+  {
+    "comment": "ORDER BY on select multi t.*",
+    "query": "select t.*, t.name, t.*, t.col from t_user t order by t.col",
+    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+  },
+  {
+    "comment": "ORDER BY on select multi *",
+    "query": "select *, name, *, col from t_user order by col",
+    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+  },
+  {
+    "comment": "ORDER BY on scatter with multiple columns",
+    "query": "select col from t_user order by a,b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by a,b",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col, a, weight_string(a), b, weight_string(b) from t_user_1 where 1 != 1",
+        "Query": "select col, a, weight_string(a), b, weight_string(b) from t_user order by a asc, b asc",
+        "OrderBy": "1 ASC, 3 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY on scatter with multiple columns numbers",
+    "query": "select id,col,a,b from t_user order by 2,3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id,col,a,b from t_user order by 2,3",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id, col, a, b, weight_string(a) from t_user_1 where 1 != 1",
+        "Query": "select id, col, a, b, weight_string(a) from t_user order by col asc, a asc",
+        "OrderBy": "1 ASC, 2 ASC",
+        "ResultColumns": 4,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY RAND()",
+    "query": "select col from t_user order by RAND()",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by RAND()",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user order by RAND()",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, qualified '*' expression, name mismatched.",
+    "query": "select t_user.* from t_user where id = 5 order by e.col",
+    "plan": "column 'e.col' not found"
+  },
+  {
+    "comment": "Order by, invalid column number",
+    "query": "select col from t_user where id = 5 order by 18446744073709551616",
+    "plan": "error parsing column number: 18446744073709551616"
+  },
+  {
+    "comment": "Order by, out of range column number",
+    "query": "select col from t_user where id = 5 order by 2",
+    "plan": "Unknown column '2' in 'order clause'"
+  },
+  {
+    "comment": "Order by with math functions",
+    "query": "select * from t_user where id = 5 and col = 6 order by -col1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 5 and col = 6 order by -col1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 5 and col = 6 order by -col1 asc",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ],
+        "Table": "t_user",
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by with string operations",
+    "query": "select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8_general_ci desc",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8_general_ci desc",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 5 and col = 6 order by concat(col, col1) collate utf8_general_ci desc",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ],
+        "Table": "t_user",
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by with math operations",
+    "query": "select * from t_user where id = 5 and col = 6 order by id+col collate utf8_general_ci desc",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 5 and col = 6 order by id+col collate utf8_general_ci desc",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 5 and col = 6 order by id + col collate utf8_general_ci desc",
+        "Values": [
+          "INT64(5)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ],
+        "Table": "t_user",
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "routing rules: order by gets pushed for routes",
+    "query": "select col from t_user where id = 1  and col = 6 order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where id = 1  and col = 6 order by col",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "Query": "select col from t_user where id = 1 and col = 6 order by col asc",
+        "Values": [
+          "INT64(1)"
+        ],
+        "TableValues": [
+          "INT64(6)"
+        ],
+        "Table": "t_user",
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "order by column alias",
+    "query": "select col as foo from t_user order by foo",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col as foo from t_user order by foo",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col as foo from t_user_1 where 1 != 1",
+        "Query": "select col as foo from t_user order by foo asc",
+        "OrderBy": "0 ASC",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "column alias for a table column in order by",
+    "query": "select col as foo,col2 as col from t_user order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col as foo,col2 as col from t_user order by col",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col as foo, col2 as col, weight_string(col2) from t_user_1 where 1 != 1",
+        "Query": "select col as foo, col2 as col, weight_string(col2) from t_user order by col asc",
+        "OrderBy": "1 ASC",
+        "ResultColumns": 2,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "order by with ambiguous column reference ; valid in MySQL",
+    "query": "select col, col from t_user order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col, col from t_user order by col",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col, col from t_user_1 where 1 != 1",
+        "Query": "select col, col from t_user order by col asc",
+        "OrderBy": "0 ASC",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by uses cross-shard expression",
+    "query": "select col from t_user order by col+1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by col+1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col, col + 1, weight_string(col + 1) from t_user_1 where 1 != 1",
+        "Query": "select col, col + 1, weight_string(col + 1) from t_user order by col + 1 asc",
+        "OrderBy": "1 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by column number with collate",
+    "query": "select t_user.col1 as a from t_user order by 1 collate utf8_general_ci",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 as a from t_user order by 1 collate utf8_general_ci",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_1.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user_1 where 1 != 1",
+        "Query": "select t_user.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user order by a collate utf8_general_ci asc",
+        "OrderBy": "1 ASC",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

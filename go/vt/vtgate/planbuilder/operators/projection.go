@@ -146,6 +146,10 @@ func (p *Projection) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return p.Columns, nil
 }
 
+func (p *Projection) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return transformColumnsToSelectExprs(ctx, p)
+}
+
 func (p *Projection) GetOrdering() ([]ops.OrderBy, error) {
 	return p.Source.GetOrdering()
 }

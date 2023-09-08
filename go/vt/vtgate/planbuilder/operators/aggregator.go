@@ -163,6 +163,10 @@ func (a *Aggregator) GetColumns() (columns []*sqlparser.AliasedExpr, err error) 
 	return a.Columns, nil
 }
 
+func (a *Aggregator) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return transformColumnsToSelectExprs(ctx, a)
+}
+
 func (a *Aggregator) Description() ops.OpDescription {
 	return ops.OpDescription{
 		OperatorType: "Aggregator",

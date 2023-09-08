@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
 	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 
@@ -136,11 +137,13 @@ func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, b
 		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
 	}
 
-	// 4.可能要处理Order by排序
-	if len(tableRoute.OrderBy) == 0 {
-		return result, nil
+	if len(tableRoute.OrderBy) != 0 {
+		result, err = tableRoute.sort(result)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return tableRoute.sort(result)
+	return result.Truncate(tableRoute.TruncateColumnCount), nil
 }
 
 func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error) {

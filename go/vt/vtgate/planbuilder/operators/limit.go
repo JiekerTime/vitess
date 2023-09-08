@@ -69,6 +69,10 @@ func (l *Limit) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return l.Source.GetColumns()
 }
 
+func (l *Limit) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return l.Source.GetSelectExprs(ctx)
+}
+
 func (l *Limit) GetOrdering() ([]ops.OrderBy, error) {
 	return l.Source.GetOrdering()
 }

@@ -25,7 +25,7 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	ksAndTablePlan, err = visit(ksPlan, func(logicalPlan logicalPlan) (bool, logicalPlan, error) {
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
-			tablePlan, err := doBuildTableSelectPlan(ctx, node.Select, node.eroute.RoutingParameters)
+			tablePlan, err := doBuildTableSelectPlan(ctx, node.Select, node.eroute)
 			if err != nil {
 				return false, nil, err
 			}
@@ -41,13 +41,13 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	return ksAndTablePlan, semTable, nil, nil
 }
 
-func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement, shardRouteParam *engine.RoutingParameters,
+func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement, ksERoute *engine.Route,
 ) (tablePlan logicalPlan, err error) {
 	tableOperator, err := operators.TablePlanQuery(ctx, Select)
 	if err != nil {
 		return nil, err
 	}
-	tablePlan, err = transformToTableLogicalPlan(ctx, tableOperator, true, shardRouteParam)
+	tablePlan, err = transformToTableLogicalPlan(ctx, tableOperator, true, ksERoute)
 	if err != nil {
 		return nil, err
 	}

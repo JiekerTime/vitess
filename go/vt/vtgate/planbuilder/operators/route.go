@@ -611,6 +611,10 @@ func (r *Route) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return r.Source.GetColumns()
 }
 
+func (r *Route) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return r.Source.GetSelectExprs(ctx)
+}
+
 func (r *Route) GetOrdering() ([]ops.OrderBy, error) {
 	return r.Source.GetOrdering()
 }
