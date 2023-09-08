@@ -40,7 +40,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 		case Unsharded, Next:
 		//	return rp.unsharded(ctx, vcursor, bindVars)
 		case Reference:
-			logicTableMap[logicTable], err = rp.anyTable(ctx, vcursor, logicTable, key.DestinationAnyTable{})
+			logicTableMap[logicTable], err = rp.byDestination(ctx, vcursor, logicTable, key.DestinationAnyTable{})
 			if err != nil {
 				return nil, err
 			}
@@ -118,20 +118,6 @@ func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCurso
 		return nil, err
 	}
 	return actualTableName, nil
-}
-
-func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor, logicTable string, destination key.TableDestination) (tables []tableindexes.ActualTable, err error) {
-
-	var logicTableConfig = rp.LogicTable[logicTable]
-
-	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex uint64) error {
-		tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
-		return nil
-	}); err != nil {
-		return tables, err
-	}
-
-	return tables, nil
 }
 
 func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]tableindexes.ActualTable, error) {
