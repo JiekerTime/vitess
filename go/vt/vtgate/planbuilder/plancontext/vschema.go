@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+
 	"vitess.io/vitess/go/vt/log"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	vtgatepb "vitess.io/vitess/go/vt/proto/vtgate"
@@ -87,6 +89,8 @@ type VSchema interface {
 
 	// StorePrepareData stores the prepared data in the session.
 	StorePrepareData(name string, v *vtgatepb.PrepareData)
+
+	FindSplitTable(keyspace, tableName string) (*tableindexes.LogicTableConfig, error)
 }
 
 // PlannerNameToVersion returns the numerical representation of the planner

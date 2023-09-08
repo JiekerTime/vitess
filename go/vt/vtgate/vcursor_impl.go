@@ -25,6 +25,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+
 	"vitess.io/vitess/go/vt/vtgate/logstats"
 
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -1186,4 +1188,8 @@ func (vc *vcursorImpl) StorePrepareData(stmtName string, prepareData *vtgatepb.P
 
 func (vc *vcursorImpl) GetPrepareData(stmtName string) *vtgatepb.PrepareData {
 	return vc.safeSession.GetPrepareData(stmtName)
+}
+
+func (vc *vcursorImpl) FindSplitTable(keyspace, tableName string) (*tableindexes.LogicTableConfig, error) {
+	return vc.vschema.FindSplitTable(keyspace, tableName)
 }

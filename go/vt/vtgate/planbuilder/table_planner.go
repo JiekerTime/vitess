@@ -1,24 +1,20 @@
 package planbuilder
 
 import (
-	"vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 ) (ksAndTablePlan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
 	// get split table metadata
-	config, found := getLogicTableConfig(ksPlan.Primitive().GetTableName())
+	found := findLogicTableConfig(ctx, ksPlan.Primitive().GetTableName())
 	if !found {
 		return ksPlan, ctx.SemTable, nil, nil
 	}
-
-	ctx.SplitTableConfig[config.LogicTableName] = config
 
 	// The routePlan is used as input to generate the tablePlan
 	// Replace routePlan with tablePlan
@@ -59,79 +55,16 @@ func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.S
 	return tablePlan, nil
 }
 
-func getLogicTableConfig(tableName string) (logical tableindexes.LogicTableConfig, found bool) {
-	tableMap := fakeLogicTableMap()
-	if logical, ok := tableMap[tableName]; ok {
-		return logical, true
+func findLogicTableConfig(ctx *plancontext.PlanningContext, tableName string) (found bool) {
+	ksName := ""
+	if ks, _ := ctx.VSchema.DefaultKeyspace(); ks != nil {
+		ksName = ks.Name
 	}
-	return logical, false
-}
-
-func fakeLogicTableMap() (logicTableMap tableindexes.SplitTableMap) {
-	logicTable := tableindexes.LogicTableConfig{
-		LogicTableName: "t_user",
-		ActualTableList: []tableindexes.ActualTable{
-			{
-				ActualTableName: "t_user" + "_1",
-				Index:           1,
-			},
-			{
-				ActualTableName: "t_user" + "_2",
-				Index:           2,
-			},
-		},
-		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: query.Type_VARCHAR}},
+	splitTable, err := ctx.VSchema.FindSplitTable(ksName, tableName)
+	if err != nil {
+		return false
 	}
 
-	logicTable2 := tableindexes.LogicTableConfig{
-		LogicTableName: "table_engine_test",
-		ActualTableList: []tableindexes.ActualTable{
-			{
-				ActualTableName: "table_engine_test" + "_1",
-				Index:           1,
-			},
-			{
-				ActualTableName: "table_engine_test" + "_2",
-				Index:           2,
-			},
-			{
-				ActualTableName: "table_engine_test" + "_3",
-				Index:           3,
-			},
-			{
-				ActualTableName: "table_engine_test" + "_4",
-				Index:           4,
-			},
-		},
-		TableIndexColumn: []*tableindexes.Column{{Column: "f_int", ColumnType: query.Type_VARCHAR}},
-	}
-
-	logicTable3 := tableindexes.LogicTableConfig{
-		LogicTableName: "t_authoritative",
-		ActualTableList: []tableindexes.ActualTable{
-			{
-				ActualTableName: "t_authoritative" + "_1",
-				Index:           1,
-			},
-			{
-				ActualTableName: "t_authoritative" + "_2",
-				Index:           2,
-			},
-			{
-				ActualTableName: "t_authoritative" + "_3",
-				Index:           3,
-			},
-			{
-				ActualTableName: "t_authoritative" + "_4",
-				Index:           4,
-			},
-		},
-		TableIndexColumn: []*tableindexes.Column{{Column: "col1", ColumnType: query.Type_VARCHAR}},
-	}
-
-	logicTableMap = make(map[string]tableindexes.LogicTableConfig)
-	logicTableMap[logicTable.LogicTableName] = logicTable
-	logicTableMap[logicTable2.LogicTableName] = logicTable2
-	logicTableMap[logicTable3.LogicTableName] = logicTable3
-	return logicTableMap
+	ctx.SplitTableConfig[splitTable.LogicTableName] = splitTable
+	return true
 }

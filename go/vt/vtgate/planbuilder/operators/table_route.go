@@ -30,16 +30,16 @@ type (
 	}
 
 	// TindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
-	TindexPlusPredicates struct {
-		TableID   semantics.TableSet
-		ColVindex []*tableindexes.Column
+	TableVindexPlusPredicates struct {
+		TableID        semantics.TableSet
+		ColTableVindex []*tableindexes.Column
 
 		// during planning, we store the alternatives found for this route in this slice
-		Options []*TindexOption
+		Options []*TableVindexOption
 	}
 
 	// TindexOption stores the information needed to know if we have all the information needed to use a vindex
-	TindexOption struct {
+	TableVindexOption struct {
 		Ready       bool
 		Values      []evalengine.Expr
 		ValueExprs  []sqlparser.Expr
@@ -290,7 +290,7 @@ func createTableRouteFromVSchemaTable(
 	ctx *plancontext.PlanningContext,
 	queryTable *QueryTable,
 	vschemaTable *vindexes.Table,
-	logicTableConfig tableindexes.LogicTableConfig,
+	logicTableConfig *tableindexes.LogicTableConfig,
 	solves semantics.TableSet,
 	_ bool,
 ) (*TableRoute, error) {

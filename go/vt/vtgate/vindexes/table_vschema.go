@@ -19,6 +19,7 @@ package vindexes
 import (
 	"strconv"
 	"strings"
+
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
@@ -42,22 +43,22 @@ type TableVindexColumn struct {
 }
 
 // FindSplitTableOrVindex finds a table or a Vindex by name using Find and FindVindex.
-func (vschema *VSchema) FindSplitTableOrVindex(keyspace, name string) (*tableindexes.LogicTableConfig, Vindex, error) {
-	tables, err := vschema.FindSplitTable(keyspace, name)
+func (vschema *VSchema) FindSplitTableOrVindex(keyspace, tableName string) (*tableindexes.LogicTableConfig, Vindex, error) {
+	tables, err := vschema.FindSplitTable(keyspace, tableName)
 	if err != nil {
 		return nil, nil, err
 	}
 	if tables != nil {
 		return tables, nil, nil
 	}
-	v, err := vschema.FindSplitTableVindex(keyspace, name)
+	v, err := vschema.FindSplitTableVindex(keyspace, tableName)
 	if err != nil {
 		return nil, nil, err
 	}
 	if v != nil {
 		return nil, v, nil
 	}
-	return nil, nil, NotFoundError{TableName: name}
+	return nil, nil, NotFoundError{TableName: tableName}
 }
 
 // FindSplitTableVindex finds a split table  vindex by name. If a keyspace is specified, only
@@ -153,7 +154,7 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 			colNames[name.Lowered()] = true
 			t.TableIndexColumn = append(t.TableIndexColumn, &tableindexes.Column{Column: col.Column, Index: col.Index, ColumnType: col.ColumnType})
 		}
-		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
+		for tableIndex := int32(1); tableIndex < t.TableCount; tableIndex++ {
 			if err := logicToActualTable(t.LogicTableName, int(tableIndex), t); err != nil {
 				return err
 			}
@@ -164,6 +165,7 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 	}
 	return nil
 }
+
 func (ks *KeyspaceSchema) findSplitTable(
 	tableName string,
 ) *tableindexes.LogicTableConfig {
@@ -176,18 +178,19 @@ func (ks *KeyspaceSchema) findSplitTable(
 
 func (vschema *VSchema) FindSplitTable(
 	keyspace,
-	tablename string,
+	tableName string,
 ) (*tableindexes.LogicTableConfig, error) {
 	ks, ok := vschema.Keyspaces[keyspace]
 	if !ok {
 		return nil, vterrors.VT05003(keyspace)
 	}
-	table := ks.findSplitTable(tablename)
+	table := ks.findSplitTable(tableName)
 	if table == nil {
-		return nil, vterrors.VT05004(tablename)
+		return nil, vterrors.VT05004(tableName)
 	}
 	return table, nil
 }
+
 func (vschema *VSchema) FindActualTable(
 	keyspace,
 	logicTableName string,

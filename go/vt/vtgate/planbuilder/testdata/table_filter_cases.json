@@ -867,5 +867,59 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "Single table unique tindex route, but complex expr",
+    "query": "select id from t_user where t_user.col = 5+5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where t_user.col = 5+5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where t_user.col = 5 + 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(10)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Single table unique tindex route, but complex expr",
+    "query": "select id from t_user where id = 123 and t_user.col = 5+5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id = 123 and t_user.col = 5+5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "Query": "select id from t_user where id = 123 and t_user.col = 5 + 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(10)"
+        ],
+        "Values": [
+          "INT64(123)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

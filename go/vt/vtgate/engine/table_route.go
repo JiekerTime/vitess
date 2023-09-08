@@ -181,7 +181,7 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, logicTb *tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
 	for _, act := range logicTb.ActualTableList {
 		sql, err := rewriteQuery(stmt, act, logicTb.LogicTableName)

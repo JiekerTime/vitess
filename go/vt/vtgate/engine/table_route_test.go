@@ -19,14 +19,14 @@ func TestGetTableQueries(t *testing.T) {
 	tests := []struct {
 		name     string
 		query    string
-		logicTb  tableindexes.LogicTableConfig
+		logicTb  *tableindexes.LogicTableConfig
 		bv       map[string]*querypb.BindVariable
 		expected []*querypb.BoundQuery
 	}{
 		{
 			name:  "Select query with table alias",
 			query: `SELECT * FROM my_table AS t WHERE t.id = 1`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -52,7 +52,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with table name",
 			query: `SELECT * FROM my_table WHERE id = 1`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -78,7 +78,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with subquery",
 			query: "SELECT * FROM (SELECT * FROM my_table) AS t WHERE t.id = 1",
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -104,7 +104,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries",
 			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 WHERE t2.id = 1`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -130,7 +130,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and aliases",
 			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 WHERE t3.id = 1`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -156,7 +156,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases",
 			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 JOIN my_table AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -182,7 +182,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases",
 			query: `SELECT t1.id, t2.name FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -208,7 +208,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -233,7 +233,7 @@ func TestGetTableQueries(t *testing.T) {
 		}, {
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -259,7 +259,7 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2 LIMIT 10 OFFSET 5) AS t3 LIMIT 10 OFFSET 5) AS t4 JOIN my_table AS t5 ON t4.id = t5.id WHERE t4.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			logicTb: tableindexes.LogicTableConfig{
+			logicTb: &tableindexes.LogicTableConfig{
 				LogicTableName: "my_table",
 				ActualTableList: []tableindexes.ActualTable{
 					{
@@ -433,8 +433,8 @@ func TestTableRouteGetFields(t *testing.T) {
 		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
-	logicTableMap[logicTable.LogicTableName] = logicTable
+	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = &logicTable
 
 	routingParameters := &RoutingParameters{
 		Opcode: Scatter,
@@ -515,7 +515,7 @@ func TestTableRouteTryExecute(t *testing.T) {
 		"dummy_select_field",
 	)
 
-	logicTable := tableindexes.LogicTableConfig{
+	logicTable := &tableindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []tableindexes.ActualTable{
 			{
@@ -530,7 +530,7 @@ func TestTableRouteTryExecute(t *testing.T) {
 		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 
 	routingParameters := &RoutingParameters{
@@ -700,7 +700,7 @@ func TestTableRouteSortTruncate(t *testing.T) {
 }
 
 func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tableIndexColumn []*tableindexes.Column, tableOpcode Opcode) *TableRoute {
-	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
 	logicTable := tableindexes.LogicTableConfig{
 		LogicTableName: tableName,
 		ActualTableList: []tableindexes.ActualTable{
@@ -715,7 +715,7 @@ func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tab
 		},
 		TableIndexColumn: tableIndexColumn,
 	}
-	logicTableMap[tableName] = logicTable
+	logicTableMap[tableName] = &logicTable
 
 	return &TableRoute{
 		TableName:       tableName,
