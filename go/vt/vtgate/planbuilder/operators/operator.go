@@ -34,6 +34,7 @@ The operators go through a few phases while planning:
 package operators
 
 import (
+	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
@@ -104,6 +105,10 @@ func (noColumns) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return nil, vterrors.VT13001("the noColumns operator cannot accept columns")
 }
 
+func (noColumns) GetSelectExprs(*plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return nil, vterrors.VT13001("noColumns operators have no column")
+}
+
 // AddPredicate implements the Operator interface
 func (noPredicates) AddPredicate(*plancontext.PlanningContext, sqlparser.Expr) (ops.Operator, error) {
 	return nil, vterrors.VT13001("the noColumns operator cannot accept predicates")
@@ -134,4 +139,15 @@ func tryTruncateColumnsAt(op ops.Operator, truncateAt int) bool {
 	}
 
 	return tryTruncateColumnsAt(inputs[0], truncateAt)
+}
+
+func transformColumnsToSelectExprs(ctx *plancontext.PlanningContext, op ops.Operator) (sqlparser.SelectExprs, error) {
+	columns, err := op.GetColumns()
+	if err != nil {
+		return nil, err
+	}
+	selExprs := slices2.Map(columns, func(from *sqlparser.AliasedExpr) sqlparser.SelectExpr {
+		return from
+	})
+	return selExprs, nil
 }

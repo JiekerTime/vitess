@@ -48,6 +48,7 @@ type (
 		AddColumn(ctx *plancontext.PlanningContext, expr *sqlparser.AliasedExpr, reuseExisting, addToGroupBy bool) (Operator, int, error)
 
 		GetColumns() ([]*sqlparser.AliasedExpr, error)
+		GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error)
 
 		Description() OpDescription
 		ShortDescription() string

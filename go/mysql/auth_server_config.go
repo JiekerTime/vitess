@@ -6,8 +6,8 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
 	"net"
+	"os"
 	"sync"
 
 	"github.com/spf13/pflag"
@@ -120,7 +120,7 @@ func RegisterAuthServerConfigFromParams(file, str string) {
 	authServerConfig := NewAuthServerConfig() // Every time call the NewAuthServerConfig will create a new pointer
 	jsonConfig := []byte(str)
 	if file != "" {
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			log.Fatalf("Failed to read mysql_auth_server_config_file file: %v", err)
 		}
@@ -149,7 +149,7 @@ func UpdateAuthServerConfigFromParams(file, str string) {
 	authServerConfig := NewAuthServerConfig() // Every time call the NewAuthServerConfig will create a new pointer
 	jsonConfig := []byte(str)
 	if file != "" {
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			log.Errorf("Failed to read mysql_auth_server_config_file file: %v", err)
 			return

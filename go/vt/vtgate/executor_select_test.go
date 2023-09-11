@@ -27,6 +27,7 @@ import (
 	"time"
 
 	_flag "vitess.io/vitess/go/internal/flag"
+	"vitess.io/vitess/go/mysql/collations"
 
 	"vitess.io/vitess/go/vt/sqlparser"
 
@@ -130,7 +131,7 @@ func TestSelectDBA(t *testing.T) {
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 
 	sbc1.Queries = nil
-	query = "select 1 from information_schema.table_constraints where constraint_schema = 'vt_ks' and table_name = 'user'"
+	query = "select 1 from information_schema.table_constraints where constraint_schema = 'ks' and table_name = 'user'"
 	_, err = executor.Execute(context.Background(), nil, "TestSelectDBA",
 		NewSafeSession(&vtgatepb.Session{TargetString: "TestExecutor"}),
 		query, map[string]*querypb.BindVariable{},
@@ -138,13 +139,13 @@ func TestSelectDBA(t *testing.T) {
 	require.NoError(t, err)
 	wantQueries = []*querypb.BoundQuery{{Sql: "select 1 from information_schema.table_constraints where constraint_schema = :__vtschemaname /* VARCHAR */ and table_name = :table_name /* VARCHAR */",
 		BindVariables: map[string]*querypb.BindVariable{
-			"__vtschemaname": sqltypes.StringBindVariable("vt_ks"),
+			"__vtschemaname": sqltypes.StringBindVariable("ks"),
 			"table_name":     sqltypes.StringBindVariable("user"),
 		}}}
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 
 	sbc1.Queries = nil
-	query = "select 1 from information_schema.table_constraints where constraint_schema = 'vt_ks'"
+	query = "select 1 from information_schema.table_constraints where constraint_schema = 'ks'"
 	_, err = executor.Execute(context.Background(), nil, "TestSelectDBA",
 		NewSafeSession(&vtgatepb.Session{TargetString: "TestExecutor"}),
 		query, map[string]*querypb.BindVariable{},
@@ -152,7 +153,7 @@ func TestSelectDBA(t *testing.T) {
 	require.NoError(t, err)
 	wantQueries = []*querypb.BoundQuery{{Sql: "select 1 from information_schema.table_constraints where constraint_schema = :__vtschemaname /* VARCHAR */",
 		BindVariables: map[string]*querypb.BindVariable{
-			"__vtschemaname": sqltypes.StringBindVariable("vt_ks"),
+			"__vtschemaname": sqltypes.StringBindVariable("ks"),
 		}}}
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 }
@@ -168,8 +169,8 @@ func TestSystemVariablesMySQLBelow80(t *testing.T) {
 
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "orig", Type: sqltypes.VarChar},
-			{Name: "new", Type: sqltypes.VarChar},
+			{Name: "orig", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "new", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar(""),
@@ -206,8 +207,8 @@ func TestSystemVariablesWithSetVarDisabled(t *testing.T) {
 
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "orig", Type: sqltypes.VarChar},
-			{Name: "new", Type: sqltypes.VarChar},
+			{Name: "orig", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "new", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar(""),
@@ -248,8 +249,8 @@ func TestSetSystemVariablesTx(t *testing.T) {
 
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "orig", Type: sqltypes.VarChar},
-			{Name: "new", Type: sqltypes.VarChar},
+			{Name: "orig", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "new", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar(""),
@@ -291,8 +292,8 @@ func TestSetSystemVariables(t *testing.T) {
 
 	lookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "orig", Type: sqltypes.VarChar},
-			{Name: "new", Type: sqltypes.VarChar},
+			{Name: "orig", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "new", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar(""),
@@ -325,7 +326,7 @@ func TestSetSystemVariables(t *testing.T) {
 
 	lookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "sql_safe_updates", Type: sqltypes.VarChar},
+			{Name: "sql_safe_updates", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar("0"),
@@ -348,7 +349,7 @@ func TestSetSystemVariables(t *testing.T) {
 
 	lookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "max_tmp_tables", Type: sqltypes.VarChar},
+			{Name: "max_tmp_tables", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar("4"),
@@ -371,7 +372,7 @@ func TestSetSystemVariables(t *testing.T) {
 
 	lookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "max_tmp_tables", Type: sqltypes.VarChar},
+			{Name: "max_tmp_tables", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar("1"),
@@ -400,8 +401,8 @@ func TestSetSystemVariablesWithReservedConnection(t *testing.T) {
 
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "orig", Type: sqltypes.VarChar},
-			{Name: "new", Type: sqltypes.VarChar},
+			{Name: "orig", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "new", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar("only_full_group_by"),
@@ -486,7 +487,7 @@ func TestGen4SelectDBA(t *testing.T) {
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 
 	sbc1.Queries = nil
-	query = "select 1 from information_schema.table_constraints where constraint_schema = 'vt_ks' and table_name = 'user'"
+	query = "select 1 from information_schema.table_constraints where constraint_schema = 'ks' and table_name = 'user'"
 	_, err = executor.Execute(context.Background(), nil, "TestSelectDBA",
 		NewSafeSession(&vtgatepb.Session{TargetString: "TestExecutor"}),
 		query, map[string]*querypb.BindVariable{},
@@ -495,15 +496,15 @@ func TestGen4SelectDBA(t *testing.T) {
 	wantQueries = []*querypb.BoundQuery{{Sql: "select :vtg1 /* INT64 */ from information_schema.table_constraints where constraint_schema = :__vtschemaname /* VARCHAR */ and table_name = :table_name1 /* VARCHAR */",
 		BindVariables: map[string]*querypb.BindVariable{
 			"vtg1":              sqltypes.Int64BindVariable(1),
-			"constraint_schema": sqltypes.StringBindVariable("vt_ks"),
+			"constraint_schema": sqltypes.StringBindVariable("ks"),
 			"table_name":        sqltypes.StringBindVariable("user"),
-			"__vtschemaname":    sqltypes.StringBindVariable("vt_ks"),
+			"__vtschemaname":    sqltypes.StringBindVariable("ks"),
 			"table_name1":       sqltypes.StringBindVariable("user"),
 		}}}
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 
 	sbc1.Queries = nil
-	query = "select 1 from information_schema.table_constraints where constraint_schema = 'vt_ks'"
+	query = "select 1 from information_schema.table_constraints where constraint_schema = 'ks'"
 	_, err = executor.Execute(context.Background(), nil, "TestSelectDBA",
 		NewSafeSession(&vtgatepb.Session{TargetString: "TestExecutor"}),
 		query, map[string]*querypb.BindVariable{},
@@ -512,8 +513,8 @@ func TestGen4SelectDBA(t *testing.T) {
 	wantQueries = []*querypb.BoundQuery{{Sql: "select :vtg1 /* INT64 */ from information_schema.table_constraints where constraint_schema = :__vtschemaname /* VARCHAR */",
 		BindVariables: map[string]*querypb.BindVariable{
 			"vtg1":              sqltypes.Int64BindVariable(1),
-			"constraint_schema": sqltypes.StringBindVariable("vt_ks"),
-			"__vtschemaname":    sqltypes.StringBindVariable("vt_ks"),
+			"constraint_schema": sqltypes.StringBindVariable("ks"),
+			"__vtschemaname":    sqltypes.StringBindVariable("ks"),
 		}}}
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 
@@ -608,8 +609,8 @@ func TestStreamBuffering(t *testing.T) {
 	// such that the splitting of the Result into multiple Result responses gets tested.
 	sbclookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.VarChar},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt32(1),
@@ -636,8 +637,8 @@ func TestStreamBuffering(t *testing.T) {
 	require.NoError(t, err)
 	wantResults := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.VarChar},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 	}, {
 		Rows: [][]sqltypes.Value{{
@@ -660,9 +661,9 @@ func TestStreamLimitOffset(t *testing.T) {
 	// such that the splitting of the Result into multiple Result responses gets tested.
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "textcol", Type: sqltypes.VarChar},
-			{Name: "weight_string(id)", Type: sqltypes.VarBinary},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "weight_string(id)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt32(1),
@@ -677,9 +678,9 @@ func TestStreamLimitOffset(t *testing.T) {
 
 	sbc2.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "textcol", Type: sqltypes.VarChar},
-			{Name: "weight_string(id)", Type: sqltypes.VarBinary},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
+			{Name: "weight_string(id)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt32(2),
@@ -705,8 +706,8 @@ func TestStreamLimitOffset(t *testing.T) {
 	require.NoError(t, err)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "textcol", Type: sqltypes.VarChar},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 
 		Rows: [][]sqltypes.Value{{
@@ -739,7 +740,7 @@ func TestSelectLastInsertId(t *testing.T) {
 	result, err := executorExec(executor, sql, map[string]*querypb.BindVariable{})
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "last_insert_id()", Type: sqltypes.Uint64},
+			{Name: "last_insert_id()", Type: sqltypes.Uint64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG | querypb.MySqlFlag_UNSIGNED_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewUint64(52),
@@ -767,19 +768,19 @@ func TestSelectSystemVariables(t *testing.T) {
 	result, err := executorExec(executor, sql, map[string]*querypb.BindVariable{})
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "@@autocommit", Type: sqltypes.Int64},
-			{Name: "@@client_found_rows", Type: sqltypes.Int64},
-			{Name: "@@skip_query_plan_cache", Type: sqltypes.Int64},
-			{Name: "@@enable_system_settings", Type: sqltypes.Int64},
-			{Name: "@@sql_select_limit", Type: sqltypes.Int64},
-			{Name: "@@transaction_mode", Type: sqltypes.VarChar},
-			{Name: "@@workload", Type: sqltypes.VarChar},
-			{Name: "@@read_after_write_gtid", Type: sqltypes.VarChar},
-			{Name: "@@read_after_write_timeout", Type: sqltypes.Float64},
-			{Name: "@@session_track_gtids", Type: sqltypes.VarChar},
-			{Name: "@@ddl_strategy", Type: sqltypes.VarChar},
-			{Name: "@@socket", Type: sqltypes.VarChar},
-			{Name: "@@query_timeout", Type: sqltypes.Int64},
+			{Name: "@@autocommit", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@client_found_rows", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@skip_query_plan_cache", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@enable_system_settings", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@sql_select_limit", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@transaction_mode", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
+			{Name: "@@workload", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
+			{Name: "@@read_after_write_gtid", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
+			{Name: "@@read_after_write_timeout", Type: sqltypes.Float64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@session_track_gtids", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
+			{Name: "@@ddl_strategy", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
+			{Name: "@@socket", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
+			{Name: "@@query_timeout", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			// the following are the uninitialised session values
@@ -824,9 +825,9 @@ func TestSelectInitializedVitessAwareVariable(t *testing.T) {
 	result, err := executorExec(executor, sql, nil)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "@@autocommit", Type: sqltypes.Int64},
-			{Name: "@@enable_system_settings", Type: sqltypes.Int64},
-			{Name: "@@query_timeout", Type: sqltypes.Int64},
+			{Name: "@@autocommit", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@enable_system_settings", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "@@query_timeout", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt64(1),
@@ -849,7 +850,7 @@ func TestSelectUserDefinedVariable(t *testing.T) {
 	require.NoError(t, err)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "@foo", Type: sqltypes.Null},
+			{Name: "@foo", Type: sqltypes.Null, Charset: collations.CollationBinaryID},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NULL,
@@ -862,7 +863,7 @@ func TestSelectUserDefinedVariable(t *testing.T) {
 	require.NoError(t, err)
 	wantResult = &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "@foo", Type: sqltypes.VarChar},
+			{Name: "@foo", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar("bar"),
@@ -885,7 +886,7 @@ func TestFoundRows(t *testing.T) {
 	result, err := executorExec(executor, sql, map[string]*querypb.BindVariable{})
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "found_rows()", Type: sqltypes.Int64},
+			{Name: "found_rows()", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt64(1),
@@ -915,7 +916,7 @@ func testRowCount(t *testing.T, executor *Executor, wantRowCount int64) {
 	result, err := executorExec(executor, "select row_count()", map[string]*querypb.BindVariable{})
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "row_count()", Type: sqltypes.Int64},
+			{Name: "row_count()", Type: sqltypes.Int64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt64(wantRowCount),
@@ -932,7 +933,7 @@ func TestSelectLastInsertIdInUnion(t *testing.T) {
 
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -946,7 +947,7 @@ func TestSelectLastInsertIdInUnion(t *testing.T) {
 	require.NoError(t, err)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt32(52),
@@ -977,8 +978,8 @@ func TestLastInsertIDInVirtualTable(t *testing.T) {
 	executor.normalize = true
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -1009,7 +1010,7 @@ func TestLastInsertIDInSubQueryExpression(t *testing.T) {
 	require.NoError(t, err)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "x", Type: sqltypes.Uint64},
+			{Name: "x", Type: sqltypes.Uint64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG | querypb.MySqlFlag_NUM_FLAG | querypb.MySqlFlag_UNSIGNED_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewUint64(12345),
@@ -1038,7 +1039,7 @@ func TestSelectDatabase(t *testing.T) {
 		map[string]*querypb.BindVariable{})
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "database()", Type: sqltypes.VarChar},
+			{Name: "database()", Type: sqltypes.VarChar, Charset: uint32(collations.Default()), Flags: uint32(querypb.MySqlFlag_NOT_NULL_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewVarChar("TestExecutor@primary"),
@@ -1121,7 +1122,7 @@ func TestSelectBindvars(t *testing.T) {
 	lookup.Queries = nil
 	lookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "user_id", Type: sqltypes.Int32},
+			{Name: "user_id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		RowsAffected: 0,
 		InsertID:     0,
@@ -1756,9 +1757,9 @@ func TestSelectScatterOrderBy(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col1", Type: sqltypes.Int32},
-				{Name: "col2", Type: sqltypes.Int32},
-				{Name: "weight_string(col2)", Type: sqltypes.VarBinary},
+				{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col2)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -1788,8 +1789,8 @@ func TestSelectScatterOrderBy(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col1", Type: sqltypes.Int32},
-			{Name: "col2", Type: sqltypes.Int32},
+			{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 	}
@@ -1822,8 +1823,8 @@ func TestSelectScatterOrderByVarChar(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col1", Type: sqltypes.Int32},
-				{Name: "textcol", Type: sqltypes.VarChar},
+				{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -1853,8 +1854,8 @@ func TestSelectScatterOrderByVarChar(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col1", Type: sqltypes.Int32},
-			{Name: "textcol", Type: sqltypes.VarChar},
+			{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 		InsertID: 0,
 	}
@@ -1886,9 +1887,9 @@ func TestStreamSelectScatterOrderBy(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "id", Type: sqltypes.Int32},
-				{Name: "col", Type: sqltypes.Int32},
-				{Name: "weight_string(col)", Type: sqltypes.VarBinary},
+				{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -1915,8 +1916,8 @@ func TestStreamSelectScatterOrderBy(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	for i := 0; i < 4; i++ {
@@ -1944,8 +1945,8 @@ func TestStreamSelectScatterOrderByVarChar(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "id", Type: sqltypes.Int32},
-				{Name: "textcol", Type: sqltypes.VarChar},
+				{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -1972,8 +1973,8 @@ func TestStreamSelectScatterOrderByVarChar(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "textcol", Type: sqltypes.VarChar},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "textcol", Type: sqltypes.VarChar, Charset: uint32(collations.Default())},
 		},
 	}
 	for i := 0; i < 4; i++ {
@@ -2002,9 +2003,9 @@ func TestSelectScatterAggregate(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col", Type: sqltypes.Int32},
-				{Name: "sum(foo)", Type: sqltypes.Int32},
-				{Name: "weight_string(col)", Type: sqltypes.VarBinary},
+				{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "sum(foo)", Type: sqltypes.Decimal, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -2031,15 +2032,15 @@ func TestSelectScatterAggregate(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col", Type: sqltypes.Int32},
-			{Name: "sum(foo)", Type: sqltypes.Int32},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "sum(foo)", Type: sqltypes.Decimal, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 	}
 	for i := 0; i < 4; i++ {
 		row := []sqltypes.Value{
 			sqltypes.NewInt32(int32(i)),
-			sqltypes.NewInt32(int32(i*2 + 4)),
+			sqltypes.NewDecimal(fmt.Sprintf("%d", i*2+4)),
 		}
 		wantResult.Rows = append(wantResult.Rows, row)
 	}
@@ -2061,14 +2062,14 @@ func TestStreamSelectScatterAggregate(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col", Type: sqltypes.Int32},
-				{Name: "sum(foo)", Type: sqltypes.Int32},
-				{Name: "weight_string(col)", Type: sqltypes.VarBinary},
+				{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "sum(foo)", Type: sqltypes.Decimal, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
 				sqltypes.NewInt32(int32(i % 4)),
-				sqltypes.NewInt32(int32(i)),
+				sqltypes.NewDecimal(fmt.Sprintf("%d", i)),
 				sqltypes.NULL,
 			}},
 		}})
@@ -2090,14 +2091,14 @@ func TestStreamSelectScatterAggregate(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col", Type: sqltypes.Int32},
-			{Name: "sum(foo)", Type: sqltypes.Int32},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "sum(foo)", Type: sqltypes.Decimal, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	for i := 0; i < 4; i++ {
 		row := []sqltypes.Value{
 			sqltypes.NewInt32(int32(i)),
-			sqltypes.NewInt32(int32(i*2 + 4)),
+			sqltypes.NewDecimal(fmt.Sprintf("%d", i*2+4)),
 		}
 		wantResult.Rows = append(wantResult.Rows, row)
 	}
@@ -2121,9 +2122,9 @@ func TestSelectScatterLimit(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col1", Type: sqltypes.Int32},
-				{Name: "col2", Type: sqltypes.Int32},
-				{Name: "weight_string(col2)", Type: sqltypes.VarBinary},
+				{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col2)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -2150,8 +2151,8 @@ func TestSelectScatterLimit(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col1", Type: sqltypes.Int32},
-			{Name: "col2", Type: sqltypes.Int32},
+			{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 	}
@@ -2189,9 +2190,9 @@ func TestStreamSelectScatterLimit(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col1", Type: sqltypes.Int32},
-				{Name: "col2", Type: sqltypes.Int32},
-				{Name: "weight_string(col2)", Type: sqltypes.VarBinary},
+				{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col2)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -2218,8 +2219,8 @@ func TestStreamSelectScatterLimit(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col1", Type: sqltypes.Int32},
-			{Name: "col2", Type: sqltypes.Int32},
+			{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	wantResult.Rows = append(wantResult.Rows,
@@ -2345,8 +2346,8 @@ func TestVarJoin(t *testing.T) {
 
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2380,8 +2381,8 @@ func TestVarJoinStream(t *testing.T) {
 
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2414,8 +2415,8 @@ func TestLeftJoin(t *testing.T) {
 	defer QueryLogger.Unsubscribe(logChan)
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2425,7 +2426,7 @@ func TestLeftJoin(t *testing.T) {
 	}}
 	emptyResult := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}}
 	sbc1.SetResults(result1)
@@ -2455,8 +2456,8 @@ func TestLeftJoinStream(t *testing.T) {
 	executor, sbc1, sbc2, _ := createExecutorEnv()
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2466,7 +2467,7 @@ func TestLeftJoinStream(t *testing.T) {
 	}}
 	emptyResult := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}}
 	sbc1.SetResults(result1)
@@ -2497,13 +2498,13 @@ func TestEmptyJoin(t *testing.T) {
 	// which is sent to shard 0.
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}, {
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}})
 	result, err := executorExec(executor, "select u1.id, u2.id from user u1 join user u2 on u2.id = u1.col where u1.id = 1", nil)
@@ -2520,8 +2521,8 @@ func TestEmptyJoin(t *testing.T) {
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	if !result.Equal(wantResult) {
@@ -2535,11 +2536,11 @@ func TestEmptyJoinStream(t *testing.T) {
 	// which is sent to shard 0.
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}, {
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}})
 	result, err := executorStream(executor, "select u1.id, u2.id from user u1 join user u2 on u2.id = u1.col where u1.id = 1")
@@ -2556,8 +2557,8 @@ func TestEmptyJoinStream(t *testing.T) {
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	if !result.Equal(wantResult) {
@@ -2570,16 +2571,16 @@ func TestEmptyJoinRecursive(t *testing.T) {
 	// Make sure it also works recursively.
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}, {
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}, {
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}})
 	result, err := executorExec(executor, "select u1.id, u2.id, u3.id from user u1 join (user u2 join user u3 on u3.id = u2.col) where u1.id = 1", nil)
@@ -2599,9 +2600,9 @@ func TestEmptyJoinRecursive(t *testing.T) {
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	if !result.Equal(wantResult) {
@@ -2614,16 +2615,16 @@ func TestEmptyJoinRecursiveStream(t *testing.T) {
 	// Make sure it also works recursively.
 	sbc1.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}, {
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}, {
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}})
 	result, err := executorStream(executor, "select u1.id, u2.id, u3.id from user u1 join (user u2 join user u3 on u3.id = u2.col) where u1.id = 1")
@@ -2643,9 +2644,9 @@ func TestEmptyJoinRecursiveStream(t *testing.T) {
 	utils.MustMatch(t, wantQueries, sbc1.Queries)
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	if !result.Equal(wantResult) {
@@ -2698,8 +2699,8 @@ func TestSubQueryAndQueryWithLimit(t *testing.T) {
 	executor, sbc1, sbc2, _ := createExecutorEnv()
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2709,8 +2710,8 @@ func TestSubQueryAndQueryWithLimit(t *testing.T) {
 	}}
 	result2 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2740,8 +2741,8 @@ func TestCrossShardSubqueryStream(t *testing.T) {
 	executor, sbc1, sbc2, _ := createExecutorEnv()
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		InsertID: 0,
 		Rows: [][]sqltypes.Value{{
@@ -2766,7 +2767,7 @@ func TestCrossShardSubqueryStream(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 		Rows: [][]sqltypes.Value{{
 			sqltypes.NewInt32(1),
@@ -2781,13 +2782,13 @@ func TestCrossShardSubqueryGetFields(t *testing.T) {
 	executor, sbc1, _, sbclookup := createExecutorEnv()
 	sbclookup.SetResults([]*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}})
 	result1 := []*sqltypes.Result{{
 		Fields: []*querypb.Field{
-			{Name: "id", Type: sqltypes.Int32},
-			{Name: "col", Type: sqltypes.Int32},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}}
 	sbc1.SetResults(result1)
@@ -2806,8 +2807,8 @@ func TestCrossShardSubqueryGetFields(t *testing.T) {
 
 	wantResult := &sqltypes.Result{
 		Fields: []*querypb.Field{
-			{Name: "col", Type: sqltypes.Int32},
-			{Name: "id", Type: sqltypes.Int32},
+			{Name: "col", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+			{Name: "id", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
 		},
 	}
 	if !result.Equal(wantResult) {
@@ -3057,9 +3058,9 @@ func TestSelectScatterFails(t *testing.T) {
 		sbc := hc.AddTestTablet(cell, shard, 1, "TestExecutor", shard, topodatapb.TabletType_PRIMARY, true, 1, nil)
 		sbc.SetResults([]*sqltypes.Result{{
 			Fields: []*querypb.Field{
-				{Name: "col1", Type: sqltypes.Int32},
-				{Name: "col2", Type: sqltypes.Int32},
-				{Name: "weight_string(col2)", Type: sqltypes.VarBinary},
+				{Name: "col1", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "col2", Type: sqltypes.Int32, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG)},
+				{Name: "weight_string(col2)", Type: sqltypes.VarBinary, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_BINARY_FLAG)},
 			},
 			InsertID: 0,
 			Rows: [][]sqltypes.Value{{
@@ -3709,7 +3710,7 @@ func TestSelectAggregationNoData(t *testing.T) {
 			sql:         `select col2, count(*) from (select col1, col2 from user limit 2) x group by col2`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col2)", "int64|int64|varbinary")),
 			expSandboxQ: "select col1, col2, weight_string(col2) from `user` order by col2 asc limit :__upper_limit",
-			expField:    `[name:"col2" type:INT64 name:"count(*)" type:INT64]`,
+			expField:    `[name:"col2" type:INT64 charset:63 flags:32768 name:"count(*)" type:INT64]`,
 			expRow:      `[]`,
 		},
 	}
@@ -3793,7 +3794,7 @@ func TestSelectAggregationData(t *testing.T) {
 			sql:         `select col2, count(*) from (select col1, col2 from user limit 9) x group by col2`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col2)", "int64|int64|varbinary"), "3|1|NULL", "2|2|NULL"),
 			expSandboxQ: "select col1, col2, weight_string(col2) from `user` order by col2 asc limit :__upper_limit",
-			expField:    `[name:"col2" type:INT64 name:"count(*)" type:INT64]`,
+			expField:    `[name:"col2" type:INT64 charset:63 flags:32769 name:"count(*)" type:INT64]`,
 			expRow:      `[[INT64(1) INT64(8)] [INT64(2) INT64(1)]]`,
 		},
 		{
@@ -3807,49 +3808,49 @@ func TestSelectAggregationData(t *testing.T) {
 			sql:         `select count(col1), col2 from (select col2, col1 from user limit 9) x group by col2`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col2|col1|weight_string(col2)", "int64|varchar|varbinary"), "3|a|NULL", "2|b|NULL"),
 			expSandboxQ: "select col2, col1, weight_string(col2) from `user` order by col2 asc limit :__upper_limit",
-			expField:    `[name:"count(col1)" type:INT64 name:"col2" type:INT64]`,
+			expField:    `[name:"count(col1)" type:INT64 name:"col2" type:INT64 charset:63 flags:32769]`,
 			expRow:      `[[INT64(8) INT64(2)] [INT64(1) INT64(3)]]`,
 		},
 		{
 			sql:         `select col1, count(col2) from (select col1, col2 from user limit 9) x group by col1`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col1)", "varchar|int64|varbinary"), "a|1|a", "b|null|b"),
 			expSandboxQ: "select col1, col2, weight_string(col1) from `user` order by col1 asc limit :__upper_limit",
-			expField:    `[name:"col1" type:VARCHAR name:"count(col2)" type:INT64]`,
+			expField:    `[name:"col1" type:VARCHAR charset:255 flags:1 name:"count(col2)" type:INT64]`,
 			expRow:      `[[VARCHAR("a") INT64(8)] [VARCHAR("b") INT64(0)]]`,
 		},
 		{
 			sql:         `select col1, count(col2) from (select col1, col2 from user limit 32) x group by col1`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col1)", "varchar|int64|varbinary"), "null|1|null", "null|null|null", "a|1|a", "b|null|b"),
 			expSandboxQ: "select col1, col2, weight_string(col1) from `user` order by col1 asc limit :__upper_limit",
-			expField:    `[name:"col1" type:VARCHAR name:"count(col2)" type:INT64]`,
+			expField:    `[name:"col1" type:VARCHAR charset:255 flags:1 name:"count(col2)" type:INT64]`,
 			expRow:      `[[NULL INT64(8)] [VARCHAR("a") INT64(8)] [VARCHAR("b") INT64(0)]]`,
 		},
 		{
 			sql:         `select col1, sum(col2) from (select col1, col2 from user limit 4) x group by col1`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col1)", "varchar|int64|varbinary"), "a|3|a"),
 			expSandboxQ: "select col1, col2, weight_string(col1) from `user` order by col1 asc limit :__upper_limit",
-			expField:    `[name:"col1" type:VARCHAR name:"sum(col2)" type:DECIMAL]`,
+			expField:    `[name:"col1" type:VARCHAR charset:255 flags:1 name:"sum(col2)" type:DECIMAL]`,
 			expRow:      `[[VARCHAR("a") DECIMAL(12)]]`,
 		},
 		{
 			sql:         `select col1, sum(col2) from (select col1, col2 from user limit 4) x group by col1`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col1)", "varchar|varchar|varbinary"), "a|2|a"),
 			expSandboxQ: "select col1, col2, weight_string(col1) from `user` order by col1 asc limit :__upper_limit",
-			expField:    `[name:"col1" type:VARCHAR name:"sum(col2)" type:DECIMAL]`,
+			expField:    `[name:"col1" type:VARCHAR charset:255 flags:1 name:"sum(col2)" type:DECIMAL]`,
 			expRow:      `[[VARCHAR("a") DECIMAL(8)]]`,
 		},
 		{
 			sql:         `select col1, sum(col2) from (select col1, col2 from user limit 4) x group by col1`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col1)", "varchar|varchar|varbinary"), "a|x|a"),
 			expSandboxQ: "select col1, col2, weight_string(col1) from `user` order by col1 asc limit :__upper_limit",
-			expField:    `[name:"col1" type:VARCHAR name:"sum(col2)" type:DECIMAL]`,
+			expField:    `[name:"col1" type:VARCHAR charset:255 flags:1 name:"sum(col2)" type:DECIMAL]`,
 			expRow:      `[[VARCHAR("a") DECIMAL(0)]]`,
 		},
 		{
 			sql:         `select col1, sum(col2) from (select col1, col2 from user limit 4) x group by col1`,
 			sandboxRes:  sqltypes.MakeTestResult(sqltypes.MakeTestFields("col1|col2|weight_string(col1)", "varchar|varchar|varbinary"), "a|null|a"),
 			expSandboxQ: "select col1, col2, weight_string(col1) from `user` order by col1 asc limit :__upper_limit",
-			expField:    `[name:"col1" type:VARCHAR name:"sum(col2)" type:DECIMAL]`,
+			expField:    `[name:"col1" type:VARCHAR charset:255 flags:1 name:"sum(col2)" type:DECIMAL]`,
 			expRow:      `[[VARCHAR("a") NULL]]`,
 		},
 	}

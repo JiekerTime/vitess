@@ -21,10 +21,10 @@ import (
 	"context"
 	"strconv"
 	"strings"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
 )
 
 var _ Vindex = (*SplitTableHash)(nil)

@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"vitess.io/vitess/go/mysql"
+
 	"google.golang.org/protobuf/proto"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -50,7 +52,7 @@ func (q *queryExecute) Equal(q2 *queryExecute) bool {
 }
 
 // Execute is part of the VTGateService interface
-func (f *fakeVTGateService) Execute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
+func (f *fakeVTGateService) Execute(ctx context.Context, c *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
 	execCase, ok := execMap[sql]
 	if !ok {
 		return session, nil, fmt.Errorf("no match for: %s", sql)
@@ -71,7 +73,7 @@ func (f *fakeVTGateService) Execute(ctx context.Context, session *vtgatepb.Sessi
 }
 
 // ExecuteBatch is part of the VTGateService interface
-func (f *fakeVTGateService) ExecuteBatch(ctx context.Context, session *vtgatepb.Session, sql []string, bindVariables []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
+func (f *fakeVTGateService) ExecuteBatch(ctx context.Context, c *mysql.Conn, session *vtgatepb.Session, sql []string, bindVariables []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
 	if len(sql) == 1 {
 		execCase, ok := execMap[sql[0]]
 		if !ok {
@@ -100,7 +102,7 @@ func (f *fakeVTGateService) ExecuteBatch(ctx context.Context, session *vtgatepb.
 }
 
 // StreamExecute is part of the VTGateService interface
-func (f *fakeVTGateService) StreamExecute(ctx context.Context, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (f *fakeVTGateService) StreamExecute(ctx context.Context, c *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	execCase, ok := execMap[sql]
 	if !ok {
 		return session, fmt.Errorf("no match for: %s", sql)

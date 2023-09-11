@@ -162,7 +162,7 @@ func TestAPIEndpoints(t *testing.T) {
 		assert.Equal(t, "null", resp)
 
 		// insert an errant GTID in the replica
-		_, err := utils.RunSQL(t, "insert into vt_insert_test(id, msg) values (10173, 'test 178342')", replica, "vt_ks")
+		_, err := utils.RunSQL(t, "insert into vt_insert_test(id, msg) values (10173, 'test 178342')", replica, "ks")
 		require.NoError(t, err)
 
 		// Wait until VTOrc picks up on this errant GTID and verify

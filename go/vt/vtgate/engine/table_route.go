@@ -6,14 +6,16 @@ import (
 	"sort"
 	"strings"
 
+	"vitess.io/vitess/go/vt/srvtopo"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
-	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 var _ Primitive = (*TableRoute)(nil)
@@ -184,11 +186,13 @@ func (tableRoute *TableRoute) executeShards(
 		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
 	}
 
-	// 4.可能要处理Order by排序
-	if len(tableRoute.OrderBy) == 0 {
-		return result, nil
+	if len(tableRoute.OrderBy) != 0 {
+		result, err = tableRoute.sort(result)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return tableRoute.sort(result)
+	return result.Truncate(tableRoute.TruncateColumnCount), nil
 }
 
 func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error) {
@@ -226,7 +230,7 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]tableindexes.ActualTable) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, logicTb *tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]tableindexes.ActualTable) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
 	actualTableName := actualTableNameMap[logicTb.LogicTableName]
 

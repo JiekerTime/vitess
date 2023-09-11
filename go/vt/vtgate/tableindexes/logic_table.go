@@ -4,7 +4,7 @@ import (
 	"vitess.io/vitess/go/vt/proto/query"
 )
 
-type SplitTableMap map[string]LogicTableConfig
+type SplitTableMap map[string]*LogicTableConfig
 
 type LogicTableConfig struct {
 	LogicTableName     string    `json:"logic_table_name,omitempty"`

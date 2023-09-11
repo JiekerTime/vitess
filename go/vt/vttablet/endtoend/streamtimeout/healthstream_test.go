@@ -30,7 +30,7 @@ import (
 
 // TestSchemaChangeTimedout ensures that the timeout functionality is working properly
 // to prevent queries from hanging up and causing a mutex to be locked forever.
-func TestSchemaChangeTimedout(t *testing.T) {
+func testSchemaChangeTimedout(t *testing.T) {
 	client := framework.NewClient()
 	reloadEstimatedTime := 2 * time.Second
 

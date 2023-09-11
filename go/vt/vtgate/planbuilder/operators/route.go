@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -171,7 +172,7 @@ func isConstantFalse(expr sqlparser.Expr) bool {
 	if err != nil {
 		return false
 	}
-	if eres.Value().IsNull() {
+	if eres.Value(collations.Default()).IsNull() {
 		return false
 	}
 	b, err := eres.ToBooleanStrict()
@@ -608,6 +609,10 @@ func addColumnToInput(operator ops.Operator, expr *sqlparser.AliasedExpr, addToG
 
 func (r *Route) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return r.Source.GetColumns()
+}
+
+func (r *Route) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return r.Source.GetSelectExprs(ctx)
 }
 
 func (r *Route) GetOrdering() ([]ops.OrderBy, error) {

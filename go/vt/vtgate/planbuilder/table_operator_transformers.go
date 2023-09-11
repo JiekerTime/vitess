@@ -4,34 +4,119 @@ import (
 	"fmt"
 	"sort"
 
+	"vitess.io/vitess/go/mysql/collations"
+	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 )
 
-func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator, isRoot bool, shardRouteParam *engine.RoutingParameters) (logicalPlan, error) {
+func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator, isRoot bool, ksERoute *engine.Route) (logicalPlan, error) {
 	switch op := op.(type) {
 	case *operators.TableRoute:
-		return transformTableRoutePlan(ctx, shardRouteParam, op)
+		return transformTableRoutePlan(ctx, ksERoute, op)
+	case *operators.Ordering:
+		return transformOrderingForSplitTable(ctx, ksERoute, op)
+	case *operators.Projection:
+		return transformProjectionForSplitTable(ctx, ksERoute, op)
 	}
 
 	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToLogicalPlan)", op))
 }
 
-func transformTableRoutePlan(ctx *plancontext.PlanningContext, shardRouteParam *engine.RoutingParameters, op *operators.TableRoute) (logicalPlan, error) {
+func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, ksERoute *engine.Route, op *operators.Ordering) (logicalPlan, error) {
+	plan, err := transformToTableLogicalPlan(ctx, op.Source, false, ksERoute)
+	if err != nil {
+		return nil, err
+	}
+
+	return createMemorySort(ctx, plan, op)
+}
+
+func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, ksERoute *engine.Route, op *operators.Projection) (logicalPlan, error) {
+	src, err := transformToTableLogicalPlan(ctx, op.Source, false, ksERoute)
+	if err != nil {
+		return nil, err
+	}
+
+	if cols := op.AllOffsets(); cols != nil {
+		// if all this op is doing is passing through columns from the input, we
+		// can use the faster SimpleProjection
+		return useSimpleProjection(op, cols, src)
+	}
+
+	expressions := slices2.Map(op.Projections, func(from operators.ProjExpr) sqlparser.Expr {
+		return from.GetExpr()
+	})
+
+	failed := false
+	evalengineExprs := slices2.Map(op.Projections, func(from operators.ProjExpr) evalengine.Expr {
+		switch e := from.(type) {
+		case operators.Eval:
+			return e.EExpr
+		case operators.Offset:
+			t := ctx.SemTable.ExprTypes[e.Expr]
+			return &evalengine.Column{
+				Offset:    e.Offset,
+				Type:      t.Type,
+				Collation: collations.TypedCollation{},
+			}
+		default:
+			failed = true
+			return nil
+		}
+	})
+	var primitive *engine.Projection
+	columnNames := slices2.Map(op.Columns, func(from *sqlparser.AliasedExpr) string {
+		return from.ColumnName()
+	})
+
+	if !failed {
+		primitive = &engine.Projection{
+			Cols:  columnNames,
+			Exprs: evalengineExprs,
+		}
+	}
+
+	return &projection{
+		source:      src,
+		columnNames: columnNames,
+		columns:     expressions,
+		primitive:   primitive,
+	}, nil
+}
+
+func transformTableRoutePlan(ctx *plancontext.PlanningContext, ksERoute *engine.Route, op *operators.TableRoute) (logicalPlan, error) {
 	sel, err := operators.ToSQL(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
 
-	eroute, err := routeToEngineTableRoute(ctx, shardRouteParam, op)
+	eroute, err := routeToEngineTableRoute(ctx, ksERoute.RoutingParameters, op)
 	if err != nil {
 		return nil, err
 	}
+
+	for _, order := range op.Ordering {
+		typ, collation, _ := ctx.SemTable.TypeForExpr(order.AST)
+		eroute.OrderBy = append(eroute.OrderBy, engine.OrderByParams{
+			Col:             order.Offset,
+			WeightStringCol: order.WOffset,
+			Desc:            order.Direction == sqlparser.DescOrder,
+			Type:            typ,
+			CollationID:     collation,
+		})
+	}
+
+	if ksERoute.TruncateColumnCount > 0 && op.ResultColumns > 0 {
+		return nil, vterrors.VT13001("split table add columns in selectExprs, need to recount TruncateColumnCount")
+	}
+	eroute.TruncateColumnCount = ksERoute.TruncateColumnCount + op.ResultColumns
 
 	return &tableRoute{
 		Select: sel,

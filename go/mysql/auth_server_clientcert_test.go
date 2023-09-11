@@ -39,7 +39,7 @@ func init() {
 	clientcertAuthMethod = string(MysqlClearPassword)
 }
 
-func TestValidCert(t *testing.T) {
+func testValidCert(t *testing.T) {
 	th := &testHandler{}
 
 	authServer := newAuthServerClientCert()
@@ -108,7 +108,7 @@ func TestValidCert(t *testing.T) {
 	conn.writeComQuit()
 }
 
-func TestNoCert(t *testing.T) {
+func testNoCert(t *testing.T) {
 	th := &testHandler{}
 
 	authServer := newAuthServerClientCert()

@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
-
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 type (
@@ -31,16 +30,16 @@ type (
 	}
 
 	// TindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
-	TindexPlusPredicates struct {
-		TableID   semantics.TableSet
-		ColVindex []*tableindexes.Column
+	TableVindexPlusPredicates struct {
+		TableID        semantics.TableSet
+		ColTableVindex []*tableindexes.Column
 
 		// during planning, we store the alternatives found for this route in this slice
-		Options []*TindexOption
+		Options []*TableVindexOption
 	}
 
 	// TindexOption stores the information needed to know if we have all the information needed to use a vindex
-	TindexOption struct {
+	TableVindexOption struct {
 		Ready       bool
 		Values      []evalengine.Expr
 		ValueExprs  []sqlparser.Expr
@@ -75,7 +74,7 @@ func (r *TableRoute) SetInputs(ops []ops.Operator) {
 
 func (r *TableRoute) IsSingleSplitTable() bool {
 	switch r.Routing.OpCode() {
-	case engine.Unsharded, engine.EqualUnique:
+	case engine.Unsharded, engine.EqualUnique, engine.Equal:
 		return true
 	}
 	return false
@@ -136,6 +135,10 @@ func (r *TableRoute) GetColumns() ([]*sqlparser.AliasedExpr, error) {
 	return r.Source.GetColumns()
 }
 
+func (r *TableRoute) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return r.Source.GetSelectExprs(ctx)
+}
+
 func (r *TableRoute) GetOrdering() ([]ops.OrderBy, error) {
 	return r.Source.GetOrdering()
 }
@@ -152,8 +155,43 @@ func (r *TableRoute) TablesUsed() []string {
 	return collect()
 }
 
-func (r *TableRoute) planOffsets(_ *plancontext.PlanningContext) (err error) {
-	return fmt.Errorf("todo: TableRoute.planOffsets")
+func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
+	// if operator is returning data from a single table, we don't need to do anything more
+	if r.IsSingleSplitTable() {
+		return nil
+	}
+
+	// if we are getting results from multiple shards, we need to do a merge-sort
+	// between them to get the final output correctly sorted
+	ordering, err := r.Source.GetOrdering()
+	if err != nil || len(ordering) == 0 {
+		return err
+	}
+
+	columns, err := r.Source.GetColumns()
+	if err != nil {
+		return err
+	}
+
+	for _, order := range ordering {
+		if isSpecialOrderBy(order) {
+			continue
+		}
+		offset, err := r.getOffsetFor(ctx, order, columns)
+		if err != nil {
+			return err
+		}
+
+		o := RouteOrdering{
+			AST:       order.Inner.Expr,
+			Offset:    offset,
+			WOffset:   -1,
+			Direction: order.Inner.Direction,
+		}
+		r.Ordering = append(r.Ordering, o)
+	}
+
+	return nil
 }
 
 func (r *TableRoute) getOffsetFor(ctx *plancontext.PlanningContext, order ops.OrderBy, columns []*sqlparser.AliasedExpr) (int, error) {
@@ -252,7 +290,7 @@ func createTableRouteFromVSchemaTable(
 	ctx *plancontext.PlanningContext,
 	queryTable *QueryTable,
 	vschemaTable *vindexes.Table,
-	logicTableConfig tableindexes.LogicTableConfig,
+	logicTableConfig *tableindexes.LogicTableConfig,
 	solves semantics.TableSet,
 	_ bool,
 ) (*TableRoute, error) {

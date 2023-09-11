@@ -28,6 +28,8 @@ import (
 	"strings"
 	"testing"
 
+	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+
 	"github.com/nsf/jsondiff"
 	"github.com/stretchr/testify/require"
 
@@ -501,7 +503,7 @@ func (vw *vschemaWrapper) GetSrvVschema() *vschemapb.SrvVSchema {
 }
 
 func (vw *vschemaWrapper) ConnCollation() collations.ID {
-	return collations.CollationUtf8ID
+	return collations.Default()
 }
 
 func (vw *vschemaWrapper) PlannerWarning(_ string) {
@@ -697,6 +699,23 @@ func (vw *vschemaWrapper) FindRoutedShard(keyspace, shard string) (string, error
 
 func (vw *vschemaWrapper) IsViewsEnabled() bool {
 	return vw.enableViews
+}
+
+func (vw *vschemaWrapper) FindSplitTable(keyspace, tableName string) (*tableindexes.LogicTableConfig, error) {
+	splitTable, err := vw.v.FindSplitTable(keyspace, tableName)
+	if err != nil {
+		keyspaces := vw.v.Keyspaces
+		for ks := range keyspaces {
+			splitTableNew, e := vw.v.FindSplitTable(ks, tableName)
+			if e != nil {
+				continue
+			}
+			return splitTableNew, nil
+		}
+		return nil, err
+	}
+
+	return splitTable, nil
 }
 
 type (

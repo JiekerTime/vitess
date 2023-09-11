@@ -80,9 +80,9 @@ var dryRunResultsSwitchWritesM2m3 = []string{
 	"       tablet 400 ",
 	"       tablet 500 ",
 	"Mark vreplication streams frozen on:",
-	"       Keyspace merchant-type, Shard -40, Tablet 1600, Workflow m2m3, DbName vt_merchant-type",
-	"       Keyspace merchant-type, Shard 40-c0, Tablet 1700, Workflow m2m3, DbName vt_merchant-type",
-	"       Keyspace merchant-type, Shard c0-, Tablet 1800, Workflow m2m3, DbName vt_merchant-type",
+	"       Keyspace merchant-type, Shard -40, Tablet 1600, Workflow m2m3, DbName merchant-type",
+	"       Keyspace merchant-type, Shard 40-c0, Tablet 1700, Workflow m2m3, DbName merchant-type",
+	"       Keyspace merchant-type, Shard c0-, Tablet 1800, Workflow m2m3, DbName merchant-type",
 	"Unlock keyspace merchant-type",
 }
 

@@ -18,10 +18,10 @@ import (
 type TableShardedRouting struct {
 	// here we store the possible vindexes we can use so that when we add predicates to the plan,
 	// we can quickly check if the new predicates enables any new vindex Options
-	TindexPreds []*TindexPlusPredicates
+	TindexPreds []*TableVindexPlusPredicates
 
 	// the best option available is stored here
-	Selected *TindexOption
+	Selected *TableVindexOption
 
 	keyspace *vindexes.Keyspace
 
@@ -34,13 +34,13 @@ type TableShardedRouting struct {
 
 var _ Routing = (*TableShardedRouting)(nil)
 
-func newTableShardedRouting(vtable *vindexes.Table, logicTableConfig tableindexes.LogicTableConfig, id semantics.TableSet) Routing {
+func newTableShardedRouting(vtable *vindexes.Table, logicTableConfig *tableindexes.LogicTableConfig, id semantics.TableSet) Routing {
 	routing := &TableShardedRouting{
 		RouteOpCode: engine.Scatter,
 		keyspace:    vtable.Keyspace,
 	}
 
-	routing.TindexPreds = append(routing.TindexPreds, &TindexPlusPredicates{ColVindex: logicTableConfig.TableIndexColumn, TableID: id})
+	routing.TindexPreds = append(routing.TindexPreds, &TableVindexPlusPredicates{ColTableVindex: logicTableConfig.TableIndexColumn, TableID: id})
 	return routing
 }
 
@@ -49,13 +49,13 @@ func (tableRouting *TableShardedRouting) UpdateRoutingParams(_ *plancontext.Plan
 }
 
 func (tableRouting *TableShardedRouting) Clone() Routing {
-	var selected *TindexOption
+	var selected *TableVindexOption
 	if tableRouting.Selected != nil {
 		t := *tableRouting.Selected
 		selected = &t
 	}
 	return &TableShardedRouting{
-		TindexPreds: slices2.Map(tableRouting.TindexPreds, func(from *TindexPlusPredicates) *TindexPlusPredicates {
+		TindexPreds: slices2.Map(tableRouting.TindexPreds, func(from *TableVindexPlusPredicates) *TableVindexPlusPredicates {
 			// we do this to create a copy of the struct
 			p := *from
 			return &p
@@ -125,9 +125,9 @@ func (tableRouting *TableShardedRouting) PickBestAvailableVindex() {
 	}
 }
 
-func (vpp *TindexPlusPredicates) bestOption() *TindexOption {
-	var best *TindexOption
-	var keepOptions []*TindexOption
+func (vpp *TableVindexPlusPredicates) bestOption() *TableVindexOption {
+	var best *TableVindexOption
+	var keepOptions []*TableVindexOption
 	for _, option := range vpp.Options {
 		if option.Ready {
 			if best == nil || option.OpCode < best.OpCode {
@@ -267,12 +267,11 @@ func (tableRouting *TableShardedRouting) planCompositeInOpRecursive(
 
 func (tableRouting *TableShardedRouting) hasVindex(column *sqlparser.ColName) bool {
 	for _, v := range tableRouting.TindexPreds {
-		for _, col := range v.ColVindex {
+		for _, col := range v.ColTableVindex {
 			if column.Name.Equal(sqlparser.NewIdentifierCI(col.Column)) {
 				return true
 			}
 		}
-
 	}
 	return false
 }
@@ -304,10 +303,10 @@ func (tableRouting *TableShardedRouting) processSingleColumnVindex(
 	column *sqlparser.ColName,
 	value evalengine.Expr,
 	opcode engine.Opcode,
-	tindexPlusPredicates *TindexPlusPredicates,
+	TableVindexPlusPredicates *TableVindexPlusPredicates,
 	newVindexFound bool,
 ) bool {
-	for _, col := range tindexPlusPredicates.ColVindex {
+	for _, col := range TableVindexPlusPredicates.ColTableVindex {
 		if !column.Name.Equal(sqlparser.NewIdentifierCI(col.Column)) {
 			return newVindexFound
 		}
@@ -317,7 +316,7 @@ func (tableRouting *TableShardedRouting) processSingleColumnVindex(
 		return newVindexFound
 	}
 
-	tindexPlusPredicates.Options = append(tindexPlusPredicates.Options, &TindexOption{
+	TableVindexPlusPredicates.Options = append(TableVindexPlusPredicates.Options, &TableVindexOption{
 		Values:      []evalengine.Expr{value},
 		ValueExprs:  []sqlparser.Expr{valueExpr},
 		Predicates:  []sqlparser.Expr{node},

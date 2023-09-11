@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 )
@@ -29,7 +30,7 @@ func TestMod_Map(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vind, err := CreateVindex("mod", "mod", map[string]string{
+			vind, _ := CreateVindex("mod", "mod", map[string]string{
 				"mod_size": "4",
 			})
 			vindMod := vind.(SingleColumn)

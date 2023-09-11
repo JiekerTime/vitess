@@ -17,6 +17,7 @@ limitations under the License.
 package operators
 
 import (
+	"fmt"
 	"io"
 
 	"golang.org/x/exp/slices"
@@ -213,6 +214,10 @@ func (d *Derived) GetColumns() (exprs []*sqlparser.AliasedExpr, err error) {
 		exprs = append(exprs, ae)
 	}
 	return
+}
+
+func (d *Derived) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return nil, fmt.Errorf("implement me")
 }
 
 func (d *Derived) GetOrdering() ([]ops.OrderBy, error) {

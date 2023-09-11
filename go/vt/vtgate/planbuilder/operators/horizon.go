@@ -51,6 +51,10 @@ func (h *Horizon) GetColumns() (exprs []*sqlparser.AliasedExpr, err error) {
 	return
 }
 
+func (h *Horizon) GetSelectExprs(*plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return sqlparser.GetFirstSelect(h.Select).SelectExprs, nil
+}
+
 var _ ops.Operator = (*Horizon)(nil)
 
 func (h *Horizon) AddPredicate(ctx *plancontext.PlanningContext, expr sqlparser.Expr) (ops.Operator, error) {

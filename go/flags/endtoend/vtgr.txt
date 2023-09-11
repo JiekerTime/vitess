@@ -73,9 +73,11 @@ Usage of vtgr:
       --topo_consul_lock_session_ttl string                         TTL for consul session.
       --topo_consul_watch_poll_duration duration                    time of the long poll for watch queries. (default 30s)
       --topo_etcd_lease_ttl int                                     Lease TTL for locks and leader election. The client will use KeepAlive to keep the lease going. (default 30)
+      --topo_etcd_password string                                   password to use to validate the server cert when connecting to the etcd topo server
       --topo_etcd_tls_ca string                                     path to the ca to use to validate the server cert when connecting to the etcd topo server
       --topo_etcd_tls_cert string                                   path to the client cert to use to connect to the etcd topo server, requires topo_etcd_tls_key, enables TLS
       --topo_etcd_tls_key string                                    path to the client key to use to connect to the etcd topo server, enables TLS
+      --topo_etcd_username string                                   username to use to validate the server cert when connecting to the etcd topo server
       --topo_global_root string                                     the path of the global topology data in the global topology server
       --topo_global_server_address string                           the address of the global topology server
       --topo_implementation string                                  the topology implementation to use

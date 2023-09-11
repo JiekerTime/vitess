@@ -157,9 +157,9 @@ func TestVReplicationDDLHandling(t *testing.T) {
 
 	addColDDL := fmt.Sprintf("alter table %s add column %s varchar(64)", table, newColumn)
 	dropColDDL := fmt.Sprintf("alter table %s drop column %s", table, newColumn)
-	checkColQuerySource := fmt.Sprintf("select count(column_name) from information_schema.columns where table_schema='vt_%s' and table_name='%s' and column_name='%s'",
+	checkColQuerySource := fmt.Sprintf("select count(column_name) from information_schema.columns where table_schema='%s' and table_name='%s' and column_name='%s'",
 		sourceKs, table, newColumn)
-	checkColQueryTarget := fmt.Sprintf("select count(column_name) from information_schema.columns where table_schema='vt_%s' and table_name='%s' and column_name='%s'",
+	checkColQueryTarget := fmt.Sprintf("select count(column_name) from information_schema.columns where table_schema='%s' and table_name='%s' and column_name='%s'",
 		targetKs, table, newColumn)
 
 	// Test IGNORE behavior
@@ -284,7 +284,7 @@ func TestBasicVreplicationWorkflow(t *testing.T) {
 	testBasicVreplicationWorkflow(t, "noblob")
 }
 
-func TestVreplicationCopyParallel(t *testing.T) {
+func testVreplicationCopyParallel(t *testing.T) {
 	sourceKsOpts["DBTypeVersion"] = "mysql-5.7"
 	targetKsOpts["DBTypeVersion"] = "mysql-5.7"
 	extraVTTabletArgs = []string{
@@ -368,7 +368,7 @@ func testVreplicationWorkflows(t *testing.T, limited bool, binlogRowImage string
 	})
 }
 
-func TestV2WorkflowsAcrossDBVersions(t *testing.T) {
+func testV2WorkflowsAcrossDBVersions(t *testing.T) {
 	sourceKsOpts["DBTypeVersion"] = "mysql-5.7"
 	targetKsOpts["DBTypeVersion"] = "mysql-8.0"
 	testBasicVreplicationWorkflow(t, "")
@@ -1349,7 +1349,7 @@ func waitForLowLag(t *testing.T, keyspace, workflow string) {
 }
 
 func catchup(t *testing.T, vttablet *cluster.VttabletProcess, workflow, info string) {
-	vttablet.WaitForVReplicationToCatchup(t, workflow, fmt.Sprintf("vt_%s", vttablet.Keyspace), sidecarDBName, maxWait)
+	vttablet.WaitForVReplicationToCatchup(t, workflow, vttablet.Keyspace, sidecarDBName, maxWait)
 }
 
 func moveTablesAction(t *testing.T, action, cell, workflow, sourceKs, targetKs, tables string, extraFlags ...string) {

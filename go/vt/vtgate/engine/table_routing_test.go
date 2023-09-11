@@ -17,7 +17,7 @@ import (
 
 func TestFindTableRouteSelectEqual(t *testing.T) {
 
-	logicTable := tableindexes.LogicTableConfig{
+	logicTable := &tableindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []tableindexes.ActualTable{
 			{
@@ -33,7 +33,7 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 
 	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)

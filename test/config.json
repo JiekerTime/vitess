@@ -86,7 +86,7 @@
 			"Command": [
 				"test/region_example.sh"
 			],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "",
 			"RetryMax": 1,
 			"Tags": []
@@ -317,7 +317,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/schemadiff/vrepl", "-timeout", "30m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "schemadiff_vrepl",
 			"RetryMax": 1,
 			"Tags": []
@@ -553,7 +553,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtgate/queries/misc"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vtgate_queries",
 			"RetryMax": 1,
 			"Tags": ["vtgate"]
@@ -976,7 +976,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "MultiCell"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vreplication_multicell",
 			"RetryMax": 2,
 			"Tags": []
@@ -1003,7 +1003,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "PartialMoveTables"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vreplication_cellalias",
 			"RetryMax": 0,
 			"Tags": []
@@ -1030,7 +1030,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "TestBasicVreplicationWorkflow"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vreplication_basic",
 			"RetryMax": 1,
 			"Tags": []
@@ -1138,7 +1138,7 @@
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vreplication", "-run", "TestBasicV2Workflows", "-timeout", "20m"],
 			"Command": [],
-			"Manual": false,
+			"Manual": true,
 			"Shard": "vreplication_v2",
 			"RetryMax": 1,
 			"Tags": []

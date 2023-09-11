@@ -28,6 +28,6 @@ if [ $# -lt 1 ]; then
   exit -1
 fi
 
-keyspace=${2:-vt_test_keyspace}
+keyspace=${2:-test_keyspace}
 long_alias=`printf "%010d" $1`
 docker-compose exec vttablet$1 mysql -uvt_dba -S /vt/vtdataroot/vt_${long_alias}/mysql.sock $keyspace

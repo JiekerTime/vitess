@@ -55,7 +55,7 @@ func NewPlanningContext(reservedVars *sqlparser.ReservedVars, semTable *semantic
 		SkipPredicates:    map[sqlparser.Expr]any{},
 		PlannerVersion:    version,
 		ReservedArguments: map[sqlparser.Expr]string{},
-		SplitTableConfig:  map[string]tableindexes.LogicTableConfig{},
+		SplitTableConfig:  map[string]*tableindexes.LogicTableConfig{},
 	}
 	return ctx
 }

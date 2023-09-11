@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -1081,7 +1082,9 @@ func (c *Conn) writePrepare(fld []*querypb.Field, prepare *PrepareData) error {
 			if err := c.writeColumnDefinition(&querypb.Field{
 				Name:    "?",
 				Type:    sqltypes.VarBinary,
-				Charset: 63}, []byte{}); err != nil {
+				Charset: collations.CollationBinaryID,
+				Flags:   uint32(querypb.MySqlFlag_BINARY_FLAG),
+			}, []byte{}); err != nil {
 				return err
 			}
 		}
@@ -1620,4 +1623,18 @@ func (c *Conn) writeFieldList(result *sqltypes.Result, wilds []string) error {
 	}
 
 	return nil
+}
+
+func FlagsForColumn(t sqltypes.Type, col collations.ID) uint32 {
+	var fl uint32
+	if sqltypes.IsNumber(t) {
+		fl |= uint32(querypb.MySqlFlag_NUM_FLAG)
+	}
+	if sqltypes.IsUnsigned(t) {
+		fl |= uint32(querypb.MySqlFlag_UNSIGNED_FLAG)
+	}
+	if sqltypes.IsQuoted(t) && col == collations.CollationBinaryID {
+		fl |= uint32(querypb.MySqlFlag_BINARY_FLAG)
+	}
+	return fl
 }

@@ -1,4 +1,4 @@
-drop table if exists onlineddl_test;
+/*drop table if exists onlineddl_test;
 create table onlineddl_test (
   id int(11) NOT NULL AUTO_INCREMENT,
   name varchar(512) DEFAULT NULL,
@@ -23,3 +23,4 @@ begin
   insert into onlineddl_test values (null, 'gbk-test', '添加普通列测试-添加普通列测试');
   update onlineddl_test set v='添加普通列测试' where v='添加普通列测试-添加普通列测试' order by id desc limit 1;
 end ;;
+*/

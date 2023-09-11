@@ -5,8 +5,10 @@ import (
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
+
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
@@ -100,7 +102,7 @@ func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bi
 	if err != nil {
 		return nil, err
 	}
-	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.Vindex.(vindexes.TableSingleColumn), tableName, []sqltypes.Value{value.Value()})
+	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.Vindex.(vindexes.TableSingleColumn), tableName, []sqltypes.Value{value.Value(vcursor.ConnCollation())})
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +126,7 @@ func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor,
 
 	var logicTableConfig = rp.LogicTable[logicTable]
 
-	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex int) error {
+	if err = destination.Resolve(logicTableConfig, func(actualTableIndex int) error {
 		tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
 		return nil
 	}); err != nil {
@@ -166,7 +168,7 @@ func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCu
 func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinations []key.TableDestination, logicTable string) (tables []tableindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
 	for _, destination := range destinations {
-		if err = destination.Resolve(&logicTableConfig, func(actualTableIndex int) error {
+		if err = destination.Resolve(logicTableConfig, func(actualTableIndex int) error {
 			tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
 			return nil
 		}); err != nil {
@@ -179,7 +181,7 @@ func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinatio
 func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, logicTable string, destination key.TableDestination) (tables []tableindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
 
-	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex int) error {
+	if err = destination.Resolve(logicTableConfig, func(actualTableIndex int) error {
 		tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
 		return nil
 	}); err != nil {
