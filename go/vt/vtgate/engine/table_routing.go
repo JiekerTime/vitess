@@ -124,7 +124,7 @@ func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor,
 
 	var logicTableConfig = rp.LogicTable[logicTable]
 
-	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex uint64) error {
+	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex int) error {
 		tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
 		return nil
 	}); err != nil {
@@ -166,7 +166,7 @@ func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCu
 func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinations []key.TableDestination, logicTable string) (tables []tableindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
 	for _, destination := range destinations {
-		if err = destination.Resolve(&logicTableConfig, func(actualTableIndex uint64) error {
+		if err = destination.Resolve(&logicTableConfig, func(actualTableIndex int) error {
 			tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
 			return nil
 		}); err != nil {
@@ -179,7 +179,7 @@ func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinatio
 func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, logicTable string, destination key.TableDestination) (tables []tableindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
 
-	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex uint64) error {
+	if err = destination.Resolve(&logicTableConfig, func(actualTableIndex int) error {
 		tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
 		return nil
 	}); err != nil {

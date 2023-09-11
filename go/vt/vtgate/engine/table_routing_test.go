@@ -55,7 +55,7 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 	result, err := TableRouteParam.findRoute(context.Background(), vc, map[string]*querypb.BindVariable{})
 	require.NoError(t, err)
 	if !reflect.DeepEqual(result, wantResult) {
-		//t.Errorf("find table routing error")
+		t.Errorf("find table routing error")
 	}
 
 }
