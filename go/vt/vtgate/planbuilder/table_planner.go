@@ -2,7 +2,6 @@ package planbuilder
 
 import (
 	"vitess.io/vitess/go/vt/sqlparser"
-	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
@@ -21,7 +20,8 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	ksAndTablePlan, err = visit(ksPlan, func(logicalPlan logicalPlan) (bool, logicalPlan, error) {
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
-			tablePlan, err := doBuildTableSelectPlan(ctx, node.Select, node.eroute)
+			ctx.KsERoute = *node.eroute
+			tablePlan, err := doBuildTableSelectPlan(ctx, node.Select)
 			if err != nil {
 				return false, nil, err
 			}
@@ -37,13 +37,12 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	return ksAndTablePlan, semTable, nil, nil
 }
 
-func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement, ksERoute *engine.Route,
-) (tablePlan logicalPlan, err error) {
+func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement) (tablePlan logicalPlan, err error) {
 	tableOperator, err := operators.TablePlanQuery(ctx, Select)
 	if err != nil {
 		return nil, err
 	}
-	tablePlan, err = transformToTableLogicalPlan(ctx, tableOperator, true, ksERoute)
+	tablePlan, err = transformToTableLogicalPlan(ctx, tableOperator, true)
 	if err != nil {
 		return nil, err
 	}

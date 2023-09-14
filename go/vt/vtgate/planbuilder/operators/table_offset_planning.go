@@ -17,11 +17,14 @@ func planOffsetsForSplitTable(ctx *plancontext.PlanningContext, root ops.Operato
 	}
 
 	visitor := func(in ops.Operator, _ semantics.TableSet, _ bool) (ops.Operator, *rewrite.ApplyResult, error) {
-		op, ok := in.(offsettable)
-		if !ok {
+		var err error
+		switch op := in.(type) {
+		case *Derived, *Horizon:
 			return nil, nil, vterrors.VT13001(fmt.Sprintf("should not see %T here", in))
+		case offsettable:
+			err = op.planOffsets(ctx)
 		}
-		if err := op.planOffsets(ctx); err != nil {
+		if err != nil {
 			return nil, nil, err
 		}
 		return in, rewrite.SameTree, nil

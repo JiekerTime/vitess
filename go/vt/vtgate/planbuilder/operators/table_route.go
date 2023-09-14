@@ -29,7 +29,7 @@ type (
 		ResultColumns int
 	}
 
-	// TindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
+	// TableVindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
 	TableVindexPlusPredicates struct {
 		TableID        semantics.TableSet
 		ColTableVindex []*tableindexes.Column
@@ -38,7 +38,7 @@ type (
 		Options []*TableVindexOption
 	}
 
-	// TindexOption stores the information needed to know if we have all the information needed to use a vindex
+	// TableVindexOption stores the information needed to know if we have all the information needed to use a vindex
 	TableVindexOption struct {
 		Ready       bool
 		Values      []evalengine.Expr
@@ -210,7 +210,7 @@ func (r *TableRoute) getOffsetFor(ctx *plancontext.PlanningContext, order ops.Or
 
 func (r *TableRoute) Description() ops.OpDescription {
 	return ops.OpDescription{
-		OperatorType: "Route",
+		OperatorType: "TableRoute",
 		Other: map[string]any{
 			"OpCode":   r.Routing.OpCode(),
 			"Keyspace": r.Routing.Keyspace(),

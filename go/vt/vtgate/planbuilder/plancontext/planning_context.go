@@ -19,6 +19,7 @@ package plancontext
 import (
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
 	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
@@ -44,6 +45,8 @@ type PlanningContext struct {
 	// todo(jinyue):后期通过实现VSchema接口来获取分表的元数据信息
 	// save config of splitTable
 	SplitTableConfig tableindexes.SplitTableMap
+
+	KsERoute engine.Route
 }
 
 func NewPlanningContext(reservedVars *sqlparser.ReservedVars, semTable *semantics.SemTable, vschema VSchema, version querypb.ExecuteOptions_PlannerVersion) *PlanningContext {

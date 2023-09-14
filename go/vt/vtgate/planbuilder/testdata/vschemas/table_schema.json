@@ -263,7 +263,7 @@
             }
           ]
         },
-        "music": {
+        "t_music": {
           "column_vindexes": [
             {
               "column": "user_id",
@@ -537,6 +537,18 @@
             {
               "index": 0,
               "column": "col1",
+              "column_type": "VARCHAR"
+            }
+          ],
+          "table_count": 4
+        },
+        "t_music": {
+          "logic_table_name": "t_music",
+          "table_vindex": "binary_hash",
+          "table_vindex_column": [
+            {
+              "index": 0,
+              "column": "a",
               "column_type": "VARCHAR"
             }
           ],

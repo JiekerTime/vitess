@@ -175,5 +175,334 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "sharded limit offset",
+    "query": "select user_id from t_music order by user_id limit 10, 20",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select user_id from t_music order by user_id limit 10, 20",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(20)",
+        "Offset": "INT64(10)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user_id, weight_string(user_id) from t_music_1 where 1 != 1",
+            "OrderBy": "0 ASC",
+            "Query": "select user_id, weight_string(user_id) from t_music order by user_id asc limit :__upper_limit",
+            "ResultColumns": 1,
+            "Table": "t_music"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Sharding Key Condition in Parenthesis",
+    "query": "select * from t_user where name ='abc' AND (id = 4) and (col = 123) limit 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where name ='abc' AND (id = 4) and (col = 123) limit 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where `name` = 'abc' and id = 4 and col = 123 limit 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(123)"
+        ],
+        "Values": [
+          "INT64(4)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Multiple parenthesized expressions",
+    "query": "select * from t_user where (id = 4) AND (name ='abc') AND (col = 'abc') limit 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where (id = 4) AND (name ='abc') AND (col = 'abc') limit 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 4 and `name` = 'abc' and col = 'abc' limit 5",
+        "Table": "t_user",
+        "TableValues": [
+          "VARCHAR(\"abc\")"
+        ],
+        "Values": [
+          "INT64(4)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Multiple parenthesized expressions",
+    "query": "select * from t_user where (id = 4 AND name ='abc' AND col = 'abc') limit 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where (id = 4 AND name ='abc' AND col = 'abc') limit 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 4 and `name` = 'abc' and col = 'abc' limit 5",
+        "Table": "t_user",
+        "TableValues": [
+          "VARCHAR(\"abc\")"
+        ],
+        "Values": [
+          "INT64(4)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Column Aliasing with Table.Column",
+    "query": "select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+        "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 and col = 3 order by user0_.col desc limit 2",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(3)"
+        ],
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Column Aliasing with Column",
+    "query": "select user0_.col as col0_ from t_user user0_ where id = 1 and col = 12 order by col0_ desc limit 3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select user0_.col as col0_ from t_user user0_ where id = 1 and col = 12 order by col0_ desc limit 3",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+        "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 and col = 12 order by col0_ desc limit 3",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(12)"
+        ],
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Column Aliasing with Table.Column,splitTable Limit",
+    "query": "select user0_.col as col0_ from t_user user0_ where id = 1 order by user0_.col desc limit 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select user0_.col as col0_ from t_user user0_ where id = 1 order by user0_.col desc limit 2",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(2)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+            "OrderBy": "0 DESC",
+            "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 order by user0_.col desc limit :__upper_limit",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Column Aliasing with Column,splitTable Limit",
+    "query": "select user0_.col as col0_ from t_user user0_ where id = 1 order by col0_ desc limit 3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select user0_.col as col0_ from t_user user0_ where id = 1 order by col0_ desc limit 3",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(3)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+            "OrderBy": "0 DESC",
+            "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 order by col0_ desc limit :__upper_limit",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Booleans and parenthesis",
+    "query": "select * from t_user where (id = 1) and (col = 12) AND name = true limit 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where (id = 1) and (col = 12) AND name = true limit 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 1 and col = 12 and `name` = true limit 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(12)"
+        ],
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Column as boolean-ish",
+    "query": "select * from t_user where (id = 1) and (col = 12) AND name limit 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where (id = 1) and (col = 12) AND name limit 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 1 and col = 12 and `name` limit 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(12)"
+        ],
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "PK as fake boolean, and column as boolean-ish",
+    "query": "select * from t_user where (id = 5) and (col = 12) AND name = true limit 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where (id = 5) and (col = 12) AND name = true limit 5",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Equal",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "Query": "select * from t_user where id = 5 and col = 12 and `name` = true limit 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(12)"
+        ],
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

@@ -16,21 +16,32 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 )
 
-func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator, isRoot bool, ksERoute *engine.Route) (logicalPlan, error) {
+func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator, isRoot bool) (logicalPlan, error) {
 	switch op := op.(type) {
 	case *operators.TableRoute:
-		return transformTableRoutePlan(ctx, ksERoute, op)
+		return transformTableRoutePlan(ctx, op)
 	case *operators.Ordering:
-		return transformOrderingForSplitTable(ctx, ksERoute, op)
+		return transformOrderingForSplitTable(ctx, op)
 	case *operators.Projection:
-		return transformProjectionForSplitTable(ctx, ksERoute, op)
+		return transformProjectionForSplitTable(ctx, op)
+	case *operators.Limit:
+		return transformLimitForSplitTable(ctx, op)
 	}
 
 	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToLogicalPlan)", op))
 }
 
-func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, ksERoute *engine.Route, op *operators.Ordering) (logicalPlan, error) {
-	plan, err := transformToTableLogicalPlan(ctx, op.Source, false, ksERoute)
+func transformLimitForSplitTable(ctx *plancontext.PlanningContext, op *operators.Limit) (logicalPlan, error) {
+	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return createLimit(plan, op.AST)
+}
+
+func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, op *operators.Ordering) (logicalPlan, error) {
+	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +49,8 @@ func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, ksERoute *
 	return createMemorySort(ctx, plan, op)
 }
 
-func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, ksERoute *engine.Route, op *operators.Projection) (logicalPlan, error) {
-	src, err := transformToTableLogicalPlan(ctx, op.Source, false, ksERoute)
+func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *operators.Projection) (logicalPlan, error) {
+	src, err := transformToTableLogicalPlan(ctx, op.Source, false)
 	if err != nil {
 		return nil, err
 	}
@@ -91,12 +102,13 @@ func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, ksERoute
 	}, nil
 }
 
-func transformTableRoutePlan(ctx *plancontext.PlanningContext, ksERoute *engine.Route, op *operators.TableRoute) (logicalPlan, error) {
+func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute) (logicalPlan, error) {
 	sel, err := operators.ToSQL(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
 
+	ksERoute := ctx.KsERoute
 	eroute, err := routeToEngineTableRoute(ctx, ksERoute.RoutingParameters, op)
 	if err != nil {
 		return nil, err

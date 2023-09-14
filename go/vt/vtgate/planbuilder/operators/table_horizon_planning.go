@@ -3,6 +3,7 @@ package operators
 import (
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -60,6 +61,8 @@ func optimizeHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root
 			return tryPushingDownOrderingForSplitTable(ctx, in)
 		case *Projection:
 			return tryPushingDownProjectionForSplitTable(ctx, in)
+		case *Limit:
+			return tryPushingDownLimitForSplitTable(ctx, in)
 		default:
 			return in, rewrite.SameTree, nil
 		}
@@ -77,6 +80,67 @@ func optimizeHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root
 	return newOp, nil
 }
 
+func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limit) (ops.Operator, *rewrite.ApplyResult, error) {
+	switch src := in.Source.(type) {
+	case *TableRoute:
+		return tryPushingDownLimitInRouteForSplitTable(ctx, in, src)
+	case *Projection:
+		return rewrite.Swap(in, src, "push limit under projection")
+	case *Aggregator:
+		return in, rewrite.SameTree, nil
+	default:
+		return setUpperLimitForSplitTable(in)
+	}
+}
+
+func tryPushingDownLimitInRouteForSplitTable(ctx *plancontext.PlanningContext, in *Limit, src *TableRoute) (ops.Operator, *rewrite.ApplyResult, error) {
+	if src.IsSingleSplitTable() || isMultiShard(ctx.KsERoute) {
+		return rewrite.Swap(in, src, "limit pushed into tableRoute")
+	}
+	return setUpperLimitForSplitTable(in)
+}
+
+func isMultiShard(route engine.Route) bool {
+	switch route.Opcode {
+	case engine.Unsharded, engine.DBA, engine.Next, engine.EqualUnique, engine.Reference:
+		return false
+	}
+	return true
+}
+
+func setUpperLimitForSplitTable(in *Limit) (ops.Operator, *rewrite.ApplyResult, error) {
+	if in.Pushed {
+		return in, rewrite.SameTree, nil
+	}
+	in.Pushed = true
+	visitor := func(op ops.Operator, _ semantics.TableSet, _ bool) (ops.Operator, *rewrite.ApplyResult, error) {
+		return op, rewrite.SameTree, nil
+	}
+	shouldVisit := func(op ops.Operator) rewrite.VisitRule {
+		switch op := op.(type) {
+		case *Join, *ApplyJoin:
+			// we can't push limits down on either side
+			return rewrite.SkipChildren
+		case *TableRoute:
+			newSrc := &Limit{
+				Source: op.Source,
+				AST:    &sqlparser.Limit{Rowcount: sqlparser.NewArgument("__upper_limit")},
+				Pushed: false,
+			}
+			op.Source = newSrc
+			return rewrite.SkipChildren
+		default:
+			return rewrite.VisitChildren
+		}
+	}
+
+	_, err := rewrite.TopDown(in.Source, TableID, visitor, shouldVisit)
+	if err != nil {
+		return nil, nil, err
+	}
+	return in, rewrite.SameTree, nil
+}
+
 func stopAtTableRoute(operator ops.Operator) rewrite.VisitRule {
 	_, isRoute := operator.(*TableRoute)
 	return rewrite.VisitRule(!isRoute)
@@ -85,7 +149,7 @@ func stopAtTableRoute(operator ops.Operator) rewrite.VisitRule {
 func tryPushingDownOrderingForSplitTable(ctx *plancontext.PlanningContext, in *Ordering) (ops.Operator, *rewrite.ApplyResult, error) {
 	switch src := in.Source.(type) {
 	case *TableRoute:
-		return rewrite.Swap(in, src, "push ordering under TableRoute")
+		return rewrite.Swap(in, src, "push ordering under tableRoute")
 	case *Ordering:
 		// we'll just remove the order underneath. The top order replaces whatever was incoming
 		in.Source = src.Source
@@ -105,16 +169,16 @@ func tryPushingDownOrderingForSplitTable(ctx *plancontext.PlanningContext, in *O
 func tryPushingDownProjectionForSplitTable(ctx *plancontext.PlanningContext, p *Projection) (ops.Operator, *rewrite.ApplyResult, error) {
 	switch src := p.Source.(type) {
 	case *TableRoute:
-		return rewrite.Swap(p, src, "pushed projection under TableRoute")
+		return rewrite.Swap(p, src, "pushed projection under tableRoute")
 	default:
 		return p, rewrite.SameTree, nil
 	}
 }
 
 func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horizonLike) (ops.Operator, *rewrite.ApplyResult, error) {
-	rb, isRoute := in.src().(*TableRoute)
-	if isRoute && rb.IsSingleSplitTable() {
-		return rewrite.Swap(in, rb, "push horizon into route")
+	rb, isTableRoute := in.src().(*TableRoute)
+	if isTableRoute && rb.IsSingleSplitTable() {
+		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 
 	sel, isSel := in.selectStatement().(*sqlparser.Select)
@@ -128,10 +192,10 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horiz
 	}
 
 	needsOrdering := len(qp.OrderExprs) > 0
-	canPushDown := isRoute && sel.Having == nil && !needsOrdering && !qp.NeedsAggregation() && !sel.Distinct && sel.Limit == nil
+	canPushDown := isTableRoute && sel.Having == nil && !needsOrdering && !qp.NeedsAggregation() && !sel.Distinct && sel.Limit == nil
 
 	if canPushDown {
-		return rewrite.Swap(in, rb, "push horizon into route")
+		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 
 	return expandHorizonForSplitTable(ctx, in)
