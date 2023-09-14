@@ -13,7 +13,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select predef1, predef2 from t_user_1 where 1 != 1",
+        "FieldQuery": "select predef1, predef2 from t_user_0 where 1 != 1",
         "Query": "select predef1, predef2 from t_user where id = 5 order by predef2 asc",
         "OrderBy": "1 ASC",
         "ResultColumns": 1,
@@ -35,13 +35,13 @@
       "Original": "select predef1 from t_user where id = 5 and col = 6 order by col",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Vindex": "user_index",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select predef1 from t_user_1 where 1 != 1",
+        "FieldQuery": "select predef1 from t_user_0 where 1 != 1",
         "Query": "select predef1 from t_user where id = 5 and col = 6 order by col asc",
         "Table": "t_user",
         "Values": [
@@ -69,7 +69,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user order by col asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
@@ -92,7 +92,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id, weight_string(id) from t_user_1 where 1 != 1",
+        "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
         "Query": "select id, weight_string(id) from t_user order by id asc",
         "OrderBy": "0 ASC",
         "ResultColumns": 1,
@@ -116,7 +116,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col, id, weight_string(id) from t_user_1 where 1 != 1",
+        "FieldQuery": "select col, id, weight_string(id) from t_user_0 where 1 != 1",
         "Query": "select col, id, weight_string(id) from t_user order by id asc",
         "OrderBy": "1 ASC",
         "ResultColumns": 1,
@@ -140,7 +140,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user order by col asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
@@ -163,7 +163,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id as foo, weight_string(id) from t_user_1 where 1 != 1",
+        "FieldQuery": "select id as foo, weight_string(id) from t_user_0 where 1 != 1",
         "Query": "select id as foo, weight_string(id) from t_user order by foo asc",
         "OrderBy": "0 ASC",
         "ResultColumns": 1,
@@ -192,7 +192,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user order by null",
         "Table": "t_user"
       },
@@ -209,13 +209,13 @@
       "Original": "select * from t_user where id = 5 and col = 6 order by a",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Vindex": "user_index",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 5 and col = 6 order by a asc",
         "Table": "t_user",
         "Values": [
@@ -238,13 +238,13 @@
       "Original": "select t_user.* from t_user where id = 5 and col = 6 order by t_user.a",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Vindex": "user_index",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_1.* from t_user_1 where 1 != 1",
+        "FieldQuery": "select t_user_0.* from t_user_0 where 1 != 1",
         "Query": "select t_user.* from t_user where id = 5 and col = 6 order by t_user.a asc",
         "Table": "t_user",
         "Values": [
@@ -267,13 +267,13 @@
       "Original": "select * from t_user where id = 5 and col = 6 order by t_user.a",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Vindex": "user_index",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 5 and col = 6 order by t_user.a asc",
         "Table": "t_user",
         "Values": [
@@ -321,7 +321,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col, a, weight_string(a), b, weight_string(b) from t_user_1 where 1 != 1",
+        "FieldQuery": "select col, a, weight_string(a), b, weight_string(b) from t_user_0 where 1 != 1",
         "Query": "select col, a, weight_string(a), b, weight_string(b) from t_user order by a asc, b asc",
         "OrderBy": "1 ASC, 3 ASC",
         "ResultColumns": 1,
@@ -345,7 +345,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id, col, a, b, weight_string(a) from t_user_1 where 1 != 1",
+        "FieldQuery": "select id, col, a, b, weight_string(a) from t_user_0 where 1 != 1",
         "Query": "select id, col, a, b, weight_string(a) from t_user order by col asc, a asc",
         "OrderBy": "1 ASC, 2 ASC",
         "ResultColumns": 4,
@@ -369,7 +369,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user order by RAND()",
         "Table": "t_user"
       },
@@ -401,12 +401,12 @@
       "Original": "select * from t_user where id = 5 and col = 6 order by -col1",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 5 and col = 6 order by -col1 asc",
         "Values": [
           "INT64(5)"
@@ -430,12 +430,12 @@
       "Original": "select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8_general_ci desc",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 5 and col = 6 order by concat(col, col1) collate utf8_general_ci desc",
         "Values": [
           "INT64(5)"
@@ -459,12 +459,12 @@
       "Original": "select * from t_user where id = 5 and col = 6 order by id+col collate utf8_general_ci desc",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 5 and col = 6 order by id + col collate utf8_general_ci desc",
         "Values": [
           "INT64(5)"
@@ -488,12 +488,12 @@
       "Original": "select col from t_user where id = 1  and col = 6 order by col",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user where id = 1 and col = 6 order by col asc",
         "Values": [
           "INT64(1)"
@@ -522,7 +522,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col as foo from t_user_1 where 1 != 1",
+        "FieldQuery": "select col as foo from t_user_0 where 1 != 1",
         "Query": "select col as foo from t_user order by foo asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
@@ -545,7 +545,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col as foo, col2 as col, weight_string(col2) from t_user_1 where 1 != 1",
+        "FieldQuery": "select col as foo, col2 as col, weight_string(col2) from t_user_0 where 1 != 1",
         "Query": "select col as foo, col2 as col, weight_string(col2) from t_user order by col asc",
         "OrderBy": "1 ASC",
         "ResultColumns": 2,
@@ -569,7 +569,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col, col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col, col from t_user_0 where 1 != 1",
         "Query": "select col, col from t_user order by col asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
@@ -592,7 +592,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col, col + 1, weight_string(col + 1) from t_user_1 where 1 != 1",
+        "FieldQuery": "select col, col + 1, weight_string(col + 1) from t_user_0 where 1 != 1",
         "Query": "select col, col + 1, weight_string(col + 1) from t_user order by col + 1 asc",
         "OrderBy": "1 ASC",
         "ResultColumns": 1,
@@ -616,7 +616,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_1.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user_1 where 1 != 1",
+        "FieldQuery": "select t_user_0.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user_0 where 1 != 1",
         "Query": "select t_user.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user order by a collate utf8_general_ci asc",
         "OrderBy": "1 ASC",
         "ResultColumns": 1,

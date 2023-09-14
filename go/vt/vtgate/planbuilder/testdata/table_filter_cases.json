@@ -12,7 +12,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user",
         "Table": "t_user"
       },
@@ -34,7 +34,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where someColumn = null",
         "Table": "t_user"
       },
@@ -56,7 +56,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where someColumn <=> null",
         "Table": "t_user"
       },
@@ -78,7 +78,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where (col, `name`) in (('aa', 'bb')) and id = 5",
         "Table": "t_user",
         "TableValues": [
@@ -107,7 +107,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where ((col1, `name`), col2) in (('aa', 'bb', 'cc'), (('dd', 'ee'), 'ff'))",
         "Table": "t_user"
       },
@@ -129,7 +129,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select Id from t_user_1 where 1 != 1",
+        "FieldQuery": "select Id from t_user_0 where 1 != 1",
         "Query": "select Id from t_user where 1 in ('aa', 'bb')",
         "Table": "t_user"
       },
@@ -151,7 +151,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where `name` in (col, 'bb')",
         "Table": "t_user"
       },
@@ -173,7 +173,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.id = 5",
         "Table": "t_user",
         "Values": [
@@ -199,7 +199,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.id = 5 + 5",
         "Table": "t_user",
         "Values": [
@@ -220,12 +220,12 @@
       "Original": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2)",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "IN-Equal",
+        "Variant": "IN-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col = 5 and t_user.id in ::__vals",
         "Table": "t_user",
         "TableValues": [
@@ -254,7 +254,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col = case t_user.col when 'foo' then true else false end and t_user.id in ::__vals",
         "Table": "t_user",
         "Values": [
@@ -275,12 +275,12 @@
       "Original": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2) and t_user.name = 'aa' and t_user.id = 1",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col = 5 and t_user.id in (1, 2) and t_user.`name` = 'aa' and t_user.id = 1",
         "Table": "t_user",
         "TableValues": [
@@ -304,12 +304,12 @@
       "Original": "select id from t_user where t_user.id = 1 and t_user.name = 'aa' and t_user.id in (1, 2) and t_user.col = 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.id = 1 and t_user.`name` = 'aa' and t_user.id in (1, 2) and t_user.col = 5",
         "Table": "t_user",
         "TableValues": [
@@ -338,7 +338,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where (t_user.id = 1 or t_user.`name` = 'aa') and t_user.id in ::__vals",
         "Table": "t_user",
         "Values": [
@@ -364,7 +364,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where database()",
         "Table": "t_user"
       },
@@ -386,7 +386,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.id > 5",
         "Table": "t_user"
       },
@@ -403,12 +403,12 @@
       "Original": "select id from t_user where t_user.id = t_user.col and t_user.col = 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.id = t_user.col and t_user.col = 5",
         "Table": "t_user",
         "TableValues": [
@@ -437,7 +437,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where id = 34 and `name` = 'apa'",
         "Table": "t_user",
         "Values": [
@@ -463,7 +463,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user where id in ::__vals",
         "Table": "t_user",
         "Values": [
@@ -489,7 +489,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user where id in ::__vals",
         "Table": "t_user",
         "Values": [
@@ -515,7 +515,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select col from t_user_1 where 1 != 1",
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
         "Query": "select col from t_user where id in ::__vals",
         "Table": "t_user",
         "Values": [
@@ -541,7 +541,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select a + 2 as a from t_user_1 where 1 != 1",
+        "FieldQuery": "select a + 2 as a from t_user_0 where 1 != 1",
         "Query": "select a + 2 as a from t_user where a + 2 = 42",
         "Table": "t_user"
       },
@@ -563,7 +563,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_1.col + 2 as a from t_user_1 where 1 != 1",
+        "FieldQuery": "select t_user_0.col + 2 as a from t_user_0 where 1 != 1",
         "Query": "select t_user.col + 2 as a from t_user where t_user.col + 2 = 42",
         "Table": "t_user"
       },
@@ -585,7 +585,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where id = 5 and (`name` = 'apa' or foo = 'bar')",
         "Table": "t_user",
         "Values": [
@@ -611,7 +611,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where id = 5 and `name` = 'foo' or id = 12 and `name` = 'bar'",
         "Table": "t_user",
         "Values": [
@@ -637,7 +637,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select textcol1 from t_user_1 where 1 != 1",
+        "FieldQuery": "select textcol1 from t_user_0 where 1 != 1",
         "Query": "select textcol1 from t_user where foo = 42",
         "Table": "t_user"
       },
@@ -654,12 +654,12 @@
       "Original": "select id from t_user where t_user.col = 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col = 5",
         "Table": "t_user",
         "TableValues": [
@@ -679,12 +679,12 @@
       "Original": "select id from t_user where 5 = col",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where col = 5",
         "Table": "t_user",
         "TableValues": [
@@ -704,12 +704,12 @@
       "Original": "select id from t_user where t_user.col in (5)",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col in (5)",
         "Table": "t_user",
         "TableValues": [
@@ -734,7 +734,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col in (5, 6, 7)",
         "Table": "t_user",
         "TableValues": [
@@ -754,12 +754,12 @@
       "Original": "select id from t_user where t_user.col in (5, 6, 7) and col = 9",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col in (5, 6, 7) and col = 9",
         "Table": "t_user",
         "TableValues": [
@@ -779,12 +779,12 @@
       "Original": "select id from t_user where t_user.col is null",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col is null",
         "Table": "t_user",
         "TableValues": [
@@ -809,7 +809,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col = null",
         "Table": "t_user"
       },
@@ -826,12 +826,12 @@
       "Original": "select id from t_user where not (not col = 3)",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where col = 3",
         "Table": "t_user",
         "TableValues": [
@@ -856,7 +856,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where col in (1, 5) and B or C and col in (5, 7)",
         "Table": "t_user",
         "TableValues": [
@@ -876,12 +876,12 @@
       "Original": "select id from t_user where t_user.col = 5+5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "Scatter-Equal",
+        "Variant": "Scatter-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where t_user.col = 5 + 5",
         "Table": "t_user",
         "TableValues": [
@@ -901,12 +901,12 @@
       "Original": "select id from t_user where id = 123 and t_user.col = 5+5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select id from t_user_1 where 1 != 1",
+        "FieldQuery": "select id from t_user_0 where 1 != 1",
         "Query": "select id from t_user where id = 123 and t_user.col = 5 + 5",
         "Table": "t_user",
         "TableValues": [

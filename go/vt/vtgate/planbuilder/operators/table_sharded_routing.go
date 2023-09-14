@@ -70,7 +70,7 @@ func (tableRouting *TableShardedRouting) Clone() Routing {
 func (tableRouting *TableShardedRouting) updateRoutingLogic(ctx *plancontext.PlanningContext, expr sqlparser.Expr) (Routing, error) {
 	tableRouting.SeenPredicates = append(tableRouting.SeenPredicates, expr)
 
-	newRouting, newVindexFound, err := tableRouting.searchForNewVindexes(ctx, expr)
+	newRouting, newTableVindexFound, err := tableRouting.searchForNewTableVindexes(ctx, expr)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +81,8 @@ func (tableRouting *TableShardedRouting) updateRoutingLogic(ctx *plancontext.Pla
 	}
 
 	// if we didn't open up any new vindex Options, no need to enter here
-	if newVindexFound {
-		tableRouting.PickBestAvailableVindex()
+	if newTableVindexFound {
+		tableRouting.PickBestAvailableTableVindex()
 	}
 
 	return tableRouting, nil
@@ -100,7 +100,7 @@ func (tableRouting *TableShardedRouting) Keyspace() *vindexes.Keyspace {
 	return tableRouting.keyspace
 }
 
-func (tableRouting *TableShardedRouting) searchForNewVindexes(ctx *plancontext.PlanningContext, predicate sqlparser.Expr) (Routing, bool, error) {
+func (tableRouting *TableShardedRouting) searchForNewTableVindexes(ctx *plancontext.PlanningContext, predicate sqlparser.Expr) (Routing, bool, error) {
 	newVindexFound := false
 	switch node := predicate.(type) {
 	case *sqlparser.ComparisonExpr:
@@ -114,8 +114,8 @@ func (tableRouting *TableShardedRouting) searchForNewVindexes(ctx *plancontext.P
 	return nil, newVindexFound, nil
 }
 
-// PickBestAvailableVindex goes over the available vindexes for this route and picks the best one available.
-func (tableRouting *TableShardedRouting) PickBestAvailableVindex() {
+// PickBestAvailableTableVindex goes over the available vindexes for this route and picks the best one available.
+func (tableRouting *TableShardedRouting) PickBestAvailableTableVindex() {
 	for _, t := range tableRouting.TindexPreds {
 		option := t.bestOption()
 		if option != nil && (tableRouting.Selected == nil || option.OpCode < tableRouting.Selected.OpCode) {
@@ -170,7 +170,7 @@ func (tableRouting *TableShardedRouting) planIsExpr(ctx *plancontext.PlanningCon
 	if val == nil {
 		return false
 	}
-	return tableRouting.haveMatchingVindex(ctx, node, vdValue, column, val, engine.Equal)
+	return tableRouting.haveMatchingVindex(ctx, node, vdValue, column, val, engine.EqualUnique)
 }
 
 func (tableRouting *TableShardedRouting) planEqualOp(ctx *plancontext.PlanningContext, node *sqlparser.ComparisonExpr) bool {
@@ -190,7 +190,7 @@ func (tableRouting *TableShardedRouting) planEqualOp(ctx *plancontext.PlanningCo
 		return false
 	}
 
-	return tableRouting.haveMatchingVindex(ctx, node, vdValue, column, val, engine.Equal)
+	return tableRouting.haveMatchingVindex(ctx, node, vdValue, column, val, engine.EqualUnique)
 }
 
 func (tableRouting *TableShardedRouting) planInOp(ctx *plancontext.PlanningContext, cmp *sqlparser.ComparisonExpr) bool {

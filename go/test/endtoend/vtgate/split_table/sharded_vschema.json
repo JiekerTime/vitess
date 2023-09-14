@@ -28,7 +28,7 @@
         }
       ]
     },
-    "t_user_1": {
+    "t_user_0": {
       "columnVindexes": [
         {
           "column": "id",
@@ -36,7 +36,7 @@
         }
       ]
     },
-    "t_user_2": {
+    "t_user_1": {
       "columnVindexes": [
         {
           "column": "id",

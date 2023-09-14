@@ -21,7 +21,7 @@ var (
 	clusterInstance *cluster.LocalProcessCluster
 	vtParams        mysql.ConnParams
 	mysqlParams     mysql.ConnParams
-	shardedKs       = "ks"
+	shardedKs       = "user"
 	unshardedKs     = "uks"
 	//shardedKsShards = []string{"-19a0", "19a0-20", "20-20c0", "20c0-"}
 	shardedKsShards = []string{"-80", "80-"}

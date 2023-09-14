@@ -701,21 +701,8 @@ func (vw *vschemaWrapper) IsViewsEnabled() bool {
 	return vw.enableViews
 }
 
-func (vw *vschemaWrapper) FindSplitTable(keyspace, tableName string) (*tableindexes.LogicTableConfig, error) {
-	splitTable, err := vw.v.FindSplitTable(keyspace, tableName)
-	if err != nil {
-		keyspaces := vw.v.Keyspaces
-		for ks := range keyspaces {
-			splitTableNew, e := vw.v.FindSplitTable(ks, tableName)
-			if e != nil {
-				continue
-			}
-			return splitTableNew, nil
-		}
-		return nil, err
-	}
-
-	return splitTable, nil
+func (vw *vschemaWrapper) FindSplitTable(_, tableName string) (*tableindexes.LogicTableConfig, error) {
+	return vw.v.FindSplitTable("user", tableName)
 }
 
 type (

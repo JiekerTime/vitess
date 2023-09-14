@@ -12,7 +12,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select 1 from t_user_1 where 1 != 1",
+        "FieldQuery": "select 1 from t_user_0 where 1 != 1",
         "Query": "select 1 from t_user",
         "Table": "t_user"
       },
@@ -34,7 +34,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_1.* from t_user_1 where 1 != 1",
+        "FieldQuery": "select t_user_0.* from t_user_0 where 1 != 1",
         "Query": "select t_user.* from t_user",
         "Table": "t_user"
       },
@@ -56,7 +56,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user",
         "Table": "t_user"
       },
@@ -78,7 +78,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_1.* from t_user_1 where 1 != 1",
+        "FieldQuery": "select t_user_0.* from t_user_0 where 1 != 1",
         "Query": "select t_user.* from t_user",
         "Table": "t_user"
       },
@@ -100,7 +100,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_1.* from t_user_1 where 1 != 1",
+        "FieldQuery": "select t_user_0.* from t_user_0 where 1 != 1",
         "Query": "select t_user.* from t_user",
         "Table": "t_user"
       },
@@ -122,7 +122,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select user_id, col1, col2 from t_authoritative_1 where 1 != 1",
+        "FieldQuery": "select user_id, col1, col2 from t_authoritative_0 where 1 != 1",
         "Query": "select user_id, col1, col2 from t_authoritative",
         "Table": "t_authoritative"
       },
@@ -144,7 +144,7 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select a.user_id, a.col1, a.col2 from t_authoritative_1 as a where 1 != 1",
+        "FieldQuery": "select a.user_id, a.col1, a.col2 from t_authoritative_0 as a where 1 != 1",
         "Query": "select a.user_id, a.col1, a.col2 from t_authoritative as a",
         "Table": "t_authoritative"
       },
@@ -194,7 +194,7 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select user_id, weight_string(user_id) from t_music_1 where 1 != 1",
+            "FieldQuery": "select user_id, weight_string(user_id) from t_music_0 where 1 != 1",
             "OrderBy": "0 ASC",
             "Query": "select user_id, weight_string(user_id) from t_music order by user_id asc limit :__upper_limit",
             "ResultColumns": 1,
@@ -215,12 +215,12 @@
       "Original": "select * from t_user where name ='abc' AND (id = 4) and (col = 123) limit 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where `name` = 'abc' and id = 4 and col = 123 limit 5",
         "Table": "t_user",
         "TableValues": [
@@ -244,12 +244,12 @@
       "Original": "select * from t_user where (id = 4) AND (name ='abc') AND (col = 'abc') limit 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 4 and `name` = 'abc' and col = 'abc' limit 5",
         "Table": "t_user",
         "TableValues": [
@@ -273,12 +273,12 @@
       "Original": "select * from t_user where (id = 4 AND name ='abc' AND col = 'abc') limit 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 4 and `name` = 'abc' and col = 'abc' limit 5",
         "Table": "t_user",
         "TableValues": [
@@ -302,12 +302,12 @@
       "Original": "select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+        "FieldQuery": "select user0_.col as col0_ from t_user_0 as user0_ where 1 != 1",
         "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 and col = 3 order by user0_.col desc limit 2",
         "Table": "t_user",
         "TableValues": [
@@ -331,12 +331,12 @@
       "Original": "select user0_.col as col0_ from t_user user0_ where id = 1 and col = 12 order by col0_ desc limit 3",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+        "FieldQuery": "select user0_.col as col0_ from t_user_0 as user0_ where 1 != 1",
         "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 and col = 12 order by col0_ desc limit 3",
         "Table": "t_user",
         "TableValues": [
@@ -369,7 +369,7 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+            "FieldQuery": "select user0_.col as col0_ from t_user_0 as user0_ where 1 != 1",
             "OrderBy": "0 DESC",
             "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 order by user0_.col desc limit :__upper_limit",
             "Table": "t_user",
@@ -402,7 +402,7 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select user0_.col as col0_ from t_user_1 as user0_ where 1 != 1",
+            "FieldQuery": "select user0_.col as col0_ from t_user_0 as user0_ where 1 != 1",
             "OrderBy": "0 DESC",
             "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 order by col0_ desc limit :__upper_limit",
             "Table": "t_user",
@@ -426,12 +426,12 @@
       "Original": "select * from t_user where (id = 1) and (col = 12) AND name = true limit 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 1 and col = 12 and `name` = true limit 5",
         "Table": "t_user",
         "TableValues": [
@@ -455,12 +455,12 @@
       "Original": "select * from t_user where (id = 1) and (col = 12) AND name limit 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 1 and col = 12 and `name` limit 5",
         "Table": "t_user",
         "TableValues": [
@@ -484,12 +484,12 @@
       "Original": "select * from t_user where (id = 5) and (col = 12) AND name = true limit 5",
       "Instructions": {
         "OperatorType": "TableRoute",
-        "Variant": "EqualUnique-Equal",
+        "Variant": "EqualUnique-EqualUnique",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select * from t_user_1 where 1 != 1",
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
         "Query": "select * from t_user where id = 5 and col = 12 and `name` = true limit 5",
         "Table": "t_user",
         "TableValues": [
