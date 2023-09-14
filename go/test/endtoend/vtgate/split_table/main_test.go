@@ -1,0 +1,126 @@
+package vtgate
+
+import (
+	_ "embed"
+	"flag"
+	"fmt"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"vitess.io/vitess/go/test/endtoend/utils"
+
+	"vitess.io/vitess/go/vt/vtgate/planbuilder"
+
+	"vitess.io/vitess/go/mysql"
+	"vitess.io/vitess/go/test/endtoend/cluster"
+)
+
+var (
+	clusterInstance *cluster.LocalProcessCluster
+	vtParams        mysql.ConnParams
+	mysqlParams     mysql.ConnParams
+	shardedKs       = "ks"
+	unshardedKs     = "uks"
+	//shardedKsShards = []string{"-19a0", "19a0-20", "20-20c0", "20c0-"}
+	shardedKsShards = []string{"-80", "80-"}
+
+	Cell = "test"
+	//go:embed sharded_schema.sql
+	shardedSchemaSQL string
+
+	//go:embed mysql_schema.sql
+	mysqlSchemaSQL string
+
+	//go:embed unsharded_schema.sql
+	unshardedSchemaSQL string
+
+	//go:embed sharded_vschema.json
+	shardedVSchema string
+
+	//go:embed unsharded_vschema.json
+	unshardedVSchema string
+)
+
+func TestMain(m *testing.M) {
+	defer cluster.PanicHandler(nil)
+	flag.Parse()
+
+	exitCode := func() int {
+		clusterInstance = cluster.NewCluster(Cell, "localhost")
+		defer clusterInstance.Teardown()
+
+		// Start topo server
+		err := clusterInstance.StartTopo()
+		if err != nil {
+			return 1
+		}
+
+		// Start keyspace
+		sKs := &cluster.Keyspace{
+			Name:      shardedKs,
+			SchemaSQL: shardedSchemaSQL,
+			VSchema:   shardedVSchema,
+		}
+
+		clusterInstance.VtGateExtraArgs = []string{"--schema_change_signal"}
+		clusterInstance.VtTabletExtraArgs = []string{"--queryserver-config-schema-change-signal", "--queryserver-config-schema-change-signal-interval", "0.1"}
+		err = clusterInstance.StartKeyspace(*sKs, shardedKsShards, 0, false)
+		if err != nil {
+			return 1
+		}
+
+		uKs := &cluster.Keyspace{
+			Name:      unshardedKs,
+			SchemaSQL: unshardedSchemaSQL,
+			VSchema:   unshardedVSchema,
+		}
+		err = clusterInstance.StartUnshardedKeyspace(*uKs, 0, false)
+		if err != nil {
+			return 1
+		}
+
+		// Start vtgate
+		clusterInstance.VtGatePlannerVersion = planbuilder.Gen4 // enable Gen4 planner.
+		err = clusterInstance.StartVtgate()
+		if err != nil {
+			return 1
+		}
+		vtParams = mysql.ConnParams{
+			Host: clusterInstance.Hostname,
+			Port: clusterInstance.VtgateMySQLPort,
+		}
+
+		conn, closer, err := utils.NewMySQL(clusterInstance, shardedKs, mysqlSchemaSQL)
+		if err != nil {
+			fmt.Println(err)
+			return 1
+		}
+		defer closer()
+		mysqlParams = conn
+		return m.Run()
+	}()
+	os.Exit(exitCode)
+}
+
+func start(t *testing.T) (utils.MySQLCompare, func()) {
+	mcmp, err := utils.NewMySQLCompare(t, vtParams, mysqlParams)
+	require.NoError(t, err)
+	deleteAll := func() {
+		_, _ = utils.ExecAllowError(t, mcmp.VtConn, "set workload = oltp")
+		//todo 分表delete做完不需要传物理表
+		tables := []string{"t_users", "t_users_1", "t_users_2"}
+		for _, table := range tables {
+			_, _ = mcmp.ExecAndIgnore("delete from " + table)
+		}
+	}
+
+	deleteAll()
+
+	return mcmp, func() {
+		deleteAll()
+		mcmp.Close()
+		cluster.PanicHandler(t)
+	}
+}

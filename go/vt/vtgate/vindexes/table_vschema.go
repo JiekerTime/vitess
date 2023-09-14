@@ -154,7 +154,7 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 			colNames[name.Lowered()] = true
 			t.TableIndexColumn = append(t.TableIndexColumn, &tableindexes.Column{Column: col.Column, Index: col.Index, ColumnType: col.ColumnType})
 		}
-		for tableIndex := int32(1); tableIndex < t.TableCount; tableIndex++ {
+		for tableIndex := int32(1); tableIndex <= t.TableCount; tableIndex++ {
 			if err := logicToActualTable(t.LogicTableName, int(tableIndex), t); err != nil {
 				return err
 			}
