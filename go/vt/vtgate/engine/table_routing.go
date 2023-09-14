@@ -41,11 +41,11 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 			//return rp.systemQuery(ctx, vcursor, bindVars)
 		case Unsharded, Next:
 		//	return rp.unsharded(ctx, vcursor, bindVars)
-		case Reference:
-			logicTableMap[logicTable], err = rp.anyTable(ctx, vcursor, logicTable, key.DestinationAnyTable{})
-			if err != nil {
-				return nil, err
-			}
+		//case Reference:
+		//	logicTableMap[logicTable], err = rp.anyTable(ctx, vcursor, logicTable, key.DestinationAnyTable{})
+		//	if err != nil {
+		//		return nil, err
+		//	}
 		case Scatter:
 			logicTableMap[logicTable], err = rp.byDestination(ctx, vcursor, logicTable, key.DestinationAllTables{})
 			if err != nil {
