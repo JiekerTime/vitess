@@ -46,6 +46,9 @@ type TableRoute struct {
 	// in the final result. Rest of the columns are truncated
 	// from the result received. If 0, no truncation happens.
 	TruncateColumnCount int
+
+	// QueryTimeout contains the optional timeout (in milliseconds) to apply to this query
+	QueryTimeout int
 }
 
 func (tableRoute *TableRoute) RouteType() string {
@@ -101,32 +104,78 @@ func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bi
 }
 
 func (tableRoute *TableRoute) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
+	ctx, cancelFunc := addQueryTimeout(ctx, vcursor, tableRoute.QueryTimeout)
+	defer cancelFunc()
+	qr, err := tableRoute.executeInternal(ctx, vcursor, bindVars, wantfields)
+	if err != nil {
+		return nil, err
+	}
+	return qr.Truncate(tableRoute.TruncateColumnCount), nil
+}
+
+func (tableRoute *TableRoute) executeInternal(
+	ctx context.Context,
+	vcursor VCursor,
+	bindVars map[string]*querypb.BindVariable,
+	wantfields bool,
+) (*sqltypes.Result, error) {
+
+	// 0.计算分片
+	rss, bvs, err := tableRoute.ShardRouteParam.findRoute(ctx, vcursor, bindVars)
+	if err != nil {
+		return nil, err
+	}
+
+	//1. 计算分表
+	actualTableMap, err := tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars)
+	if err != nil {
+		return nil, err
+	}
+	//排序分表
+	SortTableList(actualTableMap)
+
+	return tableRoute.executeShards(ctx, vcursor, bindVars, wantfields, rss, bvs, actualTableMap)
+}
+
+func SortTableList(tables map[string][]tableindexes.ActualTable) {
+	for _, ActualTableList := range tables {
+		sort.Slice(ActualTableList, func(i, j int) bool {
+			return ActualTableList[i].Index < ActualTableList[j].Index
+		})
+	}
+
+}
+
+func (tableRoute *TableRoute) executeShards(
+	ctx context.Context,
+	vcursor VCursor,
+	bindVars map[string]*querypb.BindVariable,
+	wantfields bool,
+	rss []*srvtopo.ResolvedShard,
+	bvs []map[string]*querypb.BindVariable,
+	actualTableNameMap map[string][]tableindexes.ActualTable,
+) (*sqltypes.Result, error) {
+
 	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
 	if !found {
 		return nil, vterrors.VT13001("not found %s splitTableConfig", tableRoute.TableName)
 	}
 
-	// 0.计算分片，先写Scatter场景，不用计算路由发到所有分片所有表
-	rss, _, err := vcursor.ResolveDestinations(ctx, tableRoute.ShardRouteParam.Keyspace.Name, nil, []key.Destination{key.DestinationAllShards{}})
-	if err != nil {
-		return nil, err
-	}
-
-	// 1.SQL改写 改写表名（逻辑表->实际表）
-	queries, err := getTableQueries(tableRoute.Query, splitTableConfig, bindVars)
+	// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
+	queries, err := getTableQueries(tableRoute.Query, splitTableConfig, bindVars, actualTableNameMap)
 	if err != nil {
 		return nil, err
 	}
 
 	result := &sqltypes.Result{}
 	for _, query := range queries {
-		rssqueries := make([]*querypb.BoundQuery, 0, len(rss))
+		rssQueries := make([]*querypb.BoundQuery, 0, len(rss))
 		for range rss {
-			rssqueries = append(rssqueries, query)
+			rssQueries = append(rssQueries, query)
 		}
 
-		// 2.执行SQL
-		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssqueries, false /* rollbackOnError */, false /* canAutocommit */)
+		// 3.执行SQL
+		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssQueries, false /* rollbackOnError */, false /* canAutocommit */)
 		if errs != nil {
 			return nil, errs[0]
 		}
@@ -181,10 +230,12 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb *tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, logicTb *tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]tableindexes.ActualTable) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
-	for _, act := range logicTb.ActualTableList {
-		sql, err := rewriteQuery(stmt, act, logicTb.LogicTableName)
+	actualTableName := actualTableNameMap[logicTb.LogicTableName]
+
+	for _, act := range actualTableName {
+		sql, err := rewriteQuery(stmt, act.ActualTableName, logicTb.LogicTableName)
 		if err != nil {
 			return nil, err
 		}
@@ -196,14 +247,14 @@ func getTableQueries(stmt sqlparser.Statement, logicTb *tableindexes.LogicTableC
 	return queries, nil
 }
 
-func rewriteQuery(stmt sqlparser.Statement, act tableindexes.ActualTable, logicTbName string) (string, error) {
+func rewriteQuery(stmt sqlparser.Statement, act string, logicTbName string) (string, error) {
 	cloneStmt := sqlparser.DeepCloneStatement(stmt)
 	sqlparser.SafeRewrite(cloneStmt, nil, func(cursor *sqlparser.Cursor) bool {
 		switch node := cursor.Node().(type) {
 		case sqlparser.TableName:
 			if strings.EqualFold(node.Name.String(), logicTbName) {
 				cursor.Replace(sqlparser.TableName{
-					Name: sqlparser.NewIdentifierCS(act.ActualTableName),
+					Name: sqlparser.NewIdentifierCS(act),
 				})
 			}
 		}
