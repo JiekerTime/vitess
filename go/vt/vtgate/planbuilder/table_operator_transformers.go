@@ -9,6 +9,7 @@ import (
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
+	"vitess.io/vitess/go/vt/vtgate/engine/opcode"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
@@ -26,6 +27,8 @@ func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operat
 		return transformProjectionForSplitTable(ctx, op)
 	case *operators.Limit:
 		return transformLimitForSplitTable(ctx, op)
+	case *operators.Aggregator:
+		return transformAggregatorForSplitTable(ctx, op)
 	}
 
 	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToLogicalPlan)", op))
@@ -134,6 +137,41 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 		Select: sel,
 		eroute: eroute,
 	}, nil
+}
+
+func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *operators.Aggregator) (logicalPlan, error) {
+	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	if err != nil {
+		return nil, err
+	}
+
+	oa := &orderedAggregate{
+		resultsBuilder: resultsBuilder{
+			logicalPlanCommon: newBuilderCommon(plan),
+			weightStrings:     make(map[*resultColumn]int),
+		},
+	}
+
+	for _, aggr := range op.Aggregations {
+		if aggr.OpCode == opcode.AggregateUnassigned {
+			return nil, vterrors.VT12001(fmt.Sprintf("in scatter query: aggregation function '%s'", sqlparser.String(aggr.Original)))
+		}
+		typ, col := aggr.GetTypeCollation(ctx)
+		oa.aggregates = append(oa.aggregates, &engine.AggregateParams{
+			Opcode:      aggr.OpCode,
+			Col:         aggr.ColOffset,
+			Alias:       aggr.Alias,
+			Expr:        aggr.Func,
+			Original:    aggr.Original,
+			OrigOpcode:  aggr.OriginalOpCode,
+			WCol:        aggr.WSOffset,
+			Type:        typ,
+			CollationID: col,
+		})
+	}
+
+	oa.truncateColumnCount = op.ResultColumns
+	return oa, nil
 }
 
 func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *engine.RoutingParameters, op *operators.TableRoute) (*engine.TableRoute, error) {

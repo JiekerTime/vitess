@@ -626,5 +626,220 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "aggregation and non-aggregations column without group by",
+    "query": "select count(id), num from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(id), num from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count(0) AS count(id), random(1) AS num",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select count(id), num from t_user_0 where 1 != 1",
+            "Query": "select count(id), num from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "aggregation and non-aggregations column with order by",
+    "query": "select count(id), num from t_user order by 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(id), num from t_user order by 2",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(1|2) ASC",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum_count(0) AS count(id), random(1) AS num, random(2)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select count(id), num, weight_string(num) from t_user_0 where 1 != 1",
+                "Query": "select count(id), num, weight_string(num) from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "min column",
+    "query": "select min(id),col from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select min(id),col from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "min(0) AS min(id), random(1) AS col",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select min(id), col from t_user_0 where 1 != 1",
+            "Query": "select min(id), col from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "max column",
+    "query": "select max(id),col from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select max(id),col from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "max(0) AS max(id), random(1) AS col",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select max(id), col from t_user_0 where 1 != 1",
+            "Query": "select max(id), col from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "select multi aggregator func columns",
+    "query": "select max(id),min(id),count(*),col from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select max(id),min(id),count(*),col from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "max(0) AS max(id), min(1) AS min(id), sum_count_star(2) AS count(*), random(3) AS col",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select max(id), min(id), count(*), col from t_user_0 where 1 != 1",
+            "Query": "select max(id), min(id), count(*), col from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "aggregator func columns with single shard",
+    "query": "select count(*) from t_user where id=5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user where id=5",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select count(*) from t_user_0 where 1 != 1",
+            "Query": "select count(*) from t_user where id = 5",
+            "Table": "t_user",
+            "Values": [
+              "INT64(5)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "aggregator func columns with single shard and single table",
+    "query": "select count(*) from t_user where id=5 and col=6",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user where id=5 and col=6",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select count(*) from t_user_0 where 1 != 1",
+        "Query": "select count(*) from t_user where id = 5 and col = 6",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(6)"
+        ],
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

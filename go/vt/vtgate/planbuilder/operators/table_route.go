@@ -74,7 +74,7 @@ func (r *TableRoute) SetInputs(ops []ops.Operator) {
 
 func (r *TableRoute) IsSingleSplitTable() bool {
 	switch r.Routing.OpCode() {
-	case engine.Unsharded, engine.EqualUnique, engine.Equal:
+	case engine.EqualUnique:
 		return true
 	}
 	return false

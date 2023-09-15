@@ -42,7 +42,6 @@ type PlanningContext struct {
 	// we can continue using the same argument name
 	ReservedArguments map[sqlparser.Expr]string
 
-	// todo(jinyue):后期通过实现VSchema接口来获取分表的元数据信息
 	// save config of splitTable
 	SplitTableConfig tableindexes.SplitTableMap
 

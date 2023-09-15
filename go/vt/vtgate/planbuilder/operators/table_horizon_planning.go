@@ -1,6 +1,8 @@
 package operators
 
 import (
+	"fmt"
+
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -63,6 +65,8 @@ func optimizeHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root
 			return tryPushingDownProjectionForSplitTable(ctx, in)
 		case *Limit:
 			return tryPushingDownLimitForSplitTable(ctx, in)
+		case *Aggregator:
+			return tryPushingDownAggregatorForSplitTable(ctx, in)
 		default:
 			return in, rewrite.SameTree, nil
 		}
@@ -204,7 +208,8 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horiz
 func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon horizonLike) (ops.Operator, *rewrite.ApplyResult, error) {
 	sel, _ := horizon.selectStatement().(*sqlparser.Select)
 
-	op, err := createProjectionFromSelect(ctx, horizon)
+	op, err := createProjectionFromSelectForSplitTable(ctx, horizon)
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -257,4 +262,75 @@ func addTruncationOrProjectionToReturnOutputForSplitTable(ctx *plancontext.Plann
 	}
 
 	return nil, vterrors.VT13001("split table not implement yet")
+}
+
+// createProjectionFromSelectForSplitTable is simplified to createProjectionFromSelect.
+func createProjectionFromSelectForSplitTable(ctx *plancontext.PlanningContext, horizon horizonLike) (out ops.Operator, err error) {
+	qp, err := horizon.getQP(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !qp.NeedsAggregation() {
+		projX, err := createProjectionWithoutAggr(qp, horizon.src())
+		if err != nil {
+			return nil, err
+		}
+		if _, isDerived := horizon.(*Derived); isDerived {
+			return nil, vterrors.VT13001("todo: Derived")
+		}
+		out = projX
+
+		return out, nil
+	}
+
+	aggregations, err := qp.AggregationExpressions(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	a := &Aggregator{
+		Source:       horizon.src(),
+		Original:     true,
+		QP:           qp,
+		Grouping:     qp.GetGrouping(),
+		Aggregations: aggregations,
+	}
+
+	if _, isDerived := horizon.(*Derived); isDerived {
+		return nil, vterrors.VT13001("todo: Derived")
+	}
+
+outer:
+	for colIdx, expr := range qp.SelectExprs {
+		ae, err := expr.GetAliasedExpr()
+		if err != nil {
+			return nil, err
+		}
+		addedToCol := false
+		for idx, groupBy := range a.Grouping {
+			if ctx.SemTable.EqualsExprWithDeps(groupBy.SimplifiedExpr, ae.Expr) {
+				if !addedToCol {
+					a.Columns = append(a.Columns, ae)
+					addedToCol = true
+				}
+				if groupBy.ColOffset < 0 {
+					a.Grouping[idx].ColOffset = colIdx
+				}
+			}
+		}
+		if addedToCol {
+			continue
+		}
+		for idx, aggr := range a.Aggregations {
+			if ctx.SemTable.EqualsExprWithDeps(aggr.Original.Expr, ae.Expr) && aggr.ColOffset < 0 {
+				a.Columns = append(a.Columns, ae)
+				a.Aggregations[idx].ColOffset = colIdx
+				continue outer
+			}
+		}
+		return nil, vterrors.VT13001(fmt.Sprintf("Could not find the %s in aggregation in the original query", sqlparser.String(ae)))
+	}
+
+	return a, nil
 }
