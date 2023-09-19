@@ -11,15 +11,14 @@ import (
 
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func TestFindTableRouteSelectEqual(t *testing.T) {
 
-	logicTable := &tableindexes.LogicTableConfig{
+	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
-		ActualTableList: []tableindexes.ActualTable{
+		ActualTableList: []vindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_0",
 				Index:           0,
@@ -30,10 +29,10 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 
 	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
@@ -47,7 +46,7 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 		Vindex: vindex.(vindexes.TableSingleColumn),
 	}
 
-	wantResult := map[string][]tableindexes.ActualTable{
+	wantResult := map[string][]vindexes.ActualTable{
 		"lkp": {{ActualTableName: "lkp_0", Index: 0}},
 	}
 
@@ -62,7 +61,7 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 
 func TestOrderbyIndex(t *testing.T) {
 
-	ActualTable := []tableindexes.ActualTable{
+	ActualTable := []vindexes.ActualTable{
 		{
 			ActualTableName: "lpk_1",
 			Index:           1,

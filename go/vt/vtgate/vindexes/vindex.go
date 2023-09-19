@@ -94,7 +94,7 @@ type (
 		// a KeyRange, or a single KeyspaceID.
 		// If the Vindex is non-unique, each id would map to either
 		// a KeyRange, or a list of KeyspaceID.
-		Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.TableDestination, error)
+		Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]TableDestination, error)
 
 		// Verify returns true for every id that successfully maps to the
 		// specified keyspace id.

@@ -11,7 +11,6 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
@@ -32,7 +31,7 @@ type (
 	// TableVindexPlusPredicates is a struct used to store all the predicates that the vindex can be used to query
 	TableVindexPlusPredicates struct {
 		TableID        semantics.TableSet
-		ColTableVindex []*tableindexes.Column
+		ColTableVindex []*vindexes.TableColumn
 
 		// during planning, we store the alternatives found for this route in this slice
 		Options []*TableVindexOption
@@ -40,12 +39,11 @@ type (
 
 	// TableVindexOption stores the information needed to know if we have all the information needed to use a vindex
 	TableVindexOption struct {
-		Ready       bool
-		Values      []evalengine.Expr
-		ValueExprs  []sqlparser.Expr
-		Predicates  []sqlparser.Expr
-		OpCode      engine.Opcode
-		FoundVindex tableindexes.TableIndexRule
+		Ready      bool
+		Values     []evalengine.Expr
+		ValueExprs []sqlparser.Expr
+		Predicates []sqlparser.Expr
+		OpCode     engine.Opcode
 	}
 )
 
@@ -290,7 +288,7 @@ func createTableRouteFromVSchemaTable(
 	ctx *plancontext.PlanningContext,
 	queryTable *QueryTable,
 	vschemaTable *vindexes.Table,
-	logicTableConfig *tableindexes.LogicTableConfig,
+	logicTableConfig *vindexes.LogicTableConfig,
 	solves semantics.TableSet,
 	_ bool,
 ) (*TableRoute, error) {

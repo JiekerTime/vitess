@@ -24,8 +24,6 @@ import (
 	"strings"
 	"testing"
 
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -2975,10 +2973,9 @@ func assertVindexMatches(t *testing.T, cv *ColumnVindex, v Vindex, name string, 
 func assertColumn(t *testing.T, col Column, expectedName string, expectedType querypb.Type) {
 	assert.True(t, col.Name.EqualString(expectedName), "column name does not match")
 	assert.Equal(t, expectedType, col.Type, "column type does not match")
-
 }
-func assertSplitTableColumn(t *testing.T, col tableindexes.Column, expectedName string, expectedType querypb.Type) {
+
+func assertSplitTableColumn(t *testing.T, col TableColumn, expectedName string, expectedType querypb.Type) {
 	assert.Equal(t, expectedName, col.Column, "column name does not match")
 	assert.Equal(t, expectedType, col.ColumnType, "column type does not match")
-
 }

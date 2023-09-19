@@ -4,14 +4,11 @@ import (
 	"context"
 
 	"vitess.io/vitess/go/sqltypes"
-	"vitess.io/vitess/go/vt/key"
-
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
@@ -19,7 +16,7 @@ type TableRoutingParameters struct {
 	// Opcode is the execution opcode.
 	Opcode Opcode
 
-	LogicTable tableindexes.SplitTableMap
+	LogicTable vindexes.SplitTableMap
 
 	// Values specifies the vindex values to use for routing.
 	Values []evalengine.Expr
@@ -29,9 +26,9 @@ type TableRoutingParameters struct {
 
 type LogicTableName string
 
-func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string][]tableindexes.ActualTable, err error) {
+func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string][]vindexes.ActualTable, err error) {
 
-	logicTableMap = make(map[string][]tableindexes.ActualTable)
+	logicTableMap = make(map[string][]vindexes.ActualTable)
 
 	for logicTable := range rp.LogicTable {
 		switch rp.Opcode {
@@ -47,7 +44,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 		//		return nil, err
 		//	}
 		case Scatter:
-			logicTableMap[logicTable], err = rp.byDestination(ctx, vcursor, logicTable, key.DestinationAllTables{})
+			logicTableMap[logicTable], err = rp.byDestination(ctx, vcursor, logicTable, vindexes.DestinationAllTables{})
 			if err != nil {
 				return nil, err
 			}
@@ -96,7 +93,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 
 }
 
-func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]tableindexes.ActualTable, error) {
+func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]vindexes.ActualTable, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	value, err := env.Evaluate(rp.Values[0])
 	if err != nil {
@@ -109,7 +106,7 @@ func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bi
 	return actualTableName, nil
 }
 
-func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]tableindexes.ActualTable, error) {
+func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]vindexes.ActualTable, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	value, err := env.Evaluate(rp.Values[0])
 	if err != nil {
@@ -122,7 +119,7 @@ func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCurso
 	return actualTableName, nil
 }
 
-func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor, logicTable string, destination key.DestinationAnyTable) (tables []tableindexes.ActualTable, err error) {
+func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor, logicTable string, destination vindexes.DestinationAnyTable) (tables []vindexes.ActualTable, err error) {
 
 	var logicTableConfig = rp.LogicTable[logicTable]
 
@@ -136,7 +133,7 @@ func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor,
 	return tables, nil
 }
 
-func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]tableindexes.ActualTable, error) {
+func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]vindexes.ActualTable, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	value, err := env.Evaluate(rp.Values[0])
 	if err != nil {
@@ -150,7 +147,7 @@ func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindV
 	return actualTableName, nil
 }
 
-func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCursor, vindex vindexes.TableSingleColumn, logicTable string, vindexKeys []sqltypes.Value) ([]tableindexes.ActualTable, error) {
+func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCursor, vindex vindexes.TableSingleColumn, logicTable string, vindexKeys []sqltypes.Value) ([]vindexes.ActualTable, error) {
 	// Convert vindexKeys to []*querypb.Value
 	ids := make([]*querypb.Value, len(vindexKeys))
 	for i, vik := range vindexKeys {
@@ -165,7 +162,7 @@ func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCu
 	return rp.tableTransform(ctx, destinations, logicTable)
 }
 
-func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinations []key.TableDestination, logicTable string) (tables []tableindexes.ActualTable, err error) {
+func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinations []vindexes.TableDestination, logicTable string) (tables []vindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
 	for _, destination := range destinations {
 		if err = destination.Resolve(logicTableConfig, func(actualTableIndex int) error {
@@ -178,7 +175,7 @@ func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinatio
 	return tables, nil
 }
 
-func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, logicTable string, destination key.TableDestination) (tables []tableindexes.ActualTable, err error) {
+func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCursor, logicTable string, destination vindexes.TableDestination) (tables []vindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
 
 	if err = destination.Resolve(logicTableConfig, func(actualTableIndex int) error {

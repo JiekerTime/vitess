@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"vitess.io/vitess/go/vt/srvtopo"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 
+	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -137,7 +137,7 @@ func (tableRoute *TableRoute) executeInternal(
 	return tableRoute.executeShards(ctx, vcursor, bindVars, wantfields, rss, bvs, actualTableMap)
 }
 
-func SortTableList(tables map[string][]tableindexes.ActualTable) {
+func SortTableList(tables map[string][]vindexes.ActualTable) {
 	for _, ActualTableList := range tables {
 		sort.Slice(ActualTableList, func(i, j int) bool {
 			return ActualTableList[i].Index < ActualTableList[j].Index
@@ -153,7 +153,7 @@ func (tableRoute *TableRoute) executeShards(
 	wantfields bool,
 	rss []*srvtopo.ResolvedShard,
 	bvs []map[string]*querypb.BindVariable,
-	actualTableNameMap map[string][]tableindexes.ActualTable,
+	actualTableNameMap map[string][]vindexes.ActualTable,
 ) (*sqltypes.Result, error) {
 
 	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
@@ -230,7 +230,7 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb *tableindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]tableindexes.ActualTable) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, logicTb *vindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
 	actualTableName := actualTableNameMap[logicTb.LogicTableName]
 

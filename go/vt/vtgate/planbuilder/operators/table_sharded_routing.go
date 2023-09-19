@@ -9,7 +9,6 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
@@ -34,7 +33,7 @@ type TableShardedRouting struct {
 
 var _ Routing = (*TableShardedRouting)(nil)
 
-func newTableShardedRouting(vtable *vindexes.Table, logicTableConfig *tableindexes.LogicTableConfig, id semantics.TableSet) Routing {
+func newTableShardedRouting(vtable *vindexes.Table, logicTableConfig *vindexes.LogicTableConfig, id semantics.TableSet) Routing {
 	routing := &TableShardedRouting{
 		RouteOpCode: engine.Scatter,
 		keyspace:    vtable.Keyspace,
@@ -317,12 +316,11 @@ func (tableRouting *TableShardedRouting) processSingleColumnVindex(
 	}
 
 	TableVindexPlusPredicates.Options = append(TableVindexPlusPredicates.Options, &TableVindexOption{
-		Values:      []evalengine.Expr{value},
-		ValueExprs:  []sqlparser.Expr{valueExpr},
-		Predicates:  []sqlparser.Expr{node},
-		OpCode:      routeOpcode,
-		FoundVindex: nil,
-		Ready:       true,
+		Values:     []evalengine.Expr{value},
+		ValueExprs: []sqlparser.Expr{valueExpr},
+		Predicates: []sqlparser.Expr{node},
+		OpCode:     routeOpcode,
+		Ready:      true,
 	})
 	return true
 }

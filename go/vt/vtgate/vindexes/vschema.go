@@ -34,7 +34,6 @@ import (
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 // TabletTypeSuffix maps the tablet type to its suffix string.
@@ -181,20 +180,20 @@ type KeyspaceSchema struct {
 	Keyspace           *Keyspace
 	Tables             map[string]*Table
 	Vindexes           map[string]Vindex
-	SplitTableTables   map[string]*tableindexes.LogicTableConfig
+	SplitTableTables   map[string]*LogicTableConfig
 	SplitTableVindexes map[string]Vindex
 	Views              map[string]sqlparser.SelectStatement
 	Error              error
 }
 
 type ksJSON struct {
-	Sharded            bool                                      `json:"sharded,omitempty"`
-	Tables             map[string]*Table                         `json:"tables,omitempty"`
-	Vindexes           map[string]Vindex                         `json:"vindexes,omitempty"`
-	SplitTableTables   map[string]*tableindexes.LogicTableConfig `json:"splitable_tables,omitempty"`
-	SplitTableVindexes map[string]Vindex                         `json:"splittable_vindexes,omitempty"`
-	Views              map[string]string                         `json:"views,omitempty"`
-	Error              string                                    `json:"error,omitempty"`
+	Sharded            bool                         `json:"sharded,omitempty"`
+	Tables             map[string]*Table            `json:"tables,omitempty"`
+	Vindexes           map[string]Vindex            `json:"vindexes,omitempty"`
+	SplitTableTables   map[string]*LogicTableConfig `json:"splitable_tables,omitempty"`
+	SplitTableVindexes map[string]Vindex            `json:"splittable_vindexes,omitempty"`
+	Views              map[string]string            `json:"views,omitempty"`
+	Error              string                       `json:"error,omitempty"`
 }
 
 // findTable looks for the table with the requested tablename in the keyspace.
@@ -236,7 +235,7 @@ func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 		ksJ.Views = make(map[string]string, len(ks.Views))
 	}
 	if len(ks.SplitTableTables) > 0 {
-		ksJ.SplitTableTables = make(map[string]*tableindexes.LogicTableConfig, len(ks.SplitTableTables))
+		ksJ.SplitTableTables = make(map[string]*LogicTableConfig, len(ks.SplitTableTables))
 	}
 	if len(ks.SplitTableVindexes) > 0 {
 		ksJ.SplitTableVindexes = make(map[string]Vindex, len(ks.SplitTableVindexes))
@@ -326,7 +325,7 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 			Vindexes: make(map[string]Vindex),
 		}
 		if len(ks.SplittableTables) > 0 {
-			ksvschema.SplitTableTables = make(map[string]*tableindexes.LogicTableConfig)
+			ksvschema.SplitTableTables = make(map[string]*LogicTableConfig)
 		}
 		if len(ks.SplittableVindexes) > 0 {
 			ksvschema.SplitTableVindexes = make(map[string]Vindex)

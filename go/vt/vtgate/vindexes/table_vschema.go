@@ -25,7 +25,6 @@ import (
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 )
 
 type SplitTable struct {
@@ -33,7 +32,7 @@ type SplitTable struct {
 	TableVindex       string                 `json:"table_vindex,omitempty"`
 	TableVindexColumn []*TableVindexColumn   `json:"table_vindex_column,omitempty"`
 	TableCount        int32                  `json:"table_count,omitempty"`
-	ActualTables      []*tableindexes.ActualTable
+	ActualTables      []*ActualTable
 }
 
 type TableVindexColumn struct {
@@ -43,7 +42,7 @@ type TableVindexColumn struct {
 }
 
 // FindSplitTableOrVindex finds a table or a Vindex by name using Find and FindVindex.
-func (vschema *VSchema) FindSplitTableOrVindex(keyspace, tableName string) (*tableindexes.LogicTableConfig, Vindex, error) {
+func (vschema *VSchema) FindSplitTableOrVindex(keyspace, tableName string) (*LogicTableConfig, Vindex, error) {
 	tables, err := vschema.FindSplitTable(keyspace, tableName)
 	if err != nil {
 		return nil, nil, err
@@ -85,7 +84,7 @@ func (vschema *VSchema) FindSplitTableVindex(keyspace, name string) (Vindex, err
 }
 
 // logicToActualTable split table  logic table -> all actual tables list
-func logicToActualTable(logicTableName string, tableIndex int, table *tableindexes.LogicTableConfig) error {
+func logicToActualTable(logicTableName string, tableIndex int, table *LogicTableConfig) error {
 	if len(logicTableName) == 0 {
 		return vterrors.Errorf(
 			vtrpcpb.Code_INVALID_ARGUMENT,
@@ -111,7 +110,7 @@ func logicToActualTable(logicTableName string, tableIndex int, table *tableindex
 	builder.WriteString(logicTableName[:position])
 	builder.WriteString(splitTableIndex)
 	builder.WriteString(logicTableName[position:])
-	table.ActualTableList = append(table.ActualTableList, tableindexes.ActualTable{ActualTableName: builder.String(), Index: tableIndex})
+	table.ActualTableList = append(table.ActualTableList, ActualTable{ActualTableName: builder.String(), Index: tableIndex})
 	return nil
 }
 
@@ -134,9 +133,9 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 		ksvschema.SplitTableVindexes[vname] = vindex
 	}
 	for tname, table := range ks.SplittableTables {
-		t := &tableindexes.LogicTableConfig{
+		t := &LogicTableConfig{
 			LogicTableName: tname,
-			TableVindex:    table.TableVindex,
+			TableVindex:    ksvschema.SplitTableVindexes[table.TableVindex],
 			TableCount:     table.TableCount,
 		}
 		// Initialize Columns.
@@ -152,7 +151,7 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 				)
 			}
 			colNames[name.Lowered()] = true
-			t.TableIndexColumn = append(t.TableIndexColumn, &tableindexes.Column{Column: col.Column, Index: col.Index, ColumnType: col.ColumnType})
+			t.TableIndexColumn = append(t.TableIndexColumn, &TableColumn{Column: col.Column, Index: col.Index, ColumnType: col.ColumnType})
 		}
 		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
 			if err := logicToActualTable(t.LogicTableName, int(tableIndex), t); err != nil {
@@ -168,7 +167,7 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 
 func (ks *KeyspaceSchema) findSplitTable(
 	tableName string,
-) *tableindexes.LogicTableConfig {
+) *LogicTableConfig {
 	table := ks.SplitTableTables[tableName]
 	if table != nil {
 		return table
@@ -179,7 +178,7 @@ func (ks *KeyspaceSchema) findSplitTable(
 func (vschema *VSchema) FindSplitTable(
 	keyspace,
 	tableName string,
-) (*tableindexes.LogicTableConfig, error) {
+) (*LogicTableConfig, error) {
 	ks, ok := vschema.Keyspaces[keyspace]
 	if !ok {
 		return nil, vterrors.VT05003(keyspace)
@@ -194,7 +193,7 @@ func (vschema *VSchema) FindSplitTable(
 func (vschema *VSchema) FindActualTable(
 	keyspace,
 	logicTableName string,
-) (*tableindexes.LogicTableConfig, error) {
+) (*LogicTableConfig, error) {
 	ks, ok := vschema.Keyspaces[keyspace]
 	if !ok {
 		return nil, vterrors.VT05003(keyspace)

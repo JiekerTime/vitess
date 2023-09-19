@@ -1,4 +1,4 @@
-package tableindexes
+package vindexes
 
 import (
 	"vitess.io/vitess/go/vt/proto/query"
@@ -7,12 +7,11 @@ import (
 type SplitTableMap map[string]*LogicTableConfig
 
 type LogicTableConfig struct {
-	LogicTableName     string    `json:"logic_table_name,omitempty"`
-	TableVindex        string    `json:"table_vindex,omitempty"`
-	TableCount         int32     `json:"table_count,omitempty"`
-	TableIndexColumn   []*Column `json:"table_vindex_column,omitempty"`
+	LogicTableName     string         `json:"logic_table_name,omitempty"`
+	TableVindex        Vindex         `json:"table_vindex,omitempty"`
+	TableCount         int32          `json:"table_count,omitempty"`
+	TableIndexColumn   []*TableColumn `json:"table_vindex_column,omitempty"`
 	ActualTableList    []ActualTable
-	TableIndexRule     TableIndexRule
 	SequenceColumnName string
 }
 
@@ -21,14 +20,14 @@ type ActualTable struct {
 	Index           int
 }
 
-type Column struct {
+type TableColumn struct {
 	Column     string     `json:"column"`
 	ColumnType query.Type `json:"column_type"`
 	Index      int32      `json:"index"`
 }
 
-// GetFirstActualTableMap Gets the first table mapping of the splitable
-// It is used in filedquery
+// GetFirstActualTableMap Gets the first table mapping of the split table
+// It is used in FieldQuery
 func GetFirstActualTableMap(logicTable SplitTableMap) map[string]string {
 	firstActualTable := make(map[string]string)
 	for key, value := range logicTable {

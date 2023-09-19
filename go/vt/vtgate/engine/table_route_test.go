@@ -12,7 +12,6 @@ import (
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
@@ -20,17 +19,17 @@ func TestGetTableQueries(t *testing.T) {
 	tests := []struct {
 		name               string
 		query              string
-		logicTb            *tableindexes.LogicTableConfig
+		logicTb            *vindexes.LogicTableConfig
 		bv                 map[string]*querypb.BindVariable
 		expected           []*querypb.BoundQuery
-		actualTableNameMap map[string][]tableindexes.ActualTable
+		actualTableNameMap map[string][]vindexes.ActualTable
 	}{
 		{
 			name:  "Select query with table alias",
 			query: `SELECT * FROM my_table AS t WHERE t.id = 1`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -50,7 +49,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -60,9 +59,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with table name",
 			query: `SELECT * FROM my_table WHERE id = 1`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -82,7 +81,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -92,9 +91,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with subquery",
 			query: "SELECT * FROM (SELECT * FROM my_table) AS t WHERE t.id = 1",
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -114,7 +113,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -124,9 +123,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries",
 			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 WHERE t2.id = 1`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -146,7 +145,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -156,9 +155,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and aliases",
 			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 WHERE t3.id = 1`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -178,7 +177,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -188,9 +187,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases",
 			query: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 JOIN my_table AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -210,7 +209,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -220,9 +219,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases",
 			query: `SELECT t1.id, t2.name FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -242,7 +241,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -252,9 +251,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -274,7 +273,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -283,9 +282,9 @@ func TestGetTableQueries(t *testing.T) {
 		}, {
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -305,7 +304,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -315,9 +314,9 @@ func TestGetTableQueries(t *testing.T) {
 		{
 			name:  "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query: `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2 LIMIT 10 OFFSET 5) AS t3 LIMIT 10 OFFSET 5) AS t4 JOIN my_table AS t5 ON t4.id = t5.id WHERE t4.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			logicTb: &tableindexes.LogicTableConfig{
+			logicTb: &vindexes.LogicTableConfig{
 				LogicTableName: "my_table",
-				ActualTableList: []tableindexes.ActualTable{
+				ActualTableList: []vindexes.ActualTable{
 					{
 						ActualTableName: "my_actual_table_1",
 					},
@@ -337,7 +336,7 @@ func TestGetTableQueries(t *testing.T) {
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
-			actualTableNameMap: map[string][]tableindexes.ActualTable{
+			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
 					{ActualTableName: "my_actual_table_1", Index: 0},
 					{ActualTableName: "my_actual_table_2", Index: 1},
@@ -460,9 +459,9 @@ func TestRewriteQuery(t *testing.T) {
 
 func TestTableRouteGetFields(t *testing.T) {
 
-	logicTable := tableindexes.LogicTableConfig{
+	logicTable := vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
-		ActualTableList: []tableindexes.ActualTable{
+		ActualTableList: []vindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_1",
 				Index:           0,
@@ -472,10 +471,10 @@ func TestTableRouteGetFields(t *testing.T) {
 				Index:           1,
 			},
 		},
-		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = &logicTable
 
 	routingParameters := &RoutingParameters{
@@ -543,9 +542,9 @@ func TestTableRouteGetFields(t *testing.T) {
 
 func TestTableRouteSelectScatter(t *testing.T) {
 
-	logicTable := &tableindexes.LogicTableConfig{
+	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
-		ActualTableList: []tableindexes.ActualTable{
+		ActualTableList: []vindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_1",
 				Index:           0,
@@ -556,10 +555,10 @@ func TestTableRouteSelectScatter(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 
 	routingParameters := &RoutingParameters{
@@ -616,9 +615,9 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
 
-	logicTable := &tableindexes.LogicTableConfig{
+	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
-		ActualTableList: []tableindexes.ActualTable{
+		ActualTableList: []vindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_1",
 				Index:           0,
@@ -629,10 +628,10 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 
 	routingParameters := &RoutingParameters{
@@ -697,9 +696,9 @@ func TestTableRouteSelectEqual(t *testing.T) {
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
 
-	logicTable := &tableindexes.LogicTableConfig{
+	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
-		ActualTableList: []tableindexes.ActualTable{
+		ActualTableList: []vindexes.ActualTable{
 			{
 				ActualTableName: "lkp" + "_1",
 				Index:           0,
@@ -710,10 +709,10 @@ func TestTableRouteSelectEqual(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*tableindexes.Column{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
 	}
 
-	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
 
 	routingParameters := &RoutingParameters{
@@ -761,7 +760,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 
 func TestSortTableList(t *testing.T) {
 
-	actualTableNameMap := map[string][]tableindexes.ActualTable{
+	actualTableNameMap := map[string][]vindexes.ActualTable{
 		"my_table": {{ActualTableName: "my_actual_table_1", Index: 1}, {ActualTableName: "my_actual_table_0", Index: 0}, {ActualTableName: "my_actual_table_3", Index: 3}},
 	}
 
@@ -780,7 +779,7 @@ func TestTableRouteSort(t *testing.T) {
 			Sharded: false,
 		},
 	}
-	tableIndexColumn := []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+	tableIndexColumn := []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
 	tableName := "t_user"
 	sel := newTestTableRoute(shardRouteParam, tableName, tableIndexColumn, Scatter)
 	sqlStmt, _, _ := sqlparser.Parse2("select id from t_user order by id")
@@ -848,7 +847,7 @@ func TestTableRouteSortTruncate(t *testing.T) {
 			Sharded: false,
 		},
 	}
-	tableIndexColumn := []*tableindexes.Column{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+	tableIndexColumn := []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
 	tableName := "t_user"
 	sel := newTestTableRoute(shardRouteParam, tableName, tableIndexColumn, Scatter)
 	sqlStmt, _, _ := sqlparser.Parse2("dummy_select")
@@ -891,11 +890,11 @@ func TestTableRouteSortTruncate(t *testing.T) {
 	expectResult(t, "sel.Execute", result, wantResult)
 }
 
-func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tableIndexColumn []*tableindexes.Column, tableOpcode Opcode) *TableRoute {
-	logicTableMap := make(map[string]*tableindexes.LogicTableConfig)
-	logicTable := tableindexes.LogicTableConfig{
+func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tableIndexColumn []*vindexes.TableColumn, tableOpcode Opcode) *TableRoute {
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
+	logicTable := vindexes.LogicTableConfig{
 		LogicTableName: tableName,
-		ActualTableList: []tableindexes.ActualTable{
+		ActualTableList: []vindexes.ActualTable{
 			{
 				ActualTableName: tableName + "_1",
 				Index:           0,

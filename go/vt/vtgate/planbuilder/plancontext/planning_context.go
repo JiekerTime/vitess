@@ -21,7 +21,7 @@ import (
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 type PlanningContext struct {
@@ -43,7 +43,7 @@ type PlanningContext struct {
 	ReservedArguments map[sqlparser.Expr]string
 
 	// save config of splitTable
-	SplitTableConfig tableindexes.SplitTableMap
+	SplitTableConfig vindexes.SplitTableMap
 
 	KsERoute engine.Route
 }
@@ -57,7 +57,7 @@ func NewPlanningContext(reservedVars *sqlparser.ReservedVars, semTable *semantic
 		SkipPredicates:    map[sqlparser.Expr]any{},
 		PlannerVersion:    version,
 		ReservedArguments: map[sqlparser.Expr]string{},
-		SplitTableConfig:  map[string]*tableindexes.LogicTableConfig{},
+		SplitTableConfig:  map[string]*vindexes.LogicTableConfig{},
 	}
 	return ctx
 }

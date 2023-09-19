@@ -28,8 +28,6 @@ import (
 	"strings"
 	"testing"
 
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
-
 	"github.com/nsf/jsondiff"
 	"github.com/stretchr/testify/require"
 
@@ -701,7 +699,7 @@ func (vw *vschemaWrapper) IsViewsEnabled() bool {
 	return vw.enableViews
 }
 
-func (vw *vschemaWrapper) FindSplitTable(_, tableName string) (*tableindexes.LogicTableConfig, error) {
+func (vw *vschemaWrapper) FindSplitTable(_, tableName string) (*vindexes.LogicTableConfig, error) {
 	return vw.v.FindSplitTable("user", tableName)
 }
 

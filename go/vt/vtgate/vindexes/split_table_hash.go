@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"vitess.io/vitess/go/sqltypes"
-	"vitess.io/vitess/go/vt/key"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 )
 
@@ -57,8 +56,8 @@ func (m *SplitTableHash) NeedsVCursor() bool {
 }
 
 // Map can map ids to key.Destination objects.
-func (m *SplitTableHash) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]key.TableDestination, error) {
-	out := make([]key.TableDestination, len(ids))
+func (m *SplitTableHash) Map(ctx context.Context, vcursor VCursor, ids []sqltypes.Value) ([]TableDestination, error) {
+	out := make([]TableDestination, len(ids))
 	for i, id := range ids {
 		var num uint64
 		var err error
@@ -78,13 +77,13 @@ func (m *SplitTableHash) Map(ctx context.Context, vcursor VCursor, ids []sqltype
 			h64 := New64()
 			_, err = h64.Write([]byte(strings.ToLower(strings.TrimSpace(string(id.Raw())))))
 			if err != nil {
-				out[i] = key.TableDestinationNone{}
+				out[i] = TableDestinationNone{}
 				continue
 			}
 			num = h64.Sum64()
 		}
 
-		out[i] = key.TableDestinationKeyspaceID(vhash(num))
+		out[i] = TableDestinationKeyspaceID(vhash(num))
 	}
 	return out, nil
 }

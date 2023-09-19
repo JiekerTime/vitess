@@ -6,7 +6,7 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/tableindexes"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 var _ logicalPlan = (*tableRoute)(nil)
@@ -26,7 +26,7 @@ func (t *tableRoute) WireupGen4(context *plancontext.PlanningContext) error {
 	t.eroute.Query = t.Select
 	nodeClone, _ := sqlparser.DeepCloneStatement(t.Select).(*sqlparser.Select)
 	logicTable := t.eroute.TableRouteParam.LogicTable
-	tableMap := tableindexes.GetFirstActualTableMap(logicTable)
+	tableMap := vindexes.GetFirstActualTableMap(logicTable)
 	sqlparser.RewirteSplitTableName(nodeClone, tableMap)
 	buffer := sqlparser.NewTrackedBuffer(sqlparser.FormatImpossibleQuery)
 	node := buffer.WriteNode(nodeClone)
