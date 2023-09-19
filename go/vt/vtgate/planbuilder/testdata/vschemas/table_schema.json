@@ -174,14 +174,6 @@
             {
               "column": "Id",
               "name": "user_index"
-            },
-            {
-              "column": "Name",
-              "name": "name_user_map"
-            },
-            {
-              "column": "Costly",
-              "name": "costly_map"
             }
           ],
           "auto_increment": {
