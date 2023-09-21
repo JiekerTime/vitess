@@ -2,12 +2,13 @@ package planbuilder
 
 import (
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
 )
 
-func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
+func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 ) (ksAndTablePlan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
 	// get split table metadata
 	found := findLogicTableConfig(ctx, ksPlan.Primitive().GetTableName())
@@ -21,13 +22,22 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
 			ctx.KsERoute = *node.eroute
-			tablePlan, err := doBuildTableSelectPlan(ctx, node.Select)
+			tablePlan, err := doBuildTablePlan(ctx, node.Select)
 			if err != nil {
 				return false, nil, err
 			}
 			return true, tablePlan, nil
+		case *primitiveWrapper:
+			switch prim := node.Primitive().(type) {
+			case *engine.Delete:
+				ctx.DMLEngine = *prim.DML
+				deleteTablePlan, err := doBuildTablePlan(ctx, prim.AST)
+				if err != nil {
+					return false, nil, err
+				}
+				return true, deleteTablePlan, nil
+			}
 		}
-
 		return true, logicalPlan, nil
 	})
 	if err != nil {
@@ -37,8 +47,8 @@ func buildTableSelectPlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	return ksAndTablePlan, semTable, nil, nil
 }
 
-func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.SelectStatement) (tablePlan logicalPlan, err error) {
-	tableOperator, err := operators.TablePlanQuery(ctx, Select)
+func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) (tablePlan logicalPlan, err error) {
+	tableOperator, err := operators.TablePlanQuery(ctx, stmt)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +57,8 @@ func doBuildTableSelectPlan(ctx *plancontext.PlanningContext, Select sqlparser.S
 		return nil, err
 	}
 
-	err = tablePlan.WireupGen4(ctx)
-	if err != nil {
-		return tablePlan, err
+	if err = tablePlan.WireupGen4(ctx); err != nil {
+		return nil, err
 	}
 	return tablePlan, nil
 }

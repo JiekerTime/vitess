@@ -38,12 +38,12 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 
 	TableRouteParam := &TableRoutingParameters{
-		Opcode:     Equal,
-		LogicTable: logicTableMap,
-		Values: []evalengine.Expr{
+		TableOpcode: Equal,
+		LogicTable:  logicTableMap,
+		TableValues: []evalengine.Expr{
 			evalengine.NewLiteralInt(1),
 		},
-		Vindex: vindex.(vindexes.TableSingleColumn),
+		TableVindex: vindex.(vindexes.TableSingleColumn),
 	}
 
 	wantResult := map[string][]vindexes.ActualTable{
@@ -51,7 +51,7 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 	}
 
 	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
-	result, err := TableRouteParam.findRoute(context.Background(), vc, map[string]*querypb.BindVariable{})
+	result, err := TableRouteParam.findTableRoute(context.Background(), vc, map[string]*querypb.BindVariable{})
 	require.NoError(t, err)
 	if !reflect.DeepEqual(result, wantResult) {
 		t.Errorf("find table routing error")

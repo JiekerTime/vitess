@@ -13,6 +13,10 @@ import (
 )
 
 func tryHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root ops.Operator) (output ops.Operator, err error) {
+	if _, ok := root.(*Horizon); !ok {
+		return root, nil
+	}
+
 	output, err = planHorizonsForSplitTable(ctx, root)
 	if err != nil {
 		return nil, err

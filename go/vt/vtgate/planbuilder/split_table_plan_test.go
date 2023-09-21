@@ -24,13 +24,13 @@ func TestSplitTablePlan(t *testing.T) {
 	}
 	output := makeTestOutput(t)
 	testTableFile(t, "table_select_case.json", output, vschema, false)
+	testTableFile(t, "table_dml_cases.json", output, vschema, false)
 	testTableFile(t, "table_filter_cases.json", output, vschema, false)
 	testTableFile(t, "table_postprocess_cases.json", output, vschema, false)
 	testTableFile(t, "table_aggr_cases.json", output, vschema, false)
 }
 
 func TestSplitTableOne(t *testing.T) {
-	t.Skip()
 	oprewriters.DebugOperatorTree = true
 	vschema := &vschemaWrapper{
 		v:             loadSchema(t, "vschemas/table_schema.json", true),

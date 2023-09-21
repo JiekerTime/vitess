@@ -501,9 +501,9 @@ func TestTableRouteGetFields(t *testing.T) {
 		FieldQuery:      "select f1, f2 from lkp",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     Scatter,
-			LogicTable: logicTableMap,
-			Values:     Values,
+			TableOpcode: Scatter,
+			LogicTable:  logicTableMap,
+			TableValues: Values,
 		},
 	}
 
@@ -579,12 +579,12 @@ func TestTableRouteSelectScatter(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     Scatter,
-			LogicTable: logicTableMap,
-			Values: []evalengine.Expr{
+			TableOpcode: Scatter,
+			LogicTable:  logicTableMap,
+			TableValues: []evalengine.Expr{
 				evalengine.NewLiteralInt(1),
 			},
-			Vindex: vindex.(vindexes.TableSingleColumn),
+			TableVindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
@@ -656,12 +656,12 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     EqualUnique,
-			LogicTable: logicTableMap,
-			Values: []evalengine.Expr{
+			TableOpcode: EqualUnique,
+			LogicTable:  logicTableMap,
+			TableValues: []evalengine.Expr{
 				evalengine.NewLiteralInt(1),
 			},
-			Vindex: vindex.(vindexes.TableSingleColumn),
+			TableVindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
@@ -737,12 +737,12 @@ func TestTableRouteSelectEqual(t *testing.T) {
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     Equal,
-			LogicTable: logicTableMap,
-			Values: []evalengine.Expr{
+			TableOpcode: Equal,
+			LogicTable:  logicTableMap,
+			TableValues: []evalengine.Expr{
 				evalengine.NewLiteralInt(1),
 			},
-			Vindex: vindex.(vindexes.TableSingleColumn),
+			TableVindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
@@ -912,8 +912,8 @@ func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tab
 		TableName:       tableName,
 		ShardRouteParam: shardRouteParam,
 		TableRouteParam: &TableRoutingParameters{
-			Opcode:     tableOpcode,
-			LogicTable: logicTableMap,
+			TableOpcode: tableOpcode,
+			LogicTable:  logicTableMap,
 		},
 	}
 }

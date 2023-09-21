@@ -6,32 +6,30 @@ import (
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
-
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 type TableRoutingParameters struct {
-	// Opcode is the execution opcode.
-	Opcode Opcode
+	// TableOpcode is the execution opcode.
+	TableOpcode Opcode
+
+	// TableValues specifies the vindex values to use for routing.
+	TableValues []evalengine.Expr
 
 	LogicTable vindexes.SplitTableMap
 
-	// Values specifies the vindex values to use for routing.
-	Values []evalengine.Expr
-
-	Vindex vindexes.Vindex
+	TableVindex vindexes.Vindex
 }
 
 type LogicTableName string
 
-func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string][]vindexes.ActualTable, err error) {
-
+func (rp *TableRoutingParameters) findTableRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string][]vindexes.ActualTable, err error) {
 	logicTableMap = make(map[string][]vindexes.ActualTable)
 
 	for logicTable := range rp.LogicTable {
-		switch rp.Opcode {
+		switch rp.TableOpcode {
 		case None:
 			return nil, nil
 		case DBA:
@@ -54,7 +52,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 			//	return nil, err
 			//}
 		case Equal, EqualUnique, SubShard:
-			switch rp.Vindex.(type) {
+			switch rp.TableVindex.(type) {
 			//case vindexes.MultiColumn:
 			//	return rp.equalMultiCol(ctx, vcursor, bindVars)
 			default:
@@ -64,7 +62,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 				}
 			}
 		case IN:
-			switch rp.Vindex.(type) {
+			switch rp.TableVindex.(type) {
 			//case vindexes.MultiColumn:
 			//	return rp.inMultiCol(ctx, vcursor, bindVars)
 			default:
@@ -74,7 +72,7 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 				}
 			}
 		case MultiEqual:
-			switch rp.Vindex.(type) {
+			switch rp.TableVindex.(type) {
 			//case vindexes.MultiColumn:
 			//	return rp.multiEqualMultiCol(ctx, vcursor, bindVars)
 			default:
@@ -85,9 +83,8 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 			}
 		default:
 			// Unreachable.
-			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.Opcode)
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported opcode: %v", rp.TableOpcode)
 		}
-
 	}
 	return logicTableMap, nil
 
@@ -95,11 +92,11 @@ func (rp *TableRoutingParameters) findRoute(ctx context.Context, vcursor VCursor
 
 func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]vindexes.ActualTable, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
-	value, err := env.Evaluate(rp.Values[0])
+	value, err := env.Evaluate(rp.TableValues[0])
 	if err != nil {
 		return nil, err
 	}
-	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.Vindex.(vindexes.TableSingleColumn), tableName, []sqltypes.Value{value.Value(vcursor.ConnCollation())})
+	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.TableVindex.(vindexes.TableSingleColumn), tableName, []sqltypes.Value{value.Value(vcursor.ConnCollation())})
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +105,11 @@ func (rp *TableRoutingParameters) equal(ctx context.Context, vcursor VCursor, bi
 
 func (rp *TableRoutingParameters) multiEqual(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]vindexes.ActualTable, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
-	value, err := env.Evaluate(rp.Values[0])
+	value, err := env.Evaluate(rp.TableValues[0])
 	if err != nil {
 		return nil, err
 	}
-	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.Vindex.(vindexes.TableSingleColumn), tableName, value.TupleValues())
+	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.TableVindex.(vindexes.TableSingleColumn), tableName, value.TupleValues())
 	if err != nil {
 		return nil, err
 	}
@@ -135,12 +132,12 @@ func (rp *TableRoutingParameters) anyTable(ctx context.Context, vcursor VCursor,
 
 func (rp *TableRoutingParameters) in(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, tableName string) ([]vindexes.ActualTable, error) {
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
-	value, err := env.Evaluate(rp.Values[0])
+	value, err := env.Evaluate(rp.TableValues[0])
 	if err != nil {
 		return nil, err
 	}
 
-	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.Vindex.(vindexes.TableSingleColumn), tableName, value.TupleValues())
+	actualTableName, err := rp.resolveTables(ctx, vcursor, rp.TableVindex.(vindexes.TableSingleColumn), tableName, value.TupleValues())
 	if err != nil {
 		return nil, err
 	}
@@ -186,5 +183,12 @@ func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCu
 	}
 
 	return tables, nil
+}
 
+func (rp *TableRoutingParameters) IsSingleTable() bool {
+	switch rp.TableOpcode {
+	case EqualUnique:
+		return true
+	}
+	return false
 }

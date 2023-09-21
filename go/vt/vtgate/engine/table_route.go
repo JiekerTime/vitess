@@ -52,7 +52,7 @@ type TableRoute struct {
 }
 
 func (tableRoute *TableRoute) RouteType() string {
-	return tableRoute.TableRouteParam.Opcode.String()
+	return tableRoute.TableRouteParam.TableOpcode.String()
 }
 
 func (tableRoute *TableRoute) GetKeyspaceName() string {
@@ -127,7 +127,7 @@ func (tableRoute *TableRoute) executeInternal(
 	}
 
 	//1. 计算分表
-	actualTableMap, err := tableRoute.TableRouteParam.findRoute(ctx, vcursor, bindVars)
+	actualTableMap, err := tableRoute.TableRouteParam.findTableRoute(ctx, vcursor, bindVars)
 	if err != nil {
 		return nil, err
 	}
@@ -283,9 +283,9 @@ func (tableRoute *TableRoute) description() PrimitiveDescription {
 		}
 		other["Values"] = formattedValues
 	}
-	if tableRoute.TableRouteParam.Values != nil {
-		formattedValues := make([]string, 0, len(tableRoute.TableRouteParam.Values))
-		for _, value := range tableRoute.TableRouteParam.Values {
+	if tableRoute.TableRouteParam.TableValues != nil {
+		formattedValues := make([]string, 0, len(tableRoute.TableRouteParam.TableValues))
+		for _, value := range tableRoute.TableRouteParam.TableValues {
 			formattedValues = append(formattedValues, evalengine.FormatExpr(value))
 		}
 		other["TableValues"] = formattedValues
@@ -325,7 +325,7 @@ func (tableRoute *TableRoute) description() PrimitiveDescription {
 		}*/
 	return PrimitiveDescription{
 		OperatorType:      "TableRoute",
-		Variant:           tableRoute.ShardRouteParam.Opcode.String() + "-" + tableRoute.TableRouteParam.Opcode.String(),
+		Variant:           tableRoute.ShardRouteParam.Opcode.String() + "-" + tableRoute.TableRouteParam.TableOpcode.String(),
 		Keyspace:          tableRoute.ShardRouteParam.Keyspace,
 		TargetDestination: tableRoute.ShardRouteParam.TargetDestination,
 		Other:             other,

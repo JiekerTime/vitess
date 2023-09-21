@@ -150,7 +150,7 @@ func (tr *ShardedRouting) UpdateRoutingParams(_ *plancontext.PlanningContext, rp
 
 func (tr *ShardedRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
 	if tr.Selected != nil {
-		rp.Values = tr.Selected.Values
+		rp.TableValues = tr.Selected.Values
 	}
 	return nil
 }

@@ -106,6 +106,10 @@ func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *oper
 }
 
 func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute) (logicalPlan, error) {
+	switch src := op.Source.(type) {
+	case *operators.Delete:
+		return transformTableDeletePlan(ctx, op, src)
+	}
 	sel, err := operators.ToSQL(ctx, op.Source)
 	if err != nil {
 		return nil, err
@@ -137,6 +141,28 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 		Select: sel,
 		eroute: eroute,
 	}, nil
+}
+
+func transformTableDeletePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute, del *operators.Delete) (logicalPlan, error) {
+	ast := del.AST
+	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
+	if err := op.Routing.UpdateTableRoutingParams(ctx, rp); err != nil {
+		return nil, err
+	}
+
+	edml := &engine.TableDML{
+		AST:             ast,
+		KsidVindex:      ctx.DMLEngine.KsidVindex,
+		KsidLength:      ctx.DMLEngine.KsidLength,
+		Table:           ctx.DMLEngine.Table,
+		ShardRouteParam: ctx.DMLEngine.RoutingParameters,
+		TableRouteParam: rp,
+	}
+
+	e := &engine.TableDelete{
+		TableDML: edml,
+	}
+	return &primitiveWrapper{prim: e}, nil
 }
 
 func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *operators.Aggregator) (logicalPlan, error) {
@@ -194,13 +220,12 @@ func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *
 		ShardRouteParam: shardRouteParam,
 		TableRouteParam: rp,
 	}, nil
-
 }
 
 func newTableRoutingParams(ctx *plancontext.PlanningContext, opCode engine.Opcode) *engine.TableRoutingParameters {
 	return &engine.TableRoutingParameters{
-		Opcode:     opCode,
-		LogicTable: ctx.SplitTableConfig,
+		TableOpcode: opCode,
+		LogicTable:  ctx.SplitTableConfig,
 	}
 }
 

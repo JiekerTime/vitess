@@ -378,7 +378,7 @@ func (tableRouting *TableShardedRouting) tryImprove(ctx *plancontext.PlanningCon
 
 func (tableRouting *TableShardedRouting) UpdateTableRoutingParams(_ *plancontext.PlanningContext, rp *engine.TableRoutingParameters) error {
 	if tableRouting.Selected != nil {
-		rp.Values = tableRouting.Selected.Values
+		rp.TableValues = tableRouting.Selected.Values
 	}
 	return nil
 }

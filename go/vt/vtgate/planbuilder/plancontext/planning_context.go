@@ -46,6 +46,9 @@ type PlanningContext struct {
 	SplitTableConfig vindexes.SplitTableMap
 
 	KsERoute engine.Route
+
+	// FIXME! abstract engine interface
+	DMLEngine engine.DML
 }
 
 func NewPlanningContext(reservedVars *sqlparser.ReservedVars, semTable *semantics.SemTable, vschema VSchema, version querypb.ExecuteOptions_PlannerVersion) *PlanningContext {

@@ -233,7 +233,7 @@ func newBuildSelectPlan(
 	plan = pushCommentDirectivesOnPlan(plan, selStmt)
 
 	// todo: build split table plan
-	plan, _, _, err = buildTableSelectPlan(ctx, plan)
+	plan, _, _, err = buildTablePlan(ctx, plan)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -423,6 +423,12 @@ func gen4DeleteStmtPlanner(
 	setLockOnAllSelect(plan)
 
 	if err := plan.WireupGen4(ctx); err != nil {
+		return nil, err
+	}
+
+	// todo: build split table plan
+	plan, _, _, err = buildTablePlan(ctx, plan)
+	if err != nil {
 		return nil, err
 	}
 

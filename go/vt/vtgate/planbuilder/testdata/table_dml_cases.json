@@ -1,0 +1,342 @@
+[
+  {
+    "comment": "delete from user without a where clause",
+    "query": "delete from t_user",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete with binary value",
+    "query": "delete from t_user where name = _binary 'abc'",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where name = _binary 'abc'",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where `name` = _binary 'abc'",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete from where",
+    "query": "delete from t_user where id = 1",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where id = 1",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete from where",
+    "query": "delete from t_user where col = 1",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where col = 1",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where col = 1",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "QueryType": "DELETE",
+    "Original": "delete from t_user where id = 5 and col = 6",
+    "Instructions": {
+      "OperatorType": "TableDelete",
+      "Variant": "EqualUnique-EqualUnique",
+      "Keyspace": {
+        "Name": "user",
+        "Sharded": true
+      },
+      "TargetTabletType": "PRIMARY",
+      "Queries": "delete from t_user where id = 5 and col = 6",
+      "Table": "t_user",
+      "TableValues": [
+        "INT64(6)"
+      ],
+      "Values": [
+        "INT64(5)"
+      ],
+      "Vindex": "user_index"
+    },
+    "TablesUsed": [
+      "user.t_user"
+    ]
+  },
+  {
+    "comment": "delete from t_user by primary keyspace id with in clause",
+    "query": "delete from t_user where id in (1, 2, 3)",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where id in (1, 2, 3)",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where id in (1, 2, 3)",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(1), INT64(2), INT64(3))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete from t_user with split table key",
+    "query": "delete from t_user where col in (1, 2, 3)",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where col in (1, 2, 3)",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-IN",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where col in (1, 2, 3)",
+        "Table": "t_user",
+        "TableValues": [
+          "(INT64(1), INT64(2), INT64(3))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete from t_user by complex expression",
+    "query": "delete from t_user where id + 1 = 2",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where id + 1 = 2",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where id + 1 = 2",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "multi-table delete with single table",
+    "query": "delete u.* from t_user u where u.id * u.col = u.foo",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete u.* from t_user u where u.id * u.col = u.foo",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where t_user.id * t_user.col = t_user.foo",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete with alias table",
+    "query": "delete from t_user u where u.col > 20",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user u where u.col > 20",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user as u where u.col > 20",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete from where multi in",
+    "query": "delete from t_user where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-MultiEqual",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where (`name`, col) in (('aa', 'bb'), ('cc', 'dd'))",
+        "Table": "t_user",
+        "TableValues": [
+          "(VARCHAR(\"bb\"), VARCHAR(\"dd\"))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete with non-comparison expr",
+    "query": "delete from t_user where id between 1 and 2",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where id between 1 and 2",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where id between 1 and 2",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete from with no index match",
+    "query": "delete from t_user where name = 'jose'",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where name = 'jose'",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where `name` = 'jose'",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "delete limit with shard key",
+    "query": "delete from t_user where id=5 limit 5",
+    "plan": "VT12001: unsupported: multi split tables DELETE with LIMIT"
+  },
+  {
+    "comment": "delete limit with shard key and split table key",
+    "query": "delete from t_user where id=5 and col=6 limit 7",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_user where id=5 and col=6 limit 7",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete from t_user where id = 5 and col = 6 limit 7",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(6)"
+        ],
+        "Values": [
+          "INT64(5)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

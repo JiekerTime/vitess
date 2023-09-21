@@ -6,6 +6,7 @@ import (
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -35,6 +36,8 @@ func createLogicalOperatorFromASTForSplitTable(ctx *plancontext.PlanningContext,
 	switch node := selStmt.(type) {
 	case *sqlparser.Select:
 		op, err = createOperatorFromSelectForSplitTable(ctx, node)
+	case *sqlparser.Delete:
+		op, err = createOperatorFromDeleteForSplitTable(ctx, node)
 	default:
 		err = vterrors.VT12001(fmt.Sprintf("operator: %T", selStmt))
 	}
@@ -64,6 +67,49 @@ func createOperatorFromSelectForSplitTable(ctx *plancontext.PlanningContext, sel
 		Source: op,
 		Select: sel,
 	}, nil
+}
+
+func createOperatorFromDeleteForSplitTable(ctx *plancontext.PlanningContext, deleteStmt *sqlparser.Delete) (ops.Operator, error) {
+	_, qt, err := createQueryTableForDML(ctx, deleteStmt.TableExprs[0], deleteStmt.Where)
+	if err != nil {
+		return nil, err
+	}
+
+	tableName := deleteStmt.TableExprs[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName)
+	if err != nil {
+		return nil, err
+	}
+	vschemaTable, _, _, _, _, err := ctx.VSchema.FindTableOrVindex(tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	logicTableConfig := ctx.SplitTableConfig[tableName.Name.String()]
+	solves := ctx.SemTable.TableSetFor(qt.Alias)
+	routing := newTableShardedRouting(vschemaTable, logicTableConfig, solves)
+
+	for _, predicate := range qt.Predicates {
+		routing, err = UpdateRoutingLogic(ctx, predicate, routing)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if routing.OpCode() == engine.Scatter && deleteStmt.Limit != nil {
+		return nil, vterrors.VT12001("multi split tables DELETE with LIMIT")
+	}
+
+	tableDelete := &Delete{
+		QTable: qt,
+		VTable: nil,
+		AST:    deleteStmt,
+	}
+	tableRoute := &TableRoute{
+		Source:  tableDelete,
+		Routing: routing,
+	}
+
+	return tableRoute, nil
 }
 
 func crossJoinForSplitTable(ctx *plancontext.PlanningContext, exprs sqlparser.TableExprs) (ops.Operator, error) {
