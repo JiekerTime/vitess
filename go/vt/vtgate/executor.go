@@ -1725,3 +1725,8 @@ func (e *Executor) handleLoadData(ctx context.Context, safeSession *SafeSession,
 	err = e.scatterConn.txConn.Commit(ctx, safeSession)
 	return result, err
 }
+
+// ExecuteBatchMultiShard executing a batch of SQL statements on each shard
+func (e *Executor) ExecuteBatchMultiShard(ctx context.Context, primitive engine.Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, session *SafeSession, autocommit bool, ignoreMaxMemoryRows bool) (qr *sqltypes.Result, errs []error) {
+	return e.scatterConn.ExecuteBatchMultiShard(ctx, primitive, rss, queries, session, autocommit, ignoreMaxMemoryRows)
+}

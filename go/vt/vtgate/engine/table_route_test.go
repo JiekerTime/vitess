@@ -541,7 +541,7 @@ func TestTableRouteGetFields(t *testing.T) {
 }
 
 func TestTableRouteSelectScatter(t *testing.T) {
-
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -556,6 +556,7 @@ func TestTableRouteSelectScatter(t *testing.T) {
 		},
 		TableCount:       2,
 		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableVindex:      vindex,
 	}
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
@@ -571,8 +572,6 @@ func TestTableRouteSelectScatter(t *testing.T) {
 
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
-
 	TableRoute := TableRoute{
 		TableName:       "lkp",
 		Query:           statement,
@@ -584,7 +583,6 @@ func TestTableRouteSelectScatter(t *testing.T) {
 			TableValues: []evalengine.Expr{
 				evalengine.NewLiteralInt(1),
 			},
-			TableVindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
@@ -593,8 +591,8 @@ func TestTableRouteSelectScatter(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
-		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
-		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
@@ -614,7 +612,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 	)
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
-
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -629,6 +627,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 		},
 		TableCount:       2,
 		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableVindex:      vindex,
 	}
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
@@ -648,8 +647,6 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
-
 	TableRoute := TableRoute{
 		TableName:       "lkp",
 		Query:           statement,
@@ -661,7 +658,6 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 			TableValues: []evalengine.Expr{
 				evalengine.NewLiteralInt(1),
 			},
-			TableVindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
@@ -670,7 +666,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6)`,
-		`ExecuteMultiShard ks.-20: select f1, f2 from lkp_1 {} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
@@ -696,6 +692,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
 
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -710,6 +707,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 		},
 		TableCount:       2,
 		TableIndexColumn: []*vindexes.TableColumn{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
+		TableVindex:      vindex,
 	}
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
@@ -729,8 +727,6 @@ func TestTableRouteSelectEqual(t *testing.T) {
 
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
-
 	TableRoute := TableRoute{
 		TableName:       "lkp",
 		Query:           statement,
@@ -742,20 +738,40 @@ func TestTableRouteSelectEqual(t *testing.T) {
 			TableValues: []evalengine.Expr{
 				evalengine.NewLiteralInt(1),
 			},
-			TableVindex: vindex.(vindexes.TableSingleColumn),
 		},
 	}
 
-	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
+	wantResult := sqltypes.MakeTestResult(
+		sqltypes.MakeTestFieldsWithTableName(
+			"id",
+			"int64",
+			"lkp",
+		),
+		"1",
+	)
+
+	vc := &loggingVCursor{
+		shards: []string{"-20", "20-"},
+		results: []*sqltypes.Result{
+			sqltypes.MakeTestResult(
+				sqltypes.MakeTestFields(
+					"fromc|toc",
+					"int64|varbinary",
+				),
+				"1|\x00",
+				"1|\x80",
+			),
+			wantResult,
+		},
+	}
 	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`Execute select from, toc from lkp where from in ::from from: type:TUPLE values:{type:INT64 value:"1"} false`,
-		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationNone()`,
-		`ExecuteMultiShard false false`,
+		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceIDs(00,80)`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
 	})
-	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
-
+	expectResult(t, "sel.Execute", result, wantResult)
 }
 
 func TestSortTableList(t *testing.T) {

@@ -6,16 +6,15 @@ import (
 	"sort"
 	"strings"
 
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
-
-	"vitess.io/vitess/go/vt/srvtopo"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-
+	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 var _ Primitive = (*TableRoute)(nil)
@@ -125,6 +124,13 @@ func (tableRoute *TableRoute) executeInternal(
 	if err != nil {
 		return nil, err
 	}
+	// No route.
+	if len(rss) == 0 {
+		if wantfields {
+			return tableRoute.GetFields(ctx, vcursor, bindVars)
+		}
+		return &sqltypes.Result{}, nil
+	}
 
 	//1. 计算分表
 	actualTableMap, err := tableRoute.TableRouteParam.findTableRoute(ctx, vcursor, bindVars)
@@ -167,19 +173,23 @@ func (tableRoute *TableRoute) executeShards(
 		return nil, err
 	}
 
-	result := &sqltypes.Result{}
-	for _, query := range queries {
-		rssQueries := make([]*querypb.BoundQuery, 0, len(rss))
-		for range rss {
-			rssQueries = append(rssQueries, query)
-		}
+	querieses := make([][]*querypb.BoundQuery, len(rss))
+	for j := range rss {
+		querieses[j] = queries
+	}
+	result, errs := vcursor.ExecuteBatchMultiShard(ctx, tableRoute, rss, querieses, false /* rollbackOnError */, false /* canAutocommit */)
 
-		// 3.执行SQL
-		innerResult, errs := vcursor.ExecuteMultiShard(ctx, tableRoute, rss, rssQueries, false /* rollbackOnError */, false /* canAutocommit */)
-		if errs != nil {
-			return nil, errs[0]
+	if errs != nil {
+		errs = filterOutNilErrors(errs)
+		if len(errs) == len(rss) {
+			return nil, vterrors.Aggregate(errs)
 		}
-		result.AppendResult(innerResult)
+		partialSuccessScatterQueries.Add(1)
+
+		for _, err := range errs {
+			serr := mysql.NewSQLErrorFromError(err).(*mysql.SQLError)
+			vcursor.Session().RecordWarning(&querypb.QueryWarning{Code: uint32(serr.Num), Message: err.Error()})
+		}
 	}
 
 	for _, field := range result.Fields {

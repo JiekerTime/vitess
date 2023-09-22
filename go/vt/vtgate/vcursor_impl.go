@@ -82,6 +82,7 @@ type iExecute interface {
 	ParseDestinationTarget(targetString string) (string, topodatapb.TabletType, key.Destination, error)
 	VSchema() *vindexes.VSchema
 	planPrepareStmt(ctx context.Context, vcursor *vcursorImpl, query string) (*engine.Plan, sqlparser.Statement, error)
+	ExecuteBatchMultiShard(ctx context.Context, primitive engine.Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, session *SafeSession, autocommit bool, ignoreMaxMemoryRows bool) (qr *sqltypes.Result, errs []error)
 }
 
 // VSchemaOperator is an interface to Vschema Operations
@@ -1190,4 +1191,19 @@ func (vc *vcursorImpl) GetPrepareData(stmtName string) *vtgatepb.PrepareData {
 
 func (vc *vcursorImpl) FindSplitTable(keyspace, tableName string) (*vindexes.LogicTableConfig, error) {
 	return vc.vschema.FindSplitTable(keyspace, tableName)
+}
+
+// ExecuteBatchMultiShard executing a batch of SQL statements on each shard
+func (vc *vcursorImpl) ExecuteBatchMultiShard(ctx context.Context, primitive engine.Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error) {
+	noOfShards := len(rss)
+	atomic.AddUint64(&vc.logStats.ShardQueries, uint64(noOfShards))
+	err := vc.markSavepoint(ctx, rollbackOnError && (noOfShards > 1), map[string]*querypb.BindVariable{})
+	if err != nil {
+		return nil, []error{err}
+	}
+
+	qr, errs := vc.executor.ExecuteBatchMultiShard(ctx, primitive, rss, queries, vc.safeSession, canAutocommit, vc.ignoreMaxMemoryRows)
+	vc.setRollbackOnPartialExecIfRequired(len(errs) != len(rss), rollbackOnError)
+
+	return qr, errs
 }

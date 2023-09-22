@@ -336,6 +336,10 @@ func (t *noopVCursor) GetDBDDLPluginName() string {
 	panic("unimplemented")
 }
 
+func (f *noopVCursor) ExecuteBatchMultiShard(ctx context.Context, primitive Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error) {
+	panic("unimplemented")
+}
+
 var _ VCursor = (*loggingVCursor)(nil)
 var _ SessionActions = (*loggingVCursor)(nil)
 
@@ -793,4 +797,30 @@ func printResolvedShardsBindVars(rss []*srvtopo.ResolvedShard, bvs []map[string]
 		fmt.Fprintf(buf, "%s.%s: {%v} ", rs.Target.Keyspace, rs.Target.Shard, printBindVars(bvs[i]))
 	}
 	return buf.String()
+}
+
+func (f *loggingVCursor) ExecuteBatchMultiShard(_ context.Context, _ Primitive, rss []*srvtopo.ResolvedShard, querieses [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error) {
+	rows := len(querieses)
+	var cols int
+	for _, queries := range querieses {
+		if len(queries) > cols {
+			cols = len(queries)
+		}
+	}
+	for i := 0; i < cols; i++ {
+		executeQueries := make([]*querypb.BoundQuery, 0)
+		executeRss := make([]*srvtopo.ResolvedShard, 0)
+		for j := 0; j < rows; j++ {
+			if i < len(querieses[j]) {
+				executeRss = append(executeRss, rss[j])
+				executeQueries = append(executeQueries, querieses[j][i])
+			}
+		}
+		f.log = append(f.log, fmt.Sprintf("ExecuteBatchMultiShard %v%v %v", printResolvedShardQueries(executeRss, executeQueries), rollbackOnError, canAutocommit))
+	}
+	res, err := f.nextResult()
+	if err != nil {
+		return nil, []error{err}
+	}
+	return res, f.multiShardErrs
 }

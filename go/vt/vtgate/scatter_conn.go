@@ -917,3 +917,46 @@ func transactionInfo(
 
 	return true, 0
 }
+
+// ExecuteBatchMultiShard is similar to ExecuteMultiShard,
+// with the difference that ExecuteBatchMultiShard internally invokes the BatchExecute method of VTTablet.
+// It allows executing a batch of SQL statements on each shard.
+//
+// querieses[i] represents the i-th element in the first layer, corresponding to rss[i].
+// querieses[i][j] represents the j-th element in the second layer, corresponding to the j-th *querypb.BoundQuery associated with rss[i].
+// querieses[i] 表示第一层中的第 i 个元素，对应于 rss[i]。
+// querieses[i][j] 表示第二层中的第 j 个元素，对应于 rss[i] 的第 j 个 *querypb.BoundQuery。
+func (stc *ScatterConn) ExecuteBatchMultiShard(
+	ctx context.Context,
+	primitive engine.Primitive,
+	rss []*srvtopo.ResolvedShard,
+	querieses [][]*querypb.BoundQuery,
+	session *SafeSession,
+	autocommit bool,
+	ignoreMaxMemoryRows bool,
+) (qr *sqltypes.Result, errs []error) {
+	rows := len(querieses)
+	var cols int
+	for _, queries := range querieses {
+		if len(queries) > cols {
+			cols = len(queries)
+		}
+	}
+	result := &sqltypes.Result{}
+	for i := 0; i < cols; i++ {
+		executeQueries := make([]*querypb.BoundQuery, 0)
+		executeRss := make([]*srvtopo.ResolvedShard, 0)
+		for j := 0; j < rows; j++ {
+			if i < len(querieses[j]) {
+				executeRss = append(executeRss, rss[j])
+				executeQueries = append(executeQueries, querieses[j][i])
+			}
+		}
+		multiShard, errors := stc.ExecuteMultiShard(ctx, primitive, executeRss, executeQueries, session, autocommit, ignoreMaxMemoryRows)
+		if errors != nil {
+			return nil, errors
+		}
+		result.AppendResult(multiShard)
+	}
+	return result, nil
+}

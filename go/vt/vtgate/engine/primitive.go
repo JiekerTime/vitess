@@ -117,6 +117,9 @@ type (
 
 		// ReleaseLock releases all the held advisory locks.
 		ReleaseLock(ctx context.Context) error
+
+		// ExecuteBatchMultiShard executing a batch of SQL statements on each shard
+		ExecuteBatchMultiShard(ctx context.Context, primitive Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error)
 	}
 
 	// SessionActions gives primitives ability to interact with the session state

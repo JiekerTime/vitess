@@ -15,7 +15,7 @@ import (
 )
 
 func TestFindTableRouteSelectEqual(t *testing.T) {
-
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -30,12 +30,11 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 		},
 		TableCount:       2,
 		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableVindex:      vindex,
 	}
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTableMap[logicTable.LogicTableName] = logicTable
-
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 
 	TableRouteParam := &TableRoutingParameters{
 		TableOpcode: Equal,
@@ -43,7 +42,6 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 		TableValues: []evalengine.Expr{
 			evalengine.NewLiteralInt(1),
 		},
-		TableVindex: vindex.(vindexes.TableSingleColumn),
 	}
 
 	wantResult := map[string][]vindexes.ActualTable{

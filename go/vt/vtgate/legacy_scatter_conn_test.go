@@ -590,3 +590,132 @@ func newTestScatterConn(hc discovery.HealthCheck, serv srvtopo.Server, cell stri
 }
 
 var ctx = context.Background()
+
+func testScatterConnBatchGeneric(t *testing.T, name string, f func(sc *ScatterConn, shards []string) (*sqltypes.Result, error)) {
+	hc := discovery.NewFakeHealthCheck(nil)
+
+	// no shard
+	s := createSandbox(name)
+	sc := newTestScatterConn(hc, newSandboxForCells([]string{"aa"}), "aa")
+	qr, err := f(sc, nil)
+	require.NoError(t, err)
+	if qr.RowsAffected != 0 {
+		t.Errorf("want 0, got %v", qr.RowsAffected)
+	}
+
+	// single shard
+	s.Reset()
+	sc = newTestScatterConn(hc, newSandboxForCells([]string{"aa"}), "aa")
+	sbc := hc.AddTestTablet("aa", "0", 1, name, "0", topodatapb.TabletType_REPLICA, true, 1, nil)
+	sbc.MustFailCodes[vtrpcpb.Code_INVALID_ARGUMENT] = 1
+	_, err = f(sc, []string{"0"})
+	want := fmt.Sprintf("target: %v.0.replica: INVALID_ARGUMENT error", name)
+	// Verify server error string.
+	if err == nil || err.Error() != want {
+		t.Errorf("want %s, got %v", want, err)
+	}
+	// Ensure that we tried only once.
+	if execCount := sbc.ExecCount.Load(); execCount != 1 {
+		t.Errorf("want 1, got %v", execCount)
+	}
+
+	// two shards
+	s.Reset()
+	hc.Reset()
+	sc = newTestScatterConn(hc, newSandboxForCells([]string{"aa"}), "aa")
+	sbc0 := hc.AddTestTablet("aa", "0", 1, name, "0", topodatapb.TabletType_REPLICA, true, 1, nil)
+	sbc1 := hc.AddTestTablet("aa", "1", 1, name, "1", topodatapb.TabletType_REPLICA, true, 1, nil)
+	sbc0.MustFailCodes[vtrpcpb.Code_INVALID_ARGUMENT] = 1
+	sbc1.MustFailCodes[vtrpcpb.Code_INVALID_ARGUMENT] = 1
+	_, err = f(sc, []string{"0", "1"})
+	// Verify server errors are consolidated.
+	want = fmt.Sprintf("target: %v.0.replica: INVALID_ARGUMENT error\ntarget: %v.1.replica: INVALID_ARGUMENT error", name, name)
+	verifyScatterConnError(t, err, want, vtrpcpb.Code_INVALID_ARGUMENT)
+	// Ensure that we tried only once.
+	if execCount := sbc0.ExecCount.Load(); execCount != 1 {
+		t.Errorf("want 1, got %v", execCount)
+	}
+	if execCount := sbc1.ExecCount.Load(); execCount != 1 {
+		t.Errorf("want 1, got %v", execCount)
+	}
+
+	// two shards with different errors
+	s.Reset()
+	hc.Reset()
+	sc = newTestScatterConn(hc, newSandboxForCells([]string{"aa"}), "aa")
+	sbc0 = hc.AddTestTablet("aa", "0", 1, name, "0", topodatapb.TabletType_REPLICA, true, 1, nil)
+	sbc1 = hc.AddTestTablet("aa", "1", 1, name, "1", topodatapb.TabletType_REPLICA, true, 1, nil)
+	sbc0.MustFailCodes[vtrpcpb.Code_INVALID_ARGUMENT] = 1
+	sbc1.MustFailCodes[vtrpcpb.Code_RESOURCE_EXHAUSTED] = 1
+	_, err = f(sc, []string{"0", "1"})
+	// Verify server errors are consolidated.
+	want = fmt.Sprintf("target: %v.0.replica: INVALID_ARGUMENT error\ntarget: %v.1.replica: RESOURCE_EXHAUSTED error", name, name)
+	// We should only surface the higher priority error code
+	verifyScatterConnError(t, err, want, vtrpcpb.Code_INVALID_ARGUMENT)
+	// Ensure that we tried only once.
+	if execCount := sbc0.ExecCount.Load(); execCount != 1 {
+		t.Errorf("want 1, got %v", execCount)
+	}
+	if execCount := sbc1.ExecCount.Load(); execCount != 1 {
+		t.Errorf("want 1, got %v", execCount)
+	}
+
+	// duplicate shards
+	s.Reset()
+	hc.Reset()
+	sc = newTestScatterConn(hc, newSandboxForCells([]string{"aa"}), "aa")
+	sbc = hc.AddTestTablet("aa", "0", 1, name, "0", topodatapb.TabletType_REPLICA, true, 1, nil)
+	_, _ = f(sc, []string{"0", "0"})
+	// Ensure that we executed only once.
+	if execCount := sbc.ExecCount.Load(); execCount != 15 {
+		t.Errorf("want 15, got %v", execCount)
+	}
+
+	// no errors
+	s.Reset()
+	hc.Reset()
+	sc = newTestScatterConn(hc, newSandboxForCells([]string{"aa"}), "aa")
+	sbc0 = hc.AddTestTablet("aa", "0", 1, name, "0", topodatapb.TabletType_REPLICA, true, 1, nil)
+	sbc1 = hc.AddTestTablet("aa", "1", 1, name, "1", topodatapb.TabletType_REPLICA, true, 1, nil)
+	qr, err = f(sc, []string{"0", "1"})
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	if execCount := sbc0.ExecCount.Load(); execCount != 15 {
+		t.Errorf("want 15, got %v", execCount)
+	}
+	if execCount := sbc1.ExecCount.Load(); execCount != 15 {
+		t.Errorf("want 15, got %v", execCount)
+	}
+	if qr.RowsAffected != 0 {
+		t.Errorf("want 0, got %v", qr.RowsAffected)
+	}
+	if len(qr.Rows) != 30 {
+		t.Errorf("want 30, got %v", len(qr.Rows))
+	}
+}
+
+func TestScatterConnBatchExecuteMulti(t *testing.T) {
+	testScatterConnBatchGeneric(t, "TestScatterConnBatchExecuteMultiShard", func(sc *ScatterConn, shards []string) (*sqltypes.Result, error) {
+		res := srvtopo.NewResolver(newSandboxForCells([]string{"aa"}), sc.gateway, "aa")
+		rss, err := res.ResolveDestination(ctx, "TestScatterConnBatchExecuteMultiShard", topodatapb.TabletType_REPLICA, key.DestinationShards(shards))
+		if err != nil {
+			return nil, err
+		}
+
+		size := 15
+		querieses := make([][]*querypb.BoundQuery, len(rss))
+		for j := range rss {
+			querieses[j] = make([]*querypb.BoundQuery, size)
+			for i := 0; i < size; i++ {
+				querieses[j][i] = &querypb.BoundQuery{
+					Sql:           "query",
+					BindVariables: nil,
+				}
+			}
+		}
+
+		qr, errs := sc.ExecuteBatchMultiShard(ctx, nil, rss, querieses, NewSafeSession(nil), false /*autocommit*/, false)
+		return qr, vterrors.Aggregate(errs)
+	})
+}
