@@ -33,7 +33,7 @@ func pushDownAggregationThroughRouteForSplitTable(
 ) (ops.Operator, *rewrite.ApplyResult, error) {
 	// If the route is single-splitTable, or we are grouping by sharding keys, we can just push down the aggregation
 	// or logicPlan of shardKeyspace is multiShard.
-	if route.IsSingleSplitTable() || isMultiShard(ctx.KsERoute) {
+	if route.IsSingleSplitTable() || isMultiShard(ctx.GetRoute()) {
 		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute - remove original")
 	}
 

@@ -106,6 +106,16 @@ type (
 
 		// Insert needs tx handling
 		txNeeded
+
+		// AST represents the insert statement from the SQL syntax.
+		AST *sqlparser.Insert
+
+		TableColVindexes *vindexes.LogicTableConfig
+
+		//这里分片是个三维数组，因为分片的元数据一个表可以有多个ColVindexes，分表的元数据没有兼容这个所以定义为二维数组
+		TableVindexValues [][]evalengine.Expr
+
+		TableVindexValueOffset []int
 	}
 
 	ksID = []byte
@@ -192,13 +202,24 @@ const (
 	// InsertByDestination is to route explicitly to a given
 	// target destination.
 	InsertByDestination
+
+	InsertTableUnsharded
+
+	InsertTableSharded
+
+	InsertTableSelect
 )
 
 var insName = map[InsertOpcode]string{
-	InsertUnsharded:     "InsertUnsharded",
-	InsertSharded:       "InsertSharded",
-	InsertSelect:        "InsertSelect",
-	InsertByDestination: "InsertByDestination",
+	InsertUnsharded:      "InsertUnsharded",
+	InsertSharded:        "InsertSharded",
+	InsertSelect:         "InsertSelect",
+	InsertByDestination:  "InsertByDestination",
+	InsertTableUnsharded: "InsertTableUnsharded",
+
+	InsertTableSharded: "InsertTableSharded",
+
+	InsertTableSelect: "InsertTableSelect",
 }
 
 // String returns the opcode
@@ -234,7 +255,6 @@ func (ins *Insert) GetTableName() string {
 func (ins *Insert) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
 	ctx, cancelFunc := addQueryTimeout(ctx, vcursor, ins.QueryTimeout)
 	defer cancelFunc()
-
 	switch ins.Opcode {
 	case InsertUnsharded:
 		return ins.execInsertUnsharded(ctx, vcursor, bindVars)
@@ -244,6 +264,8 @@ func (ins *Insert) TryExecute(ctx context.Context, vcursor VCursor, bindVars map
 		return ins.execInsertFromSelect(ctx, vcursor, bindVars)
 	case InsertByDestination:
 		return ins.execInsertByDestination(ctx, vcursor, bindVars, ins.TargetDestination)
+	case InsertTableSharded:
+		return ins.execInsertTableSharded(ctx, vcursor, bindVars)
 	default:
 		// Unreachable.
 		return nil, fmt.Errorf("unsupported query route: %v", ins)
@@ -1009,6 +1031,22 @@ func (ins *Insert) description() PrimitiveDescription {
 			other["ShardedQuery"] = shardQuery
 		}
 	}
+	if len(ins.TableVindexValues) > 0 {
+		valuesOffsets := map[string]string{}
+		for _, ints := range ins.TableVindexValues {
+
+			vindex := ins.TableColVindexes.TableVindex
+			var res []string
+			var this []string
+			for _, expr := range ints {
+				this = append(this, evalengine.FormatExpr(expr))
+			}
+			res = append(res, strings.Join(this, ", "))
+			valuesOffsets[vindex.String()] = strings.Join(res, ", ")
+		}
+		other["TableVindexValues"] = valuesOffsets
+	}
+
 	return PrimitiveDescription{
 		OperatorType:     "Insert",
 		Keyspace:         ins.Keyspace,

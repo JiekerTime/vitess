@@ -109,8 +109,7 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 	require.NoError(t, err)
 	deleteAll := func() {
 		_, _ = utils.ExecAllowError(t, mcmp.VtConn, "set workload = oltp")
-		//todo 分表delete做完不需要传物理表
-		tables := []string{"t_users", "t_users_1", "t_users_2"}
+		tables := []string{"t_user"}
 		for _, table := range tables {
 			_, _ = mcmp.ExecAndIgnore("delete from " + table)
 		}

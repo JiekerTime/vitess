@@ -21,7 +21,6 @@ func tryHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root ops.
 	if err != nil {
 		return nil, err
 	}
-
 	output, err = planOffsetsForSplitTable(ctx, output)
 	if err != nil {
 		return nil, err
@@ -102,7 +101,7 @@ func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limi
 }
 
 func tryPushingDownLimitInRouteForSplitTable(ctx *plancontext.PlanningContext, in *Limit, src *TableRoute) (ops.Operator, *rewrite.ApplyResult, error) {
-	if src.IsSingleSplitTable() || isMultiShard(ctx.KsERoute) {
+	if src.IsSingleSplitTable() || isMultiShard(ctx.GetRoute()) {
 		return rewrite.Swap(in, src, "limit pushed into tableRoute")
 	}
 	return setUpperLimitForSplitTable(in)

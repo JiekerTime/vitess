@@ -29,13 +29,17 @@
       "Original": "delete from t_user where name = _binary 'abc'",
       "Instructions": {
         "OperatorType": "TableDelete",
-        "Variant": "Scatter-Scatter",
+        "Variant": "Equal-Scatter",
+        "Vindex": "name_user_map",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
         "TargetTabletType": "PRIMARY",
         "Queries": "delete from t_user where `name` = _binary 'abc'",
+        "Values": [
+          "VARBINARY(\"abc\")"
+        ],
         "Table": "t_user"
       },
       "TablesUsed": [
@@ -244,7 +248,7 @@
       "Original": "delete from t_user where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
       "Instructions": {
         "OperatorType": "TableDelete",
-        "Variant": "Scatter-MultiEqual",
+        "Variant": "MultiEqual-MultiEqual",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
@@ -254,7 +258,11 @@
         "Table": "t_user",
         "TableValues": [
           "(VARCHAR(\"bb\"), VARCHAR(\"dd\"))"
-        ]
+        ],
+        "Values": [
+          "(VARCHAR(\"aa\"), VARCHAR(\"cc\"))"
+        ],
+        "Vindex": "name_user_map"
       },
       "TablesUsed": [
         "user.t_user"
@@ -291,14 +299,18 @@
       "Original": "delete from t_user where name = 'jose'",
       "Instructions": {
         "OperatorType": "TableDelete",
-        "Variant": "Scatter-Scatter",
+        "Variant": "Equal-Scatter",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
         "TargetTabletType": "PRIMARY",
         "Queries": "delete from t_user where `name` = 'jose'",
-        "Table": "t_user"
+        "Table": "t_user",
+        "Values": [
+          "VARCHAR(\"jose\")"
+        ],
+        "Vindex": "name_user_map"
       },
       "TablesUsed": [
         "user.t_user"
@@ -333,6 +345,263 @@
           "INT64(5)"
         ],
         "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "sharded upsert with sharding key set to vindex and tablevindex column",
+    "query": "insert into t_music(user_id, id, a) values(1, 2, 'a') on duplicate key update user_id = values(user_id)",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_music(user_id, id, a) values(1, 2, 'a') on duplicate key update user_id = values(user_id)",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "InsertIgnore": true,
+        "Query": "insert into t_music(user_id, id, a) values (:_user_id_0, :_id_0, :_a_0) on duplicate key update user_id = values(user_id)",
+        "TableName": "t_music",
+        "VindexValues": {
+          "music_user_map": "INT64(2)",
+          "user_index": "INT64(1)"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"a\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "sharded bulk upsert with sharding key set to vindex column",
+    "query": "insert into t_music(user_id, id , a) values (1, 2, 'a'), (3,4,'a') on duplicate key update user_id = values(user_id)",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_music(user_id, id , a) values (1, 2, 'a'), (3,4,'a') on duplicate key update user_id = values(user_id)",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "InsertIgnore": true,
+        "Query": "insert into t_music(user_id, id, a) values (:_user_id_0, :_id_0, :_a_0), (:_user_id_1, :_id_1, :_a_1) on duplicate key update user_id = values(user_id)",
+        "TableName": "t_music",
+        "VindexValues": {
+          "music_user_map": "INT64(2), INT64(4)",
+          "user_index": "INT64(1), INT64(3)"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"a\"), VARCHAR(\"a\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "sharded insert subquery in insert value",
+    "query": "insert into t_user(id, val, col) values((select 1), 1, 'a')",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_user(id, val, col) values((select 1), 1, 'a')",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
+        "Query": "insert into t_user(id, val, col, `Name`, Costly) values (:_Id_0, 1, :_col_0, :_Name_0, :_Costly_0)",
+        "TableName": "t_user",
+        "VindexValues": {
+          "costly_map": "NULL",
+          "name_user_map": "NULL",
+          "user_index": ":__seq0"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"a\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert no column list for sharded authoritative table",
+    "query": "insert into t_authoritative values(1, 2, 3)",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_authoritative values(1, 2, 3)",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Query": "insert into t_authoritative(user_id, col1, col2) values (:_user_id_0, :_col1_0, 3)",
+        "TableName": "t_authoritative",
+        "VindexValues": {
+          "user_index": "INT64(1)"
+        },
+        "TableVindexValues": {
+          "binary_hash": "INT64(2)"
+        }
+      },
+      "TablesUsed": [
+        "user.t_authoritative"
+      ]
+    }
+  },
+  {
+    "comment": "insert ignore sharded",
+    "query": "insert ignore into t_user(id,col) values (1,'a')",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert ignore into t_user(id,col) values (1,'a')",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
+        "InsertIgnore": true,
+        "Query": "insert ignore into t_user(id, col, `Name`, Costly) values (:_Id_0, :_col_0, :_Name_0, :_Costly_0)",
+        "TableName": "t_user",
+        "VindexValues": {
+          "costly_map": "NULL",
+          "name_user_map": "NULL",
+          "user_index": ":__seq0"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"a\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert into a vindex not allowed",
+    "query": "insert into t_user(id,col) values(1,col) on duplicate key update col = 2",
+    "plan": "VT12001: unsupported: DML cannot update tablevindex column"
+
+  },
+  {
+    "comment": "insert into a vindex not allowed",
+    "query": "insert into t_user(id) values(1)",
+    "plan": "VT12001: unsupported: INSERT without splittable column"
+
+  },
+  {
+    "comment": "insert on duplicate key",
+    "query": "insert into t_user(id,col) values(1,'col') on duplicate key update intcol = 2",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_user(id,col) values(1,'col') on duplicate key update intcol = 2",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
+        "InsertIgnore": true,
+        "Query": "insert into t_user(id, col, `Name`, Costly) values (:_Id_0, :_col_0, :_Name_0, :_Costly_0) on duplicate key update intcol = 2",
+        "TableName": "t_user",
+        "VindexValues": {
+          "costly_map": "NULL",
+          "name_user_map": "NULL",
+          "user_index": ":__seq0"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"col\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert with default seq",
+    "query": "insert into t_user(id, nonid,col) values (default, 2,'a')",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_user(id, nonid,col) values (default, 2,'a')",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(NULL)",
+        "Query": "insert into t_user(id, nonid, col, `Name`, Costly) values (:_Id_0, 2, :_col_0, :_Name_0, :_Costly_0)",
+        "TableName": "t_user",
+        "VindexValues": {
+          "costly_map": "NULL",
+          "name_user_map": "NULL",
+          "user_index": ":__seq0"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"a\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert with multiple rows",
+    "query": "insert into t_user(id,col) values (1,'a'), (2,'b')",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_user(id,col) values (1,'a'), (2,'b')",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1), INT64(2))",
+        "Query": "insert into t_user(id, col, `Name`, Costly) values (:_Id_0, :_col_0, :_Name_0, :_Costly_0), (:_Id_1, :_col_1, :_Name_1, :_Costly_1)",
+        "TableName": "t_user",
+        "VindexValues": {
+          "costly_map": "NULL, NULL",
+          "name_user_map": "NULL, NULL",
+          "user_index": ":__seq0, :__seq1"
+        },
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"a\"), VARCHAR(\"b\")"
+        }
       },
       "TablesUsed": [
         "user.t_user"

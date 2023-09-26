@@ -419,6 +419,7 @@ func transformInsertPlan(ctx *plancontext.PlanningContext, op *operators.Route, 
 		ColVindexes:       ins.ColVindexes,
 		VindexValues:      ins.VindexValues,
 		VindexValueOffset: ins.VindexValueOffset,
+		AST:               ins.AST,
 	}
 	i = &insert{eInsert: eins}
 

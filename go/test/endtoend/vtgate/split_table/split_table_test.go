@@ -2,8 +2,6 @@ package vtgate
 
 import (
 	"testing"
-
-	"vitess.io/vitess/go/test/endtoend/utils"
 )
 
 func TestOne(t *testing.T) {
@@ -11,10 +9,7 @@ func TestOne(t *testing.T) {
 	defer closer()
 	//因为分表会在plan层依赖库名这里要加个use ks语句
 	mcmp.Exec("use user")
-	//todo 目前没有分表insert 只能去提前算分表hash找到映射关系  直接插入的物理表里
-	utils.Exec(t, mcmp.VtConn, "insert into t_user_0(id,col,f_key,f_tinyint,f_bit) values (2, 'b', 'bbb', 2, false)")
-	utils.Exec(t, mcmp.VtConn, "insert into t_user_1(id,col,f_key,f_tinyint,f_bit) values (1, 'a', 'aaa', 1, false)")
-	utils.Exec(t, mcmp.MySQLConn, "insert into t_user(id,col,f_key,f_tinyint,f_bit) values (1, 'a', 'aaa', 1, false),(2, 'b', 'bbb', 2, false)")
+	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit) values (1, 'a', 'aaa', 1, false),(2, 'b', 'bbb', 2, false)")
 	mcmp.ExecWithColumnCompare("select id,col,f_key,f_tinyint,f_bit from t_user")
 
 	// table_select_case.json
@@ -112,8 +107,10 @@ func TestOne(t *testing.T) {
 	//mcmp.ExecWithColumnCompare("select col from t_user where id = 5 order by 18446744073709551616")
 	mcmp.ExecAllowAndCompareError("select col from t_user where id = 5 order by 2")
 	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by -col1")
-	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8_general_ci desc")
-	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by id+col collate utf8_general_ci desc")
+	//vttablet: rpc error: code = InvalidArgument desc = COLLATION 'utf8_general_ci' is not valid for CHARACTER SET 'utf8mb4' (errno 1253)
+	//mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8_general_ci desc")
+	//target: user.80-.primary: vttablet: rpc error: code = InvalidArgument desc = COLLATION 'utf8_general_ci' is not valid for CHARACTER SET 'utf8mb4' (errno 1253)
+	//mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by id+col collate utf8_general_ci desc")
 	mcmp.ExecWithColumnCompare("select col from t_user where id = 1  and col = 6 order by col")
 	//cannot compare strings, collation is unknown or unsupported (collation ID: 0) (errno 1105)
 	//mcmp.ExecWithColumnCompare("select col as foo from t_user order by foo")

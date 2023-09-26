@@ -1280,60 +1280,6 @@
     }
   },
   {
-    "comment": "sharded upsert with sharding key set to vindex column",
-    "query": "insert into music(user_id, id) values(1, 2) on duplicate key update user_id = values(user_id)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into music(user_id, id) values(1, 2) on duplicate key update user_id = values(user_id)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "InsertIgnore": true,
-        "Query": "insert into music(user_id, id) values (:_user_id_0, :_id_0) on duplicate key update user_id = values(user_id)",
-        "TableName": "music",
-        "VindexValues": {
-          "music_user_map": "INT64(2)",
-          "user_index": "INT64(1)"
-        }
-      },
-      "TablesUsed": [
-        "user.music"
-      ]
-    }
-  },
-  {
-    "comment": "sharded bulk upsert with sharding key set to vindex column",
-    "query": "insert into music(user_id, id) values (1, 2), (3,4) on duplicate key update user_id = values(user_id)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into music(user_id, id) values (1, 2), (3,4) on duplicate key update user_id = values(user_id)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "InsertIgnore": true,
-        "Query": "insert into music(user_id, id) values (:_user_id_0, :_id_0), (:_user_id_1, :_id_1) on duplicate key update user_id = values(user_id)",
-        "TableName": "music",
-        "VindexValues": {
-          "music_user_map": "INT64(2), INT64(4)",
-          "user_index": "INT64(1), INT64(3)"
-        }
-      },
-      "TablesUsed": [
-        "user.music"
-      ]
-    }
-  },
-  {
     "comment": "insert unsharded with select",
     "query": "insert into unsharded select id from unsharded_auto",
     "v3-plan": {
@@ -1552,34 +1498,7 @@
       ]
     }
   },
-  {
-    "comment": "sharded insert subquery in insert value",
-    "query": "insert into user(id, val) values((select 1), 1)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(id, val) values((select 1), 1)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
-        "Query": "insert into `user`(id, val, `Name`, Costly) values (:_Id_0, 1, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
+
   {
     "comment": "insert into a routed table",
     "query": "insert into route1(id) values (1)",
@@ -1614,31 +1533,7 @@
     "v3-plan": "VT13001: [BUG] column list does not match values",
     "gen4-plan": "VT03006: column count does not match value count at row 1"
   },
-  {
-    "comment": "insert no column list for sharded authoritative table",
-    "query": "insert into authoritative values(1, 2, 3)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into authoritative values(1, 2, 3)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "Query": "insert into authoritative(user_id, col1, col2) values (:_user_id_0, 2, 3)",
-        "TableName": "authoritative",
-        "VindexValues": {
-          "user_index": "INT64(1)"
-        }
-      },
-      "TablesUsed": [
-        "user.authoritative"
-      ]
-    }
-  },
+
   {
     "comment": "insert sharded, no values",
     "query": "insert into user values()",
@@ -1695,64 +1590,7 @@
       ]
     }
   },
-  {
-    "comment": "insert ignore sharded",
-    "query": "insert ignore into user(id) values (1)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert ignore into user(id) values (1)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
-        "InsertIgnore": true,
-        "Query": "insert ignore into `user`(id, `Name`, Costly) values (:_Id_0, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "insert on duplicate key",
-    "query": "insert into user(id) values(1) on duplicate key update col = 2",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(id) values(1) on duplicate key update col = 2",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
-        "InsertIgnore": true,
-        "Query": "insert into `user`(id, `Name`, Costly) values (:_Id_0, :_Name_0, :_Costly_0) on duplicate key update col = 2",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
+
   {
     "comment": "insert with one vindex and bind var",
     "query": "insert into user(id) values (:aa)",
@@ -1809,34 +1647,7 @@
       ]
     }
   },
-  {
-    "comment": "insert with default seq",
-    "query": "insert into user(id, nonid) values (default, 2)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(id, nonid) values (default, 2)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(NULL)",
-        "Query": "insert into `user`(id, nonid, `Name`, Costly) values (:_Id_0, 2, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
+
   {
     "comment": "insert with non vindex bool value",
     "query": "insert into user(nonid) values (true)",
@@ -2047,34 +1858,7 @@
     "query": "insert into noexist(music_id, user_id) values(1, 18446744073709551616)",
     "plan": "table noexist not found"
   },
-  {
-    "comment": "insert with multiple rows",
-    "query": "insert into user(id) values (1), (2)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(id) values (1), (2)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1), INT64(2))",
-        "Query": "insert into `user`(id, `Name`, Costly) values (:_Id_0, :_Name_0, :_Costly_0), (:_Id_1, :_Name_1, :_Costly_1)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL, NULL",
-          "name_user_map": "NULL, NULL",
-          "user_index": ":__seq0, :__seq1"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
+
   {
     "comment": "insert with query timeout",
     "query": "insert /*vt+ QUERY_TIMEOUT_MS=1 */ into user(id) values (1), (2)",

@@ -109,13 +109,16 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 	switch src := op.Source.(type) {
 	case *operators.Delete:
 		return transformTableDeletePlan(ctx, op, src)
+	case *operators.TableInsert:
+		return transformInsertPlanForSplitTable(ctx, op, src)
 	}
+
 	sel, err := operators.ToSQL(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
 
-	ksERoute := ctx.KsERoute
+	ksERoute := ctx.GetRoute()
 	eroute, err := routeToEngineTableRoute(ctx, ksERoute.RoutingParameters, op)
 	if err != nil {
 		return nil, err
@@ -220,6 +223,7 @@ func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *
 		ShardRouteParam: shardRouteParam,
 		TableRouteParam: rp,
 	}, nil
+
 }
 
 func newTableRoutingParams(ctx *plancontext.PlanningContext, opCode engine.Opcode) *engine.TableRoutingParameters {
@@ -249,4 +253,35 @@ func getAllTableNamesForSplitTable(op *operators.TableRoute) ([]string, error) {
 	}
 	sort.Strings(tableNames)
 	return tableNames, nil
+}
+
+func transformInsertPlanForSplitTable(ctx *plancontext.PlanningContext, op *operators.TableRoute, ins *operators.TableInsert) (i *insert, err error) {
+	eins := ctx.GetInsert()
+	eins.Opcode = mapToInsertOpCodeForSplitTable(op.Routing.OpCode(), ins.Input != nil)
+	eins.TableColVindexes = ins.TableColVindexes
+	eins.TableVindexValues = ins.TableVindexValues
+	eins.TableVindexValueOffset = ins.TableVindexValueOffset
+	i = &insert{eInsert: &eins}
+	if eins.Opcode != engine.InsertUnsharded || ins.Input != nil {
+		eins.Prefix, eins.Mid, eins.Suffix = generateInsertShardedQuery(eins.AST)
+	}
+	if ins.Input == nil {
+		eins.Query = generateQuery(eins.AST)
+	} else {
+		i.source, err = transformToLogicalPlan(ctx, ins.Input, true)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func mapToInsertOpCodeForSplitTable(code engine.Opcode, insertSelect bool) engine.InsertOpcode {
+	if code == engine.Unsharded {
+		return engine.InsertTableUnsharded
+	}
+	if insertSelect {
+		return engine.InsertTableSelect
+	}
+	return engine.InsertTableSharded
 }

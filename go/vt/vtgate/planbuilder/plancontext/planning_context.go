@@ -49,6 +49,8 @@ type PlanningContext struct {
 
 	// FIXME! abstract engine interface
 	DMLEngine engine.DML
+
+	KsPrimitive engine.Primitive
 }
 
 func NewPlanningContext(reservedVars *sqlparser.ReservedVars, semTable *semantics.SemTable, vschema VSchema, version querypb.ExecuteOptions_PlannerVersion) *PlanningContext {
@@ -87,4 +89,12 @@ func (ctx *PlanningContext) GetArgumentFor(expr sqlparser.Expr, f func() string)
 	bvName := f()
 	ctx.ReservedArguments[expr] = bvName
 	return bvName
+}
+
+func (c *PlanningContext) GetRoute() engine.Route {
+	return *c.KsPrimitive.(*engine.Route)
+}
+
+func (c *PlanningContext) GetInsert() engine.Insert {
+	return *c.KsPrimitive.(*engine.Insert)
 }

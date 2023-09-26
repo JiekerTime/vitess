@@ -515,6 +515,11 @@ func gen4InsertStmtPlanner(version querypb.ExecuteOptions_PlannerVersion, insStm
 		return nil, err
 	}
 
+	plan, _, _, err = buildTablePlan(ctx, plan)
+	if err != nil {
+		return nil, err
+	}
+
 	return newPlanResult(plan.Primitive(), operators.TablesUsed(op)...), nil
 }
 

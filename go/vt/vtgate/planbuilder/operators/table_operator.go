@@ -7,6 +7,7 @@ import (
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -36,6 +37,8 @@ func createLogicalOperatorFromASTForSplitTable(ctx *plancontext.PlanningContext,
 	switch node := selStmt.(type) {
 	case *sqlparser.Select:
 		op, err = createOperatorFromSelectForSplitTable(ctx, node)
+	case *sqlparser.Insert:
+		op, err = createOperatorFromInsertForSplitTable(ctx, node)
 	case *sqlparser.Delete:
 		op, err = createOperatorFromDeleteForSplitTable(ctx, node)
 	default:
@@ -110,6 +113,95 @@ func createOperatorFromDeleteForSplitTable(ctx *plancontext.PlanningContext, del
 	}
 
 	return tableRoute, nil
+}
+
+func createOperatorFromInsertForSplitTable(ctx *plancontext.PlanningContext, ins *sqlparser.Insert) (ops.Operator, error) {
+
+	//1、判断columns 有没有分表建没有报错，vitess分片是不报错的
+	splitTableConfig := ctx.SplitTableConfig[ins.Table.Expr.(sqlparser.TableName).Name.String()]
+	colTableVindex := splitTableConfig.TableIndexColumn
+	for _, tableIndexColumn := range colTableVindex {
+		if findColumn(ins, sqlparser.NewIdentifierCI(tableIndexColumn.Column)) == -1 {
+			return nil, vterrors.VT12001("INSERT without splittable column")
+		}
+	}
+	insOp := &TableInsert{
+		TableColVindexes: splitTableConfig,
+	}
+	route := &TableRoute{
+		Source:  insOp,
+		Routing: &ShardedRouting{RouteOpCode: mapToSelectOpCode(ctx.GetInsert().Opcode)},
+	}
+	var err error
+	switch rows := ins.Rows.(type) {
+	case sqlparser.Values:
+		route.Source, err = insertRowsPlanForSplitTable(insOp, ins, rows)
+		if err != nil {
+			return nil, err
+		}
+	case sqlparser.SelectStatement:
+		/*	route.Source, err = insertSelectPlan(ctx, insOp, ins, rows)
+			if err != nil {
+				return nil, err
+			}*/
+		return nil, err
+	}
+	//2、
+
+	return route, nil
+}
+
+func mapToSelectOpCode(code engine.InsertOpcode) engine.Opcode {
+	if code == engine.InsertUnsharded {
+		return engine.Unsharded
+	}
+	return engine.Scatter
+}
+
+func insertRowsPlanForSplitTable(insOp *TableInsert, ins *sqlparser.Insert, rows sqlparser.Values) (*TableInsert, error) {
+	colTableVindexes := insOp.TableColVindexes.TableIndexColumn
+	routeValues := make([][]evalengine.Expr, len(colTableVindexes))
+	for colIdx, col := range colTableVindexes {
+		err := checkAndErrIfTableVindexChanging(sqlparser.UpdateExprs(ins.OnDup), sqlparser.NewIdentifierCI(col.Column))
+		if err != nil {
+			return nil, err
+		}
+		routeValues[colIdx] = make([]evalengine.Expr, len(rows))
+		colNum := findColumn(ins, sqlparser.NewIdentifierCI(col.Column))
+		for rowNum, row := range rows {
+			innerpv, err := evalengine.Translate(row[colNum], nil)
+			if err != nil {
+				return nil, err
+			}
+			routeValues[colIdx][rowNum] = innerpv
+		}
+	}
+
+	// here we are replacing the row value with the argument.
+	for _, col := range colTableVindexes {
+		colNum, _ := findOrAddColumn(ins, sqlparser.NewIdentifierCI(col.Column))
+		for rowNum, row := range rows {
+			name := engine.InsertVarName(sqlparser.NewIdentifierCI(col.Column), rowNum)
+			row[colNum] = sqlparser.NewArgument(name)
+		}
+	}
+
+	insOp.TableVindexValues = routeValues
+	return insOp, nil
+}
+
+func checkAndErrIfTableVindexChanging(setClauses sqlparser.UpdateExprs, col sqlparser.IdentifierCI) error {
+	for _, assignment := range setClauses {
+		if col.Equal(assignment.Name.Name) {
+			valueExpr, isValuesFuncExpr := assignment.Expr.(*sqlparser.ValuesFuncExpr)
+			// update on duplicate key is changing the vindex column, not supported.
+			if !isValuesFuncExpr || !valueExpr.Name.Name.Equal(assignment.Name.Name) {
+				return vterrors.VT12001("DML cannot update tablevindex column")
+			}
+			return nil
+		}
+	}
+	return nil
 }
 
 func crossJoinForSplitTable(ctx *plancontext.PlanningContext, exprs sqlparser.TableExprs) (ops.Operator, error) {

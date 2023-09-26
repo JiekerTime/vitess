@@ -21,12 +21,19 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 	ksAndTablePlan, err = visit(ksPlan, func(logicalPlan logicalPlan) (bool, logicalPlan, error) {
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
-			ctx.KsERoute = *node.eroute
+			ctx.KsPrimitive = node.eroute
 			tablePlan, err := doBuildTablePlan(ctx, node.Select)
 			if err != nil {
 				return false, nil, err
 			}
-			return true, tablePlan, nil
+			return false, tablePlan, nil
+		case *insert:
+			ctx.KsPrimitive = node.eInsert
+			tablePlan, err := doBuildTablePlan(ctx, node.eInsert.AST)
+			if err != nil {
+				return false, nil, err
+			}
+			return false, tablePlan, nil
 		case *primitiveWrapper:
 			switch prim := node.Primitive().(type) {
 			case *engine.Delete:
@@ -38,6 +45,7 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 				return true, deleteTablePlan, nil
 			}
 		}
+
 		return true, logicalPlan, nil
 	})
 	if err != nil {

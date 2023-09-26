@@ -112,7 +112,7 @@ type (
 	// TableMultiColumn defines the interface for a multi-column vindex.
 	TableMultiColumn interface {
 		Vindex
-		Map(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value) ([]key.Destination, error)
+		Map(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value) ([]TableDestination, error)
 		Verify(ctx context.Context, vcursor VCursor, rowsColValues [][]sqltypes.Value, ksids [][]byte) ([]bool, error)
 		// PartialVindex returns true if subset of columns can be passed in to the vindex Map and Verify function.
 		PartialVindex() bool
@@ -216,6 +216,17 @@ func Map(ctx context.Context, vindex Vindex, vcursor VCursor, rowsColValues [][]
 	case MultiColumn:
 		return vindex.Map(ctx, vcursor, rowsColValues)
 	case SingleColumn:
+		return vindex.Map(ctx, vcursor, firstColsOnly(rowsColValues))
+	}
+	return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vindex '%T' does not have Map function", vindex)
+}
+
+// TableMap invokes the TableMapMap implementation supplied by the vindex.
+func TableMap(ctx context.Context, vindex Vindex, vcursor VCursor, rowsColValues [][]sqltypes.Value) ([]TableDestination, error) {
+	switch vindex := vindex.(type) {
+	case TableMultiColumn:
+		return vindex.Map(ctx, vcursor, rowsColValues)
+	case TableSingleColumn:
 		return vindex.Map(ctx, vcursor, firstColsOnly(rowsColValues))
 	}
 	return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vindex '%T' does not have Map function", vindex)
