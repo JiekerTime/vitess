@@ -63,8 +63,10 @@ func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primiti
 
 	}
 
-	if err := dmlSpecialFunc(ctx, vcursor, bindVars, rss); err != nil {
-		return nil, err
+	if dmlSpecialFunc != nil {
+		if err := dmlSpecialFunc(ctx, vcursor, bindVars, rss); err != nil {
+			return nil, err
+		}
 	}
 
 	result := &sqltypes.Result{}

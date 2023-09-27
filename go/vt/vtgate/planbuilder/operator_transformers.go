@@ -520,6 +520,7 @@ func transformUpdatePlan(ctx *plancontext.PlanningContext, op *operators.Route, 
 	}
 	edml := &engine.DML{
 		Query: generateQuery(ast),
+		AST:   ast,
 		Table: []*vindexes.Table{
 			upd.VTable,
 		},

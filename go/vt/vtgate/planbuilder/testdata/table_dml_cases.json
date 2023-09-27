@@ -256,13 +256,13 @@
         "TargetTabletType": "PRIMARY",
         "Queries": "delete from t_user where (`name`, col) in (('aa', 'bb'), ('cc', 'dd'))",
         "Table": "t_user",
-        "TableValues": [
-          "(VARCHAR(\"bb\"), VARCHAR(\"dd\"))"
-        ],
         "Values": [
           "(VARCHAR(\"aa\"), VARCHAR(\"cc\"))"
         ],
-        "Vindex": "name_user_map"
+        "Vindex": "name_user_map",
+        "TableValues": [
+          "(VARCHAR(\"bb\"), VARCHAR(\"dd\"))"
+        ]
       },
       "TablesUsed": [
         "user.t_user"
@@ -310,8 +310,7 @@
         "Values": [
           "VARCHAR(\"jose\")"
         ],
-        "Vindex": "name_user_map"
-      },
+        "Vindex": "name_user_map"      },
       "TablesUsed": [
         "user.t_user"
       ]
@@ -345,6 +344,450 @@
           "INT64(5)"
         ],
         "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by primary keyspace id",
+    "query": "update t_user set val = 1 where id = 1",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where id = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by split table key",
+    "query": "update t_user set name='123' where col=5",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set name='123' where col=5",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set `name` = '123' where col = 5",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by primary keyspace id with alias",
+    "query": "update t_user as user_alias set val = 1 where user_alias.id = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user as user_alias set val = 1 where user_alias.id = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user as user_alias set val = 1 where user_alias.id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by split table key with alias",
+    "query": "update t_user as user_alias set val = 1 where user_alias.col = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user as user_alias set val = 1 where user_alias.col = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user as user_alias set val = 1 where user_alias.col = 1",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by primary keyspace id with parenthesized expression",
+    "query": "update t_user set val = 1 where (id = 1)",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where (id = 1)",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by primary keyspace id with multi-part where clause with parens",
+    "query": "update t_user set val = 1 where (name = 'foo' and id = 1)",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where (name = 'foo' and id = 1)",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where `name` = 'foo' and id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by primary keyspace id, stray where clause",
+    "query": "update t_user set val = 1 where id = id2 and id = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where id = id2 and id = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where id = id2 and id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by split table key, stray where clause",
+    "query": "update t_user set val = 1 where col = col2 and col = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where col = col2 and col = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where col = col2 and col = 1",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by split table key, stray where clause with conversion error",
+    "query": "update t_user set val = 1 where col = 18446744073709551616 and col = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where col = 18446744073709551616 and col = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where col = 18446744073709551616 and col = 1",
+        "Table": "t_user",
+        "TableValues": [
+          "DECIMAL(18446744073709551616)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update by split table key, stray where clause with conversion error",
+    "query": "update t_user set val = 1 where id = 1 and id = 18446744073709551616",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1 where id = 1 and id = 18446744073709551616",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1 where id = 1 and id = 18446744073709551616",
+        "Table": "t_user",
+        "Values": [
+          "DECIMAL(18446744073709551616)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter update",
+    "query": "update t_user set val = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set val = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set val = 1",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update with binary value",
+    "query": "update t_user set name = _binary 'abc' where id = 1",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set name = _binary 'abc' where id = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set `name` = _binary 'abc' where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update with alias table",
+    "query": "update t_user u set u.name = 'john' where u.col > 20",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user u set u.name = 'john' where u.col > 20",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user as u set u.`name` = 'john' where u.col > 20",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update with routing using multi column vindex",
+    "query": "update t_user set a = 1 where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
+    "plan":   {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set a = 1 where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "MultiEqual-MultiEqual",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set a = 1 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd'))",
+        "Table": "t_user",
+        "Values": [
+          "(VARCHAR(\"aa\"), VARCHAR(\"cc\"))"
+        ],
+        "TableValues": [
+          "(VARCHAR(\"bb\"), VARCHAR(\"dd\"))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update in shard key",
+    "query": "update t_user set a = 123 where id in (4,5,6)",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set a = 123 where id in (4,5,6)",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set a = 123 where id in (4, 5, 6)",
+        "Table": "t_user",
+        "Values": [
+          "(INT64(4), INT64(5), INT64(6))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update in split table key",
+    "query": "update t_user set a = 123 where col in (4,5,6)",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set a = 123 where col in (4,5,6)",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-IN",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set a = 123 where col in (4, 5, 6)",
+        "Table": "t_user",
+        "TableValues": [
+          "(INT64(4), INT64(5), INT64(6))"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update in",
+    "query": "update t_user set a = 123 where b in (4,5,6)",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set a = 123 where b in (4,5,6)",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set a = 123 where b in (4, 5, 6)",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update primary vindex columns",
+    "query": "update t_user set id = 123",
+    "plan": "VT12001: unsupported: you cannot UPDATE primary vindex columns; invalid update on vindex: user_index"
+  },
+  {
+    "comment": "update split table column",
+    "query": "update t_user set col = 123",
+    "plan": "VT12001: unsupported: DML cannot update tablevindex column"
+  },
+  {
+    "comment": "debug case",
+    "query": "update t_user set a='a' where b=5 limit 7",
+    "plan": "VT12001: unsupported: multi shard UPDATE with LIMIT"
+  },
+  {
+    "comment": "debug case",
+    "query": "update t_user set a='a' where id=4 and col=5 limit 7",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_user set a='a' where id=4 and col=5 limit 7",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_user set a = 'a' where id = 4 and col = 5 limit 7",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(5)"
+        ],
+        "Values": [
+          "INT64(4)"
+        ]
       },
       "TablesUsed": [
         "user.t_user"
@@ -506,13 +949,11 @@
     "comment": "insert into a vindex not allowed",
     "query": "insert into t_user(id,col) values(1,col) on duplicate key update col = 2",
     "plan": "VT12001: unsupported: DML cannot update tablevindex column"
-
   },
   {
     "comment": "insert into a vindex not allowed",
     "query": "insert into t_user(id) values(1)",
     "plan": "VT12001: unsupported: INSERT without splittable column"
-
   },
   {
     "comment": "insert on duplicate key",

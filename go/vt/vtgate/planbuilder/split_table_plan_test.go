@@ -7,12 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
-
 	"github.com/nsf/jsondiff"
 	"github.com/stretchr/testify/require"
 
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
+	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 )
 
 func TestSplitTablePlan(t *testing.T) {

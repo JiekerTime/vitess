@@ -43,6 +43,13 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 					return false, nil, err
 				}
 				return true, deleteTablePlan, nil
+			case *engine.Update:
+				ctx.DMLEngine = *prim.DML
+				updateTablePlan, err := doBuildTablePlan(ctx, prim.AST)
+				if err != nil {
+					return false, nil, err
+				}
+				return true, updateTablePlan, nil
 			}
 		}
 

@@ -41,6 +41,8 @@ func createLogicalOperatorFromASTForSplitTable(ctx *plancontext.PlanningContext,
 		op, err = createOperatorFromInsertForSplitTable(ctx, node)
 	case *sqlparser.Delete:
 		op, err = createOperatorFromDeleteForSplitTable(ctx, node)
+	case *sqlparser.Update:
+		op, err = createOperatorFromUpdateForSplitTable(ctx, node)
 	default:
 		err = vterrors.VT12001(fmt.Sprintf("operator: %T", selStmt))
 	}
@@ -109,6 +111,55 @@ func createOperatorFromDeleteForSplitTable(ctx *plancontext.PlanningContext, del
 	}
 	tableRoute := &TableRoute{
 		Source:  tableDelete,
+		Routing: routing,
+	}
+
+	return tableRoute, nil
+}
+
+func createOperatorFromUpdateForSplitTable(ctx *plancontext.PlanningContext, updateStmt *sqlparser.Update) (ops.Operator, error) {
+	_, qt, err := createQueryTableForDML(ctx, updateStmt.TableExprs[0], updateStmt.Where)
+	if err != nil {
+		return nil, err
+	}
+
+	tableName := updateStmt.TableExprs[0].(*sqlparser.AliasedTableExpr).Expr.(sqlparser.TableName)
+	if err != nil {
+		return nil, err
+	}
+	vschemaTable, _, _, _, _, err := ctx.VSchema.FindTableOrVindex(tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	logicTableConfig := ctx.SplitTableConfig[tableName.Name.String()]
+
+	for _, col := range logicTableConfig.TableIndexColumn {
+		if err := checkAndErrIfTableVindexChanging(updateStmt.Exprs, sqlparser.NewIdentifierCI(col.Column)); err != nil {
+			return nil, err
+		}
+	}
+
+	solves := ctx.SemTable.TableSetFor(qt.Alias)
+	routing := newTableShardedRouting(vschemaTable, logicTableConfig, solves)
+
+	for _, predicate := range qt.Predicates {
+		routing, err = UpdateRoutingLogic(ctx, predicate, routing)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if routing.OpCode() == engine.Scatter && updateStmt.Limit != nil {
+		return nil, vterrors.VT12001("multi split tables UPDATE with LIMIT")
+	}
+
+	tableRoute := &TableRoute{
+		Source: &Update{
+			QTable: qt,
+			VTable: nil,
+			AST:    updateStmt,
+		},
 		Routing: routing,
 	}
 

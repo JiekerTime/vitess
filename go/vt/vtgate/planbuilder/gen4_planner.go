@@ -335,6 +335,12 @@ func gen4UpdateStmtPlanner(
 		return nil, err
 	}
 
+	// build split table plan
+	plan, _, _, err = buildTablePlan(ctx, plan)
+	if err != nil {
+		return nil, err
+	}
+
 	return newPlanResult(plan.Primitive(), operators.TablesUsed(op)...), nil
 }
 

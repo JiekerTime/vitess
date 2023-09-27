@@ -907,6 +907,23 @@ func TestTableRouteSortTruncate(t *testing.T) {
 }
 
 func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tableIndexColumn []*vindexes.TableColumn, tableOpcode Opcode) *TableRoute {
+	return &TableRoute{
+		TableName:       tableName,
+		ShardRouteParam: shardRouteParam,
+		TableRouteParam: &TableRoutingParameters{
+			TableOpcode: tableOpcode,
+			LogicTable:  getTestLogicTableConfig(tableName, tableIndexColumn, nil),
+		},
+	}
+}
+
+func getTestLogicTableConfig(tableName string, tableIndexColumn []*vindexes.TableColumn, tableVindex vindexes.Vindex) vindexes.SplitTableMap {
+	if len(tableIndexColumn) == 0 {
+		tableIndexColumn = []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+		tableName = "t_user"
+		tableVindex, _ = vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	}
+
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
 	logicTable := vindexes.LogicTableConfig{
 		LogicTableName: tableName,
@@ -920,16 +937,10 @@ func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tab
 				Index:           1,
 			},
 		},
+		TableCount:       2,
 		TableIndexColumn: tableIndexColumn,
+		TableVindex:      tableVindex,
 	}
 	logicTableMap[tableName] = &logicTable
-
-	return &TableRoute{
-		TableName:       tableName,
-		ShardRouteParam: shardRouteParam,
-		TableRouteParam: &TableRoutingParameters{
-			TableOpcode: tableOpcode,
-			LogicTable:  logicTableMap,
-		},
-	}
+	return logicTableMap
 }

@@ -109,6 +109,8 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 	switch src := op.Source.(type) {
 	case *operators.Delete:
 		return transformTableDeletePlan(ctx, op, src)
+	case *operators.Update:
+		return transformTableUpdatePlan(ctx, op, src)
 	case *operators.TableInsert:
 		return transformInsertPlanForSplitTable(ctx, op, src)
 	}
@@ -163,6 +165,28 @@ func transformTableDeletePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 	}
 
 	e := &engine.TableDelete{
+		TableDML: edml,
+	}
+	return &primitiveWrapper{prim: e}, nil
+}
+
+func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute, updateOperator *operators.Update) (logicalPlan, error) {
+	ast := updateOperator.AST
+	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
+	if err := op.Routing.UpdateTableRoutingParams(ctx, rp); err != nil {
+		return nil, err
+	}
+
+	edml := &engine.TableDML{
+		AST:             ast,
+		KsidVindex:      ctx.DMLEngine.KsidVindex,
+		KsidLength:      ctx.DMLEngine.KsidLength,
+		Table:           ctx.DMLEngine.Table,
+		ShardRouteParam: ctx.DMLEngine.RoutingParameters,
+		TableRouteParam: rp,
+	}
+
+	e := &engine.TableUpdate{
 		TableDML: edml,
 	}
 	return &primitiveWrapper{prim: e}, nil
