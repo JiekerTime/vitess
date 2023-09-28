@@ -124,6 +124,12 @@ type QueryService interface {
 	Close(ctx context.Context) error
 
 	ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, sql string, bindVariables map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (*sqltypes.Result, error)
+
+	// ExecuteBatch for muti-query execution
+	ExecuteBatch(ctx context.Context, target *querypb.Target, queries []*querypb.BoundQuery, transactionID, reservedID int64, options *querypb.ExecuteOptions) ([]*sqltypes.Result, error)
+
+	// BeginExecuteBatch for muti-query execution in transaction
+	BeginExecuteBatch(ctx context.Context, target *querypb.Target, preQueries []string, queries []*querypb.BoundQuery, reservedID int64, options *querypb.ExecuteOptions) (TransactionState, []*sqltypes.Result, error)
 }
 
 type TransactionState struct {

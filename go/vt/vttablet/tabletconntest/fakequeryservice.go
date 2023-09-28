@@ -765,3 +765,13 @@ func CreateFakeServer(t testing.TB) *FakeQueryService {
 func (f *FakeQueryService) ExecuteLoadData(ctx context.Context, target *querypb.Target, lines chan string, query string, bindVars map[string]*querypb.BindVariable, transactionID int64, options *querypb.ExecuteOptions) (qr *sqltypes.Result, err error) {
 	return nil, nil
 }
+
+// ExecuteBatch is part of the queryservice.QueryService interface
+func (f *FakeQueryService) ExecuteBatch(_ context.Context, _ *querypb.Target, _ []*querypb.BoundQuery, _, _ int64, _ *querypb.ExecuteOptions) ([]*sqltypes.Result, error) {
+	return nil, nil
+}
+
+// BeginExecute combines Begin and Execute.
+func (f *FakeQueryService) BeginExecuteBatch(_ context.Context, _ *querypb.Target, _ []string, _ []*querypb.BoundQuery, _ int64, _ *querypb.ExecuteOptions) (queryservice.TransactionState, []*sqltypes.Result, error) {
+	return queryservice.TransactionState{}, nil, nil
+}

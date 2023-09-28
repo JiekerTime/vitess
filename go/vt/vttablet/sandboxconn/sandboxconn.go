@@ -719,3 +719,13 @@ var StreamRowResult = &sqltypes.Result{
 func (sbc *SandboxConn) ExecuteLoadData(context.Context, *querypb.Target, chan string, string, map[string]*querypb.BindVariable, int64, *querypb.ExecuteOptions) (*sqltypes.Result, error) {
 	return nil, nil
 }
+
+// ExecuteBatch is part of the QueryService interface.
+func (sbc *SandboxConn) ExecuteBatch(_ context.Context, _ *querypb.Target, _ []*querypb.BoundQuery, _, _ int64, _ *querypb.ExecuteOptions) ([]*sqltypes.Result, error) {
+	return nil, nil
+}
+
+// BeginExecuteBatch is part of the QueryService interface.
+func (sbc *SandboxConn) BeginExecuteBatch(_ context.Context, _ *querypb.Target, _ []string, _ []*querypb.BoundQuery, _ int64, _ *querypb.ExecuteOptions) (queryservice.TransactionState, []*sqltypes.Result, error) {
+	return queryservice.TransactionState{}, nil, nil
+}

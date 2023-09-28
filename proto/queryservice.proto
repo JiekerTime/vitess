@@ -113,4 +113,10 @@ service Query {
   rpc GetSchema(query.GetSchemaRequest) returns (stream query.GetSchemaResponse) {};
 
   rpc LoadDataStream(stream query.LoadDataStreamRequest) returns(query.LoadDataStreamResponse) {};
+
+  // ExecuteBatch executes the multi-query SQL query (might be in a
+  // transaction context, if Query.transaction_id is set).
+  rpc ExecuteBatch(query.ExecuteBatchRequest) returns (query.ExecuteBatchResponse) {};
+  // BeginExecuteBatch executes the multi-query SQL query with transaction
+  rpc BeginExecuteBatch(query.BeginExecuteBatchRequest) returns (query.BeginExecuteBatchResponse) {};
 }

@@ -131,3 +131,13 @@ func (q *StreamHealthQueryService) AddHealthResponseWithNotServing() {
 func (q *StreamHealthQueryService) UpdateType(tabletType topodatapb.TabletType) {
 	q.target.TabletType = tabletType
 }
+
+// ExecuteBatch implemented as a no op
+func (q *StreamHealthQueryService) ExecuteBatch(_ context.Context, _ *querypb.Target, _ []*querypb.BoundQuery, _, _ int64, _ *querypb.ExecuteOptions) ([]*sqltypes.Result, error) {
+	return nil, nil
+}
+
+// BeginExecuteBatch implemented as a no op
+func (q *StreamHealthQueryService) BeginExecuteBatch(_ context.Context, _ *querypb.Target, _ []string, _ []*querypb.BoundQuery, _ int64, _ *querypb.ExecuteOptions) (queryservice.TransactionState, []*sqltypes.Result, error) {
+	return queryservice.TransactionState{}, nil, nil
+}

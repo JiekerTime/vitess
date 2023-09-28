@@ -1132,3 +1132,65 @@ func (conn *gRPCQueryClient) ExecuteLoadData(ctx context.Context, target *queryp
 
 	return sqltypes.Proto3ToLoadResult(response), err
 }
+
+// ExecuteBatch sends the muti-query to VTTablet.
+func (conn *gRPCQueryClient) ExecuteBatch(ctx context.Context, target *querypb.Target, queries []*querypb.BoundQuery, transactionID, reservedID int64, options *querypb.ExecuteOptions) ([]*sqltypes.Result, error) {
+	conn.mu.RLock()
+	defer conn.mu.RUnlock()
+	if conn.cc == nil {
+		return nil, tabletconn.ConnClosed
+	}
+
+	req := &querypb.ExecuteBatchRequest{
+		EffectiveCallerId: callerid.EffectiveCallerIDFromContext(ctx),
+		ImmediateCallerId: callerid.ImmediateCallerIDFromContext(ctx),
+		Target:            target,
+		Query:             queries,
+		TransactionId:     transactionID,
+		Options:           options,
+		ReservedId:        reservedID,
+	}
+	er, err := conn.c.ExecuteBatch(ctx, req)
+	if err != nil {
+		return nil, tabletconn.ErrorFromGRPC(err)
+	}
+	var results []*sqltypes.Result
+	for _, v := range er.Result {
+		results = append(results, sqltypes.Proto3ToResult(v))
+	}
+	return results, nil
+}
+
+// BeginExecuteBatch starts a transaction and runs an Execute.
+func (conn *gRPCQueryClient) BeginExecuteBatch(ctx context.Context, target *querypb.Target, preQueries []string, queries []*querypb.BoundQuery, reservedID int64, options *querypb.ExecuteOptions) (state queryservice.TransactionState, result []*sqltypes.Result, err error) {
+	conn.mu.RLock()
+	defer conn.mu.RUnlock()
+	if conn.cc == nil {
+		return state, nil, tabletconn.ConnClosed
+	}
+
+	req := &querypb.BeginExecuteBatchRequest{
+		Target:            target,
+		EffectiveCallerId: callerid.EffectiveCallerIDFromContext(ctx),
+		ImmediateCallerId: callerid.ImmediateCallerIDFromContext(ctx),
+		PreQueries:        preQueries,
+		Query:             queries,
+		ReservedId:        reservedID,
+		Options:           options,
+	}
+	reply, err := conn.c.BeginExecuteBatch(ctx, req)
+	if err != nil {
+		return state, nil, tabletconn.ErrorFromGRPC(err)
+	}
+	state.TransactionID = reply.TransactionId
+	state.TabletAlias = conn.tablet.Alias
+	state.SessionStateChanges = reply.SessionStateChanges
+	if reply.Error != nil {
+		return state, nil, tabletconn.ErrorFromVTRPC(reply.Error)
+	}
+	var results []*sqltypes.Result
+	for _, v := range reply.Result {
+		results = append(results, sqltypes.Proto3ToResult(v))
+	}
+	return state, results, nil
+}

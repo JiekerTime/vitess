@@ -2113,3 +2113,51 @@ func (tsv *TabletServer) ExecuteLoadData(ctx context.Context, target *querypb.Ta
 	return result, err
 
 }
+
+// ExecuteBatch executes the query and returns the result as response.
+func (tsv *TabletServer) ExecuteBatch(ctx context.Context, target *querypb.Target, queries []*querypb.BoundQuery, transactionID, reservedID int64, options *querypb.ExecuteOptions) (result []*sqltypes.Result, err error) {
+	if transactionID != 0 && reservedID != 0 && transactionID != reservedID {
+		return nil, vterrors.New(vtrpcpb.Code_INTERNAL, "[BUG] transactionID and reserveID must match if both are non-zero")
+	}
+	var results []*sqltypes.Result
+	for _, query := range queries {
+		span, ctx := trace.NewSpan(ctx, "TabletServer.Execute")
+		trace.AnnotateSQL(span, sqlparser.Preview(query.Sql))
+		defer span.Finish()
+
+		result, err := tsv.execute(ctx, target, query.Sql, query.BindVariables, transactionID, reservedID, nil, options)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
+// BeginExecuteBatch combines Begin and Execute.
+func (tsv *TabletServer) BeginExecuteBatch(ctx context.Context, target *querypb.Target, preQueries []string, queries []*querypb.BoundQuery, reservedID int64, options *querypb.ExecuteOptions) (queryservice.TransactionState, []*sqltypes.Result, error) {
+	// Disable hot row protection in case of reserve connection.
+	//if tsv.enableHotRowProtection && reservedID == 0 {
+	//	txDone, err := tsv.beginWaitForSameRangeTransactions(ctx, target, options, sql, bindVariables)
+	//	if err != nil {
+	//		return queryservice.TransactionState{}, nil, err
+	//	}
+	//	if txDone != nil {
+	//		defer txDone()
+	//	}
+	//}
+
+	state, err := tsv.begin(ctx, target, preQueries, reservedID, nil, options)
+	if err != nil {
+		return state, nil, err
+	}
+	var results []*sqltypes.Result
+	for _, query := range queries {
+		result, err := tsv.Execute(ctx, target, query.Sql, query.BindVariables, state.TransactionID, reservedID, options)
+		if err != nil {
+			return state, results, err
+		}
+		results = append(results, result)
+	}
+	return state, results, err
+}

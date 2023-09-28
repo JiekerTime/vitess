@@ -84,6 +84,11 @@ type QueryClient interface {
 	// GetSchema returns the schema information.
 	GetSchema(ctx context.Context, in *query.GetSchemaRequest, opts ...grpc.CallOption) (Query_GetSchemaClient, error)
 	LoadDataStream(ctx context.Context, opts ...grpc.CallOption) (Query_LoadDataStreamClient, error)
+	// ExecuteBatch executes the multi-query SQL query (might be in a
+	// transaction context, if Query.transaction_id is set).
+	ExecuteBatch(ctx context.Context, in *query.ExecuteBatchRequest, opts ...grpc.CallOption) (*query.ExecuteBatchResponse, error)
+	// BeginExecuteBatch executes the multi-query SQL query with transaction
+	BeginExecuteBatch(ctx context.Context, in *query.BeginExecuteBatchRequest, opts ...grpc.CallOption) (*query.BeginExecuteBatchResponse, error)
 }
 
 type queryClient struct {
@@ -601,6 +606,24 @@ func (x *queryLoadDataStreamClient) CloseAndRecv() (*query.LoadDataStreamRespons
 	return m, nil
 }
 
+func (c *queryClient) ExecuteBatch(ctx context.Context, in *query.ExecuteBatchRequest, opts ...grpc.CallOption) (*query.ExecuteBatchResponse, error) {
+	out := new(query.ExecuteBatchResponse)
+	err := c.cc.Invoke(ctx, "/queryservice.Query/ExecuteBatch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) BeginExecuteBatch(ctx context.Context, in *query.BeginExecuteBatchRequest, opts ...grpc.CallOption) (*query.BeginExecuteBatchResponse, error) {
+	out := new(query.BeginExecuteBatchResponse)
+	err := c.cc.Invoke(ctx, "/queryservice.Query/BeginExecuteBatch", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -665,6 +688,11 @@ type QueryServer interface {
 	// GetSchema returns the schema information.
 	GetSchema(*query.GetSchemaRequest, Query_GetSchemaServer) error
 	LoadDataStream(Query_LoadDataStreamServer) error
+	// ExecuteBatch executes the multi-query SQL query (might be in a
+	// transaction context, if Query.transaction_id is set).
+	ExecuteBatch(context.Context, *query.ExecuteBatchRequest) (*query.ExecuteBatchResponse, error)
+	// BeginExecuteBatch executes the multi-query SQL query with transaction
+	BeginExecuteBatch(context.Context, *query.BeginExecuteBatchRequest) (*query.BeginExecuteBatchResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -755,6 +783,12 @@ func (UnimplementedQueryServer) GetSchema(*query.GetSchemaRequest, Query_GetSche
 }
 func (UnimplementedQueryServer) LoadDataStream(Query_LoadDataStreamServer) error {
 	return status.Errorf(codes.Unimplemented, "method LoadDataStream not implemented")
+}
+func (UnimplementedQueryServer) ExecuteBatch(context.Context, *query.ExecuteBatchRequest) (*query.ExecuteBatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecuteBatch not implemented")
+}
+func (UnimplementedQueryServer) BeginExecuteBatch(context.Context, *query.BeginExecuteBatchRequest) (*query.BeginExecuteBatchResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BeginExecuteBatch not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -1311,6 +1345,42 @@ func (x *queryLoadDataStreamServer) Recv() (*query.LoadDataStreamRequest, error)
 	return m, nil
 }
 
+func _Query_ExecuteBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(query.ExecuteBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ExecuteBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/queryservice.Query/ExecuteBatch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ExecuteBatch(ctx, req.(*query.ExecuteBatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_BeginExecuteBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(query.BeginExecuteBatchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).BeginExecuteBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/queryservice.Query/BeginExecuteBatch",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).BeginExecuteBatch(ctx, req.(*query.BeginExecuteBatchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1385,6 +1455,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Release",
 			Handler:    _Query_Release_Handler,
+		},
+		{
+			MethodName: "ExecuteBatch",
+			Handler:    _Query_ExecuteBatch_Handler,
+		},
+		{
+			MethodName: "BeginExecuteBatch",
+			Handler:    _Query_BeginExecuteBatch_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

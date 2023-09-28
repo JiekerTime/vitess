@@ -1,6 +1,5 @@
 import * as $protobuf from "protobufjs";
 import Long = require("long");
-
 /** Namespace vtadmin. */
 export namespace vtadmin {
 
@@ -38220,6 +38219,490 @@ export namespace query {
 
         /**
          * Gets the default type url for LoadDataStreamResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an ExecuteBatchRequest. */
+    interface IExecuteBatchRequest {
+
+        /** ExecuteBatchRequest effective_caller_id */
+        effective_caller_id?: (vtrpc.ICallerID|null);
+
+        /** ExecuteBatchRequest immediate_caller_id */
+        immediate_caller_id?: (query.IVTGateCallerID|null);
+
+        /** ExecuteBatchRequest target */
+        target?: (query.ITarget|null);
+
+        /** ExecuteBatchRequest query */
+        query?: (query.IBoundQuery[]|null);
+
+        /** ExecuteBatchRequest transaction_id */
+        transaction_id?: (number|Long|null);
+
+        /** ExecuteBatchRequest options */
+        options?: (query.IExecuteOptions|null);
+
+        /** ExecuteBatchRequest reserved_id */
+        reserved_id?: (number|Long|null);
+    }
+
+    /** Represents an ExecuteBatchRequest. */
+    class ExecuteBatchRequest implements IExecuteBatchRequest {
+
+        /**
+         * Constructs a new ExecuteBatchRequest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: query.IExecuteBatchRequest);
+
+        /** ExecuteBatchRequest effective_caller_id. */
+        public effective_caller_id?: (vtrpc.ICallerID|null);
+
+        /** ExecuteBatchRequest immediate_caller_id. */
+        public immediate_caller_id?: (query.IVTGateCallerID|null);
+
+        /** ExecuteBatchRequest target. */
+        public target?: (query.ITarget|null);
+
+        /** ExecuteBatchRequest query. */
+        public query: query.IBoundQuery[];
+
+        /** ExecuteBatchRequest transaction_id. */
+        public transaction_id: (number|Long);
+
+        /** ExecuteBatchRequest options. */
+        public options?: (query.IExecuteOptions|null);
+
+        /** ExecuteBatchRequest reserved_id. */
+        public reserved_id: (number|Long);
+
+        /**
+         * Creates a new ExecuteBatchRequest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ExecuteBatchRequest instance
+         */
+        public static create(properties?: query.IExecuteBatchRequest): query.ExecuteBatchRequest;
+
+        /**
+         * Encodes the specified ExecuteBatchRequest message. Does not implicitly {@link query.ExecuteBatchRequest.verify|verify} messages.
+         * @param message ExecuteBatchRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: query.IExecuteBatchRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ExecuteBatchRequest message, length delimited. Does not implicitly {@link query.ExecuteBatchRequest.verify|verify} messages.
+         * @param message ExecuteBatchRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: query.IExecuteBatchRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an ExecuteBatchRequest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ExecuteBatchRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): query.ExecuteBatchRequest;
+
+        /**
+         * Decodes an ExecuteBatchRequest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ExecuteBatchRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): query.ExecuteBatchRequest;
+
+        /**
+         * Verifies an ExecuteBatchRequest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an ExecuteBatchRequest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ExecuteBatchRequest
+         */
+        public static fromObject(object: { [k: string]: any }): query.ExecuteBatchRequest;
+
+        /**
+         * Creates a plain object from an ExecuteBatchRequest message. Also converts values to other types if specified.
+         * @param message ExecuteBatchRequest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: query.ExecuteBatchRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ExecuteBatchRequest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ExecuteBatchRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of an ExecuteBatchResponse. */
+    interface IExecuteBatchResponse {
+
+        /** ExecuteBatchResponse result */
+        result?: (query.IQueryResult[]|null);
+    }
+
+    /** Represents an ExecuteBatchResponse. */
+    class ExecuteBatchResponse implements IExecuteBatchResponse {
+
+        /**
+         * Constructs a new ExecuteBatchResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: query.IExecuteBatchResponse);
+
+        /** ExecuteBatchResponse result. */
+        public result: query.IQueryResult[];
+
+        /**
+         * Creates a new ExecuteBatchResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns ExecuteBatchResponse instance
+         */
+        public static create(properties?: query.IExecuteBatchResponse): query.ExecuteBatchResponse;
+
+        /**
+         * Encodes the specified ExecuteBatchResponse message. Does not implicitly {@link query.ExecuteBatchResponse.verify|verify} messages.
+         * @param message ExecuteBatchResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: query.IExecuteBatchResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified ExecuteBatchResponse message, length delimited. Does not implicitly {@link query.ExecuteBatchResponse.verify|verify} messages.
+         * @param message ExecuteBatchResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: query.IExecuteBatchResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes an ExecuteBatchResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns ExecuteBatchResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): query.ExecuteBatchResponse;
+
+        /**
+         * Decodes an ExecuteBatchResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns ExecuteBatchResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): query.ExecuteBatchResponse;
+
+        /**
+         * Verifies an ExecuteBatchResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates an ExecuteBatchResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns ExecuteBatchResponse
+         */
+        public static fromObject(object: { [k: string]: any }): query.ExecuteBatchResponse;
+
+        /**
+         * Creates a plain object from an ExecuteBatchResponse message. Also converts values to other types if specified.
+         * @param message ExecuteBatchResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: query.ExecuteBatchResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this ExecuteBatchResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for ExecuteBatchResponse
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a BeginExecuteBatchRequest. */
+    interface IBeginExecuteBatchRequest {
+
+        /** BeginExecuteBatchRequest effective_caller_id */
+        effective_caller_id?: (vtrpc.ICallerID|null);
+
+        /** BeginExecuteBatchRequest immediate_caller_id */
+        immediate_caller_id?: (query.IVTGateCallerID|null);
+
+        /** BeginExecuteBatchRequest target */
+        target?: (query.ITarget|null);
+
+        /** BeginExecuteBatchRequest query */
+        query?: (query.IBoundQuery[]|null);
+
+        /** BeginExecuteBatchRequest options */
+        options?: (query.IExecuteOptions|null);
+
+        /** BeginExecuteBatchRequest reserved_id */
+        reserved_id?: (number|Long|null);
+
+        /** BeginExecuteBatchRequest pre_queries */
+        pre_queries?: (string[]|null);
+    }
+
+    /** Represents a BeginExecuteBatchRequest. */
+    class BeginExecuteBatchRequest implements IBeginExecuteBatchRequest {
+
+        /**
+         * Constructs a new BeginExecuteBatchRequest.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: query.IBeginExecuteBatchRequest);
+
+        /** BeginExecuteBatchRequest effective_caller_id. */
+        public effective_caller_id?: (vtrpc.ICallerID|null);
+
+        /** BeginExecuteBatchRequest immediate_caller_id. */
+        public immediate_caller_id?: (query.IVTGateCallerID|null);
+
+        /** BeginExecuteBatchRequest target. */
+        public target?: (query.ITarget|null);
+
+        /** BeginExecuteBatchRequest query. */
+        public query: query.IBoundQuery[];
+
+        /** BeginExecuteBatchRequest options. */
+        public options?: (query.IExecuteOptions|null);
+
+        /** BeginExecuteBatchRequest reserved_id. */
+        public reserved_id: (number|Long);
+
+        /** BeginExecuteBatchRequest pre_queries. */
+        public pre_queries: string[];
+
+        /**
+         * Creates a new BeginExecuteBatchRequest instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BeginExecuteBatchRequest instance
+         */
+        public static create(properties?: query.IBeginExecuteBatchRequest): query.BeginExecuteBatchRequest;
+
+        /**
+         * Encodes the specified BeginExecuteBatchRequest message. Does not implicitly {@link query.BeginExecuteBatchRequest.verify|verify} messages.
+         * @param message BeginExecuteBatchRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: query.IBeginExecuteBatchRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BeginExecuteBatchRequest message, length delimited. Does not implicitly {@link query.BeginExecuteBatchRequest.verify|verify} messages.
+         * @param message BeginExecuteBatchRequest message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: query.IBeginExecuteBatchRequest, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BeginExecuteBatchRequest message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BeginExecuteBatchRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): query.BeginExecuteBatchRequest;
+
+        /**
+         * Decodes a BeginExecuteBatchRequest message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BeginExecuteBatchRequest
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): query.BeginExecuteBatchRequest;
+
+        /**
+         * Verifies a BeginExecuteBatchRequest message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BeginExecuteBatchRequest message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BeginExecuteBatchRequest
+         */
+        public static fromObject(object: { [k: string]: any }): query.BeginExecuteBatchRequest;
+
+        /**
+         * Creates a plain object from a BeginExecuteBatchRequest message. Also converts values to other types if specified.
+         * @param message BeginExecuteBatchRequest
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: query.BeginExecuteBatchRequest, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BeginExecuteBatchRequest to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BeginExecuteBatchRequest
+         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns The default type url
+         */
+        public static getTypeUrl(typeUrlPrefix?: string): string;
+    }
+
+    /** Properties of a BeginExecuteBatchResponse. */
+    interface IBeginExecuteBatchResponse {
+
+        /** BeginExecuteBatchResponse error */
+        error?: (vtrpc.IRPCError|null);
+
+        /** BeginExecuteBatchResponse result */
+        result?: (query.IQueryResult[]|null);
+
+        /** BeginExecuteBatchResponse transaction_id */
+        transaction_id?: (number|Long|null);
+
+        /** BeginExecuteBatchResponse tablet_alias */
+        tablet_alias?: (topodata.ITabletAlias|null);
+
+        /** BeginExecuteBatchResponse session_state_changes */
+        session_state_changes?: (string|null);
+    }
+
+    /** Represents a BeginExecuteBatchResponse. */
+    class BeginExecuteBatchResponse implements IBeginExecuteBatchResponse {
+
+        /**
+         * Constructs a new BeginExecuteBatchResponse.
+         * @param [properties] Properties to set
+         */
+        constructor(properties?: query.IBeginExecuteBatchResponse);
+
+        /** BeginExecuteBatchResponse error. */
+        public error?: (vtrpc.IRPCError|null);
+
+        /** BeginExecuteBatchResponse result. */
+        public result: query.IQueryResult[];
+
+        /** BeginExecuteBatchResponse transaction_id. */
+        public transaction_id: (number|Long);
+
+        /** BeginExecuteBatchResponse tablet_alias. */
+        public tablet_alias?: (topodata.ITabletAlias|null);
+
+        /** BeginExecuteBatchResponse session_state_changes. */
+        public session_state_changes: string;
+
+        /**
+         * Creates a new BeginExecuteBatchResponse instance using the specified properties.
+         * @param [properties] Properties to set
+         * @returns BeginExecuteBatchResponse instance
+         */
+        public static create(properties?: query.IBeginExecuteBatchResponse): query.BeginExecuteBatchResponse;
+
+        /**
+         * Encodes the specified BeginExecuteBatchResponse message. Does not implicitly {@link query.BeginExecuteBatchResponse.verify|verify} messages.
+         * @param message BeginExecuteBatchResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encode(message: query.IBeginExecuteBatchResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Encodes the specified BeginExecuteBatchResponse message, length delimited. Does not implicitly {@link query.BeginExecuteBatchResponse.verify|verify} messages.
+         * @param message BeginExecuteBatchResponse message or plain object to encode
+         * @param [writer] Writer to encode to
+         * @returns Writer
+         */
+        public static encodeDelimited(message: query.IBeginExecuteBatchResponse, writer?: $protobuf.Writer): $protobuf.Writer;
+
+        /**
+         * Decodes a BeginExecuteBatchResponse message from the specified reader or buffer.
+         * @param reader Reader or buffer to decode from
+         * @param [length] Message length if known beforehand
+         * @returns BeginExecuteBatchResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): query.BeginExecuteBatchResponse;
+
+        /**
+         * Decodes a BeginExecuteBatchResponse message from the specified reader or buffer, length delimited.
+         * @param reader Reader or buffer to decode from
+         * @returns BeginExecuteBatchResponse
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): query.BeginExecuteBatchResponse;
+
+        /**
+         * Verifies a BeginExecuteBatchResponse message.
+         * @param message Plain object to verify
+         * @returns `null` if valid, otherwise the reason why it is not
+         */
+        public static verify(message: { [k: string]: any }): (string|null);
+
+        /**
+         * Creates a BeginExecuteBatchResponse message from a plain object. Also converts values to their respective internal types.
+         * @param object Plain object
+         * @returns BeginExecuteBatchResponse
+         */
+        public static fromObject(object: { [k: string]: any }): query.BeginExecuteBatchResponse;
+
+        /**
+         * Creates a plain object from a BeginExecuteBatchResponse message. Also converts values to other types if specified.
+         * @param message BeginExecuteBatchResponse
+         * @param [options] Conversion options
+         * @returns Plain object
+         */
+        public static toObject(message: query.BeginExecuteBatchResponse, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+        /**
+         * Converts this BeginExecuteBatchResponse to JSON.
+         * @returns JSON object
+         */
+        public toJSON(): { [k: string]: any };
+
+        /**
+         * Gets the default type url for BeginExecuteBatchResponse
          * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
          * @returns The default type url
          */

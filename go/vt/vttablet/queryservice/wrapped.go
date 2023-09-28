@@ -347,3 +347,25 @@ func (ws *wrappedService) ExecuteLoadData(ctx context.Context, target *querypb.T
 	})
 	return qr, err
 }
+
+func (ws *wrappedService) ExecuteBatch(ctx context.Context, target *querypb.Target, queries []*querypb.BoundQuery, transactionID, reservedID int64, options *querypb.ExecuteOptions) (qr []*sqltypes.Result, err error) {
+	inDedicatedConn := transactionID != 0 || reservedID != 0
+	err = ws.wrapper(ctx, target, ws.impl, "Execute", inDedicatedConn, func(ctx context.Context, target *querypb.Target, conn QueryService) (bool, error) {
+		var innerErr error
+		qr, innerErr = conn.ExecuteBatch(ctx, target, queries, transactionID, reservedID, options)
+		// You cannot retry if you're in a transaction.
+		retryable := canRetry(ctx, innerErr) && (!inDedicatedConn)
+		return retryable, innerErr
+	})
+	return qr, err
+}
+
+func (ws *wrappedService) BeginExecuteBatch(ctx context.Context, target *querypb.Target, preQueries []string, queries []*querypb.BoundQuery, reservedID int64, options *querypb.ExecuteOptions) (state TransactionState, qr []*sqltypes.Result, err error) {
+	inDedicatedConn := reservedID != 0
+	err = ws.wrapper(ctx, target, ws.impl, "BeginExecute", inDedicatedConn, func(ctx context.Context, target *querypb.Target, conn QueryService) (bool, error) {
+		var innerErr error
+		state, qr, innerErr = conn.BeginExecuteBatch(ctx, target, preQueries, queries, reservedID, options)
+		return canRetry(ctx, innerErr) && !inDedicatedConn, innerErr
+	})
+	return state, qr, err
+}

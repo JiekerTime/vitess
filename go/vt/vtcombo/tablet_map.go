@@ -967,3 +967,27 @@ func (itc *internalTabletConn) ExecuteLoadData(ctx context.Context, target *quer
 	}
 	return result, nil
 }
+
+// ExecuteBatch is part of queryservice.QueryService
+// We need to copy the bind variables as tablet server will change them.
+func (itc *internalTabletConn) ExecuteBatch(
+	_ context.Context,
+	_ *querypb.Target,
+	_ []*querypb.BoundQuery,
+	_, _ int64,
+	_ *querypb.ExecuteOptions,
+) ([]*sqltypes.Result, error) {
+	return nil, nil
+}
+
+// BeginExecuteBatch is part of queryservice.QueryService
+func (itc *internalTabletConn) BeginExecuteBatch(
+	_ context.Context,
+	_ *querypb.Target,
+	_ []string,
+	_ []*querypb.BoundQuery,
+	_ int64,
+	_ *querypb.ExecuteOptions,
+) (queryservice.TransactionState, []*sqltypes.Result, error) {
+	return queryservice.TransactionState{}, nil, nil
+}

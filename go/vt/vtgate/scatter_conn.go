@@ -930,33 +930,90 @@ func (stc *ScatterConn) ExecuteBatchMultiShard(
 	ctx context.Context,
 	primitive engine.Primitive,
 	rss []*srvtopo.ResolvedShard,
-	querieses [][]*querypb.BoundQuery,
+	queries [][]*querypb.BoundQuery,
 	session *SafeSession,
 	autocommit bool,
 	ignoreMaxMemoryRows bool,
 ) (qr *sqltypes.Result, errs []error) {
-	rows := len(querieses)
-	var cols int
-	for _, queries := range querieses {
-		if len(queries) > cols {
-			cols = len(queries)
-		}
+	if len(rss) != len(queries) {
+		return nil, []error{vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] got mismatched number of queries and shards")}
 	}
-	result := &sqltypes.Result{}
-	for i := 0; i < cols; i++ {
-		executeQueries := make([]*querypb.BoundQuery, 0)
-		executeRss := make([]*srvtopo.ResolvedShard, 0)
-		for j := 0; j < rows; j++ {
-			if i < len(querieses[j]) {
-				executeRss = append(executeRss, rss[j])
-				executeQueries = append(executeQueries, querieses[j][i])
+
+	// mu protects qr
+	var mu sync.Mutex
+	qr = new(sqltypes.Result)
+	if session.InLockSession() && session.TriggerLockHeartBeat() {
+		go stc.runLockQuery(ctx, session)
+	}
+	allErrors := stc.multiGoTransaction(
+		ctx,
+		"ExecuteBatch",
+		rss,
+		session,
+		autocommit,
+		func(rs *srvtopo.ResolvedShard, i int, info *shardActionInfo) (*shardActionInfo, error) {
+			var (
+				innerqr []*sqltypes.Result
+				err     error
+				opts    *querypb.ExecuteOptions
+				alias   *topodatapb.TabletAlias
+				qs      queryservice.QueryService
+			)
+			transactionID := info.transactionID
+			reservedID := info.reservedID
+
+			if session != nil && session.Session != nil {
+				opts = session.Session.Options
 			}
-		}
-		multiShard, errors := stc.ExecuteMultiShard(ctx, primitive, executeRss, executeQueries, session, autocommit, ignoreMaxMemoryRows)
-		if errors != nil {
-			return nil, errors
-		}
-		result.AppendResult(multiShard)
+
+			if autocommit {
+				// As this is auto-commit, the transactionID is supposed to be zero.
+				if transactionID != int64(0) {
+					return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "in autocommit mode, transactionID should be zero but was: %d", transactionID)
+				}
+			}
+
+			qs, err = getQueryService(rs, info, session, false)
+			if err != nil {
+				return nil, err
+			}
+
+			switch info.actionNeeded {
+			case nothing:
+				innerqr, err = qs.ExecuteBatch(ctx, rs.Target, queries[i], info.transactionID, info.reservedID, opts)
+			case begin:
+				var state queryservice.TransactionState
+				state, innerqr, err = qs.BeginExecuteBatch(ctx, rs.Target, session.SavePoints(), queries[i], reservedID, opts)
+				transactionID = state.TransactionID
+				alias = state.TabletAlias
+			default:
+				return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] unexpected actionNeeded on query execution: %v", info.actionNeeded)
+			}
+
+			// We need to new shard info irrespective of the error.
+			newInfo := info.updateTransactionAndReservedID(transactionID, reservedID, alias)
+			if err != nil {
+				return newInfo, err
+			}
+			mu.Lock()
+			defer mu.Unlock()
+
+			// Don't append more rows if row count is exceeded.
+			var rows int
+			for _, v := range innerqr {
+				rows += len(v.Rows)
+			}
+			if ignoreMaxMemoryRows || rows <= maxMemoryRows {
+				for k, v := range innerqr {
+					session.logging.log(primitive, rs.Target, rs.Gateway, queries[i][k].Sql, info.actionNeeded == begin || info.actionNeeded == reserveBegin, queries[i][k].BindVariables)
+					qr.AppendResult(v)
+				}
+			}
+			return newInfo, nil
+		},
+	)
+	if !ignoreMaxMemoryRows && len(qr.Rows) > maxMemoryRows {
+		return nil, []error{vterrors.NewErrorf(vtrpcpb.Code_RESOURCE_EXHAUSTED, vterrors.NetPacketTooLarge, "in-memory row count exceeded allowed limit of %d", maxMemoryRows)}
 	}
-	return result, nil
+	return qr, allErrors.GetErrors()
 }

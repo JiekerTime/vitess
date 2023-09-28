@@ -799,10 +799,10 @@ func printResolvedShardsBindVars(rss []*srvtopo.ResolvedShard, bvs []map[string]
 	return buf.String()
 }
 
-func (f *loggingVCursor) ExecuteBatchMultiShard(_ context.Context, _ Primitive, rss []*srvtopo.ResolvedShard, querieses [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error) {
-	rows := len(querieses)
+func (f *loggingVCursor) ExecuteBatchMultiShard(_ context.Context, _ Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error) {
+	rows := len(queries)
 	var cols int
-	for _, queries := range querieses {
+	for _, queries := range queries {
 		if len(queries) > cols {
 			cols = len(queries)
 		}
@@ -811,9 +811,9 @@ func (f *loggingVCursor) ExecuteBatchMultiShard(_ context.Context, _ Primitive, 
 		executeQueries := make([]*querypb.BoundQuery, 0)
 		executeRss := make([]*srvtopo.ResolvedShard, 0)
 		for j := 0; j < rows; j++ {
-			if i < len(querieses[j]) {
+			if i < len(queries[j]) {
 				executeRss = append(executeRss, rss[j])
-				executeQueries = append(executeQueries, querieses[j][i])
+				executeQueries = append(executeQueries, queries[j][i])
 			}
 		}
 		f.log = append(f.log, fmt.Sprintf("ExecuteBatchMultiShard %v%v %v", printResolvedShardQueries(executeRss, executeQueries), rollbackOnError, canAutocommit))

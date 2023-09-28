@@ -871,3 +871,56 @@ func inferColTypeFromExpr(node sqlparser.Expr, tableColumnMap map[sqlparser.Iden
 
 	return colNames, colTypes
 }
+
+// ExecuteBatch is part of the QueryService interface.
+func (t *explainTablet) ExecuteBatch(ctx context.Context, target *querypb.Target, queries []*querypb.BoundQuery, transactionID, reservedID int64, options *querypb.ExecuteOptions) ([]*sqltypes.Result, error) {
+	t.mu.Lock()
+	t.currentTime = t.vte.batchTime.Wait()
+	defer t.mu.Unlock()
+	var results []*sqltypes.Result
+	for _, query := range queries {
+		// Since the query is simulated being "sent" over the wire we need to
+		// copy the bindVars into the executor to avoid a data race.
+		bindVariable := sqltypes.CopyBindVariables(query.BindVariables)
+		t.tabletQueries = append(t.tabletQueries, &TabletQuery{
+			Time:     t.currentTime,
+			SQL:      query.Sql,
+			BindVars: bindVariable,
+		})
+
+		result, err := t.tsv.Execute(ctx, target, query.Sql, bindVariable, transactionID, reservedID, options)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
+// BeginExecuteBatch is part of the QueryService interface.
+func (t *explainTablet) BeginExecuteBatch(ctx context.Context, target *querypb.Target, preQueries []string, queries []*querypb.BoundQuery, reservedID int64, options *querypb.ExecuteOptions) (queryservice.TransactionState, []*sqltypes.Result, error) {
+	t.mu.Lock()
+	t.currentTime = t.vte.batchTime.Wait()
+	defer t.mu.Unlock()
+	var (
+		results []*sqltypes.Result
+		result  *sqltypes.Result
+		state   queryservice.TransactionState
+		err     error
+	)
+	for _, query := range queries {
+		bindVariables := sqltypes.CopyBindVariables(query.BindVariables)
+		t.tabletQueries = append(t.tabletQueries, &TabletQuery{
+			Time:     t.currentTime,
+			SQL:      query.Sql,
+			BindVars: bindVariables,
+		})
+
+		state, result, err = t.tsv.BeginExecute(ctx, target, preQueries, query.Sql, bindVariables, reservedID, options)
+		if err != nil {
+			return state, results, err
+		}
+		results = append(results, result)
+	}
+	return state, results, err
+}
