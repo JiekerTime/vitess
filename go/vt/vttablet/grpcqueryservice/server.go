@@ -552,3 +552,44 @@ func (q *query) LoadDataStream(qls queryservicepb.Query_LoadDataStreamServer) (e
 
 	return qls.SendAndClose(&querypb.LoadDataStreamResponse{Result: sqltypes.ResultToProto3(result)})
 }
+
+func (q *query) ExecuteBatch(ctx context.Context, request *querypb.ExecuteBatchRequest) (response *querypb.ExecuteBatchResponse, err error) {
+	defer q.server.HandlePanic(&err)
+	ctx = callerid.NewContext(callinfo.GRPCCallInfo(ctx),
+		request.EffectiveCallerId,
+		request.ImmediateCallerId,
+	)
+	result, err := q.server.ExecuteBatch(ctx, request.Target, request.Query, request.TransactionId, request.ReservedId, request.Options)
+	if err != nil {
+		return nil, vterrors.ToGRPC(err)
+	}
+	return &querypb.ExecuteBatchResponse{
+		Result: sqltypes.ResultsToProto3(result),
+	}, nil
+}
+
+func (q *query) BeginExecuteBatch(ctx context.Context, request *querypb.BeginExecuteBatchRequest) (response *querypb.BeginExecuteBatchResponse, err error) {
+	defer q.server.HandlePanic(&err)
+	ctx = callerid.NewContext(callinfo.GRPCCallInfo(ctx),
+		request.EffectiveCallerId,
+		request.ImmediateCallerId,
+	)
+	state, result, err := q.server.BeginExecuteBatch(ctx, request.Target, request.PreQueries, request.Query, request.ReservedId, request.Options)
+	if err != nil {
+		// if we have a valid transactionID, return the error in-band
+		if state.TransactionID != 0 {
+			return &querypb.BeginExecuteBatchResponse{
+				Error:         vterrors.ToVTRPC(err),
+				TransactionId: state.TransactionID,
+				TabletAlias:   state.TabletAlias,
+			}, nil
+		}
+		return nil, vterrors.ToGRPC(err)
+	}
+	return &querypb.BeginExecuteBatchResponse{
+		Result:              sqltypes.ResultsToProto3(result),
+		TransactionId:       state.TransactionID,
+		TabletAlias:         state.TabletAlias,
+		SessionStateChanges: state.SessionStateChanges,
+	}, nil
+}

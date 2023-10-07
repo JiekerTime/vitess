@@ -143,13 +143,13 @@ func CustomProto3ToResult(fields []*querypb.Field, qr *querypb.QueryResult) *Res
 }
 
 // ResultsToProto3 converts []Result to proto3.
-func ResultsToProto3(qr []Result) []*querypb.QueryResult {
+func ResultsToProto3(qr []*Result) []*querypb.QueryResult {
 	if len(qr) == 0 {
 		return nil
 	}
 	result := make([]*querypb.QueryResult, len(qr))
 	for i, q := range qr {
-		result[i] = ResultToProto3(&q)
+		result[i] = ResultToProto3(q)
 	}
 	return result
 }
