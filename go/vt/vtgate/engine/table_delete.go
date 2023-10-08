@@ -24,6 +24,7 @@ import (
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 )
 
@@ -54,8 +55,10 @@ func (del *TableDelete) TryExecute(ctx context.Context, vcursor VCursor, bindVar
 
 	// todo:根据分片和分表的Opcode确实是否开启事务
 	switch del.ShardRouteParam.Opcode {
+	case Unsharded:
+		return del.execUnsharded(ctx, del, vcursor, bindVars, rss, actualTableMap)
 	case IN, Scatter, EqualUnique, MultiEqual:
-		return del.execMultiDestination(ctx, del, vcursor, bindVars, rss, nil, actualTableMap)
+		return del.execMultiDestination(ctx, del, vcursor, bindVars, rss, del.deleteVindexEntries, actualTableMap)
 	default:
 		// Unreachable.
 		return nil, fmt.Errorf("unsupported opcode: %v", del.ShardRouteParam.Opcode)
@@ -70,6 +73,11 @@ func (del *TableDelete) TryStreamExecute(ctx context.Context, vcursor VCursor, b
 // GetFields fetches the field info.
 func (del *TableDelete) GetFields(context.Context, VCursor, map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
 	return nil, fmt.Errorf("BUG: unreachable code for %q", del.Queries)
+}
+
+func (del *TableDelete) deleteVindexEntries(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, rss []*srvtopo.ResolvedShard) error {
+	// TODO: support delete vindex entries method. Please refer to original method in delete.go.
+	return nil
 }
 
 func (del *TableDelete) description() PrimitiveDescription {

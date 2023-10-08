@@ -48,7 +48,7 @@ type TableDML struct {
 
 func (dml *TableDML) execUnsharded(ctx context.Context, primitive Primitive, vcursor VCursor, bindVars map[string]*querypb.BindVariable, rss []*srvtopo.ResolvedShard,
 	actualTableNameMap map[string][]vindexes.ActualTable) (*sqltypes.Result, error) {
-	return nil, fmt.Errorf("implement me")
+	return nil, fmt.Errorf("unsupported opcode: %v", Unsharded)
 }
 
 func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primitive, vcursor VCursor, bindVars map[string]*querypb.BindVariable, rss []*srvtopo.ResolvedShard,
