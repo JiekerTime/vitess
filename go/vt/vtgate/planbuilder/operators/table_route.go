@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"vitess.io/vitess/go/vt/sqlparser"
-	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
@@ -252,46 +251,7 @@ func createTableRoute(
 	queryTable *QueryTable,
 	solves semantics.TableSet,
 ) (ops.Operator, error) {
-	return findVSchemaTableAndCreateTableRoute(ctx, queryTable, queryTable.Table, solves, true /*planAlternates*/)
-}
-
-// findVSchemaTableAndCreateTableRoute consults the VSchema to find a suitable
-// table, and then creates a route from that.
-func findVSchemaTableAndCreateTableRoute(
-	ctx *plancontext.PlanningContext,
-	queryTable *QueryTable,
-	tableName sqlparser.TableName,
-	solves semantics.TableSet,
-	planAlternates bool,
-) (*TableRoute, error) {
-	vschemaTable, _, _, _, target, err := ctx.VSchema.FindTableOrVindex(tableName)
-	if target != nil {
-		return nil, vterrors.VT12001("SELECT with a target destination")
-	}
-	if err != nil {
-		return nil, err
-	}
-	config := ctx.SplitTableConfig[tableName.Name.String()]
-
-	return createTableRouteFromVSchemaTable(
-		ctx,
-		queryTable,
-		vschemaTable,
-		config,
-		solves,
-		planAlternates,
-	)
-}
-
-// createTableRouteFromVSchemaTable creates a route from the given VSchema table.
-func createTableRouteFromVSchemaTable(
-	ctx *plancontext.PlanningContext,
-	queryTable *QueryTable,
-	vschemaTable *vindexes.Table,
-	logicTableConfig *vindexes.LogicTableConfig,
-	solves semantics.TableSet,
-	_ bool,
-) (*TableRoute, error) {
+	config := ctx.SplitTableConfig[queryTable.Table.Name.String()]
 	plan := &TableRoute{
 		Source: &Table{
 			QTable: queryTable,
@@ -300,7 +260,7 @@ func createTableRouteFromVSchemaTable(
 	}
 
 	// We create the appropiate Routing struct here, depending on the type of table we are dealing with.
-	routing := newTableShardedRouting(vschemaTable, logicTableConfig, solves)
+	routing := newTableShardedRouting(config, solves)
 	for _, predicate := range queryTable.Predicates {
 		var err error
 		routing, err = UpdateRoutingLogic(ctx, predicate, routing)
@@ -310,7 +270,6 @@ func createTableRouteFromVSchemaTable(
 	}
 
 	plan.Routing = routing
-
 	tableShardedRouting, ok := routing.(*TableShardedRouting)
 	if ok {
 		if tableShardedRouting.isScatter() && len(queryTable.Predicates) > 0 {

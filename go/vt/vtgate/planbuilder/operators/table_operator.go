@@ -84,14 +84,10 @@ func createOperatorFromDeleteForSplitTable(ctx *plancontext.PlanningContext, del
 	if err != nil {
 		return nil, err
 	}
-	vschemaTable, _, _, _, _, err := ctx.VSchema.FindTableOrVindex(tableName)
-	if err != nil {
-		return nil, err
-	}
 
 	logicTableConfig := ctx.SplitTableConfig[tableName.Name.String()]
 	solves := ctx.SemTable.TableSetFor(qt.Alias)
-	routing := newTableShardedRouting(vschemaTable, logicTableConfig, solves)
+	routing := newTableShardedRouting(logicTableConfig, solves)
 
 	for _, predicate := range qt.Predicates {
 		routing, err = UpdateRoutingLogic(ctx, predicate, routing)
@@ -127,10 +123,6 @@ func createOperatorFromUpdateForSplitTable(ctx *plancontext.PlanningContext, upd
 	if err != nil {
 		return nil, err
 	}
-	vschemaTable, _, _, _, _, err := ctx.VSchema.FindTableOrVindex(tableName)
-	if err != nil {
-		return nil, err
-	}
 
 	logicTableConfig := ctx.SplitTableConfig[tableName.Name.String()]
 
@@ -141,7 +133,7 @@ func createOperatorFromUpdateForSplitTable(ctx *plancontext.PlanningContext, upd
 	}
 
 	solves := ctx.SemTable.TableSetFor(qt.Alias)
-	routing := newTableShardedRouting(vschemaTable, logicTableConfig, solves)
+	routing := newTableShardedRouting(logicTableConfig, solves)
 
 	for _, predicate := range qt.Predicates {
 		routing, err = UpdateRoutingLogic(ctx, predicate, routing)

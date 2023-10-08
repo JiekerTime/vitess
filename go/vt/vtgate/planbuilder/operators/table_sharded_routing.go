@@ -22,8 +22,6 @@ type TableShardedRouting struct {
 	// the best option available is stored here
 	Selected *TableVindexOption
 
-	keyspace *vindexes.Keyspace
-
 	RouteOpCode engine.Opcode
 
 	// SeenPredicates contains all the predicates that have had a chance to influence routing.
@@ -33,12 +31,10 @@ type TableShardedRouting struct {
 
 var _ Routing = (*TableShardedRouting)(nil)
 
-func newTableShardedRouting(vtable *vindexes.Table, logicTableConfig *vindexes.LogicTableConfig, id semantics.TableSet) Routing {
+func newTableShardedRouting(logicTableConfig *vindexes.LogicTableConfig, id semantics.TableSet) Routing {
 	routing := &TableShardedRouting{
 		RouteOpCode: engine.Scatter,
-		keyspace:    vtable.Keyspace,
 	}
-
 	routing.TindexPreds = append(routing.TindexPreds, &TableVindexPlusPredicates{ColTableVindex: logicTableConfig.TableIndexColumn, TableID: id})
 	return routing
 }
@@ -60,7 +56,6 @@ func (tableRouting *TableShardedRouting) Clone() Routing {
 			return &p
 		}),
 		Selected:       selected,
-		keyspace:       tableRouting.keyspace,
 		RouteOpCode:    tableRouting.RouteOpCode,
 		SeenPredicates: slices.Clone(tableRouting.SeenPredicates),
 	}
@@ -96,7 +91,7 @@ func (tableRouting *TableShardedRouting) OpCode() engine.Opcode {
 }
 
 func (tableRouting *TableShardedRouting) Keyspace() *vindexes.Keyspace {
-	return tableRouting.keyspace
+	return nil
 }
 
 func (tableRouting *TableShardedRouting) searchForNewTableVindexes(ctx *plancontext.PlanningContext, predicate sqlparser.Expr) (Routing, bool, error) {
