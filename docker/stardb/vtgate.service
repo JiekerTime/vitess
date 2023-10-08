@@ -1,0 +1,16 @@
+[Unit]
+Description=vtgate Service
+Documentation=https://vitess.io/docs/
+After=network.target
+[Service]
+User=root
+Type=simple
+ExecStart=/vt/config/vtgate_start_script.sh
+Restart=always
+RestartSec=2s
+LimitNOFILE=655350
+WorkingDirectory=/vt
+EnvironmentFile=/vt/config/pod/podenv
+EnvironmentFile=/vt/config/cluster/clusterenv
+[Install]
+WantedBy=multi-user.target
