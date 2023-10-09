@@ -349,9 +349,9 @@ func buildDMLPlan(
 		return nil, nil, nil, err
 	}
 
-	if edml.Table[0].Pinned != nil {
+	if edmlTable.Pinned != nil {
 		edml.Opcode = engine.ByDestination
-		edml.TargetDestination = key.DestinationKeyspaceID(edml.Table[0].Pinned)
+		edml.TargetDestination = key.DestinationKeyspaceID(edmlTable.Pinned)
 		return edml, nil, nil, nil
 	}
 

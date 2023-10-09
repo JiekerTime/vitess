@@ -462,6 +462,7 @@ func autoIncGenerate(gen *operators.Generate) *engine.Generate {
 		Query:    sqlparser.String(selNext),
 		Values:   gen.Values,
 		Offset:   gen.Offset,
+		Pinned:   gen.Pinned,
 	}
 }
 

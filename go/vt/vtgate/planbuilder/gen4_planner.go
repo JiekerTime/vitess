@@ -289,17 +289,6 @@ func gen4UpdateStmtPlanner(
 		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
 	}
 
-	if len(semTable.Tables) > 0 && semTable.Tables[0].GetVindexTable().Pinned != nil {
-		ks, err := vschema.DefaultKeyspace()
-		if err != nil {
-			return nil, err
-		}
-		var tables []*vindexes.Table
-		tables = append(tables, semTable.Tables[0].GetVindexTable())
-		plan := updateDestinationShortcut(updStmt, ks, tables)
-		plan = pushCommentDirectivesOnPlan(plan, updStmt)
-		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
-	}
 	if semTable.NotUnshardedErr != nil {
 		return nil, semTable.NotUnshardedErr
 	}
@@ -376,18 +365,6 @@ func gen4DeleteStmtPlanner(
 	}
 	if ks, tables := semTable.SingleUnshardedKeyspace(); ks != nil {
 		plan := deleteUnshardedShortcut(deleteStmt, ks, tables)
-		plan = pushCommentDirectivesOnPlan(plan, deleteStmt)
-		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
-	}
-
-	if len(semTable.Tables) > 0 && semTable.Tables[0].GetVindexTable().Pinned != nil {
-		ks, err := vschema.DefaultKeyspace()
-		if err != nil {
-			return nil, err
-		}
-		var tables []*vindexes.Table
-		tables = append(tables, semTable.Tables[0].GetVindexTable())
-		plan := deleteDestinationShortcut(deleteStmt, ks, tables)
 		plan = pushCommentDirectivesOnPlan(plan, deleteStmt)
 		return newPlanResult(plan.Primitive(), operators.QualifiedTables(ks, tables)...), nil
 	}
@@ -728,24 +705,4 @@ func insertDestinationShortcut(stmt *sqlparser.Insert, ks *vindexes.Keyspace, ta
 	eIns.TargetDestination = key.DestinationKeyspaceID(tables.Pinned)
 	eIns.Query = generateQuery(stmt)
 	return &insert{eInsert: eIns}
-}
-
-func updateDestinationShortcut(stmt *sqlparser.Update, ks *vindexes.Keyspace, tables []*vindexes.Table) logicalPlan {
-	edml := engine.NewDML()
-	edml.Keyspace = ks
-	edml.Table = tables
-	edml.Opcode = engine.ByDestination
-	edml.TargetDestination = key.DestinationKeyspaceID(tables[0].Pinned)
-	edml.Query = generateQuery(stmt)
-	return &primitiveWrapper{prim: &engine.Update{DML: edml}}
-}
-
-func deleteDestinationShortcut(stmt *sqlparser.Delete, ks *vindexes.Keyspace, tables []*vindexes.Table) logicalPlan {
-	edml := engine.NewDML()
-	edml.Keyspace = ks
-	edml.Table = tables
-	edml.Opcode = engine.ByDestination
-	edml.TargetDestination = key.DestinationKeyspaceID(tables[0].Pinned)
-	edml.Query = generateQuery(stmt)
-	return &primitiveWrapper{prim: &engine.Delete{DML: edml}}
 }

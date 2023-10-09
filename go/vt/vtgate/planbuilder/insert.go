@@ -384,6 +384,7 @@ func modifyForAutoinc(ins *sqlparser.Insert, eins *engine.Insert) error {
 	eins.Generate = &engine.Generate{
 		Keyspace: eins.Table.AutoIncrement.Sequence.Keyspace,
 		Query:    sqlparser.String(selNext),
+		Pinned:   eins.Table.AutoIncrement.Sequence.Pinned,
 	}
 	switch rows := ins.Rows.(type) {
 	case sqlparser.SelectStatement:

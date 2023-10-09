@@ -192,7 +192,7 @@ func createOperatorFromDelete(ctx *plancontext.PlanningContext, deleteStmt *sqlp
 		Routing: routing,
 	}
 
-	if !vindexTable.Keyspace.Sharded {
+	if !vindexTable.Keyspace.Sharded || vindexTable.Pinned != nil {
 		return route, nil
 	}
 
@@ -505,6 +505,7 @@ func modifyForAutoinc(ins *sqlparser.Insert, vTable *vindexes.Table) (*Generate,
 	gen := &Generate{
 		Keyspace:  vTable.AutoIncrement.Sequence.Keyspace,
 		TableName: sqlparser.TableName{Name: vTable.AutoIncrement.Sequence.Name},
+		Pinned:    vTable.AutoIncrement.Sequence.Pinned,
 	}
 	colNum, newColAdded := findOrAddColumn(ins, vTable.AutoIncrement.Column)
 	switch rows := ins.Rows.(type) {
