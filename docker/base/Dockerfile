@@ -36,6 +36,6 @@ ARG BUILD_TIME
 COPY --chown=vitess:vitess . /vt/src/vitess.io/vitess
 
 USER vitess
-
+ENV GOPROXY https://goproxy.cn
 # Build Vitess
 RUN make build
