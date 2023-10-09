@@ -774,6 +774,90 @@ func TestTableRouteSelectEqual(t *testing.T) {
 	expectResult(t, "sel.Execute", result, wantResult)
 }
 
+func TestTableRouteSelectIN(t *testing.T) {
+
+	selvIndex, _ := vindexes.NewHash("", nil)
+	sel := NewRoute(
+		IN,
+		&vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		"dummy_select",
+		"dummy_select_field",
+	)
+
+	sel.Vindex = selvIndex.(vindexes.SingleColumn)
+	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	logicTable := &vindexes.LogicTableConfig{
+		LogicTableName: "lkp",
+		ActualTableList: []vindexes.ActualTable{
+			{
+				ActualTableName: "lkp" + "_1",
+				Index:           0,
+			},
+			{
+				ActualTableName: "lkp" + "_2",
+				Index:           1,
+			},
+		},
+		TableCount:       2,
+		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableVindex:      vindex,
+	}
+
+	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
+	logicTableMap[logicTable.LogicTableName] = logicTable
+
+	routingParameters := &RoutingParameters{
+		Opcode: IN,
+		Keyspace: &vindexes.Keyspace{
+			Name:    "ks",
+			Sharded: true,
+		},
+		Values: []evalengine.Expr{
+			evalengine.TupleExpr{
+				evalengine.NewLiteralInt(1),
+				evalengine.NewLiteralInt(2),
+				evalengine.NewLiteralInt(4),
+			},
+		},
+		Vindex: selvIndex.(vindexes.SingleColumn),
+	}
+
+	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
+
+	TableRoute := TableRoute{
+		TableName:       "lkp",
+		Query:           statement,
+		FieldQuery:      "dummy_select_field",
+		ShardRouteParam: routingParameters,
+		TableRouteParam: &TableRoutingParameters{
+			TableOpcode: IN,
+			LogicTable:  logicTableMap,
+			TableValues: []evalengine.Expr{
+				evalengine.TupleExpr{
+					evalengine.NewLiteralInt(1),
+					evalengine.NewLiteralInt(2),
+					evalengine.NewLiteralInt(4),
+				},
+			},
+		},
+	}
+
+	vc := &loggingVCursor{shards: []string{"-20", "20-"}}
+	result, err := TableRoute.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, true)
+	require.NoError(t, err)
+	vc.ExpectLog(t, []string{
+		`ResolveDestinations ks [type:INT64 value:"1" type:INT64 value:"2" type:INT64 value:"4"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6),DestinationKeyspaceID(06e7ea22ce92708f),DestinationKeyspaceID(d2fd8867d50d2dfe)`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_2 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
+	})
+	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
+
+}
+
 func TestSortTableList(t *testing.T) {
 
 	actualTableNameMap := map[string][]vindexes.ActualTable{

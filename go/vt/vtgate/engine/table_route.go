@@ -167,15 +167,14 @@ func (tableRoute *TableRoute) executeShards(
 		return nil, vterrors.VT13001("not found %s splitTableConfig", tableRoute.TableName)
 	}
 
-	// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
-	queries, err := getTableQueries(tableRoute.Query, splitTableConfig, bindVars, actualTableNameMap)
-	if err != nil {
-		return nil, err
-	}
-
 	querieses := make([][]*querypb.BoundQuery, len(rss))
 	for j := range rss {
-		querieses[j] = queries
+		// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
+		boundQueries, err := getTableQueries(tableRoute.Query, splitTableConfig, bvs[j], actualTableNameMap)
+		if err != nil {
+			return nil, err
+		}
+		querieses[j] = boundQueries
 	}
 	result, errs := vcursor.ExecuteBatchMultiShard(ctx, tableRoute, rss, querieses, false /* rollbackOnError */, false /* canAutocommit */)
 
@@ -197,9 +196,9 @@ func (tableRoute *TableRoute) executeShards(
 	}
 
 	if len(tableRoute.OrderBy) != 0 {
-		result, err = tableRoute.sort(result)
-		if err != nil {
-			return nil, err
+		result, errSort := tableRoute.sort(result)
+		if errSort != nil {
+			return result, errSort
 		}
 	}
 	return result.Truncate(tableRoute.TruncateColumnCount), nil
