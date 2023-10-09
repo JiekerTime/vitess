@@ -1,0 +1,425 @@
+[
+  {
+    "comment": "Test cases in this file follow the code in memory_sort.go.\n# scatter aggregate order by references ungrouped column",
+    "query": "select a, b, count(*) from t_user group by a order by b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) from t_user group by a order by b",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(1|3) ASC",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "random(1) AS b, sum_count_star(2) AS count(*), random(3)",
+            "GroupBy": "(0|4)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|4) ASC",
+                "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter aggregate order by references aggregate expression",
+    "query": "select a, b, count(*) k from t_user group by a order by k",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) k from t_user group by a order by k",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "2 ASC",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "random(1) AS b, sum_count_star(2) AS k",
+            "GroupBy": "(0|3)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select a, b, count(*) as k, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|3) ASC",
+                "Query": "select a, b, count(*) as k, weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "select a, b, count(*) k from t_user group by a order by b, a, k",
+    "query": "select a, b, count(*) k from t_user group by a order by b, a, k",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) k from t_user group by a order by b, a, k",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(1|3) ASC, (0|4) ASC, 2 ASC",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "random(1) AS b, sum_count_star(2) AS k, random(3)",
+            "GroupBy": "(0|4)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select a, b, count(*) as k, weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|4) ASC",
+                "Query": "select a, b, count(*) as k, weight_string(b), weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter aggregate with memory sort and limit",
+    "query": "select a, b, count(*) k from t_user group by a order by k desc limit 10",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) k from t_user group by a order by k desc limit 10",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(10)",
+        "Inputs": [
+          {
+            "OperatorType": "Sort",
+            "Variant": "Memory",
+            "OrderBy": "2 DESC",
+            "ResultColumns": 3,
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Ordered",
+                "Aggregates": "random(1) AS b, sum_count_star(2) AS k",
+                "GroupBy": "(0|3)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select a, b, count(*) as k, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                    "OrderBy": "(0|3) ASC",
+                    "Query": "select a, b, count(*) as k, weight_string(a) from t_user group by a, weight_string(a) order by a asc limit :__upper_limit",
+                    "Table": "t_user"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter aggregate with memory sort and order by number",
+    "query": "select a, b, count(*) k from t_user group by a order by 1,3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) k from t_user group by a order by 1,3",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(0|3) ASC, 2 ASC",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "random(1) AS b, sum_count_star(2) AS k",
+            "GroupBy": "(0|3)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select a, b, count(*) as k, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|3) ASC",
+                "Query": "select a, b, count(*) as k, weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter aggregate with memory sort and order by number, reuse weight_string\n# we have to use a meaningless construct to test this",
+    "query": "select textcol1 as t, count(*) k from t_user group by textcol1 order by textcol1, k, textcol1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select textcol1 as t, count(*) k from t_user group by textcol1 order by textcol1, k, textcol1",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "0 ASC COLLATE latin1_swedish_ci, 1 ASC",
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "sum_count_star(1) AS k",
+            "GroupBy": "0 COLLATE latin1_swedish_ci",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select textcol1 as t, count(*) as k from t_user_0 where 1 != 1 group by textcol1",
+                "OrderBy": "0 ASC COLLATE latin1_swedish_ci",
+                "Query": "select textcol1 as t, count(*) as k from t_user group by textcol1 order by textcol1 asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "unary expression",
+    "query": "select a from t_user order by binary a desc",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a from t_user order by binary a desc",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a, convert(a, binary), weight_string(convert(a, binary)) from t_user_0 where 1 != 1",
+        "OrderBy": "(1|2) DESC",
+        "Query": "select a, convert(a, binary), weight_string(convert(a, binary)) from t_user order by convert(a, binary) desc",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "intcol order by",
+    "query": "select id, intcol from t_user order by intcol",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id, intcol from t_user order by intcol",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id, intcol from t_user_0 where 1 != 1",
+        "OrderBy": "1 ASC",
+        "Query": "select id, intcol from t_user order by intcol asc",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Scatter-Scatter order by with order by column not present",
+    "query": "select col from t_user order by id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user order by id",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col, id, weight_string(id) from t_user_0 where 1 != 1",
+        "OrderBy": "(1|2) ASC",
+        "Query": "select col, id, weight_string(id) from t_user order by id asc",
+        "ResultColumns": 1,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "EqualUnique Select, scatter aggregate order by references ungrouped column",
+    "query": "select a, b, count(*) from t_user where id = 1024 group by a order by b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) from t_user where id = 1024 group by a order by b",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(1|3) ASC",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "random(1) AS b, sum_count_star(2) AS count(*), random(3)",
+            "GroupBy": "(0|4)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "EqualUnique-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|4) ASC",
+                "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user where id = 1024 group by a, weight_string(a) order by a asc",
+                "Table": "t_user",
+                "Values": [
+                  "INT64(1024)"
+                ],
+                "Vindex": "user_index"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter aggregate order by references ungrouped column, table index EqualUnique",
+    "query": "select a, b, count(*) from t_user where col = 1024 group by a order by b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) from t_user where col = 1024 group by a order by b",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(1|3) ASC",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "random(1) AS b, sum_count_star(2) AS count(*), random(3)",
+            "GroupBy": "(0|4)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user where col = 1024 group by a, weight_string(a) order by a asc",
+                "Table": "t_user",
+                "TableValues": [
+                  "INT64(1024)"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "vindex EqualUnique, table index EqualUnique",
+    "query": "select a, b, count(*) from t_user where col = 1024 and id = 100865 group by a order by b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, b, count(*) from t_user where col = 1024 and id = 100865 group by a order by b",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a, b, count(*) from t_user_0 where 1 != 1 group by a",
+        "Query": "select a, b, count(*) from t_user where col = 1024 and id = 100865 group by a order by b asc",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(1024)"
+        ],
+        "Values": [
+          "INT64(100865)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

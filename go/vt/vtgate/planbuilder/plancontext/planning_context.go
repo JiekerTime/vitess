@@ -45,9 +45,6 @@ type PlanningContext struct {
 	// save config of splitTable
 	SplitTableConfig vindexes.SplitTableMap
 
-	KsERoute engine.Route
-
-	// FIXME! abstract engine interface
 	DMLEngine engine.DML
 
 	KsPrimitive engine.Primitive

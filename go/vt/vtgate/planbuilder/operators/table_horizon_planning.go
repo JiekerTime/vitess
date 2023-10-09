@@ -3,6 +3,7 @@ package operators
 import (
 	"fmt"
 
+	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -43,18 +44,62 @@ func planHorizonsForSplitTable(ctx *plancontext.PlanningContext, root ops.Operat
 	// Adding Group by - This is needed if the grouping is performed on a join with a join condition then
 	//                   aggregation happening at route needs a group by to ensure only matching rows returns
 	//                   the aggregations otherwise returns no result.
-
-	// todo(jinyue): 处理聚合操作
-	//root, err = addOrderBysAndGroupBysForAggregations(ctx, root)
-	//if err != nil {
-	//	return nil, err
-	//}
+	root, err = addOrderBysAndGroupBysForAggregationsForSplitTable(ctx, root)
+	if err != nil {
+		return nil, err
+	}
 
 	root, err = optimizeHorizonPlanningForSplitTable(ctx, root)
 	if err != nil {
 		return nil, err
 	}
 	return root, nil
+}
+
+func addOrderBysAndGroupBysForAggregationsForSplitTable(ctx *plancontext.PlanningContext, root ops.Operator) (ops.Operator, error) {
+	visitor := func(in ops.Operator, _ semantics.TableSet, isRoot bool) (ops.Operator, *rewrite.ApplyResult, error) {
+		switch in := in.(type) {
+		case *Aggregator:
+			if in.Pushed {
+				// first we update the incoming columns, so we know about any new columns that have been added
+				columns, err := in.Source.GetColumns()
+				if err != nil {
+					return nil, nil, err
+				}
+				in.Columns = columns
+			}
+
+			requireOrdering, err := needsOrdering(in, ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+			if !requireOrdering {
+				return in, rewrite.SameTree, nil
+			}
+			in.Source = &Ordering{
+				Source: in.Source,
+				Order: slices2.Map(in.Grouping, func(from GroupBy) ops.OrderBy {
+					return from.AsOrderBy()
+				}),
+			}
+			return in, rewrite.NewTree("added ordering before aggregation", in), nil
+		case *ApplyJoin:
+			_ = rewrite.Visit(in.RHS, func(op ops.Operator) error {
+				aggr, isAggr := op.(*Aggregator)
+				if !isAggr {
+					return nil
+				}
+				if len(aggr.Grouping) == 0 {
+					gb := sqlparser.NewIntLiteral(".0")
+					aggr.Grouping = append(aggr.Grouping, NewGroupBy(gb, gb, aeWrap(gb)))
+				}
+				return nil
+			})
+		}
+		return in, rewrite.SameTree, nil
+	}
+
+	return rewrite.TopDown(root, TableID, visitor, stopAtTableRoute)
 }
 
 func optimizeHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root ops.Operator) (ops.Operator, error) {
@@ -101,13 +146,13 @@ func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limi
 }
 
 func tryPushingDownLimitInRouteForSplitTable(ctx *plancontext.PlanningContext, in *Limit, src *TableRoute) (ops.Operator, *rewrite.ApplyResult, error) {
-	if src.IsSingleSplitTable() || isMultiShard(ctx.GetRoute()) {
+	if src.IsSingleSplitTable() || isCrossShard(ctx.GetRoute()) {
 		return rewrite.Swap(in, src, "limit pushed into tableRoute")
 	}
 	return setUpperLimitForSplitTable(in)
 }
 
-func isMultiShard(route engine.Route) bool {
+func isCrossShard(route engine.Route) bool {
 	switch route.Opcode {
 	case engine.Unsharded, engine.DBA, engine.Next, engine.EqualUnique, engine.Reference:
 		return false
@@ -169,6 +214,11 @@ func tryPushingDownOrderingForSplitTable(ctx *plancontext.PlanningContext, in *O
 			}
 		}
 		return rewrite.Swap(in, src, "push ordering under projection")
+	case *Aggregator:
+		if !(src.QP.AlignGroupByAndOrderBy(ctx) || overlaps(ctx, in.Order, src.Grouping)) {
+			return in, rewrite.SameTree, nil
+		}
+		return pushOrderingUnderAggr(ctx, in, src)
 	}
 	return in, rewrite.SameTree, nil
 }

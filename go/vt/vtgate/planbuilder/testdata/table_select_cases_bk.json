@@ -2430,28 +2430,6 @@
     }
   },
   {
-    "comment": "groupe by with non aggregated columns and table alias",
-    "query": "select u.id, u.age from user u group by u.id",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select u.id, u.age from user u group by u.id",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select u.id, u.age from `user` as u where 1 != 1 group by u.id",
-        "Query": "select u.id, u.age from `user` as u group by u.id",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "Functions that return JSON value attributes",
     "query": "select JSON_DEPTH('{}'), JSON_LENGTH('{\"a\": 1, \"b\": {\"c\": 30}}', '$.b'), JSON_TYPE(JSON_EXTRACT('{\"a\": [10, true]}', '$.a')), JSON_VALID('{\"a\": 1}')",
     "plan": {

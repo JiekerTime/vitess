@@ -222,6 +222,16 @@ func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *oper
 			CollationID: col,
 		})
 	}
+	for _, groupBy := range op.Grouping {
+		typ, col, _ := ctx.SemTable.TypeForExpr(groupBy.SimplifiedExpr)
+		oa.groupByKeys = append(oa.groupByKeys, &engine.GroupByParams{
+			KeyCol:          groupBy.ColOffset,
+			WeightStringCol: groupBy.WSOffset,
+			Expr:            groupBy.AsAliasedExpr().Expr,
+			Type:            typ,
+			CollationID:     col,
+		})
+	}
 
 	oa.truncateColumnCount = op.ResultColumns
 	return oa, nil

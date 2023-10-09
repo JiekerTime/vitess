@@ -13,9 +13,9 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select predef1, predef2 from t_user_0 where 1 != 1",
-        "Query": "select predef1, predef2 from t_user where id = 5 order by predef2 asc",
-        "OrderBy": "1 ASC",
+        "FieldQuery": "select predef1, predef2, weight_string(predef2) from t_user_0 where 1 != 1",
+        "Query": "select predef1, predef2, weight_string(predef2) from t_user where id = 5 order by predef2 asc",
+        "OrderBy": "(1|2) ASC",
         "ResultColumns": 1,
         "Table": "t_user",
         "Values": [
@@ -94,7 +94,7 @@
         },
         "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
         "Query": "select id, weight_string(id) from t_user order by id asc",
-        "OrderBy": "0 ASC",
+        "OrderBy": "(0|1) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
       },
@@ -118,7 +118,7 @@
         },
         "FieldQuery": "select col, id, weight_string(id) from t_user_0 where 1 != 1",
         "Query": "select col, id, weight_string(id) from t_user order by id asc",
-        "OrderBy": "1 ASC",
+        "OrderBy": "(1|2) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
       },
@@ -165,7 +165,7 @@
         },
         "FieldQuery": "select id as foo, weight_string(id) from t_user_0 where 1 != 1",
         "Query": "select id as foo, weight_string(id) from t_user order by foo asc",
-        "OrderBy": "0 ASC",
+        "OrderBy": "(0|1) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
       },
@@ -323,7 +323,7 @@
         },
         "FieldQuery": "select col, a, weight_string(a), b, weight_string(b) from t_user_0 where 1 != 1",
         "Query": "select col, a, weight_string(a), b, weight_string(b) from t_user order by a asc, b asc",
-        "OrderBy": "1 ASC, 3 ASC",
+        "OrderBy": "(1|2) ASC, (3|4) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
       },
@@ -347,7 +347,7 @@
         },
         "FieldQuery": "select id, col, a, b, weight_string(a) from t_user_0 where 1 != 1",
         "Query": "select id, col, a, b, weight_string(a) from t_user order by col asc, a asc",
-        "OrderBy": "1 ASC, 2 ASC",
+        "OrderBy": "1 ASC, (2|4) ASC",
         "ResultColumns": 4,
         "Table": "t_user"
       },
@@ -547,7 +547,7 @@
         },
         "FieldQuery": "select col as foo, col2 as col, weight_string(col2) from t_user_0 where 1 != 1",
         "Query": "select col as foo, col2 as col, weight_string(col2) from t_user order by col asc",
-        "OrderBy": "1 ASC",
+        "OrderBy": "(1|2) ASC",
         "ResultColumns": 2,
         "Table": "t_user"
       },
@@ -594,7 +594,7 @@
         },
         "FieldQuery": "select col, col + 1, weight_string(col + 1) from t_user_0 where 1 != 1",
         "Query": "select col, col + 1, weight_string(col + 1) from t_user order by col + 1 asc",
-        "OrderBy": "1 ASC",
+        "OrderBy": "(1|2) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
       },
@@ -618,7 +618,7 @@
         },
         "FieldQuery": "select t_user_0.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user_0 where 1 != 1",
         "Query": "select t_user.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user order by a collate utf8_general_ci asc",
-        "OrderBy": "1 ASC",
+        "OrderBy": "(1|2) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
       },
@@ -836,6 +836,116 @@
           "INT64(5)"
         ],
         "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "aggregation and non-aggregations column with group by",
+    "query": "select count(id), num from t_user group by 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(id), num from t_user group by 2",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count(0) AS count(id)",
+        "GroupBy": "(1|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select count(id), num, weight_string(num) from t_user_0 where 1 != 1 group by num, weight_string(num)",
+            "OrderBy": "(1|2) ASC",
+            "Query": "select count(id), num, weight_string(num) from t_user group by num, weight_string(num) order by num asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "aggregation and non-aggregations column with group by and order by",
+    "query": "select count(id), num from t_user group by 2 order by 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(id), num from t_user group by 2 order by 1",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "0 ASC",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "sum_count(0) AS count(id)",
+            "GroupBy": "(1|2)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select count(id), num, weight_string(num) from t_user_0 where 1 != 1 group by num, weight_string(num)",
+                "OrderBy": "(1|2) ASC",
+                "Query": "select count(id), num, weight_string(num) from t_user group by num, weight_string(num) order by num asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Scatter order by and aggregation: order by column must reference column from select list",
+    "query": "select col, count(*) from t_user group by col order by c1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col, count(*) from t_user group by col order by c1",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(2|3) ASC",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "sum_count_star(1) AS count(*), random(2) AS c1, random(3)",
+            "GroupBy": "0",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select col, count(*), c1, weight_string(c1) from t_user_0 where 1 != 1 group by col",
+                "OrderBy": "0 ASC",
+                "Query": "select col, count(*), c1, weight_string(c1) from t_user group by col order by col asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
       },
       "TablesUsed": [
         "user.t_user"

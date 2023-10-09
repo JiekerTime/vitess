@@ -1,9 +1,12 @@
 package planbuilder
 
 import (
+	"fmt"
+
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
+	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
 )
@@ -42,14 +45,14 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 				if err != nil {
 					return false, nil, err
 				}
-				return true, deleteTablePlan, nil
+				return false, deleteTablePlan, nil
 			case *engine.Update:
 				ctx.DMLEngine = *prim.DML
 				updateTablePlan, err := doBuildTablePlan(ctx, prim.AST)
 				if err != nil {
 					return false, nil, err
 				}
-				return true, updateTablePlan, nil
+				return false, updateTablePlan, nil
 			}
 		}
 
@@ -63,6 +66,9 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
 }
 
 func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) (tablePlan logicalPlan, err error) {
+	if oprewriters.DebugOperatorTree {
+		fmt.Println(sqlparser.String(stmt))
+	}
 	tableOperator, err := operators.TablePlanQuery(ctx, stmt)
 	if err != nil {
 		return nil, err

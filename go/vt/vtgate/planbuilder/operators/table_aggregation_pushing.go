@@ -1,6 +1,7 @@
 package operators
 
 import (
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -31,10 +32,17 @@ func pushDownAggregationThroughRouteForSplitTable(
 	aggregator *Aggregator,
 	route *TableRoute,
 ) (ops.Operator, *rewrite.ApplyResult, error) {
-	// If the route is single-splitTable, or we are grouping by sharding keys, we can just push down the aggregation
-	// or logicPlan of shardKeyspace is multiShard.
-	if route.IsSingleSplitTable() || isMultiShard(ctx.GetRoute()) {
+	// If the route is single-splitTable, or we are grouping by table index keys, we can just push down the aggregation
+	if route.IsSingleSplitTable() || overlappingUniqueTableIndex(ctx, aggregator.Grouping) {
 		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute - remove original")
+	}
+	// If the logicPlan of shardKeyspace has Aggregation, then the split table plan does not need to generate it again.
+	// such as Cross-shard aggregation functions, Cross-shard group by (not grouping by sharding keys)
+	if aggregator.Grouping == nil && isCrossShard(ctx.GetRoute()) {
+		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard aggregation functions - remove original")
+	}
+	if aggregator.Grouping != nil && isCrossShard(ctx.GetRoute()) && !overlappingUniqueVindex(ctx, aggregator.Grouping) {
+		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard group by - remove original")
 	}
 
 	// Create a new aggregator to be placed below the route.
@@ -52,4 +60,31 @@ func pushDownAggregationThroughRouteForSplitTable(
 	}
 
 	return aggregator, rewrite.NewTree("push aggregation under tableRoute - keep original", aggregator), nil
+}
+
+func overlappingUniqueTableIndex(ctx *plancontext.PlanningContext, groupByExprs []GroupBy) bool {
+	for _, groupByExpr := range groupByExprs {
+		if exprHasUniqueTableIndex(ctx, groupByExpr.SimplifiedExpr) {
+			return true
+		}
+	}
+	return false
+}
+
+func exprHasUniqueTableIndex(ctx *plancontext.PlanningContext, expr sqlparser.Expr) bool {
+	col, isCol := expr.(*sqlparser.ColName)
+	if !isCol {
+		return false
+	}
+	ts := ctx.SemTable.RecursiveDeps(expr)
+	tableInfo, err := ctx.SemTable.TableInfoFor(ts)
+	if err != nil {
+		return false
+	}
+	logicTableConfig := ctx.SplitTableConfig[tableInfo.GetVindexTable().Name.String()]
+	if len(logicTableConfig.TableIndexColumn) > 1 {
+		return false
+	}
+	column := logicTableConfig.TableIndexColumn[0].Column
+	return col.Name.Equal(sqlparser.NewIdentifierCI(column))
 }

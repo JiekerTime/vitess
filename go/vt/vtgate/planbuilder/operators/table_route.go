@@ -185,6 +185,14 @@ func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
 			WOffset:   -1,
 			Direction: order.Inner.Direction,
 		}
+		if ctx.SemTable.NeedsWeightString(order.SimplifiedExpr) {
+			wrap := aeWrap(weightStringFor(order.SimplifiedExpr))
+			_, offset, err = r.AddColumn(ctx, wrap, true, false)
+			if err != nil {
+				return err
+			}
+			o.WOffset = offset
+		}
 		r.Ordering = append(r.Ordering, o)
 	}
 
