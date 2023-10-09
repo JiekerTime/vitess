@@ -458,7 +458,8 @@ func createRouteFromVSchemaTable(
 func createRoutingForVTable(vschemaTable *vindexes.Table, id semantics.TableSet) Routing {
 	switch {
 	case vschemaTable.Type == vindexes.TypeSequence:
-		return &SequenceRouting{keyspace: vschemaTable.Keyspace}
+		//return &SequenceRouting{keyspace: vschemaTable.Keyspace}
+		return newShardedRouting(vschemaTable, id)
 	case vschemaTable.Type == vindexes.TypeReference && vschemaTable.Name.String() == "dual":
 		return &DualRouting{}
 	case vschemaTable.Type == vindexes.TypeReference || !vschemaTable.Keyspace.Sharded:

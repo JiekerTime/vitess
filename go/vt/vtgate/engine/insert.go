@@ -181,6 +181,8 @@ type Generate struct {
 	Values evalengine.Expr
 	// Insert using Select, offset for auto increment column
 	Offset int
+
+	Pinned []byte
 }
 
 // InsertOpcode is a number representing the opcode
@@ -577,7 +579,13 @@ func (ins *Insert) processGenerateFromValues(
 
 	// If generation is needed, generate the requested number of values (as one call).
 	if count != 0 {
-		rss, _, err := vcursor.ResolveDestinations(ctx, ins.Generate.Keyspace.Name, nil, []key.Destination{key.DestinationAnyShard{}})
+		var dst key.Destination
+		if ins.Generate.Pinned != nil {
+			dst = key.DestinationKeyspaceID(ins.Generate.Pinned)
+		} else {
+			dst = key.DestinationAnyShard{}
+		}
+		rss, _, err := vcursor.ResolveDestinations(ctx, ins.Generate.Keyspace.Name, nil, []key.Destination{dst})
 		if err != nil {
 			return 0, err
 		}

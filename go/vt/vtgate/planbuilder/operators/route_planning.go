@@ -135,6 +135,10 @@ func buildVindexTableForDML(
 		return vindexTable, &AnyShardRouting{keyspace: vindexTable.Keyspace}, nil
 	}
 
+	if vindexTable.Pinned != nil {
+		return vindexTable, &TargetedRouting{keyspace: vindexTable.Keyspace, TargetDestination: key.DestinationKeyspaceID(vindexTable.Pinned)}, nil
+	}
+
 	var dest key.Destination
 	var typ topodatapb.TabletType
 	var err error
@@ -191,7 +195,7 @@ func getUpdateVindexInformation(
 	tableID semantics.TableSet,
 	predicates []sqlparser.Expr,
 ) ([]*VindexPlusPredicates, map[string]*engine.VindexValues, string, error) {
-	if !vindexTable.Keyspace.Sharded {
+	if !vindexTable.Keyspace.Sharded || vindexTable.Pinned != nil {
 		return nil, nil, "", nil
 	}
 

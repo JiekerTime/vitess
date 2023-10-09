@@ -39,6 +39,8 @@ import (
 	"strings"
 	"time"
 
+	"vitess.io/vitess/go/vt/grpccommon"
+
 	"github.com/spf13/pflag"
 	"go.etcd.io/etcd/client/pkg/v3/tlsutil"
 	"google.golang.org/grpc"
@@ -143,9 +145,12 @@ func newTLSConfig(certPath, keyPath, caPath string) (*tls.Config, error) {
 func NewServerWithOpts(serverAddr, root, certPath, keyPath, caPath, username, password string) (*Server, error) {
 	// TODO: Rename this to NewServer and change NewServer to a name that signifies it uses the process-wide TLS settings.
 	config := clientv3.Config{
-		Endpoints:   strings.Split(serverAddr, ","),
-		DialTimeout: 5 * time.Second,
-		DialOptions: []grpc.DialOption{grpc.WithBlock()},
+		Endpoints:            strings.Split(serverAddr, ","),
+		DialTimeout:          5 * time.Second,
+		DialKeepAliveTime:    30 * time.Second,
+		DialKeepAliveTimeout: 30 * time.Second,
+		MaxCallSendMsgSize:   grpccommon.MaxMessageSize(),
+		DialOptions:          []grpc.DialOption{grpc.WithBlock()},
 	}
 
 	if username != "" && password != "" {

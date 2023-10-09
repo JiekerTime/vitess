@@ -84,6 +84,8 @@ type Generate struct {
 
 	// added indicates whether the auto-increment column was already present in the insert column list or added.
 	added bool
+
+	Pinned []byte
 }
 
 func (i *Insert) Description() ops.OpDescription {

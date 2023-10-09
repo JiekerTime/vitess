@@ -272,11 +272,15 @@ func (pb *primitiveBuilder) buildTablePrimitive(tableExpr *sqlparser.AliasedTabl
 	switch {
 	case vschemaTable.Type == vindexes.TypeSequence:
 		eroute = engine.NewSimpleRoute(engine.Next, vschemaTable.Keyspace)
+		vindex, _ = vindexes.NewBinary("binary", nil)
+		eroute.Vindex, _ = vindex.(vindexes.SingleColumn)
+		lit := evalengine.NewLiteralString(vschemaTable.Pinned, collations.TypedCollation{})
+		eroute.Values = []evalengine.Expr{lit}
 	case vschemaTable.Type == vindexes.TypeReference:
 		eroute = engine.NewSimpleRoute(engine.Reference, vschemaTable.Keyspace)
 	case !vschemaTable.Keyspace.Sharded:
 		eroute = engine.NewSimpleRoute(engine.Unsharded, vschemaTable.Keyspace)
-	case vschemaTable.Pinned == nil:
+	case vschemaTable.Pinned == nil || (vschemaTable.Pinned != nil && tableName.Name.String() == "dual"):
 		eroute = engine.NewSimpleRoute(engine.Scatter, vschemaTable.Keyspace)
 		eroute.TargetDestination = destTarget
 		eroute.TargetTabletType = destTableType

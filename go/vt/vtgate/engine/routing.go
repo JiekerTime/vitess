@@ -279,8 +279,13 @@ func (rp *RoutingParameters) routedTable(ctx context.Context, vcursor VCursor, b
 			if routedKs.Name != routedTable.Keyspace.Name {
 				return nil, vterrors.Errorf(vtrpcpb.Code_UNIMPLEMENTED, "cannot send the query to multiple keyspace due to different table_name: %s, %s", routedKs.Name, routedTable.Keyspace.Name)
 			}
-
-			shards, _, err := vcursor.ResolveDestinations(ctx, routedTable.Keyspace.Name, nil, []key.Destination{key.DestinationAnyShard{}})
+			var dst key.Destination
+			if routedTable.Pinned != nil {
+				dst = key.DestinationKeyspaceID(routedTable.Pinned)
+			} else {
+				dst = key.DestinationAnyShard{}
+			}
+			shards, _, err := vcursor.ResolveDestinations(ctx, routedTable.Keyspace.Name, nil, []key.Destination{dst})
 			bindVars[tblBvName] = sqltypes.StringBindVariable(routedTable.Name.String())
 			if tableSchema != "" {
 				setReplaceSchemaName(bindVars)

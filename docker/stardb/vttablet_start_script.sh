@@ -26,6 +26,7 @@ function vttablet_start() {
       --log_dir /export/data/mysql/tmp \
       --topo_implementation etcd2 \
       --topo_global_server_address $ETCD_SERVER \
+      --docker_run \
       --topo_global_root /vt/global \
       --topo_etcd_username $ETCD_USER \
       --topo_etcd_password $ETCD_PASSWORD \
