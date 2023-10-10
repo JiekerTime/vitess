@@ -69,18 +69,20 @@ func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primiti
 		}
 	}
 
-	result := &sqltypes.Result{}
-	for _, query := range dml.Queries {
-		rssQueries := make([]*querypb.BoundQuery, 0, len(rss))
-		for range rss {
-			rssQueries = append(rssQueries, query)
-		}
-		innerResult, err := execMultiShard(ctx, primitive, vcursor, rss, rssQueries, dml.MultiShardAutocommit)
-		if err != nil {
-			return nil, err
-		}
-		result.AppendResult(innerResult)
+	queries := make([][]*querypb.BoundQuery, len(rss))
+
+	for i := range rss {
+		queries[i] = dml.Queries
 	}
+
+	autocommit := (len(rss) == 1 || dml.MultiShardAutocommit) && vcursor.AutocommitApproval()
+
+	result, errs := vcursor.ExecuteBatchMultiShard(ctx, primitive, rss, queries, true /* rollbackOnError */, autocommit)
+
+	if errs != nil {
+		return nil, vterrors.Aggregate(errs)
+	}
+
 	for _, field := range result.Fields {
 		field.Table = dml.TableRouteParam.LogicTable[dml.Table[0].Name.String()].LogicTableName
 	}
