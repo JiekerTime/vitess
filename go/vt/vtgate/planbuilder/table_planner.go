@@ -11,10 +11,10 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/semantics"
 )
 
-func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan,
+func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableNames []string,
 ) (ksAndTablePlan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
 	// get split table metadata
-	found := findLogicTableConfig(ctx, ksPlan.Primitive().GetTableName())
+	found := findTableSchema(ctx, tableNames)
 	if !found {
 		return ksPlan, ctx.SemTable, nil, nil
 	}
@@ -84,16 +84,19 @@ func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement
 	return tablePlan, nil
 }
 
-func findLogicTableConfig(ctx *plancontext.PlanningContext, tableName string) (found bool) {
+func findTableSchema(ctx *plancontext.PlanningContext, tableNames []string) (found bool) {
 	ksName := ""
 	if ks, _ := ctx.VSchema.DefaultKeyspace(); ks != nil {
 		ksName = ks.Name
 	}
-	splitTable, err := ctx.VSchema.FindSplitTable(ksName, tableName)
-	if err != nil {
-		return false
+	found = false
+	for _, tableName := range tableNames {
+		splitTable, err := ctx.VSchema.FindSplitTable(ksName, tableName)
+		if err != nil {
+			continue
+		}
+		ctx.SplitTableConfig[splitTable.LogicTableName] = splitTable
+		found = true
 	}
-
-	ctx.SplitTableConfig[splitTable.LogicTableName] = splitTable
-	return true
+	return found
 }

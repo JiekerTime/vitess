@@ -745,3 +745,13 @@ func (r *Route) ShortDescription() string {
 func (r *Route) setTruncateColumnCount(offset int) {
 	r.ResultColumns = offset
 }
+
+func (r *Route) TableNamesUsed() []string {
+	addString, collect := collectSortedUniqueStrings()
+	for _, mw := range r.MergedWith {
+		for _, u := range TableNamesUsed(mw) {
+			addString(u)
+		}
+	}
+	return collect()
+}

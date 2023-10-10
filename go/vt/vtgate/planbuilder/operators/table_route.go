@@ -291,3 +291,7 @@ func createTableRoute(
 	}
 	return plan, nil
 }
+
+func (r *TableRoute) TableNamesUsed() []string {
+	return nil
+}

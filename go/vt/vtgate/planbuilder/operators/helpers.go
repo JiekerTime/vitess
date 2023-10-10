@@ -85,6 +85,7 @@ func TableID(op ops.Operator) (result semantics.TableSet) {
 // TableUser is used to signal that this operator directly interacts with one or more tables
 type TableUser interface {
 	TablesUsed() []string
+	TableNamesUsed() []string
 }
 
 func TablesUsed(op ops.Operator) []string {
@@ -92,6 +93,19 @@ func TablesUsed(op ops.Operator) []string {
 	_ = rewrite.Visit(op, func(this ops.Operator) error {
 		if tbl, ok := this.(TableUser); ok {
 			for _, u := range tbl.TablesUsed() {
+				addString(u)
+			}
+		}
+		return nil
+	})
+	return collect()
+}
+
+func TableNamesUsed(op ops.Operator) []string {
+	addString, collect := collectSortedUniqueStrings()
+	_ = rewrite.Visit(op, func(this ops.Operator) error {
+		if tbl, ok := this.(TableUser); ok {
+			for _, u := range tbl.TableNamesUsed() {
 				addString(u)
 			}
 		}

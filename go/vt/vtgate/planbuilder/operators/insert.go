@@ -125,3 +125,7 @@ func (i *Insert) Clone(inputs []ops.Operator) ops.Operator {
 func (i *Insert) TablesUsed() []string {
 	return SingleQualifiedIdentifier(i.VTable.Keyspace, i.VTable.Name)
 }
+
+func (i *Insert) TableNamesUsed() []string {
+	return []string{i.VTable.Name.String()}
+}

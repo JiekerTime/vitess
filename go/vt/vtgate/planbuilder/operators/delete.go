@@ -71,3 +71,10 @@ func (d *Delete) Description() ops.OpDescription {
 func (d *Delete) ShortDescription() string {
 	return fmt.Sprintf("%s.%s %s", d.VTable.Keyspace.Name, d.VTable.Name.String(), sqlparser.String(d.AST.Where))
 }
+
+func (d *Delete) TableNamesUsed() []string {
+	if d.VTable != nil {
+		return []string{d.VTable.Name.String()}
+	}
+	return nil
+}

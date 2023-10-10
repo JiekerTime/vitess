@@ -165,3 +165,7 @@ func (v *Vindex) Description() ops.OpDescription {
 func (v *Vindex) ShortDescription() string {
 	return v.Vindex.String()
 }
+
+func (v *Vindex) TableNamesUsed() []string {
+	return []string{v.Table.Table.Name.String()}
+}

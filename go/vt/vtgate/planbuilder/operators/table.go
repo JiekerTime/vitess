@@ -131,3 +131,10 @@ func (to *Table) Description() ops.OpDescription {
 func (to *Table) ShortDescription() string {
 	return to.VTable.String()
 }
+
+func (to *Table) TableNamesUsed() []string {
+	if sqlparser.SystemSchema(to.QTable.Table.Qualifier.String()) {
+		return nil
+	}
+	return []string{to.VTable.Name.String()}
+}

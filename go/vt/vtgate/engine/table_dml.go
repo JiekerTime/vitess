@@ -121,12 +121,7 @@ func (dml *TableDML) GetSingleTable() (*vindexes.Table, error) {
 }
 
 func (dml *TableDML) getSplitQueries(bindVars map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) error {
-	splitTableConfig, found := dml.TableRouteParam.LogicTable[dml.Table[0].Name.String()]
-	if !found {
-		return vterrors.VT13001("not found %s splitTableConfig", dml.Table[0].Name.String())
-	}
-
-	queries, err := getTableQueries(dml.AST, splitTableConfig, bindVars, actualTableNameMap)
+	queries, err := getTableQueries(dml.AST, bindVars, actualTableNameMap)
 	if err != nil {
 		return err
 	}

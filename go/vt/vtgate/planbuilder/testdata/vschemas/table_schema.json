@@ -43,7 +43,9 @@
       },
       {
         "from_table": "user.rerouted_ref",
-        "to_tables": ["user.ref"]
+        "to_tables": [
+          "user.ref"
+        ]
       }
     ]
   },
@@ -147,25 +149,25 @@
           "type": "xxhash"
         },
         "unq_lkp_bf_vdx": {
-            "type": "unq_lkp_test",
-            "owner": "customer",
-            "params": {
-              "table": "unq_lkp_idx",
-              "from": " ",
-              "to": "keyspace_id",
-              "cost": "100",
-              "write_only": "true"
-            }
+          "type": "unq_lkp_test",
+          "owner": "customer",
+          "params": {
+            "table": "unq_lkp_idx",
+            "from": " ",
+            "to": "keyspace_id",
+            "cost": "100",
+            "write_only": "true"
+          }
         },
         "unq_lkp_vdx": {
-            "type": "unq_lkp_test",
-            "owner": "customer",
-            "params": {
-              "table": "unq_lkp_idx",
-              "from": "unq_key",
-              "to": "keyspace_id",
-              "cost": "300"
-            }
+          "type": "unq_lkp_test",
+          "owner": "customer",
+          "params": {
+            "table": "unq_lkp_idx",
+            "from": "unq_key",
+            "to": "keyspace_id",
+            "cost": "300"
+          }
         }
       },
       "tables": {
@@ -245,7 +247,7 @@
             }
           ]
         },
-        "user_extra": {
+        "t_user_extra": {
           "column_vindexes": [
             {
               "column": "user_id",
@@ -474,8 +476,8 @@
               "name": "shard_index"
             },
             {
-                "column": "email",
-                "name": "unq_lkp_vdx"
+              "column": "email",
+              "name": "unq_lkp_vdx"
             },
             {
               "column": "phone",
@@ -553,6 +555,18 @@
             }
           ],
           "table_count": 4
+        },
+        "t_user_extra": {
+          "logic_table_name": "t_user_extra",
+          "table_vindex": "binary_hash",
+          "table_vindex_column": [
+            {
+              "index": 0,
+              "column": "col",
+              "column_type": "VARCHAR"
+            }
+          ],
+          "table_count": 20
         }
       }
     },

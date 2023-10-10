@@ -74,3 +74,10 @@ func (u *Update) Description() ops.OpDescription {
 func (u *Update) ShortDescription() string {
 	return u.VTable.String()
 }
+
+func (u *Update) TableNamesUsed() []string {
+	if u.VTable != nil {
+		return []string{u.VTable.Name.String()}
+	}
+	return nil
+}

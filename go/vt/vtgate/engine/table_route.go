@@ -149,7 +149,6 @@ func SortTableList(tables map[string][]vindexes.ActualTable) {
 			return ActualTableList[i].Index < ActualTableList[j].Index
 		})
 	}
-
 }
 
 func (tableRoute *TableRoute) executeShards(
@@ -161,16 +160,10 @@ func (tableRoute *TableRoute) executeShards(
 	bvs []map[string]*querypb.BindVariable,
 	actualTableNameMap map[string][]vindexes.ActualTable,
 ) (*sqltypes.Result, error) {
-
-	splitTableConfig, found := tableRoute.TableRouteParam.LogicTable[tableRoute.TableName]
-	if !found {
-		return nil, vterrors.VT13001("not found %s splitTableConfig", tableRoute.TableName)
-	}
-
 	querieses := make([][]*querypb.BoundQuery, len(rss))
 	for j := range rss {
 		// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
-		boundQueries, err := getTableQueries(tableRoute.Query, splitTableConfig, bvs[j], actualTableNameMap)
+		boundQueries, err := getTableQueries(tableRoute.Query, bvs[j], actualTableNameMap)
 		if err != nil {
 			return nil, err
 		}
@@ -191,8 +184,18 @@ func (tableRoute *TableRoute) executeShards(
 		}
 	}
 
+	var nameMap = make(map[string]string)
+	for logicTableName, actualTables := range actualTableNameMap {
+		for _, actualTable := range actualTables {
+			nameMap[actualTable.ActualTableName] = logicTableName
+		}
+	}
+
 	for _, field := range result.Fields {
-		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
+		logicTableName := nameMap[field.Table]
+		if logicTableName != "" {
+			field.Table = logicTableName
+		}
 	}
 
 	if len(tableRoute.OrderBy) != 0 {
@@ -239,20 +242,22 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	return out.Truncate(tableRoute.TruncateColumnCount), err
 }
 
-func getTableQueries(stmt sqlparser.Statement, logicTb *vindexes.LogicTableConfig, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) ([]*querypb.BoundQuery, error) {
+func getTableQueries(stmt sqlparser.Statement, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) ([]*querypb.BoundQuery, error) {
 	var queries []*querypb.BoundQuery
-	actualTableName := actualTableNameMap[logicTb.LogicTableName]
 
-	for _, act := range actualTableName {
-		sql, err := rewriteQuery(stmt, act.ActualTableName, logicTb.LogicTableName)
-		if err != nil {
-			return nil, err
+	for logicTableName, actualTables := range actualTableNameMap {
+		for _, actualTable := range actualTables {
+			sql, err := rewriteQuery(stmt, actualTable.ActualTableName, logicTableName)
+			if err != nil {
+				return nil, err
+			}
+			queries = append(queries, &querypb.BoundQuery{
+				Sql:           sql,
+				BindVariables: bvs,
+			})
 		}
-		queries = append(queries, &querypb.BoundQuery{
-			Sql:           sql,
-			BindVariables: bvs,
-		})
 	}
+
 	return queries, nil
 }
 

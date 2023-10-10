@@ -154,29 +154,6 @@
     }
   },
   {
-    "comment": "Merging dual with user",
-    "query": "select 42, id from dual, t_user",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select 42, id from dual, t_user",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select 42, id from dual, t_user where 1 != 1",
-        "Query": "select 42, id from dual, t_user",
-        "Table": "dual, t_user"
-      },
-      "TablesUsed": [
-        "main.dual",
-        "user.t_user"
-      ]
-    }
-  },
-  {
     "comment": "sharded limit offset",
     "query": "select user_id from t_music order by user_id limit 10, 20",
     "plan": {
@@ -524,6 +501,395 @@
       },
       "TablesUsed": [
         "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Auto-resolve should work if unique vindex columns are referenced",
+    "query": "select id, user_id from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id, user_id from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user_id from t_user_extra_0 where 1 != 1",
+            "Query": "select user_id from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "RHS TableRoute referenced",
+    "query": "select t_user_extra.id from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user_extra.id from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_0 where 1 != 1",
+            "Query": "select 1 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Both TableRoutes referenced",
+    "query": "select t_user.col, t_user_extra.id from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col, t_user_extra.id from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Expression with single-TableRoute reference",
+    "query": "select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id + t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id + t_user_extra.col from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Jumbled references",
+    "query": "select t_user.col, t_user_extra.id, t_user.col2 from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col, t_user_extra.id, t_user.col2 from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0,L:1",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col, t_user_0.col2 from t_user_0 where 1 != 1",
+            "Query": "select t_user.col, t_user.col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Comments",
+    "query": "select /* comment */ t_user.col from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select /* comment */ t_user.col from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select /* comment */ t_user.col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select /* comment */ 1 from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Case preservation",
+    "query": "select t_user.Col, t_user_extra.Id from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.Col, t_user_extra.Id from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.Col from t_user_0 where 1 != 1",
+            "Query": "select t_user.Col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.Id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.Id from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "select expression having dependencies on both sides of a join",
+    "query": "select t_user.id * user_id as amount from t_user, t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id * user_id as amount from t_user, t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_id": 0
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.id from t_user_0 where 1 != 1",
+            "Query": "select t_user.id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select :t_user_id * user_id as amount from t_user_extra_0 where 1 != 1",
+            "Query": "select :t_user_id * user_id as amount from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "use output column containing data from both sides of the join",
+    "query": "select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_extra_col": 0,
+          "t_user_extra_id": 1
+        },
+        "TableName": "t_user_extra_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col, t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col, t_user_extra.id from t_user_extra",
+            "Table": "t_user_extra"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select :t_user_extra_col + t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select :t_user_extra_col + t_user.col from t_user where t_user.id = :t_user_extra_id",
+            "Table": "t_user",
+            "Values": [
+              ":t_user_extra_id"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
       ]
     }
   }

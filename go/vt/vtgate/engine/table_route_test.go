@@ -352,7 +352,7 @@ func TestGetTableQueries(t *testing.T) {
 				t.Fatalf("Failed to parse query: %v", err)
 			}
 
-			actual, err := getTableQueries(stmt, test.logicTb, test.bv, test.actualTableNameMap)
+			actual, err := getTableQueries(stmt, test.bv, test.actualTableNameMap)
 			if err != nil {
 				t.Fatalf(err.Error())
 			}
@@ -907,10 +907,9 @@ func TestTableRouteSort(t *testing.T) {
 	}
 
 	wantResult := sqltypes.MakeTestResult(
-		sqltypes.MakeTestFieldsWithTableName(
+		sqltypes.MakeTestFields(
 			"id",
 			"int64",
-			tableName,
 		),
 		"1",
 		"1",
@@ -926,10 +925,9 @@ func TestTableRouteSort(t *testing.T) {
 	result, err = sel.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, false)
 	require.NoError(t, err)
 	wantResult = sqltypes.MakeTestResult(
-		sqltypes.MakeTestFieldsWithTableName(
+		sqltypes.MakeTestFields(
 			"id",
 			"int64",
-			tableName,
 		),
 		"3",
 		"2",
@@ -977,10 +975,9 @@ func TestTableRouteSortTruncate(t *testing.T) {
 	require.NoError(t, err)
 
 	wantResult := sqltypes.MakeTestResult(
-		sqltypes.MakeTestFieldsWithTableName(
+		sqltypes.MakeTestFields(
 			"id",
 			"int64",
-			tableName,
 		),
 		"1",
 		"1",

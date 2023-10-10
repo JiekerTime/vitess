@@ -580,7 +580,8 @@
           "column_list_authoritative": true
         },
         "seq": {
-          "type": "sequence"
+          "type": "sequence",
+          "pinned": "00"
         },
         "ambiguous_ref_with_source": {},
         "global_ref": {},

@@ -233,7 +233,7 @@ func newBuildSelectPlan(
 	plan = pushCommentDirectivesOnPlan(plan, selStmt)
 
 	// todo: build split table plan
-	plan, _, _, err = buildTablePlan(ctx, plan)
+	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -325,7 +325,7 @@ func gen4UpdateStmtPlanner(
 	}
 
 	// build split table plan
-	plan, _, _, err = buildTablePlan(ctx, plan)
+	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +410,7 @@ func gen4DeleteStmtPlanner(
 	}
 
 	// todo: build split table plan
-	plan, _, _, err = buildTablePlan(ctx, plan)
+	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, err
 	}
@@ -498,7 +498,7 @@ func gen4InsertStmtPlanner(version querypb.ExecuteOptions_PlannerVersion, insStm
 		return nil, err
 	}
 
-	plan, _, _, err = buildTablePlan(ctx, plan)
+	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, err
 	}
