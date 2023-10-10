@@ -1,4 +1,4 @@
-package vtgate
+package split_table
 
 import (
 	_ "embed"
@@ -23,7 +23,6 @@ var (
 	mysqlParams     mysql.ConnParams
 	shardedKs       = "user"
 	unshardedKs     = "uks"
-	//shardedKsShards = []string{"-19a0", "19a0-20", "20-20c0", "20c0-"}
 	shardedKsShards = []string{"-80", "80-"}
 
 	Cell = "test"
