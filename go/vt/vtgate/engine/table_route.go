@@ -254,17 +254,9 @@ func getTableQueries(stmt sqlparser.Statement, bvs map[string]*querypb.BindVaria
 
 func rewriteQuery(stmt sqlparser.Statement, act string, logicTbName string) (string, error) {
 	cloneStmt := sqlparser.DeepCloneStatement(stmt)
-	sqlparser.SafeRewrite(cloneStmt, nil, func(cursor *sqlparser.Cursor) bool {
-		switch node := cursor.Node().(type) {
-		case sqlparser.TableName:
-			if strings.EqualFold(node.Name.String(), logicTbName) {
-				cursor.Replace(sqlparser.TableName{
-					Name: sqlparser.NewIdentifierCS(act),
-				})
-			}
-		}
-		return true
-	})
+	tableMap := make(map[string]string)
+	tableMap[logicTbName] = act
+	sqlparser.RewirteSplitTableName(cloneStmt, tableMap)
 	return sqlparser.String(cloneStmt), nil
 }
 

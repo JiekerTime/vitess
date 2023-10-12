@@ -7,6 +7,8 @@ import (
 	"sort"
 	"testing"
 
+	"vitess.io/vitess/go/vt/sqlparser"
+
 	"github.com/stretchr/testify/require"
 
 	querypb "vitess.io/vitess/go/vt/proto/query"
@@ -29,7 +31,7 @@ func TestFindTableRouteSelectEqual(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}},
 		TableVindex:      vindex,
 	}
 

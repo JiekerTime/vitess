@@ -2,6 +2,7 @@ package vindexes
 
 import (
 	"vitess.io/vitess/go/vt/proto/query"
+	"vitess.io/vitess/go/vt/sqlparser"
 )
 
 type SplitTableMap map[string]*LogicTableConfig
@@ -21,9 +22,9 @@ type ActualTable struct {
 }
 
 type TableColumn struct {
-	Column     string     `json:"column"`
-	ColumnType query.Type `json:"column_type"`
-	Index      int32      `json:"index"`
+	Column     sqlparser.IdentifierCI `json:"column"`
+	ColumnType query.Type             `json:"column_type"`
+	Index      int32                  `json:"index"`
 }
 
 // GetFirstActualTableMap Gets the first table mapping of the split table

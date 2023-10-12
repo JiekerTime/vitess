@@ -86,5 +86,5 @@ func exprHasUniqueTableIndex(ctx *plancontext.PlanningContext, expr sqlparser.Ex
 		return false
 	}
 	column := logicTableConfig.TableIndexColumn[0].Column
-	return col.Name.Equal(sqlparser.NewIdentifierCI(column))
+	return col.Name.Equal(column)
 }

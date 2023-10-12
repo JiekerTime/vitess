@@ -127,7 +127,7 @@ func createOperatorFromUpdateForSplitTable(ctx *plancontext.PlanningContext, upd
 	logicTableConfig := ctx.SplitTableConfig[tableName.Name.String()]
 
 	for _, col := range logicTableConfig.TableIndexColumn {
-		if err := checkAndErrIfTableVindexChanging(updateStmt.Exprs, sqlparser.NewIdentifierCI(col.Column)); err != nil {
+		if err := checkAndErrIfTableVindexChanging(updateStmt.Exprs, col.Column); err != nil {
 			return nil, err
 		}
 	}
@@ -164,7 +164,7 @@ func createOperatorFromInsertForSplitTable(ctx *plancontext.PlanningContext, ins
 	splitTableConfig := ctx.SplitTableConfig[ins.Table.Expr.(sqlparser.TableName).Name.String()]
 	colTableVindex := splitTableConfig.TableIndexColumn
 	for _, tableIndexColumn := range colTableVindex {
-		if findColumn(ins, sqlparser.NewIdentifierCI(tableIndexColumn.Column)) == -1 {
+		if findColumn(ins, tableIndexColumn.Column) == -1 {
 			return nil, vterrors.VT12001("INSERT without splittable column")
 		}
 	}
@@ -205,12 +205,12 @@ func insertRowsPlanForSplitTable(insOp *TableInsert, ins *sqlparser.Insert, rows
 	colTableVindexes := insOp.TableColVindexes.TableIndexColumn
 	routeValues := make([][]evalengine.Expr, len(colTableVindexes))
 	for colIdx, col := range colTableVindexes {
-		err := checkAndErrIfTableVindexChanging(sqlparser.UpdateExprs(ins.OnDup), sqlparser.NewIdentifierCI(col.Column))
+		err := checkAndErrIfTableVindexChanging(sqlparser.UpdateExprs(ins.OnDup), col.Column)
 		if err != nil {
 			return nil, err
 		}
 		routeValues[colIdx] = make([]evalengine.Expr, len(rows))
-		colNum := findColumn(ins, sqlparser.NewIdentifierCI(col.Column))
+		colNum := findColumn(ins, col.Column)
 		for rowNum, row := range rows {
 			innerpv, err := evalengine.Translate(row[colNum], nil)
 			if err != nil {
@@ -222,9 +222,9 @@ func insertRowsPlanForSplitTable(insOp *TableInsert, ins *sqlparser.Insert, rows
 
 	// here we are replacing the row value with the argument.
 	for _, col := range colTableVindexes {
-		colNum, _ := findOrAddColumn(ins, sqlparser.NewIdentifierCI(col.Column))
+		colNum, _ := findOrAddColumn(ins, col.Column)
 		for rowNum, row := range rows {
-			name := engine.InsertVarName(sqlparser.NewIdentifierCI(col.Column), rowNum)
+			name := engine.InsertVarName(col.Column, rowNum)
 			row[colNum] = sqlparser.NewArgument(name)
 		}
 	}

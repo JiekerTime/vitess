@@ -471,7 +471,7 @@ func TestTableRouteGetFields(t *testing.T) {
 				Index:           1,
 			},
 		},
-		TableIndexColumn: []*vindexes.TableColumn{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("f1"), ColumnType: querypb.Type_VARCHAR}},
 	}
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)
@@ -555,7 +555,7 @@ func TestTableRouteSelectScatter(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}},
 		TableVindex:      vindex,
 	}
 
@@ -626,7 +626,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}},
 		TableVindex:      vindex,
 	}
 
@@ -706,7 +706,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*vindexes.TableColumn{{Column: "f1", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("f1"), ColumnType: querypb.Type_VARCHAR}},
 		TableVindex:      vindex,
 	}
 
@@ -802,7 +802,7 @@ func TestTableRouteSelectIN(t *testing.T) {
 			},
 		},
 		TableCount:       2,
-		TableIndexColumn: []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}},
+		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}},
 		TableVindex:      vindex,
 	}
 
@@ -879,7 +879,7 @@ func TestTableRouteSort(t *testing.T) {
 			Sharded: false,
 		},
 	}
-	tableIndexColumn := []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+	tableIndexColumn := []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}}
 	tableName := "t_user"
 	sel := newTestTableRoute(shardRouteParam, tableName, tableIndexColumn, Scatter)
 	sqlStmt, _, _ := sqlparser.Parse2("select id from t_user order by id")
@@ -945,7 +945,7 @@ func TestTableRouteSortTruncate(t *testing.T) {
 			Sharded: false,
 		},
 	}
-	tableIndexColumn := []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+	tableIndexColumn := []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}}
 	tableName := "t_user"
 	sel := newTestTableRoute(shardRouteParam, tableName, tableIndexColumn, Scatter)
 	sqlStmt, _, _ := sqlparser.Parse2("dummy_select")
@@ -1000,7 +1000,7 @@ func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tab
 
 func getTestLogicTableConfig(tableName string, tableIndexColumn []*vindexes.TableColumn, tableVindex vindexes.Vindex) vindexes.SplitTableMap {
 	if len(tableIndexColumn) == 0 {
-		tableIndexColumn = []*vindexes.TableColumn{{Column: "col", ColumnType: querypb.Type_VARCHAR}}
+		tableIndexColumn = []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}}
 		tableName = "t_user"
 		tableVindex, _ = vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
 	}

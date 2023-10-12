@@ -2976,6 +2976,6 @@ func assertColumn(t *testing.T, col Column, expectedName string, expectedType qu
 }
 
 func assertSplitTableColumn(t *testing.T, col TableColumn, expectedName string, expectedType querypb.Type) {
-	assert.Equal(t, expectedName, col.Column, "column name does not match")
+	assert.Equal(t, expectedName, col.Column.String(), "column name does not match")
 	assert.Equal(t, expectedType, col.ColumnType, "column type does not match")
 }
