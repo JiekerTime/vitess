@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	querypb "vitess.io/vitess/go/vt/proto/query"
@@ -173,15 +172,7 @@ func (tableRoute *TableRoute) executeShards(
 
 	if errs != nil {
 		errs = filterOutNilErrors(errs)
-		if len(errs) == len(rss) {
-			return nil, vterrors.Aggregate(errs)
-		}
-		partialSuccessScatterQueries.Add(1)
-
-		for _, err := range errs {
-			serr := mysql.NewSQLErrorFromError(err).(*mysql.SQLError)
-			vcursor.Session().RecordWarning(&querypb.QueryWarning{Code: uint32(serr.Num), Message: err.Error()})
-		}
+		return nil, vterrors.Aggregate(errs)
 	}
 
 	var nameMap = make(map[string]string)

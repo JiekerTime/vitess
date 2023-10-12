@@ -75,8 +75,11 @@ func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primiti
 		queries[i] = dml.Queries
 	}
 
-	autocommit := (len(rss) == 1 || dml.MultiShardAutocommit) && vcursor.AutocommitApproval()
-
+	isSingleShardSingleSql := false
+	if len(rss) == 1 {
+		isSingleShardSingleSql = len(queries[0]) == 1
+	}
+	autocommit := isSingleShardSingleSql && vcursor.AutocommitApproval()
 	result, errs := vcursor.ExecuteBatchMultiShard(ctx, primitive, rss, queries, true /* rollbackOnError */, autocommit)
 
 	if errs != nil {

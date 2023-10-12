@@ -53,7 +53,6 @@ func (del *TableDelete) TryExecute(ctx context.Context, vcursor VCursor, bindVar
 	// 排序分表
 	SortTableList(actualTableMap)
 
-	// todo:根据分片和分表的Opcode确实是否开启事务
 	switch del.ShardRouteParam.Opcode {
 	case Unsharded:
 		return del.execUnsharded(ctx, del, vcursor, bindVars, rss, actualTableMap)

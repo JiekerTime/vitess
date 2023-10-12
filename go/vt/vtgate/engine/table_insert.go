@@ -254,7 +254,11 @@ func (ins *Insert) executeInsertQueriesForSplitTable(
 	queries [][]*querypb.BoundQuery,
 	insertID int64,
 ) (*sqltypes.Result, error) {
-	autocommit := (len(rss) == 1 || ins.MultiShardAutocommit) && vcursor.AutocommitApproval()
+	isSingleShardSingleSql := false
+	if len(rss) == 1 {
+		isSingleShardSingleSql = len(queries[0]) == 1
+	}
+	autocommit := isSingleShardSingleSql && vcursor.AutocommitApproval()
 	err := allowOnlyPrimary(rss...)
 	if err != nil {
 		return nil, err
