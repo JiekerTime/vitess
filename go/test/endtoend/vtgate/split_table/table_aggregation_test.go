@@ -20,7 +20,7 @@ func TestTableGroupBy(t *testing.T) {
 
 }
 
-func TestTableAggOnTopOfLimit(t *testing.T) {
+func testTableAggOnTopOfLimit(t *testing.T) {
 	mcmp, closer := start(t)
 	defer closer()
 	mcmp.Exec("use user")

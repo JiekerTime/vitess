@@ -84,13 +84,13 @@ func TestOrderBy(t *testing.T) {
 	//mcmp.ExecWithColumnCompare("select col from t_user where id = 5 order by 18446744073709551616")
 	mcmp.ExecAllowAndCompareError("select col from t_user where id = 5 order by 2")
 	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by -col1")
-	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8_general_ci desc")
-	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by id+col collate utf8_general_ci desc")
+	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by concat(col,col1) collate utf8mb4_general_ci desc")
+	mcmp.ExecWithColumnCompare("select * from t_user where id = 5 and col = 6 order by id+col collate utf8mb4_general_ci desc")
 	mcmp.ExecWithColumnCompare("select col from t_user where id = 1  and col = 6 order by col")
 	mcmp.ExecWithColumnCompare("select col as foo from t_user order by foo")
 	mcmp.ExecWithColumnCompare("select col as foo,col2 as col from t_user order by col")
 	mcmp.ExecWithColumnCompare("select col, col from t_user order by col")
 	mcmp.ExecWithColumnCompare("select col from t_user order by col+1")
-	mcmp.ExecWithColumnCompare("select t_user.col1 as a from t_user order by 1 collate utf8_general_ci")
+	mcmp.ExecWithColumnCompare("select t_user.col1 as a from t_user order by 1 collate utf8mb4_general_ci")
 
 }
