@@ -310,7 +310,8 @@
         "Values": [
           "VARCHAR(\"jose\")"
         ],
-        "Vindex": "name_user_map"      },
+        "Vindex": "name_user_map"
+      },
       "TablesUsed": [
         "user.t_user"
       ]
@@ -401,7 +402,7 @@
   {
     "comment": "update by primary keyspace id with alias",
     "query": "update t_user as user_alias set val = 1 where user_alias.id = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user as user_alias set val = 1 where user_alias.id = 1",
       "Instructions": {
@@ -425,7 +426,7 @@
   {
     "comment": "update by split table key with alias",
     "query": "update t_user as user_alias set val = 1 where user_alias.col = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user as user_alias set val = 1 where user_alias.col = 1",
       "Instructions": {
@@ -449,7 +450,7 @@
   {
     "comment": "update by primary keyspace id with parenthesized expression",
     "query": "update t_user set val = 1 where (id = 1)",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1 where (id = 1)",
       "Instructions": {
@@ -473,7 +474,7 @@
   {
     "comment": "update by primary keyspace id with multi-part where clause with parens",
     "query": "update t_user set val = 1 where (name = 'foo' and id = 1)",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1 where (name = 'foo' and id = 1)",
       "Instructions": {
@@ -497,7 +498,7 @@
   {
     "comment": "update by primary keyspace id, stray where clause",
     "query": "update t_user set val = 1 where id = id2 and id = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1 where id = id2 and id = 1",
       "Instructions": {
@@ -521,7 +522,7 @@
   {
     "comment": "update by split table key, stray where clause",
     "query": "update t_user set val = 1 where col = col2 and col = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1 where col = col2 and col = 1",
       "Instructions": {
@@ -545,7 +546,7 @@
   {
     "comment": "update by split table key, stray where clause with conversion error",
     "query": "update t_user set val = 1 where col = 18446744073709551616 and col = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1 where col = 18446744073709551616 and col = 1",
       "Instructions": {
@@ -569,7 +570,7 @@
   {
     "comment": "update by split table key, stray where clause with conversion error",
     "query": "update t_user set val = 1 where id = 1 and id = 18446744073709551616",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1 where id = 1 and id = 18446744073709551616",
       "Instructions": {
@@ -593,7 +594,7 @@
   {
     "comment": "scatter update",
     "query": "update t_user set val = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set val = 1",
       "Instructions": {
@@ -614,7 +615,7 @@
   {
     "comment": "update with binary value",
     "query": "update t_user set name = _binary 'abc' where id = 1",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set name = _binary 'abc' where id = 1",
       "Instructions": {
@@ -638,7 +639,7 @@
   {
     "comment": "update with alias table",
     "query": "update t_user u set u.name = 'john' where u.col > 20",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user u set u.name = 'john' where u.col > 20",
       "Instructions": {
@@ -659,7 +660,7 @@
   {
     "comment": "update with routing using multi column vindex",
     "query": "update t_user set a = 1 where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
-    "plan":   {
+    "plan": {
       "QueryType": "UPDATE",
       "Original": "update t_user set a = 1 where (name, col) in (('aa', 'bb'), ('cc', 'dd'))",
       "Instructions": {
@@ -1042,6 +1043,37 @@
         },
         "TableVindexValues": {
           "binary_hash": "VARCHAR(\"a\"), VARCHAR(\"b\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert with all vindexes supplied",
+    "query": "insert into t_user(nonid, name, id, col) values (2, 'foo', 1, 'col')",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_user(nonid, name, id, col) values (2, 'foo', 1, 'col')",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
+        "Query": "insert into t_user(nonid, `name`, id, col, Costly) values (2, :_Name_0, :_Id_0, :_col_0, :_Costly_0)",
+        "TableName": "t_user",
+        "TableVindexValues": {
+          "binary_hash": "VARCHAR(\"col\")"
+        },
+        "VindexValues": {
+          "costly_map": "NULL",
+          "name_user_map": "VARCHAR(\"foo\")",
+          "user_index": ":__seq0"
         }
       },
       "TablesUsed": [

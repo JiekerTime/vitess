@@ -1210,7 +1210,6 @@
       ]
     }
   },
-
   {
     "comment": "insert into a routed table",
     "query": "insert into route1(id) values (1)",
@@ -1236,209 +1235,6 @@
       },
       "TablesUsed": [
         "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "insert with mimatched column list",
-    "query": "insert into user(id) values (1, 2)",
-    "v3-plan": "VT13001: [BUG] column list does not match values",
-    "gen4-plan": "VT03006: column count does not match value count at row 1"
-  },
-
-  {
-    "comment": "insert sharded, no values",
-    "query": "insert into user values()",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user values()",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(NULL)",
-        "Query": "insert into `user`(id, `Name`, Costly) values (:_Id_0, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "insert with one vindex",
-    "query": "insert into user(id) values (1)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(id) values (1)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
-        "Query": "insert into `user`(id, `Name`, Costly) values (:_Id_0, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-
-  {
-    "comment": "insert with one vindex and bind var",
-    "query": "insert into user(id) values (:aa)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(id) values (:aa)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(:aa)",
-        "Query": "insert into `user`(id, `Name`, Costly) values (:_Id_0, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "insert with non vindex",
-    "query": "insert into user(nonid) values (2)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(nonid) values (2)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(NULL)",
-        "Query": "insert into `user`(nonid, id, `Name`, Costly) values (2, :_Id_0, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-
-  {
-    "comment": "insert with non vindex bool value",
-    "query": "insert into user(nonid) values (true)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(nonid) values (true)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(NULL)",
-        "Query": "insert into `user`(nonid, id, `Name`, Costly) values (true, :_Id_0, :_Name_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "NULL",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "insert with all vindexes supplied",
-    "query": "insert into user(nonid, name, id) values (2, 'foo', 1)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user(nonid, name, id) values (2, 'foo', 1)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1))",
-        "Query": "insert into `user`(nonid, `name`, id, Costly) values (2, :_Name_0, :_Id_0, :_Costly_0)",
-        "TableName": "user",
-        "VindexValues": {
-          "costly_map": "NULL",
-          "name_user_map": "VARCHAR(\"foo\")",
-          "user_index": ":__seq0"
-        }
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "insert for non-vindex autoinc",
-    "query": "insert into user_extra(nonid) values (2)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user_extra(nonid) values (2)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(NULL)",
-        "Query": "insert into user_extra(nonid, extra_id, user_id) values (2, :__seq0, :_user_id_0)",
-        "TableName": "user_extra",
-        "VindexValues": {
-          "user_index": "NULL"
-        }
-      },
-      "TablesUsed": [
-        "user.user_extra"
       ]
     }
   },
@@ -1509,32 +1305,6 @@
     }
   },
   {
-    "comment": "insert for non-vindex autoinc, invalid value",
-    "query": "insert into user_extra(nonid, extra_id) values (2, 18446744073709551616)",
-    "plan": {
-      "QueryType": "INSERT",
-      "Original": "insert into user_extra(nonid, extra_id) values (2, 18446744073709551616)",
-      "Instructions": {
-        "OperatorType": "Insert",
-        "Variant": "Sharded",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "TargetTabletType": "PRIMARY",
-        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(DECIMAL(18446744073709551616))",
-        "Query": "insert into user_extra(nonid, extra_id, user_id) values (2, :__seq0, :_user_id_0)",
-        "TableName": "user_extra",
-        "VindexValues": {
-          "user_index": "NULL"
-        }
-      },
-      "TablesUsed": [
-        "user.user_extra"
-      ]
-    }
-  },
-  {
     "comment": "insert invalid index value",
     "query": "insert into music_extra(music_id, user_id) values(1, 18446744073709551616)",
     "plan": {
@@ -1570,7 +1340,6 @@
     "query": "insert into noexist(music_id, user_id) values(1, 18446744073709551616)",
     "plan": "table noexist not found"
   },
-
   {
     "comment": "insert with query timeout",
     "query": "insert /*vt+ QUERY_TIMEOUT_MS=1 */ into user(id) values (1), (2)",
