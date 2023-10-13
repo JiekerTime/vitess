@@ -20,3 +20,13 @@ func TestSelect(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select user.t_user.* from user.t_user")
 
 }
+
+// sql_mode not only_full_group_by
+func TestSqlMode(t *testing.T) {
+	mcmp, closer := start(t)
+	defer closer()
+	mcmp.Exec("use user")
+
+	mcmp.Exec("insert into t_user(id,col,f_key) values (1, 'a1', 'aaa') ")
+	mcmp.ExecWithColumnCompare("select f_key from t_user group by col")
+}
