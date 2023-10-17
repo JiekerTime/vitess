@@ -125,9 +125,13 @@ func (rp *TableRoutingParameters) resolveTables(ctx context.Context, vcursor VCu
 
 func (rp *TableRoutingParameters) tableTransform(ctx context.Context, destinations []vindexes.TableDestination, logicTable string) (tables []vindexes.ActualTable, err error) {
 	var logicTableConfig = rp.LogicTable[logicTable]
+	mapTableIndex := make(map[int]int)
 	for _, destination := range destinations {
 		if err = destination.Resolve(logicTableConfig, func(actualTableIndex int) error {
-			tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
+			if _, ok := mapTableIndex[actualTableIndex]; !ok {
+				tables = append(tables, rp.LogicTable[logicTable].ActualTableList[actualTableIndex])
+				mapTableIndex[actualTableIndex] = actualTableIndex
+			}
 			return nil
 		}); err != nil {
 			return tables, err

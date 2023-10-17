@@ -127,7 +127,6 @@ func TestDeleteShardedTableIn(t *testing.T) {
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
 		`ExecuteBatchMultiShard ks.-20: delete from t_user_1 where col in (1, 2, 3) {} ks.20-: delete from t_user_1 where col in (1, 2, 3) {} true false`,
-		`ExecuteBatchMultiShard ks.-20: delete from t_user_1 where col in (1, 2, 3) {} ks.20-: delete from t_user_1 where col in (1, 2, 3) {} true false`,
 		`ExecuteBatchMultiShard ks.-20: delete from t_user_2 where col in (1, 2, 3) {} ks.20-: delete from t_user_2 where col in (1, 2, 3) {} true false`,
 	})
 }

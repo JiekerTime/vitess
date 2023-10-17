@@ -851,7 +851,6 @@ func TestTableRouteSelectIN(t *testing.T) {
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [type:INT64 value:"1" type:INT64 value:"2" type:INT64 value:"4"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6),DestinationKeyspaceID(06e7ea22ce92708f),DestinationKeyspaceID(d2fd8867d50d2dfe)`,
 		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
-		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
 		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_2 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
