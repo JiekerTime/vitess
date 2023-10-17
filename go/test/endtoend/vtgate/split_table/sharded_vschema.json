@@ -43,6 +43,54 @@
           "name": "xxhash"
         }
       ]
+    },
+    "t_2": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_3": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_4": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_5": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_6": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_7": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
     }
   },
   "splittable_vindexes": {
@@ -66,6 +114,78 @@
         {
           "index": 0,
           "column": "col",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_2": {
+      "logic_table_name": "t_2",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_3": {
+      "logic_table_name": "t_3",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_4": {
+      "logic_table_name": "t_4",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_5": {
+      "logic_table_name": "t_5",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_6": {
+      "logic_table_name": "t_6",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_shard",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_7": {
+      "logic_table_name": "t_7",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_shard",
           "column_type": "VARCHAR"
         }
       ],
