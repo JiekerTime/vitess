@@ -21,7 +21,7 @@ CREATE TABLE `t_user`
     `c`          int(16)           DEFAULT NULL,
     `foo`        int(16)           DEFAULT NULL,
     primary key (id)
-) ENGINE = InnoDB;
+) ENGINE = InnoDB collate=utf8mb4_general_ci;
 
 CREATE TABLE `t_2`
 (

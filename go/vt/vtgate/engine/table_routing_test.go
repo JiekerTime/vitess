@@ -63,11 +63,11 @@ func TestOrderbyIndex(t *testing.T) {
 
 	ActualTable := []vindexes.ActualTable{
 		{
-			ActualTableName: "lpk_1",
+			ActualTableName: "lpk_0",
 			Index:           1,
 		},
 		{
-			ActualTableName: "lpk_2",
+			ActualTableName: "lpk_1",
 			Index:           0,
 		},
 	}

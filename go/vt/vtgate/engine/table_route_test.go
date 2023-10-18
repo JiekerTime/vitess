@@ -31,28 +31,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           `SELECT * FROM my_actual_table_1 AS t WHERE t.id = 1`,
+					Sql:           `SELECT * FROM my_actual_table_0 AS t WHERE t.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           `SELECT * FROM my_actual_table_2 AS t WHERE t.id = 1`,
+					Sql:           `SELECT * FROM my_actual_table_1 AS t WHERE t.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -63,28 +63,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           `SELECT * FROM my_actual_table_1 WHERE id = 1`,
+					Sql:           `SELECT * FROM my_actual_table_0 WHERE id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           `SELECT * FROM my_actual_table_2 WHERE id = 1`,
+					Sql:           `SELECT * FROM my_actual_table_1 WHERE id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -95,28 +95,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM my_actual_table_1) AS t WHERE t.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM my_actual_table_0) AS t WHERE t.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM my_actual_table_2) AS t WHERE t.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM my_actual_table_1) AS t WHERE t.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -127,28 +127,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 WHERE t2.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_0) AS t1) AS t2 WHERE t2.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_2) AS t1) AS t2 WHERE t2.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 WHERE t2.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -159,28 +159,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_0 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_2 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -191,28 +191,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 JOIN my_actual_table_1 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_0) AS t1) AS t2 JOIN my_actual_table_0 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_2) AS t1) AS t2 JOIN my_actual_table_2 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
+					Sql:           `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 JOIN my_actual_table_1 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -223,28 +223,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
+					Sql:           "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_0 AS t1) AS t2) AS t3 JOIN my_actual_table_0 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_2 AS t1) AS t2) AS t3 JOIN my_actual_table_2 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
+					Sql:           "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -255,28 +255,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
+					Sql:           "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_0 AS t1) AS t2) AS t3 JOIN my_actual_table_0 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_2 AS t1) AS t2) AS t3 JOIN my_actual_table_2 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
+					Sql:           "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		}, {
@@ -286,28 +286,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2) as t3 join my_actual_table_1 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
+					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_0 as t1 limit 5, 10) as t2) as t3 join my_actual_table_0 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_2 as t1 limit 5, 10) as t2) as t3 join my_actual_table_2 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
+					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2) as t3 join my_actual_table_1 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -318,28 +318,28 @@ func TestGetTableQueries(t *testing.T) {
 				LogicTableName: "my_table",
 				ActualTableList: []vindexes.ActualTable{
 					{
-						ActualTableName: "my_actual_table_1",
+						ActualTableName: "my_actual_table_0",
 					},
 					{
-						ActualTableName: "my_actual_table_2",
+						ActualTableName: "my_actual_table_1",
 					},
 				},
 			},
 			bv: map[string]*querypb.BindVariable{},
 			expected: []*querypb.BoundQuery{
 				{
-					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_1 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
+					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_0 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_0 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 				{
-					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_2 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_2 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
+					Sql:           "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_1 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 					BindVariables: map[string]*querypb.BindVariable{},
 				},
 			},
 			actualTableNameMap: map[string][]vindexes.ActualTable{
 				"my_table": {
-					{ActualTableName: "my_actual_table_1", Index: 0},
-					{ActualTableName: "my_actual_table_2", Index: 1},
+					{ActualTableName: "my_actual_table_0", Index: 0},
+					{ActualTableName: "my_actual_table_1", Index: 1},
 				},
 			},
 		},
@@ -380,61 +380,61 @@ func TestRewriteQuery(t *testing.T) {
 		{
 			name:     "Select query with table alias",
 			query:    `SELECT * FROM my_table AS t WHERE t.id = 1`,
-			act:      "my_actual_table_1",
-			expected: `SELECT * FROM my_actual_table_1 AS t WHERE t.id = 1`,
+			act:      "my_actual_table_0",
+			expected: `SELECT * FROM my_actual_table_0 AS t WHERE t.id = 1`,
 		},
 		{
 			name:     "Select query with table name",
 			query:    `SELECT * FROM my_table WHERE id = 1`,
-			act:      "my_actual_table_1",
-			expected: `SELECT * FROM my_actual_table_1 WHERE id = 1`,
+			act:      "my_actual_table_0",
+			expected: `SELECT * FROM my_actual_table_0 WHERE id = 1`,
 		},
 		{
 			name:     "Select query with subquery",
 			query:    "SELECT * FROM (SELECT * FROM my_table) AS t WHERE t.id = 1",
-			act:      "my_actual_table_1",
-			expected: `SELECT * FROM (SELECT * FROM my_actual_table_1) AS t WHERE t.id = 1`,
+			act:      "my_actual_table_0",
+			expected: `SELECT * FROM (SELECT * FROM my_actual_table_0) AS t WHERE t.id = 1`,
 		},
 		{
 			name:     "Select query with multiple subqueries",
 			query:    `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 WHERE t2.id = 1`,
-			act:      "my_actual_table_1",
-			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 WHERE t2.id = 1`,
+			act:      "my_actual_table_0",
+			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_0) AS t1) AS t2 WHERE t2.id = 1`,
 		},
 		{
 			name:     "Select query with multiple subqueries and aliases",
 			query:    `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 WHERE t3.id = 1`,
-			act:      "my_actual_table_1",
-			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
+			act:      "my_actual_table_0",
+			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_0 AS t1) AS t2) AS t3 WHERE t3.id = 1`,
 		},
 		{
 			name:     "Select query with multiple subqueries and table aliases",
 			query:    `SELECT * FROM (SELECT * FROM (SELECT * FROM my_table) AS t1) AS t2 JOIN my_table AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
-			act:      "my_actual_table_1",
-			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_1) AS t1) AS t2 JOIN my_actual_table_1 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
+			act:      "my_actual_table_0",
+			expected: `SELECT * FROM (SELECT * FROM (SELECT * FROM my_actual_table_0) AS t1) AS t2 JOIN my_actual_table_0 AS t3 ON t2.id = t3.id WHERE t2.id = 1`,
 		},
 		{
 			name:     "Select query with multiple subqueries and table aliases and column aliases",
 			query:    `SELECT t1.id, t2.name FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1`,
-			act:      "my_actual_table_1",
-			expected: "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
+			act:      "my_actual_table_0",
+			expected: "SELECT t1.id, t2.`name` FROM (SELECT * FROM (SELECT * FROM my_actual_table_0 AS t1) AS t2) AS t3 JOIN my_actual_table_0 AS t4 ON t3.id = t4.id WHERE t3.id = 1",
 		},
 		{
 			name:     "Select query with multiple subqueries and table aliases and column aliases and functions",
 			query:    `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name`,
-			act:      "my_actual_table_1",
-			expected: "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_1 AS t1) AS t2) AS t3 JOIN my_actual_table_1 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
+			act:      "my_actual_table_0",
+			expected: "SELECT t1.id, t2.`name`, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_actual_table_0 AS t1) AS t2) AS t3 JOIN my_actual_table_0 AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.`name`",
 		}, {
 			name:     "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query:    `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2) AS t3 JOIN my_table AS t4 ON t3.id = t4.id WHERE t3.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			act:      "my_actual_table_1",
-			expected: "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2) as t3 join my_actual_table_1 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
+			act:      "my_actual_table_0",
+			expected: "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from my_actual_table_0 as t1 limit 5, 10) as t2) as t3 join my_actual_table_0 as t4 on t3.id = t4.id where t3.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 		},
 		{
 			name:     "Select query with multiple subqueries and table aliases and column aliases and functions and order by and limit and offset and subquery with limit and offset and subquery with limit and offset and subquery with limit and offset",
 			query:    `SELECT t1.id, t2.name, MAX(t3.age) FROM (SELECT * FROM (SELECT * FROM (SELECT * FROM my_table AS t1 LIMIT 10 OFFSET 5) AS t2 LIMIT 10 OFFSET 5) AS t3 LIMIT 10 OFFSET 5) AS t4 JOIN my_table AS t5 ON t4.id = t5.id WHERE t4.id = 1 GROUP BY t1.id, t2.name ORDER BY MAX(t3.age) LIMIT 10 OFFSET 5`,
-			act:      "my_actual_table_1",
-			expected: "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_1 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_1 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
+			act:      "my_actual_table_0",
+			expected: "select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_actual_table_0 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_actual_table_0 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 		},
 	}
 
@@ -463,11 +463,11 @@ func TestTableRouteGetFields(t *testing.T) {
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
 			{
-				ActualTableName: "lkp" + "_1",
+				ActualTableName: "lkp" + "_0",
 				Index:           0,
 			},
 			{
-				ActualTableName: "lkp" + "_2",
+				ActualTableName: "lkp" + "_1",
 				Index:           1,
 			},
 		},
@@ -546,11 +546,11 @@ func TestTableRouteSelectScatter(t *testing.T) {
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
 			{
-				ActualTableName: "lkp" + "_1",
+				ActualTableName: "lkp" + "_0",
 				Index:           0,
 			},
 			{
-				ActualTableName: "lkp" + "_2",
+				ActualTableName: "lkp" + "_1",
 				Index:           1,
 			},
 		},
@@ -591,8 +591,8 @@ func TestTableRouteSelectScatter(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_0 {} ks.20-: select f1, f2 from lkp_0 {} false false`,
 		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
-		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_2 {} ks.20-: select f1, f2 from lkp_2 {} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
@@ -617,11 +617,11 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
 			{
-				ActualTableName: "lkp" + "_1",
+				ActualTableName: "lkp" + "_0",
 				Index:           0,
 			},
 			{
-				ActualTableName: "lkp" + "_2",
+				ActualTableName: "lkp" + "_1",
 				Index:           1,
 			},
 		},
@@ -666,7 +666,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6)`,
-		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_0 {} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
@@ -697,11 +697,11 @@ func TestTableRouteSelectEqual(t *testing.T) {
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
 			{
-				ActualTableName: "lkp" + "_1",
+				ActualTableName: "lkp" + "_0",
 				Index:           0,
 			},
 			{
-				ActualTableName: "lkp" + "_2",
+				ActualTableName: "lkp" + "_1",
 				Index:           1,
 			},
 		},
@@ -769,7 +769,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 	vc.ExpectLog(t, []string{
 		`Execute select from, toc from lkp where from in ::from from: type:TUPLE values:{type:INT64 value:"1"} false`,
 		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceIDs(00,80)`,
-		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {} ks.20-: select f1, f2 from lkp_1 {} false false`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_0 {} ks.20-: select f1, f2 from lkp_0 {} false false`,
 	})
 	expectResult(t, "sel.Execute", result, wantResult)
 }
@@ -793,11 +793,11 @@ func TestTableRouteSelectIN(t *testing.T) {
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
 			{
-				ActualTableName: "lkp" + "_1",
+				ActualTableName: "lkp" + "_0",
 				Index:           0,
 			},
 			{
-				ActualTableName: "lkp" + "_2",
+				ActualTableName: "lkp" + "_1",
 				Index:           1,
 			},
 		},
@@ -850,8 +850,8 @@ func TestTableRouteSelectIN(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [type:INT64 value:"1" type:INT64 value:"2" type:INT64 value:"4"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6),DestinationKeyspaceID(06e7ea22ce92708f),DestinationKeyspaceID(d2fd8867d50d2dfe)`,
+		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_0 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
 		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_1 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
-		`ExecuteBatchMultiShard ks.-20: select f1, f2 from lkp_2 {__vals: type:TUPLE values:{type:INT64 value:"1"} values:{type:INT64 value:"2"} values:{type:INT64 value:"4"}} false false`,
 	})
 	expectResult(t, "sel.Execute", result, &sqltypes.Result{})
 
@@ -860,7 +860,7 @@ func TestTableRouteSelectIN(t *testing.T) {
 func TestSortTableList(t *testing.T) {
 
 	actualTableNameMap := map[string][]vindexes.ActualTable{
-		"my_table": {{ActualTableName: "my_actual_table_1", Index: 1}, {ActualTableName: "my_actual_table_0", Index: 0}, {ActualTableName: "my_actual_table_3", Index: 3}},
+		"my_table": {{ActualTableName: "my_actual_table_0", Index: 1}, {ActualTableName: "my_actual_table_0", Index: 0}, {ActualTableName: "my_actual_table_3", Index: 3}},
 	}
 
 	SortTableList(actualTableNameMap)
@@ -1009,11 +1009,11 @@ func getTestLogicTableConfig(tableName string, tableIndexColumn []*vindexes.Tabl
 		LogicTableName: tableName,
 		ActualTableList: []vindexes.ActualTable{
 			{
-				ActualTableName: tableName + "_1",
+				ActualTableName: tableName + "_0",
 				Index:           0,
 			},
 			{
-				ActualTableName: tableName + "_2",
+				ActualTableName: tableName + "_1",
 				Index:           1,
 			},
 		},

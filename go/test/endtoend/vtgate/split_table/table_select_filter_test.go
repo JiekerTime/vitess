@@ -44,8 +44,8 @@ func TestOne(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'a'")
 	mcmp.ExecWithColumnCompare("select id from t_user where 1 = col")
 	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in (1)")
-	//bug 等待修复
-	//mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c')")
+
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c')")
 
 	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c') and col = 'a'")
 	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col is null")

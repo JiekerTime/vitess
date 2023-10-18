@@ -41,7 +41,7 @@ func TestTableUpdateEqual(t *testing.T) {
 
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
-		`ExecuteBatchMultiShard ks.-20: update t_user_1 set a = 1 where col = 5 {} ks.20-: update t_user_1 set a = 1 where col = 5 {} true false`,
+		`ExecuteBatchMultiShard ks.-20: update t_user_0 set a = 1 where col = 5 {} ks.20-: update t_user_0 set a = 1 where col = 5 {} true false`,
 	})
 
 	// Failure case
@@ -80,7 +80,7 @@ func TestTableUpdateEqual2(t *testing.T) {
 
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6)`,
-		`ExecuteBatchMultiShard ks.-20: update t_user_2 set a = 1 where col = 99 and id = 1 {} true true`,
+		`ExecuteBatchMultiShard ks.-20: update t_user_1 set a = 1 where col = 99 and id = 1 {} true true`,
 	})
 }
 
@@ -110,7 +110,7 @@ func TestTableUpdateScatter(t *testing.T) {
 
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		`ExecuteBatchMultiShard ks.-20: update t_user_0 set a = 1 {} ks.20-: update t_user_0 set a = 1 {} true false`,
 		`ExecuteBatchMultiShard ks.-20: update t_user_1 set a = 1 {} ks.20-: update t_user_1 set a = 1 {} true false`,
-		`ExecuteBatchMultiShard ks.-20: update t_user_2 set a = 1 {} ks.20-: update t_user_2 set a = 1 {} true false`,
 	})
 }

@@ -58,7 +58,7 @@ func TestDeleteShardedTableEqualUnique(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
-		`ExecuteBatchMultiShard ks.-20: delete from t_user_1 where col = 1 {} ks.20-: delete from t_user_1 where col = 1 {} true false`,
+		`ExecuteBatchMultiShard ks.-20: delete from t_user_0 where col = 1 {} ks.20-: delete from t_user_0 where col = 1 {} true false`,
 	})
 }
 
@@ -92,7 +92,7 @@ func TestDeleteShardedTableEqualUniqueWithDifColm(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [type:INT64 value:"1"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6)`,
-		`ExecuteBatchMultiShard ks.-20: delete from t_user_2 where col = 2 and id = 1 {} true true`,
+		`ExecuteBatchMultiShard ks.-20: delete from t_user_1 where col = 2 and id = 1 {} true true`,
 	})
 }
 
@@ -126,8 +126,8 @@ func TestDeleteShardedTableIn(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		`ExecuteBatchMultiShard ks.-20: delete from t_user_0 where col in (1, 2, 3) {} ks.20-: delete from t_user_0 where col in (1, 2, 3) {} true false`,
 		`ExecuteBatchMultiShard ks.-20: delete from t_user_1 where col in (1, 2, 3) {} ks.20-: delete from t_user_1 where col in (1, 2, 3) {} true false`,
-		`ExecuteBatchMultiShard ks.-20: delete from t_user_2 where col in (1, 2, 3) {} ks.20-: delete from t_user_2 where col in (1, 2, 3) {} true false`,
 	})
 }
 
@@ -160,8 +160,8 @@ func TestDeleteShardedTableMultiEqual(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		"ExecuteBatchMultiShard ks.-20: delete from t_user_0 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd')) {} ks.20-: delete from t_user_0 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd')) {} true false",
 		"ExecuteBatchMultiShard ks.-20: delete from t_user_1 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd')) {} ks.20-: delete from t_user_1 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd')) {} true false",
-		"ExecuteBatchMultiShard ks.-20: delete from t_user_2 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd')) {} ks.20-: delete from t_user_2 where (`name`, col) in (('aa', 'bb'), ('cc', 'dd')) {} true false",
 	})
 }
 
@@ -191,7 +191,7 @@ func TestDeleteShardedTableSharded(t *testing.T) {
 	require.NoError(t, err)
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations ks [] Destinations:DestinationAllShards()`,
+		`ExecuteBatchMultiShard ks.-20: delete from t_user_0 {} ks.20-: delete from t_user_0 {} true false`,
 		`ExecuteBatchMultiShard ks.-20: delete from t_user_1 {} ks.20-: delete from t_user_1 {} true false`,
-		`ExecuteBatchMultiShard ks.-20: delete from t_user_2 {} ks.20-: delete from t_user_2 {} true false`,
 	})
 }
