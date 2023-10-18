@@ -108,10 +108,12 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 	require.NoError(t, err)
 	deleteAll := func() {
 		_, _ = utils.ExecAllowError(t, mcmp.VtConn, "set workload = oltp")
-		tables := []string{"t_user"}
+		mcmp.Exec("use user")
+		tables := []string{"t_user", "t_1"}
 		for _, table := range tables {
-			_, _ = mcmp.ExecAndIgnore("delete from " + table)
+			mcmp.Exec("delete from " + table)
 		}
+		utils.Exec(t, mcmp.VtConn, "insert IGNORE into user.t_seq (id, next_id, cache) values (0, 1, 1)")
 	}
 
 	deleteAll()

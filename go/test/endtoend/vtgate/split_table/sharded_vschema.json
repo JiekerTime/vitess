@@ -44,6 +44,22 @@
         }
       ]
     },
+    "t_1": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ],
+      "autoIncrement": {
+        "column": "id",
+        "sequence": "user.t_seq"
+      }
+    },
+    "t_seq": {
+      "type": "sequence",
+      "pinned": "00"
+    },
     "t_2": {
       "columnVindexes": [
         {
@@ -187,6 +203,18 @@
           "index": 0,
           "column": "f_shard",
           "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_1": {
+      "logic_table_name": "t_1",
+      "table_vindex": "binary_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
         }
       ],
       "table_count": 2
