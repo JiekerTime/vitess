@@ -81,7 +81,7 @@ CREATE TABLE `t_seq` (
                            `next_id` bigint DEFAULT NULL,
                            `cache` bigint DEFAULT NULL,
                            PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='vitess_sequence'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='vitess_sequence';
 
 CREATE TABLE `t_2_0`
 (
