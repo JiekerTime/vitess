@@ -13,10 +13,8 @@ func TestTableAggregate(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select count(*) as user_count  from t_user")
 	mcmp.ExecWithColumnCompare("select count(*) as user_count  from t_user where id > 1-1")
 	mcmp.ExecWithColumnCompare("select count(*) as user_count  from t_user where id > 1 - 1")
-	//        	            	cannot compare strings, collation is unknown or unsupported (collation ID: 0) (errno 1105) (sqlstate HY000) during query: select max(col) as user_count  from t_user
-	//	mcmp.ExecWithColumnCompare("select max(col) as user_count  from t_user ")
-	//        	            	cannot compare strings, collation is unknown or unsupported (collation ID: 0) (errno 1105) (sqlstate HY000) during query: select min(col) as user_count  from t_user
-	//mcmp.ExecWithColumnCompare("select min(col) as user_count  from t_user ")
+	mcmp.ExecWithColumnCompare("select max(col) as user_count  from t_user ")
+	mcmp.ExecWithColumnCompare("select min(col) as user_count  from t_user ")
 	//        	            	VT12001: unsupported: in scatter query: aggregation function 'avg(f_tinyint) as user_count' (errno 1235) (sqlstate 42000) during query: select avg(f_tinyint) as user_count  from t_user
 	//mcmp.ExecWithColumnCompare("select avg(f_tinyint) as user_count  from t_user ")
 

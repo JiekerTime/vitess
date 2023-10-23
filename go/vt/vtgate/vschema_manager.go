@@ -192,7 +192,31 @@ func (vm *VSchemaManager) updateFromSchema(vschema *vindexes.VSchema) {
 	for ksName, ks := range vschema.Keyspaces {
 		m := vm.schema.Tables(ksName)
 
+		mapActToLogical := make(map[string]string)
+		for _, config := range ks.SplitTableTables {
+			mapActToLogical[config.ActualTableList[0].ActualTableName] = config.LogicTableName
+		}
+
 		for tblName, columns := range m {
+			if logicalTableName, ok := mapActToLogical[tblName]; ok {
+				vTbl := ks.Tables[logicalTableName]
+				if vTbl == nil {
+					// a table that is unknown by the vschema. we add it as a normal table
+					ks.Tables[logicalTableName] = &vindexes.Table{
+						Name:                    sqlparser.NewIdentifierCS(logicalTableName),
+						Keyspace:                ks.Keyspace,
+						Columns:                 columns,
+						ColumnListAuthoritative: true,
+					}
+				} else {
+					if !vTbl.ColumnListAuthoritative {
+						// if we found the matching table and the vschema view of it is not authoritative, then we just update the columns of the table
+						vTbl.Columns = columns
+						vTbl.ColumnListAuthoritative = true
+					}
+				}
+			}
+
 			vTbl := ks.Tables[tblName]
 			if vTbl == nil {
 				// a table that is unknown by the vschema. we add it as a normal table
