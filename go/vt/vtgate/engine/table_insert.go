@@ -6,6 +6,7 @@ package engine
 */
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -170,15 +171,21 @@ func (ins *Insert) getInsertTableShardedRoute(
 	queries := make([][]*querypb.BoundQuery, len(rss))
 	for i := range rss {
 		mids := make(map[string][]string)
+		sortedKeys := make([]string, 0) // 用于存储排序后的表名
 		for _, indexValue := range indexesPerRss[i] {
 			index, _ := strconv.ParseInt(string(indexValue.Value), 0, 64)
 			if keyspaceIDs[index] != nil {
+				tableName := actualTables[index].ActualTableName
+				if _, ok := mids[tableName]; !ok {
+					sortedKeys = append(sortedKeys, tableName)
+				}
 				mids[actualTables[index].ActualTableName] = append(mids[actualTables[index].ActualTableName], ins.Mid[index])
 			}
 		}
-		for tableName, mid := range mids {
+		sort.Strings(sortedKeys) // 对表名进行排序
+		for _, tableName := range sortedKeys {
 			queries[i] = append(queries[i], &querypb.BoundQuery{
-				Sql:           strings.Replace(ins.Prefix, ins.TableColVindexes.LogicTableName, tableName, 1) + strings.Join(mid, ",") + ins.Suffix,
+				Sql:           strings.Replace(ins.Prefix, ins.TableColVindexes.LogicTableName, tableName, 1) + strings.Join(mids[tableName], ",") + ins.Suffix,
 				BindVariables: bindVars,
 			})
 		}
