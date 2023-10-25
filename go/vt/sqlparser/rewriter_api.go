@@ -146,17 +146,61 @@ type application struct {
 	cur       Cursor
 }
 
-func RewirteSplitTableName(in SQLNode, tableMap map[string]string) {
-	SafeRewrite(in, nil, func(cursor *Cursor) bool {
+func RewriteSplitTableName(in SQLNode, tableMap map[string]string) {
+	ignoreTables := make(map[string]bool, len(tableMap))
+	switch stmt := in.(type) {
+	case *Select:
+		checkIgnoredTables(tableMap, ignoreTables, stmt.From)
+	case *Delete:
+		checkIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
+	case *Update:
+		checkIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
+	default:
+		return
+	}
+
+	SafeRewrite(in, func(node SQLNode, parent SQLNode) bool {
+		switch pNode := parent.(type) {
+		case *AliasedTableExpr:
+			if ignore := ignoreTables[pNode.As.String()]; ignore {
+				switch cNode := node.(type) {
+				case TableName:
+					if actName, ok := tableMap[cNode.Name.String()]; ok {
+						pNode.Expr = TableName{
+							Name:      NewIdentifierCS(actName),
+							Qualifier: cNode.Qualifier,
+						}
+					}
+				}
+			}
+		}
+		return true
+	}, func(cursor *Cursor) bool {
 		switch node := cursor.Node().(type) {
 		case TableName:
-			if actName, ok := tableMap[node.Name.String()]; ok {
-				cursor.Replace(TableName{
-					Name:      NewIdentifierCS(actName),
-					Qualifier: node.Qualifier,
-				})
+			if _, ignore := ignoreTables[node.Name.String()]; !ignore {
+				if actName, ok := tableMap[node.Name.String()]; ok {
+					cursor.Replace(TableName{
+						Name:      NewIdentifierCS(actName),
+						Qualifier: node.Qualifier,
+					})
+				}
 			}
 		}
 		return true
 	})
+}
+
+func checkIgnoredTables(tableMap map[string]string, ignoreTables map[string]bool, tableExprs []TableExpr) {
+	for _, expr := range tableExprs {
+		switch node := expr.(type) {
+		case *AliasedTableExpr:
+			if _, ok := tableMap[node.As.String()]; ok {
+				ignoreTables[node.As.String()] = true
+			}
+		case *JoinTableExpr:
+			checkIgnoredTables(tableMap, ignoreTables, []TableExpr{node.LeftExpr})
+			checkIgnoredTables(tableMap, ignoreTables, []TableExpr{node.RightExpr})
+		}
+	}
 }

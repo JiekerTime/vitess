@@ -27,7 +27,7 @@ func (t *tableRoute) WireupGen4(context *plancontext.PlanningContext) error {
 	nodeClone, _ := sqlparser.DeepCloneStatement(t.Select).(*sqlparser.Select)
 	logicTable := t.eroute.TableRouteParam.LogicTable
 	tableMap := vindexes.GetFirstActualTableMap(logicTable)
-	sqlparser.RewirteSplitTableName(nodeClone, tableMap)
+	sqlparser.RewriteSplitTableName(nodeClone, tableMap)
 	buffer := sqlparser.NewTrackedBuffer(sqlparser.FormatImpossibleQuery)
 	node := buffer.WriteNode(nodeClone)
 	parsedQuery := node.ParsedQuery()

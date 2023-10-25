@@ -110,7 +110,7 @@ func TestChangeValueTypeGivesError(t *testing.T) {
 
 }
 
-func TestRewriteSplitTableName(t *testing.T) {
+func TestSelectScenarioRewriteSplitTableName(t *testing.T) {
 
 	type testCase struct {
 		originSql string
@@ -155,6 +155,37 @@ func TestRewriteSplitTableName(t *testing.T) {
 			"t_user": "t_user_2",
 			"t_msg":  "t_msg_2",
 		},
+	}, {
+		originSql: "select t_user.* from t_user where t_user.col = 5 and t_user.id = 1",
+		expect:    "select t_user_2.* from t_user_2 where t_user_2.col = 5 and t_user_2.id = 1",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select t_user.* from t_user t_user where t_user.col = 5 and t_user.id = 1",
+		expect:    "select t_user.* from t_user_2 as t_user where t_user.col = 5 and t_user.id = 1",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select t_user.* from t_user as t_user where t_user.col = 5 and t_user.id = 1",
+		expect:    "select t_user.* from t_user_2 as t_user where t_user.col = 5 and t_user.id = 1",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select t_user.* from t_user.t_user as t_user where t_user.col = 5 and t_user.id = 1",
+		expect:    "select t_user.* from t_user.t_user_2 as t_user where t_user.col = 5 and t_user.id = 1",
+		tableMap: map[string]string{
+			"t_user": "t_user_2",
+		},
+	}, {
+		originSql: "select t_order.* from t_user.t_user as t_order left join t_order as t_user on t_order.id = t_user.id where t_user.col = 5",
+		expect:    "select t_order.* from t_user.t_user_2 as t_order left join t_order_1 as t_user on t_order.id = t_user.id where t_user.col = 5",
+		tableMap: map[string]string{
+			"t_user":  "t_user_2",
+			"t_order": "t_order_1",
+		},
 	},
 	}
 
@@ -164,7 +195,64 @@ func TestRewriteSplitTableName(t *testing.T) {
 			if err != nil {
 				t.Errorf("SQL parse error")
 			}
-			RewirteSplitTableName(sqlNode, tc.tableMap)
+			RewriteSplitTableName(sqlNode, tc.tableMap)
+			assert.Equal(t, tc.expect, String(sqlNode))
+
+		})
+
+	}
+
+}
+
+func TestDMLScenarioRewriteSplitTableName(t *testing.T) {
+
+	type testCase struct {
+		originSql string
+		expect    string
+		tableMap  map[string]string
+	}
+	ts := []testCase{
+		{
+			originSql: "delete from t_user",
+			expect:    "delete from t_user_1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+		}, {
+			originSql: "delete from t_user as t_user where t_user.id = 1",
+			expect:    "delete from t_user_1 as t_user where t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+		}, {
+			originSql: "delete t_user from t_user as t_user where t_user.id = 1",
+			expect:    "delete t_user from t_user_1 as t_user where t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+		}, {
+			originSql: "update t_user set val = 1 where id = 1",
+			expect:    "update t_user_1 set val = 1 where id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+		}, {
+			originSql: "update t_user as t_user set t_user.val = 1 where t_user.id = 1",
+			expect:    "update t_user_1 as t_user set t_user.val = 1 where t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+		},
+		// TODO: add more complicate statements.
+	}
+
+	for _, tc := range ts {
+		t.Run(tc.originSql, func(t *testing.T) {
+			sqlNode, err := Parse(tc.originSql)
+			if err != nil {
+				t.Errorf("SQL parse error")
+			}
+			RewriteSplitTableName(sqlNode, tc.tableMap)
 			assert.Equal(t, tc.expect, String(sqlNode))
 
 		})

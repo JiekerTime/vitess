@@ -256,7 +256,7 @@ func rewriteQuery(stmt sqlparser.Statement, act string, logicTbName string) (str
 	cloneStmt := sqlparser.DeepCloneStatement(stmt)
 	tableMap := make(map[string]string)
 	tableMap[logicTbName] = act
-	sqlparser.RewirteSplitTableName(cloneStmt, tableMap)
+	sqlparser.RewriteSplitTableName(cloneStmt, tableMap)
 	return sqlparser.String(cloneStmt), nil
 }
 
