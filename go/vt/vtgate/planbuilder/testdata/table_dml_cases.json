@@ -817,7 +817,7 @@
           "user_index": "INT64(1)"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"a\")"
+          "split_table_hash": "VARCHAR(\"a\")"
         }
       },
       "TablesUsed": [
@@ -847,7 +847,7 @@
           "user_index": "INT64(1), INT64(3)"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"a\"), VARCHAR(\"a\")"
+          "split_table_hash": "VARCHAR(\"a\"), VARCHAR(\"a\")"
         }
       },
       "TablesUsed": [
@@ -878,7 +878,7 @@
           "user_index": ":__seq0"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"a\")"
+          "split_table_hash": "VARCHAR(\"a\")"
         }
       },
       "TablesUsed": [
@@ -906,7 +906,7 @@
           "user_index": "INT64(1)"
         },
         "TableVindexValues": {
-          "binary_hash": "INT64(2)"
+          "split_table_hash": "INT64(2)"
         }
       },
       "TablesUsed": [
@@ -938,7 +938,7 @@
           "user_index": ":__seq0"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"a\")"
+          "split_table_hash": "VARCHAR(\"a\")"
         }
       },
       "TablesUsed": [
@@ -980,7 +980,7 @@
           "user_index": ":__seq0"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"col\")"
+          "split_table_hash": "VARCHAR(\"col\")"
         }
       },
       "TablesUsed": [
@@ -1011,7 +1011,7 @@
           "user_index": ":__seq0"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"a\")"
+          "split_table_hash": "VARCHAR(\"a\")"
         }
       },
       "TablesUsed": [
@@ -1042,7 +1042,7 @@
           "user_index": ":__seq0, :__seq1"
         },
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"a\"), VARCHAR(\"b\")"
+          "split_table_hash": "VARCHAR(\"a\"), VARCHAR(\"b\")"
         }
       },
       "TablesUsed": [
@@ -1068,7 +1068,7 @@
         "Query": "insert into t_user(nonid, `name`, id, col, Costly) values (2, :_Name_0, :_Id_0, :_col_0, :_Costly_0)",
         "TableName": "t_user",
         "TableVindexValues": {
-          "binary_hash": "VARCHAR(\"col\")"
+          "split_table_hash": "VARCHAR(\"col\")"
         },
         "VindexValues": {
           "costly_map": "NULL",

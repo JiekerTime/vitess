@@ -495,7 +495,7 @@
         }
       },
       "splittable_vindexes": {
-        "binary_hash": {
+        "split_table_hash": {
           "type": "splitTableHashMod"
         },
         "multicol_hash": {
@@ -510,7 +510,7 @@
       "splittable_tables": {
         "t_user": {
           "logic_table_name": "t_user",
-          "table_vindex": "binary_hash",
+          "table_vindex": "split_table_hash",
           "table_vindex_column": [
             {
               "index": 0,
@@ -522,7 +522,7 @@
         },
         "table_engine_test": {
           "logic_table_name": "table_engine_test",
-          "table_vindex": "binary_hash",
+          "table_vindex": "split_table_hash",
           "table_vindex_column": [
             {
               "index": 0,
@@ -534,7 +534,7 @@
         },
         "t_authoritative": {
           "logic_table_name": "t_authoritative",
-          "table_vindex": "binary_hash",
+          "table_vindex": "split_table_hash",
           "table_vindex_column": [
             {
               "index": 0,
@@ -546,7 +546,7 @@
         },
         "t_music": {
           "logic_table_name": "t_music",
-          "table_vindex": "binary_hash",
+          "table_vindex": "split_table_hash",
           "table_vindex_column": [
             {
               "index": 0,
@@ -558,7 +558,7 @@
         },
         "t_user_extra": {
           "logic_table_name": "t_user_extra",
-          "table_vindex": "binary_hash",
+          "table_vindex": "split_table_hash",
           "table_vindex_column": [
             {
               "index": 0,

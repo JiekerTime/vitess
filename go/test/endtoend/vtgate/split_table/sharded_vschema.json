@@ -110,7 +110,7 @@
     }
   },
   "splittable_vindexes": {
-    "binary_hash": {
+    "split_table_hash": {
       "type": "splitTableHashMod"
     },
     "multicol_hash": {
@@ -125,7 +125,7 @@
   "splittable_tables": {
     "t_user": {
       "logic_table_name": "t_user",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -137,7 +137,7 @@
     },
     "t_2": {
       "logic_table_name": "t_2",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -149,7 +149,7 @@
     },
     "t_3": {
       "logic_table_name": "t_3",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -161,7 +161,7 @@
     },
     "t_4": {
       "logic_table_name": "t_4",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -173,7 +173,7 @@
     },
     "t_5": {
       "logic_table_name": "t_5",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -185,7 +185,7 @@
     },
     "t_6": {
       "logic_table_name": "t_6",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -197,7 +197,7 @@
     },
     "t_7": {
       "logic_table_name": "t_7",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
@@ -209,7 +209,7 @@
     },
     "t_1": {
       "logic_table_name": "t_1",
-      "table_vindex": "binary_hash",
+      "table_vindex": "split_table_hash",
       "table_vindex_column": [
         {
           "index": 0,
