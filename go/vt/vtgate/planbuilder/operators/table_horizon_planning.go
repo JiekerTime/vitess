@@ -139,6 +139,9 @@ func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limi
 	case *Projection:
 		return rewrite.Swap(in, src, "push limit under projection")
 	case *Aggregator:
+		if isCrossShard(ctx.GetRoute()) {
+			return rewrite.Swap(in, src, "limit pushed into aggregator")
+		}
 		return in, rewrite.SameTree, nil
 	default:
 		return setUpperLimitForSplitTable(in)

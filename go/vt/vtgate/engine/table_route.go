@@ -264,6 +264,11 @@ func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCur
 	panic("implement me")
 }
 
+// SetTruncateColumnCount sets the truncate column count.
+func (tableRoute *TableRoute) SetTruncateColumnCount(count int) {
+	tableRoute.TruncateColumnCount = count
+}
+
 func (tableRoute *TableRoute) description() PrimitiveDescription {
 	other := map[string]any{
 		"Query":      sqlparser.String(tableRoute.Query),

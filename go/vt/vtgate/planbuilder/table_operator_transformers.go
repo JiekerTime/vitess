@@ -137,11 +137,6 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 		})
 	}
 
-	if ksERoute.TruncateColumnCount > 0 && op.ResultColumns > 0 {
-		return nil, vterrors.VT13001("split table add columns in selectExprs, need to recount TruncateColumnCount")
-	}
-	eroute.TruncateColumnCount = ksERoute.TruncateColumnCount + op.ResultColumns
-
 	return &tableRoute{
 		Select: sel,
 		eroute: eroute,

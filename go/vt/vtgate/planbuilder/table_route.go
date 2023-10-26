@@ -55,5 +55,5 @@ func (t *tableRoute) ContainsTables() semantics.TableSet {
 }
 
 func (t *tableRoute) OutputColumns() []sqlparser.SelectExpr {
-	panic("implement me")
+	return sqlparser.GetFirstSelect(t.Select).SelectExprs
 }

@@ -61,6 +61,10 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	ksAndTablePlan, err = truncateColumns(ctx, ksAndTablePlan)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
 	return ksAndTablePlan, semTable, nil, nil
 }
@@ -99,4 +103,30 @@ func findTableSchema(ctx *plancontext.PlanningContext, tableNames []string) (fou
 		found = true
 	}
 	return found
+}
+
+func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logicalPlan, error) {
+	if ctx.OriginSelStmt == nil {
+		return plan, nil
+	}
+	sel := sqlparser.GetFirstSelect(ctx.OriginSelStmt)
+	if len(plan.OutputColumns()) == len(sel.SelectExprs) {
+		return plan, nil
+	}
+	switch p := plan.(type) {
+	case *tableRoute:
+		p.eroute.SetTruncateColumnCount(len(sel.SelectExprs))
+	case *orderedAggregate:
+		p.truncateColumnCount = len(sel.SelectExprs)
+	case *memorySort:
+		p.eMemorySort.SetTruncateColumnCount(len(sel.SelectExprs))
+	case *limit:
+		for _, p := range plan.Inputs() {
+			_, err := truncateColumns(ctx, p)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return plan, nil
 }

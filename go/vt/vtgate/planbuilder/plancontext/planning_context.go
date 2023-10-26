@@ -48,6 +48,8 @@ type PlanningContext struct {
 	DMLEngine engine.DML
 
 	KsPrimitive engine.Primitive
+
+	OriginSelStmt sqlparser.SelectStatement
 }
 
 func NewPlanningContext(reservedVars *sqlparser.ReservedVars, semTable *semantics.SemTable, vschema VSchema, version querypb.ExecuteOptions_PlannerVersion) *PlanningContext {

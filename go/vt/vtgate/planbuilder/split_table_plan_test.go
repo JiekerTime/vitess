@@ -29,6 +29,7 @@ func TestSplitTablePlan(t *testing.T) {
 	testTableFile(t, "table_postprocess_cases.json", output, vschema, false)
 	testTableFile(t, "table_select_case.json", output, vschema, false)
 	testTableFile(t, "table_memory_sort_cases.json", output, vschema, false)
+	testTableFile(t, "table_issue.json", output, vschema, false)
 }
 
 func TestSplitTableOne(t *testing.T) {
