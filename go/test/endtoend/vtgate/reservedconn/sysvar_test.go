@@ -340,7 +340,7 @@ func TestSysvarSocket(t *testing.T) {
 	defer conn.Close()
 
 	qr := utils.Exec(t, conn, "select @@socket")
-	assert.Contains(t, fmt.Sprintf("%v", qr.Rows), "mysql.sock")
+	assert.Contains(t, fmt.Sprintf("%v", qr.Rows), "mysql.socket")
 
 	_, err = utils.ExecAllowError(t, conn, "set socket = '/any/path'")
 	require.Error(t, err)

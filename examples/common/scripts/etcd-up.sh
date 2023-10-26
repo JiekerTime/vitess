@@ -29,11 +29,11 @@ PID=$!
 echo $PID > "${VTDATAROOT}/tmp/etcd.pid"
 sleep 5
 
-echo "add /vitess/global"
-etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/global &
+#echo "add /vitess/global"
+#etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/global &
 
-echo "add /vitess/$cell"
-etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/$cell &
+#echo "add /vitess/$cell"
+#etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/$cell &
 
 export ETCDCTL_API=3
 echo "add role"
@@ -50,10 +50,10 @@ etcdctl auth enable
 echo "add $cell CellInfo"
 set +e
 # shellcheck disable=SC2086
-vtctl $TOPOLOGY_FLAGS VtctldCommand AddCellInfo \
-  --root /vitess/$cell \
-  --server-address "${ETCD_SERVER}" \
-  $cell
+#vtctl $TOPOLOGY_FLAGS VtctldCommand AddCellInfo \
+#  --root /vitess/$cell \
+#  --server-address "${ETCD_SERVER}" \
+#  $cell
 set -e
 
 echo "etcd start done..."

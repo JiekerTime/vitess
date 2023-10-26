@@ -136,7 +136,7 @@ func (ctl *Mysqlctl) Address() (string, int) {
 
 // UnixSocket returns the path to the local Unix socket required to connect to mysqld
 func (ctl *Mysqlctl) UnixSocket() string {
-	return path.Join(ctl.TabletDir(), "mysql.sock")
+	return path.Join(ctl.TabletDir(), "/tmp/mysql.socket")
 }
 
 // TabletDir returns the path where data for this Tablet would be stored

@@ -41,8 +41,8 @@ var (
 	// srv_topo_cache_ttl elapses and we only try to re-establish the watch
 	// once every srv_topo_cache_refresh interval.
 	srvTopoTimeout      = 5 * time.Second
-	srvTopoCacheTTL     = 1 * time.Second
-	srvTopoCacheRefresh = 1 * time.Second
+	srvTopoCacheTTL     = 72 * time.Hour
+	srvTopoCacheRefresh = 5 * time.Second
 )
 
 func registerFlags(fs *pflag.FlagSet) {

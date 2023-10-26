@@ -432,7 +432,7 @@ func (vttablet *VttabletProcess) QueryTablet(query string, keyspace string, useD
 	if !useDb {
 		keyspace = ""
 	}
-	dbParams := NewConnParams(vttablet.DbPort, vttablet.DbPassword, path.Join(vttablet.Directory, "mysql.sock"), keyspace)
+	dbParams := NewConnParams(vttablet.DbPort, vttablet.DbPassword, path.Join(vttablet.Directory, "/tmp/mysql.socket"), keyspace)
 	conn, err := vttablet.conn(&dbParams)
 	if err != nil {
 		return nil, err
@@ -444,7 +444,7 @@ func (vttablet *VttabletProcess) QueryTablet(query string, keyspace string, useD
 func (vttablet *VttabletProcess) defaultConn(dbname string) (*mysql.Conn, error) {
 	dbParams := mysql.ConnParams{
 		Uname:      "vt_dba",
-		UnixSocket: path.Join(vttablet.Directory, "mysql.sock"),
+		UnixSocket: path.Join(vttablet.Directory, "/tmp/mysql.socket"),
 		DbName:     dbname,
 	}
 	if vttablet.DbPassword != "" {

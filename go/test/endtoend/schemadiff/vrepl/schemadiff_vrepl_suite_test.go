@@ -438,7 +438,7 @@ func mysqlParams() *mysql.ConnParams {
 	}
 	evaluatedMysqlParams = &mysql.ConnParams{
 		Uname:      "vt_dba",
-		UnixSocket: path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", getTablet().TabletUID), "/mysql.sock"),
+		UnixSocket: path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", getTablet().TabletUID), "/tmp/mysql.socket"),
 		DbName:     keyspaceName,
 	}
 	return evaluatedMysqlParams
