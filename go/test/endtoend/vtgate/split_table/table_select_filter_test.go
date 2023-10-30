@@ -73,4 +73,6 @@ func TestOne(t *testing.T) {
 
 	mcmp.ExecWithColumnCompare("SELECT INTERVAL(name,1,5) func_status FROM t_user WHERE id = 3 AND col = '1'")
 
+	mcmp.ExecWithColumnCompare("select col from t_user for update")
+
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators"
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
@@ -29,6 +30,7 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 			if err != nil {
 				return false, nil, err
 			}
+
 			return false, tablePlan, nil
 		case *insert:
 			ctx.KsPrimitive = node.eInsert
@@ -69,6 +71,38 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 	return ksAndTablePlan, semTable, nil, nil
 }
 
+func setTableMiscFunc(in logicalPlan, sel *sqlparser.Select) error {
+	_, err := visit(in, func(plan logicalPlan) (bool, logicalPlan, error) {
+		switch node := plan.(type) {
+		case *tableRoute:
+			err := copyTableCommentsAndLocks(node.Select, sel, node.eroute.TableRouteParam.TableOpcode)
+			if err != nil {
+				return false, nil, err
+			}
+			return true, node, nil
+		}
+		return true, plan, nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func copyTableCommentsAndLocks(statement sqlparser.SelectStatement, sel *sqlparser.Select, opcode engine.Opcode) error {
+	query := sqlparser.GetFirstSelect(statement)
+	query.Comments = sel.Comments
+	query.Lock = sel.Lock
+	if sel.Into != nil {
+		if opcode != engine.Unsharded {
+			return vterrors.VT12001("INTO on sharded keyspace")
+		}
+		query.Into = sel.Into
+	}
+	return nil
+}
+
 func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) (tablePlan logicalPlan, err error) {
 	if oprewriters.DebugOperatorTree {
 		fmt.Println(sqlparser.String(stmt))
@@ -82,9 +116,17 @@ func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement
 		return nil, err
 	}
 
+	sel, isSel := stmt.(*sqlparser.Select)
+	if isSel {
+		if err = setTableMiscFunc(tablePlan, sel); err != nil {
+			return nil, err
+		}
+	}
+
 	if err = tablePlan.WireupGen4(ctx); err != nil {
 		return nil, err
 	}
+
 	return tablePlan, nil
 }
 

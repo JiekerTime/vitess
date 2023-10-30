@@ -892,5 +892,27 @@
         "user.t_user_extra"
       ]
     }
+  },
+  {
+    "comment": "Single table sharded scatter",
+    "query": "select col from t_user for update",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user for update",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col from t_user_0 where 1 != 1",
+        "Query": "select col from t_user for update",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]
