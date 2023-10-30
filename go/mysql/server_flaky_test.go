@@ -1532,3 +1532,6 @@ func (th *testHandler) InitCrossTabletConn(c *Conn, authServer AuthServer, ks st
 func (th *testHandler) ValidUseDB(c *Conn, db string, authServer AuthServer) error {
 	return nil
 }
+
+func (th *testHandler) SetAuthServer(authServer AuthServer) {
+}

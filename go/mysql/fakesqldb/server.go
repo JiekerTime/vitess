@@ -858,3 +858,6 @@ func (db *DB) CheckAttachedHost(c *mysql.Conn) error {
 func (db *DB) ComFieldList(c *mysql.Conn, tableName string, callback func(*sqltypes.Result) error) error {
 	return nil
 }
+
+func (db *DB) SetAuthServer(authServer mysql.AuthServer) {
+}

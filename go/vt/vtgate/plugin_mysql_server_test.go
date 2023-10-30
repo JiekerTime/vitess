@@ -42,6 +42,9 @@ type testHandler struct {
 	lastConn *mysql.Conn
 }
 
+func (th *testHandler) SetAuthServer(authServer mysql.AuthServer) {
+}
+
 func (th *testHandler) ValidUseDB(c *mysql.Conn, db string, authServer mysql.AuthServer) error {
 	return nil
 }

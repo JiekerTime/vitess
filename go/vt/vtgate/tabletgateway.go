@@ -314,9 +314,20 @@ func (gw *TabletGateway) withRetry(ctx context.Context, target *querypb.Target, 
 				}
 			}
 
+			// if target tablet type is not primary
+			// decide whether to get healthy tablet standby another type tablet
+			if target.GetTabletType() == topodatapb.TabletType_REPLICA {
+				target.TabletType = topodatapb.TabletType_RDONLY
+				tablets = gw.hc.GetHealthyTabletStats(target)
+			} else if target.GetTabletType() == topodatapb.TabletType_RDONLY {
+				target.TabletType = topodatapb.TabletType_REPLICA
+				tablets = gw.hc.GetHealthyTabletStats(target)
+			}
 			// fail fast if there is no tablet
-			err = vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no healthy tablet available for '%s'", target.String())
-			break
+			if len(tablets) == 0 {
+				err = vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "no healthy tablet available for '%s'", target.String())
+				break
+			}
 		}
 		gw.shuffleTablets(gw.localCell, tablets)
 

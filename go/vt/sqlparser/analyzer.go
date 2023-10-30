@@ -63,6 +63,12 @@ const (
 	StmtExecute
 	StmtDeallocate
 	StmtLoadData
+	StmtCreate
+	StmtAlter
+	StmtDrop
+	StmtTruncate
+	StmtRename
+	StmtPlan
 )
 
 // ASTToStatementType returns a StatementType from an AST stmt

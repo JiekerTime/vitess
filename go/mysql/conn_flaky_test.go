@@ -1157,6 +1157,9 @@ type testRun struct {
 	expStmtID      int
 }
 
+func (t testRun) SetAuthServer(authServer AuthServer) {
+}
+
 func (t testRun) ComFieldList(c *Conn, tableName string, callback func(*sqltypes.Result) error) error {
 	//TODO implement me
 	panic("implement me")

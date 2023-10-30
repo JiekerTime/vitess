@@ -18,6 +18,7 @@ package planbuilder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -112,6 +113,9 @@ func TestBuilder(query string, vschema plancontext.VSchema, keyspace string) (*e
 	reservedVars := sqlparser.NewReservedVars("vtg", reserved)
 	return BuildFromStmt(context.Background(), query, result.AST, reservedVars, vschema, result.BindVarNeeds, true, true)
 }
+
+// ErrPlanNotSupported is an error for plan building not supported
+var ErrPlanNotSupported = errors.New("plan building not supported")
 
 // BuildFromStmt builds a plan based on the AST provided.
 func BuildFromStmt(ctx context.Context, query string, stmt sqlparser.Statement, reservedVars *sqlparser.ReservedVars, vschema plancontext.VSchema, bindVarNeeds *sqlparser.BindVarNeeds, enableOnlineDDL, enableDirectDDL bool) (*engine.Plan, error) {

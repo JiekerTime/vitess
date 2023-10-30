@@ -19,6 +19,7 @@ package mysql
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"strings"
@@ -144,6 +145,9 @@ type Handler interface {
 
 	// ComFieldList is called when a connection receives a field list query.
 	ComFieldList(c *Conn, tableName string, callback func(*sqltypes.Result) error) error
+
+	// SetAuthServer is used to set auth server for the handler.
+	SetAuthServer(authServer AuthServer)
 }
 
 // UnimplementedHandler implemnts all of the optional callbacks so as to satisy
@@ -370,6 +374,8 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 		conn.Close()
 	}()
 
+	l.authServer = GetAuthServer(mysqlAuthServerImpl)
+
 	// Tell the handler about the connection coming and going.
 	l.handler.NewConnection(c)
 	defer l.handler.ConnectionClosed(c)
@@ -504,12 +510,27 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 
 	c.User = user
 	c.UserData = userData
-	c.setAccountType()
-
+	c.setAccountType(l.authServer)
+	var clientIP string
+	if c.RemoteAddr() != nil {
+		clientIP = strings.Split(c.RemoteAddr().String(), ":")[0]
+	}
+	if ok := l.authServer.ValidClient(c.User, c.SchemaName, clientIP); !ok {
+		log.Warningf("remote client[%s] is no permissions", clientIP)
+		c.writeErrorPacketFromError(fmt.Errorf("remote client[%s] is no permissions", clientIP))
+		return
+	}
 	if c.User != "" {
 		connCountPerUser.Add(c.User, 1)
 		defer connCountPerUser.Add(c.User, -1)
 	}
+
+	// Negotiation worked, send OK packet.
+	if err := c.writeOKPacket(&PacketOK{statusFlags: c.StatusFlags}); err != nil {
+		log.Errorf("Cannot write OK packet to %s: %v", c, err)
+		return
+	}
+	c.Interceptor = NewAttachInterceptor()
 
 	if err := l.handler.InitCrossTabletConn(c, l.authServer, c.SchemaName); err != nil {
 		log.Errorf("user %v init keyspace %v attached status error :%v", c.User, c.SchemaName, err)
@@ -532,16 +553,26 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 		err = l.handler.ComQuery(c, "use "+sqlescape.EscapeID(c.SchemaName), func(result *sqltypes.Result) error {
 			return nil
 		})
+		// solution vh.vtg.executor.authServer is nil pointer
+		if err != nil && strings.Contains(err.Error(), "retry SetAuthServer") {
+			l.handler.SetAuthServer(l.authServer)
+			err = l.handler.ComQuery(c, "use "+sqlescape.EscapeID(c.SchemaName), func(result *sqltypes.Result) error {
+				return nil
+			})
+		}
+
 		if err != nil {
 			c.writeErrorPacketFromError(err)
 			return
 		}
-	}
-
-	// Negotiation worked, send OK packet.
-	if err := c.writeOKPacket(&PacketOK{statusFlags: c.StatusFlags}); err != nil {
-		log.Errorf("Cannot write OK packet to %s: %v", c, err)
-		return
+		c.User = user
+		err := l.handler.ValidUseDB(c, c.SchemaName, l.authServer)
+		if err != nil {
+			if err := c.writeErrorPacketFromError(err); err != nil {
+				log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
+				return
+			}
+		}
 	}
 
 	// Record how long we took to establish the connection
@@ -559,6 +590,7 @@ func (l *Listener) handle(conn net.Conn, connectionID uint32, acceptTime time.Ti
 	l.handler.ConnectionReady(c)
 
 	for {
+		l.handler.SetAuthServer(l.authServer)
 		kontinue := c.handleNextCommand(l.handler)
 		if !kontinue {
 			return

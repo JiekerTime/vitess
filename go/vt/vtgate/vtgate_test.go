@@ -21,6 +21,8 @@ import (
 	"strings"
 	"testing"
 
+	"vitess.io/vitess/go/mysql"
+
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
 
@@ -76,7 +78,7 @@ func init() {
 	Init(context.Background(), hcVTGateTest, newSandboxForCells([]string{"aa"}), "aa", nil, querypb.ExecuteOptions_Gen4)
 
 	mysqlServerPort = 0
-	mysqlAuthServerImpl = "none"
+	mysql.SetAuthServerImpl("none")
 	initMySQLProtocol()
 }
 

@@ -65,6 +65,15 @@ type AuthServer interface {
 
 	// GetPassword Get user's password
 	GetPassword(user string) (string, error)
+
+	// GetPrivilege Get user's privilege
+	GetPrivilege(user string) (uint16, error)
+
+	// ValidClient Valid Client
+	ValidClient(user, keyspace, ip string) bool
+
+	// GetRoleType Get user's read strategy
+	GetRoleType(user string) (int8, error)
 }
 
 // AuthMethod interface for concrete auth method implementations.
@@ -582,9 +591,9 @@ var mu sync.Mutex
 func RegisterAuthServer(name string, authServer AuthServer) {
 	mu.Lock()
 	defer mu.Unlock()
-	if _, ok := authServers[name]; ok {
-		log.Fatalf("AuthServer named %v already exists", name)
-	}
+	//if _, ok := authServers[name]; ok {
+	//	log.Fatalf("AuthServer named %v already exists", name)
+	//}
 	authServers[name] = authServer
 }
 
@@ -599,6 +608,15 @@ func GetAuthServer(name string) AuthServer {
 	return authServer
 }
 
+// GetAuthServerImpl returns an AuthServer implement name.
+func GetAuthServerImpl() string {
+	return mysqlAuthServerImpl
+}
+
+// SettAuthServerImpl Set AuthServer implement name.
+func SetAuthServerImpl(name string) {
+	mysqlAuthServerImpl = name
+}
 func newSalt() ([]byte, error) {
 	salt := make([]byte, 20)
 	if _, err := rand.Read(salt); err != nil {
