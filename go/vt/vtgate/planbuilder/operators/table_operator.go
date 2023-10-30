@@ -317,7 +317,7 @@ func optimizeQueryGraphForSplitTable(ctx *plancontext.PlanningContext, op *Query
 		result, err = greedySolveForSplitTable(ctx, op)
 	}
 
-	changed = rewrite.NewTree("solved query graph", result)
+	changed = rewrite.NewTree("solved query graph for split table", result)
 	return
 }
 

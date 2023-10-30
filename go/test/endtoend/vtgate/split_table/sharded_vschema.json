@@ -107,6 +107,72 @@
           "name": "xxhash"
         }
       ]
+    },
+    "t_user_extra": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ],
+      "columns": [
+        {
+          "name": "col",
+          "type": "INT16"
+        }
+      ]
+    },
+    "t_user_extra_0": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ],
+      "columns": [
+        {
+          "name": "col",
+          "type": "INT16"
+        }
+      ]
+    },
+    "t_user_extra_1": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ],
+      "columns": [
+        {
+          "name": "col",
+          "type": "INT16"
+        }
+      ]
+    },
+    "t_music": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_music_0": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_music_1": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ]
     }
   },
   "splittable_vindexes": {
@@ -215,6 +281,30 @@
           "index": 0,
           "column": "f_table",
           "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_user_extra": {
+      "logic_table_name": "t_user_extra",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "col",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_music": {
+      "logic_table_name": "t_music",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "a",
+          "column_type": "VARCHAR"
         }
       ],
       "table_count": 2

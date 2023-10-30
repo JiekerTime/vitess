@@ -2,6 +2,7 @@ package planbuilder
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,6 +43,11 @@ func TestSplitTableOne(t *testing.T) {
 	}
 	output := makeTestOutput(t)
 	testTableFile(t, "table_onecase.json", output, vschema, false)
+}
+
+// TestPrintSplitTable 用于生成集成测试用例
+func TestPrintSplitTable(t *testing.T) {
+	printTableFile(t, "table_aggr_cases.json")
 }
 
 func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemaWrapper, render bool) {
@@ -89,5 +95,19 @@ func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemaWrapp
 				require.NoError(t, err)
 			}
 		}
+	})
+}
+
+func printTableFile(t *testing.T, filename string) {
+	t.Run(filename, func(t *testing.T) {
+		fmt.Println()
+		for _, tcase := range readJSONTests(filename) {
+			if tcase.Query == "" {
+				continue
+			}
+			fmt.Println("// " + tcase.Comment)
+			fmt.Println("mcmp.ExecWithColumnCompare(\"" + tcase.Query + "\")")
+		}
+		fmt.Println()
 	})
 }

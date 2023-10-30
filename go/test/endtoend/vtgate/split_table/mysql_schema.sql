@@ -19,9 +19,10 @@ CREATE TABLE `t_user`
     `a`          int(16)           DEFAULT NULL,
     `b`          int(16)           DEFAULT NULL,
     `c`          int(16)           DEFAULT NULL,
+    `d`          int(16)           DEFAULT NULL,
     `foo`        int(16)           DEFAULT NULL,
     primary key (id)
-) ENGINE = InnoDB collate=utf8mb4_general_ci;
+) ENGINE = InnoDB CHARSET=utf8mb4;
 
 CREATE TABLE `t_1`
 (
@@ -120,3 +121,23 @@ CREATE TABLE `t_7`
     `f_bool`     BOOLEAN           DEFAULT NULL,
     primary key (id)
 ) ENGINE = InnoDB;
+
+CREATE TABLE `t_user_extra` (
+                                  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                                  `user_id` bigint(20) NOT NULL,
+                                  `extra_id` bigint(20) NOT NULL,
+                                  `email` varchar(200) DEFAULT NULL,
+                                  `bar`      int               DEFAULT NULL,
+                                  `baz`      int               DEFAULT NULL,
+                                  `col`        char(32) NOT NULL DEFAULT '',
+                                  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `t_music` (
+                         `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                         `user_id` bigint(20) NOT NULL,
+                         `col` varchar(100) DEFAULT NULL,
+                         `a`          int(16)           DEFAULT NULL,
+                         `bar`      int               DEFAULT NULL,
+                         PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

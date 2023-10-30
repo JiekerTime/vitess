@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
+
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
@@ -239,6 +241,16 @@ func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *
 	}
 
 	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
+	logicTableMap := map[string]*vindexes.LogicTableConfig{}
+	for _, tableName := range tableNames {
+		value, exists := rp.LogicTable[tableName]
+		if !exists {
+			continue
+		}
+		logicTableMap[tableName] = value
+	}
+	rp.LogicTable = logicTableMap
+
 	tableRouting, ok := op.Routing.(*operators.TableShardedRouting)
 	if ok {
 		err = tableRouting.UpdateTableRoutingParams(ctx, rp)

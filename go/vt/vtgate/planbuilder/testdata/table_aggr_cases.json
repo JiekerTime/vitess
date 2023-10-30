@@ -189,38 +189,6 @@
     }
   },
   {
-    "comment": "scatter aggregate multiple group by (numbers)",
-    "query": "select a, b, count(*) from t_user group by 2, 1",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select a, b, count(*) from t_user group by 2, 1",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Ordered",
-        "Aggregates": "sum_count_star(2) AS count(*)",
-        "GroupBy": "(1|3), (0|4)",
-        "ResultColumns": 3,
-        "Inputs": [
-          {
-            "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by b, a, weight_string(b), weight_string(a)",
-            "OrderBy": "(1|3) ASC, (0|4) ASC",
-            "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user group by b, a, weight_string(b), weight_string(a) order by b asc, a asc",
-            "Table": "t_user"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_user"
-      ]
-    }
-  },
-  {
     "comment": "scatter aggregate group by aggregate function",
     "query": "select count(*) b from t_user group by b",
     "plan": "VT03005: cannot group on 'count(*)'"
@@ -1309,6 +1277,1423 @@
                     "Table": "t_user_extra"
                   }
                 ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "sum spread across join",
+    "query": "select sum(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select sum(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum(0) AS sum(t_user.col)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as sum(t_user.col)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_foo": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select sum(t_user_0.col), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                    "Query": "select sum(t_user.col), t_user.foo from t_user group by t_user.foo",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_user_extra where t_user_extra.bar = :t_user_foo group by .0",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "count spread across join",
+    "query": "select count(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count(0) AS count(t_user.col)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as count(t_user.col)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_foo": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(t_user_0.col), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                    "Query": "select count(t_user.col), t_user.foo from t_user group by t_user.foo",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_user_extra where t_user_extra.bar = :t_user_foo group by .0",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "max spread across join",
+    "query": "select max(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select max(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "max(0) AS max(t_user.col)",
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0",
+            "JoinVars": {
+              "t_user_foo": 1
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select max(t_user_0.col), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                "Query": "select max(t_user.col), t_user.foo from t_user group by t_user.foo",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select 1 from t_user_extra where t_user_extra.bar = :t_user_foo group by .0",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "min spread across join RHS",
+    "query": "select min(t_user_extra.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select min(t_user_extra.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "min(0) AS min(t_user_extra.col)",
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "R:0",
+            "JoinVars": {
+              "t_user_foo": 0
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                "Query": "select t_user.foo from t_user group by t_user.foo",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select min(t_user_extra_0.col) from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select min(t_user_extra.col) from t_user_extra where t_user_extra.bar = :t_user_foo group by .0",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Grouping on join",
+    "query": "select t_user.a from t_user join t_user_extra group by t_user.a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.a from t_user join t_user_extra group by t_user.a",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|1)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1 group by t_user_0.a, weight_string(t_user_0.a)",
+                "OrderBy": "(0|1) ASC",
+                "Query": "select t_user.a, weight_string(t_user.a) from t_user group by t_user.a, weight_string(t_user.a) order by t_user.a asc",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select 1 from t_user_extra group by .0",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Aggregates and joins",
+    "query": "select count(*) from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0",
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_0 where 1 != 1",
+                    "Query": "select count(*) from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_user_extra group by .0",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Aggregate on join",
+    "query": "select t_user.a, count(*) from t_user join t_user_extra group by t_user.a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.a, count(*) from t_user join t_user_extra group by t_user.a",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(1) AS count(*)",
+        "GroupBy": "(0|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 2] as a",
+              "[COLUMN 0] * [COLUMN 1] as count(*)",
+              "[COLUMN 3] as weight_string(t_user.a)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0,L:1,L:2",
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1 group by t_user_0.a, weight_string(t_user_0.a)",
+                    "OrderBy": "(1|2) ASC",
+                    "Query": "select count(*), t_user.a, weight_string(t_user.a) from t_user group by t_user.a, weight_string(t_user.a) order by t_user.a asc",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_user_extra group by .0",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Aggregate on other table in join",
+    "query": "select t_user.a, count(t_user_extra.a) from t_user join t_user_extra group by t_user.a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.a, count(t_user_extra.a) from t_user join t_user_extra group by t_user.a",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count(1) AS count(t_user_extra.a)",
+        "GroupBy": "(0|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 2] as a",
+              "[COLUMN 1] * [COLUMN 0] as count(t_user_extra.a)",
+              "[COLUMN 3] as weight_string(t_user.a)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "R:0,L:0,L:1,L:2",
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1 group by t_user_0.a, weight_string(t_user_0.a)",
+                    "OrderBy": "(1|2) ASC",
+                    "Query": "select count(*), t_user.a, weight_string(t_user.a) from t_user group by t_user.a, weight_string(t_user.a) order by t_user.a asc",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(t_user_extra_0.a) from t_user_extra_0 where 1 != 1 group by .0",
+                    "Query": "select count(t_user_extra.a) from t_user_extra group by .0",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "group by and ',' joins with condition",
+    "query": "select t_user.col from t_user join t_user_extra on t_user_extra.col = t_user.col group by t_user.id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra on t_user_extra.col = t_user.col group by t_user.id",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "random(0) AS col",
+        "GroupBy": "(1|2)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1,L:2",
+            "JoinVars": {
+              "t_user_col": 0
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.col, t_user_0.id, weight_string(t_user_0.id) from t_user_0 where 1 != 1 group by t_user_0.id, t_user_0.col, weight_string(t_user_0.id)",
+                "OrderBy": "(1|2) ASC",
+                "Query": "select t_user.col, t_user.id, weight_string(t_user.id) from t_user group by t_user.id, t_user.col, weight_string(t_user.id) order by t_user.id asc",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select 1 from t_user_extra where t_user_extra.col = :t_user_col group by .0",
+                "TableValues": [
+                  ":t_user_col"
+                ],
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Aggregation on column from inner side in a left join query",
+    "query": "select count (u.id) from t_user u left join t_user_extra ue on u.col = ue.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count (u.id) from t_user u left join t_user_extra ue on u.col = ue.col",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count(0) AS count(u.id)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(u.id)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "u_col": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(u.id), u.col from t_user_0 as u where 1 != 1 group by u.col",
+                    "Query": "select count(u.id), u.col from t_user as u group by u.col",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-EqualUnique",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 as ue where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_user_extra as ue where ue.col = :u_col group by .0",
+                    "TableValues": [
+                      ":u_col"
+                    ],
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Aggregation on outer side in a left join query",
+    "query": "select count(ue.id) from t_user u left join t_user_extra ue on u.col = ue.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(ue.id) from t_user u left join t_user_extra ue on u.col = ue.col",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count(0) AS count(ue.id)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 1] * [COLUMN 0] as count(ue.id)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "R:0,L:0",
+                "JoinVars": {
+                  "u_col": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), u.col from t_user_0 as u where 1 != 1 group by u.col",
+                    "Query": "select count(*), u.col from t_user as u group by u.col",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-EqualUnique",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(ue.id) from t_user_extra_0 as ue where 1 != 1 group by .0",
+                    "Query": "select count(ue.id) from t_user_extra as ue where ue.col = :u_col group by .0",
+                    "TableValues": [
+                      ":u_col"
+                    ],
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "inner join with scalar aggregation",
+    "query": "select count(*) from t_user join t_music on t_user.foo = t_music.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user join t_music on t_user.foo = t_music.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_foo": 1
+                },
+                "TableName": "t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                    "Query": "select count(*), t_user.foo from t_user group by t_user.foo",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_music where t_music.bar = :t_user_foo group by .0",
+                    "Table": "t_music"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "left outer join with scalar aggregation",
+    "query": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_foo": 1
+                },
+                "TableName": "t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                    "Query": "select count(*), t_user.foo from t_user group by t_user.foo",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_music where t_music.bar = :t_user_foo group by .0",
+                    "Table": "t_music"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "inner join with left grouping",
+    "query": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_user.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_user.col",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "GroupBy": "1",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)",
+              "[COLUMN 2] as col"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0,L:1",
+                "JoinVars": {
+                  "t_user_foo": 2
+                },
+                "TableName": "t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_0.col, t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.col, t_user_0.foo",
+                    "OrderBy": "1 ASC",
+                    "Query": "select count(*), t_user.col, t_user.foo from t_user group by t_user.col, t_user.foo order by t_user.col asc",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_music where t_music.bar = :t_user_foo group by .0",
+                    "Table": "t_music"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "inner join with right grouping",
+    "query": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_music.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_music.col",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "GroupBy": "(1|2)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)",
+              "[COLUMN 2] as col",
+              "[COLUMN 3] as weight_string(t_music.col)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Sort",
+                "Variant": "Memory",
+                "OrderBy": "(2|3) ASC",
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "LeftJoin",
+                    "JoinColumnIndexes": "L:0,R:0,R:1,R:2",
+                    "JoinVars": {
+                      "t_user_foo": 1
+                    },
+                    "TableName": "t_user_t_music",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                        "Query": "select count(*), t_user.foo from t_user group by t_user.foo",
+                        "Table": "t_user"
+                      },
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_music_0.col, weight_string(t_music_0.col) from t_music_0 where 1 != 1 group by t_music_0.col, weight_string(t_music_0.col)",
+                        "Query": "select count(*), t_music.col, weight_string(t_music.col) from t_music where t_music.bar = :t_user_foo group by t_music.col, weight_string(t_music.col)",
+                        "Table": "t_music"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "left outer join with left grouping",
+    "query": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_user.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_user.col",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "GroupBy": "1",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)",
+              "[COLUMN 2] as col"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0,L:1",
+                "JoinVars": {
+                  "t_user_foo": 2
+                },
+                "TableName": "t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_0.col, t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.col, t_user_0.foo",
+                    "OrderBy": "1 ASC",
+                    "Query": "select count(*), t_user.col, t_user.foo from t_user group by t_user.col, t_user.foo order by t_user.col asc",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_music where t_music.bar = :t_user_foo group by .0",
+                    "Table": "t_music"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "left outer join with right grouping",
+    "query": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_music.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar group by t_music.col",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "GroupBy": "(1|2)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)",
+              "[COLUMN 2] as col",
+              "[COLUMN 3] as weight_string(t_music.col)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Sort",
+                "Variant": "Memory",
+                "OrderBy": "(2|3) ASC",
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "LeftJoin",
+                    "JoinColumnIndexes": "L:0,R:0,R:1,R:2",
+                    "JoinVars": {
+                      "t_user_foo": 1
+                    },
+                    "TableName": "t_user_t_music",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                        "Query": "select count(*), t_user.foo from t_user group by t_user.foo",
+                        "Table": "t_user"
+                      },
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_music_0.col, weight_string(t_music_0.col) from t_music_0 where 1 != 1 group by t_music_0.col, weight_string(t_music_0.col)",
+                        "Query": "select count(*), t_music.col, weight_string(t_music.col) from t_music where t_music.bar = :t_user_foo group by t_music.col, weight_string(t_music.col)",
+                        "Table": "t_music"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "3 table inner join with scalar aggregation",
+    "query": "select count(*) from t_user join t_music on t_user.foo = t_music.bar join t_user_extra on t_user.foo = t_user_extra.baz",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user join t_music on t_user.foo = t_music.bar join t_user_extra on t_user.foo = t_user_extra.baz",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_extra_baz": 1
+                },
+                "TableName": "t_user_extra_t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), t_user_extra_0.baz from t_user_extra_0 where 1 != 1 group by t_user_extra_0.baz",
+                    "Query": "select count(*), t_user_extra.baz from t_user_extra group by t_user_extra.baz",
+                    "Table": "t_user_extra"
+                  },
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] * [COLUMN 1] as count(*)"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Join",
+                        "Variant": "Join",
+                        "JoinColumnIndexes": "L:0,R:0",
+                        "JoinVars": {
+                          "t_user_foo": 1
+                        },
+                        "TableName": "t_user_t_music",
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                            "Query": "select count(*), t_user.foo from t_user where t_user.foo = :t_user_extra_baz group by t_user.foo",
+                            "Table": "t_user"
+                          },
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                            "Query": "select count(*) from t_music where t_music.bar = :t_user_foo group by .0",
+                            "Table": "t_music"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "3 table with mixed join with scalar aggregation",
+    "query": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar join t_user_extra on t_user.foo = t_user_extra.baz",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_music on t_user.foo = t_music.bar join t_user_extra on t_user.foo = t_user_extra.baz",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_foo": 1
+                },
+                "TableName": "t_user_t_music_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)",
+                      "[COLUMN 2] as foo"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Join",
+                        "Variant": "LeftJoin",
+                        "JoinColumnIndexes": "L:0,R:0,L:1",
+                        "JoinVars": {
+                          "t_user_foo": 1
+                        },
+                        "TableName": "t_user_t_music",
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*), t_user_0.foo from t_user_0 where 1 != 1 group by t_user_0.foo",
+                            "Query": "select count(*), t_user.foo from t_user group by t_user.foo",
+                            "Table": "t_user"
+                          },
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                            "Query": "select count(*) from t_music where t_music.bar = :t_user_foo group by .0",
+                            "Table": "t_music"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_user_extra where t_user_extra.baz = :t_user_foo group by .0",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "ordering have less column than grouping columns, grouping gets rearranged as order by and missing columns gets added to ordering",
+    "query": "select u.col, u.intcol, count(*) from t_user u join t_music group by 1,2 order by 2",
+    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.col, u.intcol, count(*) from t_user u join t_music group by 1,2 order by 2",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(2) AS count(*)",
+        "GroupBy": "1, 0",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 2] as col",
+              "[COLUMN 3] as intcol",
+              "[COLUMN 0] * [COLUMN 1] as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0,L:1,L:2",
+                "TableName": "t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*), u.col, u.intcol from t_user_0 as u where 1 != 1 group by u.col, u.intcol",
+                    "OrderBy": "2 ASC, 1 ASC",
+                    "Query": "select count(*), u.col, u.intcol from t_user as u group by u.col, u.intcol order by u.intcol asc, u.col asc",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_music_0 where 1 != 1 group by .0",
+                    "Query": "select count(*) from t_music group by .0",
+                    "Table": "t_music"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "multiple count star and a count with 3 table join",
+    "query": "select count(*), count(*), count(u.col) from t_user u, t_user u2, t_user_extra ue",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*), count(*), count(u.col) from t_user u, t_user u2, t_user_extra ue",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*), sum_count_star(1) AS count(*), sum_count(2) AS count(u.col)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * [COLUMN 1] as count(*)",
+              "[COLUMN 0] * [COLUMN 1] as count(*)",
+              "[COLUMN 0] * [COLUMN 2] as count(u.col)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,R:0,R:1",
+                "TableName": "t_user_extra_t_user_t_user",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select count(*) from t_user_extra_0 as ue where 1 != 1",
+                    "Query": "select count(*) from t_user_extra as ue",
+                    "Table": "t_user_extra"
+                  },
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] * [COLUMN 1] as count(*)",
+                      "[COLUMN 2] * [COLUMN 1] as count(u.col)"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Join",
+                        "Variant": "Join",
+                        "JoinColumnIndexes": "L:0,R:0,L:1",
+                        "TableName": "t_user_t_user",
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*), count(u.col) from t_user_0 as u where 1 != 1 group by .0",
+                            "Query": "select count(*), count(u.col) from t_user as u group by .0",
+                            "Table": "t_user"
+                          },
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*) from t_user_0 as u2 where 1 != 1 group by .0",
+                            "Query": "select count(*) from t_user as u2 group by .0",
+                            "Table": "t_user"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "interleaving grouping, aggregation and join with min, max columns",
+    "query": "select t_user.col, min(t_user_extra.foo), t_user.bar, max(t_user_extra.bar) from t_user join t_user_extra on t_user.col = t_user_extra.bar group by t_user.col, t_user.bar",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col, min(t_user_extra.foo), t_user.bar, max(t_user_extra.bar) from t_user join t_user_extra on t_user.col = t_user_extra.bar group by t_user.col, t_user.bar",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "min(1) AS min(t_user_extra.foo), max(3) AS max(t_user_extra.bar)",
+        "GroupBy": "0, (2|4)",
+        "ResultColumns": 4,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,R:0,L:1,R:1,L:2",
+            "JoinVars": {
+              "t_user_col": 0
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.col, t_user_0.bar, weight_string(t_user_0.bar) from t_user_0 where 1 != 1 group by t_user_0.col, t_user_0.bar, weight_string(t_user_0.bar)",
+                "OrderBy": "0 ASC, (1|2) ASC",
+                "Query": "select t_user.col, t_user.bar, weight_string(t_user.bar) from t_user group by t_user.col, t_user.bar, weight_string(t_user.bar) order by t_user.col asc, t_user.bar asc",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select min(t_user_extra_0.foo), max(t_user_extra_0.bar) from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select min(t_user_extra.foo), max(t_user_extra.bar) from t_user_extra where t_user_extra.bar = :t_user_col group by .0",
+                "Table": "t_user_extra"
               }
             ]
           }
