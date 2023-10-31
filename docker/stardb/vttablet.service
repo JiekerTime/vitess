@@ -5,8 +5,9 @@ After=network.target
 [Service]
 User=root
 Type=simple
+Environment=VT_MYSQL_ROOT=/export/servers/mysql
+Environment=VTDATAROOT=/export/data/mysql
 EnvironmentFile=/vt/config/vttablet/podenv
-EnvironmentFile=/vt/config/vttablet/keyspaceenv
 ExecStart=/vt/config/vttablet_start_script.sh
 Restart=always
 RestartSec=2s
