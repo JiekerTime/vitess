@@ -311,11 +311,11 @@ func (a *AuthServerVault) GetPassword(user string) (string, error) {
 }
 
 func (a *AuthServerVault) GetPrivilege(user string) (uint16, error) {
-	return 0, nil
+	return 255, nil
 }
 
 func (a *AuthServerVault) ValidClient(user string, keyspace string, ip string) bool {
-	return false
+	return true
 }
 
 func (a *AuthServerVault) GetRoleType(user string) (int8, error) {

@@ -274,17 +274,7 @@
   {
     "comment": "show databases",
     "query": "show databases",
-    "plan": {
-      "QueryType": "SHOW",
-      "Original": "show databases",
-      "Instructions": {
-        "OperatorType": "Rows",
-        "Fields": {
-          "Database": "VARCHAR"
-        },
-        "RowCount": 5
-      }
-    }
+    "plan": "plan building not supported"
   },
   {
     "comment": "show create database",

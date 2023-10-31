@@ -110,11 +110,11 @@ func (asl *AuthServerClientCert) UserEntryWithPassword(conn *Conn, user string, 
 }
 
 func (asl *AuthServerClientCert) GetPrivilege(user string) (uint16, error) {
-	return 0, nil
+	return 255, nil
 }
 
 func (asl *AuthServerClientCert) ValidClient(user string, keyspace string, ip string) bool {
-	return false
+	return true
 }
 
 func (asl *AuthServerClientCert) GetRoleType(user string) (int8, error) {

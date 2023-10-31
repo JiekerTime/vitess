@@ -69,10 +69,7 @@ RUN ln -s /usr/lib/systemd/system/mysqlctld.service /etc/systemd/system/multi-us
     systemctl enable vttablet.service && \
     systemctl enable vtctld.service && \
     systemctl enable vtgate.service
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/master
 COPY --from=builder /vt/src/vitess.io/vitess/docker/stardb/mysqlctld_start_script.sh /vt/config/
 COPY --from=builder /vt/src/vitess.io/vitess/docker/stardb/vttablet_start_script.sh /vt/config/
 COPY --from=builder /vt/src/vitess.io/vitess/docker/stardb/vtctld_start_script.sh /vt/config/

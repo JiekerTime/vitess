@@ -386,11 +386,11 @@ func (a *AuthServerStatic) GetPassword(user string) (string, error) {
 }
 
 func (a *AuthServerStatic) GetPrivilege(user string) (uint16, error) {
-	return 0, nil
+	return 255, nil
 }
 
 func (a *AuthServerStatic) ValidClient(user, keyspace, ip string) bool {
-	return false
+	return true
 }
 
 func (a *AuthServerStatic) GetRoleType(user string) (int8, error) {

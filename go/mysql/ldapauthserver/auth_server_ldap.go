@@ -282,11 +282,11 @@ func (asl *AuthServerLdap) GetPassword(user string) (string, error) {
 }
 
 func (asl *AuthServerLdap) GetPrivilege(user string) (uint16, error) {
-	return 0, nil
+	return 255, nil
 }
 
 func (asl *AuthServerLdap) ValidClient(user string, keyspace string, ip string) bool {
-	return false
+	return true
 }
 func (asl *AuthServerLdap) GetRoleType(user string) (int8, error) {
 	return 0, nil

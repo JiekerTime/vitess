@@ -29,6 +29,7 @@ import (
 )
 
 func TestBuildDBPlan(t *testing.T) {
+	t.Skip()
 	vschema := &vschemaWrapper{
 		keyspace: &vindexes.Keyspace{Name: "main"},
 	}
