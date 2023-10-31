@@ -56,7 +56,6 @@ function vttablet_start() {
     --unhealthy_threshold	$unHealthyThreshold \
     --queryserver-config-schema-reload-time 60 \
     --init_tablet_type $TABLET_TYPE \
-    --mycnf_server_id $MYSQL_SERVER_ID \
     --heartbeat_enable=true \
     --enforce_strict_trans_tables=false \
     --track_schema_versions=true \
@@ -90,7 +89,6 @@ function vttablet_start() {
     --unhealthy_threshold	$unHealthyThreshold \
     --queryserver-config-schema-reload-time 60 \
     --init_tablet_type $TABLET_TYPE \
-    --mycnf_server_id $MYSQL_SERVER_ID \
     --heartbeat_enable=true \
     --enforce_strict_trans_tables=false \
     --track_schema_versions=true \

@@ -407,7 +407,7 @@ func (vh *vtgateHandler) session(c *mysql.Conn) *vtgatepb.Session {
 		if c.Capabilities&mysql.CapabilityClientFoundRows != 0 {
 			session.Options.ClientFoundRows = true
 		}
-		//todo fupeng29 根据账号信息设置 workload。针对读rdonly的账号，设置olap。流式读
+		// 根据账号信息设置 workload。针对读rdonly的账号，设置olap。流式读
 		if c.AccountType == mysql.AccountTypeStream {
 			session.Options.Workload = querypb.ExecuteOptions_OLAP
 		}
