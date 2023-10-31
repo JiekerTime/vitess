@@ -54,7 +54,6 @@ var (
 	mysqlServerBindAddress            string
 	mysqlServerSocketPath             string
 	mysqlTCPVersion                   = "tcp"
-	mysqlAuthServerImpl               = "config"
 	mysqlAllowClearTextWithoutTLS     bool
 	mysqlProxyProtocol                bool
 	mysqlServerRequireSecureTransport bool
@@ -82,7 +81,6 @@ func registerPluginFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&mysqlServerBindAddress, "mysql_server_bind_address", mysqlServerBindAddress, "Binds on this address when listening to MySQL binary protocol. Useful to restrict listening to 'localhost' only for instance.")
 	fs.StringVar(&mysqlServerSocketPath, "mysql_server_socket_path", mysqlServerSocketPath, "This option specifies the Unix socket file to use when listening for local connections. By default it will be empty and it won't listen to a unix socket")
 	fs.StringVar(&mysqlTCPVersion, "mysql_tcp_version", mysqlTCPVersion, "Select tcp, tcp4, or tcp6 to control the socket type.")
-	fs.StringVar(&mysqlAuthServerImpl, "mysql_auth_server_impl", mysqlAuthServerImpl, "Which auth server implementation to use. Options: none, ldap, clientcert, static, vault.")
 	fs.BoolVar(&mysqlAllowClearTextWithoutTLS, "mysql_allow_clear_text_without_tls", mysqlAllowClearTextWithoutTLS, "If set, the server will allow the use of a clear text password over non-SSL connections.")
 	fs.BoolVar(&mysqlProxyProtocol, "proxy_protocol", mysqlProxyProtocol, "Enable HAProxy PROXY protocol on MySQL listener socket")
 	fs.BoolVar(&mysqlServerRequireSecureTransport, "mysql_server_require_secure_transport", mysqlServerRequireSecureTransport, "Reject insecure connections but only if mysql_server_ssl_cert and mysql_server_ssl_key are provided")
@@ -240,6 +238,12 @@ func (vh *vtgateHandler) ComQuery(c *mysql.Conn, query string, callback func(*sq
 	if !strings.Contains(session.Options.UagInfo, "uag::") {
 		session.Options.UagInfo = fmt.Sprintf("/* uag::%v;%s;%s;%s */", c.User, c.ClientHost, c.RemoteAddr().String(), c.GetLocalAddr())
 	}
+	tabletType, err := vh.getTabletType(c.AccountType, query, c.User)
+	if err != nil {
+		return err
+	}
+
+	session.TargetString = strings.Split(session.TargetString, "@")[0] + tabletType
 
 	if session.Options.Workload == querypb.ExecuteOptions_OLAP {
 		session, err := vh.vtg.StreamExecute(ctx, c, session, query, make(map[string]*querypb.BindVariable), callback)
@@ -393,7 +397,6 @@ func (vh *vtgateHandler) session(c *mysql.Conn) *vtgatepb.Session {
 				IncludedFields: querypb.ExecuteOptions_ALL,
 				Workload:       querypb.ExecuteOptions_Workload(mysqlDefaultWorkload),
 				UagInfo:        generateUagInfo(c),
-
 				// The collation field of ExecuteOption is set right before an execution.
 			},
 			Autocommit:           true,
@@ -403,6 +406,10 @@ func (vh *vtgateHandler) session(c *mysql.Conn) *vtgatepb.Session {
 		}
 		if c.Capabilities&mysql.CapabilityClientFoundRows != 0 {
 			session.Options.ClientFoundRows = true
+		}
+		// 根据账号信息设置 workload。针对读rdonly的账号，设置olap。流式读
+		if c.AccountType == mysql.AccountTypeStream {
+			session.Options.Workload = querypb.ExecuteOptions_OLAP
 		}
 		c.ClientData = session
 	}
@@ -456,7 +463,7 @@ func initMySQLProtocol() {
 	for _, initFn := range pluginInitializers {
 		initFn()
 	}
-	authServer := mysql.GetAuthServer(mysqlAuthServerImpl)
+	authServer := mysql.GetAuthServer(mysql.GetAuthServerImpl())
 
 	// Check mysql_default_workload
 	var ok bool
@@ -789,26 +796,6 @@ func (vh *vtgateHandler) GetTabletHost(ks, shard string, tabletType topodatapb.T
 	return tablet
 }
 
-// ValidUseDB Valid UseDB statement
-func (vh *vtgateHandler) ValidUseDB(c *mysql.Conn, usedb string, authServer mysql.AuthServer) error {
-	userkss, err := authServer.GetKeyspace(c.User)
-	if err != nil {
-		return err
-	}
-	if len(userkss) == 0 {
-		return nil
-	}
-
-	usedb = strings.Split(usedb, ":")[0]
-
-	for _, usks := range userkss {
-		if strings.EqualFold(usks, usedb) {
-			return nil
-		}
-	}
-	err = fmt.Errorf("keyspace %s not found in vschema", usedb)
-	return mysql.NewSQLErrorFromError(err)
-}
 func generateUagInfo(c *mysql.Conn) string {
 	buf := strings.Builder{}
 
@@ -887,8 +874,6 @@ func (vh *vtgateHandler) ComFieldList(c *mysql.Conn, tableName string, callback 
 		tabletType = "@PRIMARY"
 	case c.AccountType == mysql.AccountTypeRR:
 		tabletType = "@REPLICA"
-	case c.AccountType == mysql.AccountTypeRO:
-		tabletType = "@REPLICA"
 	case c.AccountType == mysql.AccountTypeStream:
 		tabletType = "@RDONLY"
 	default:
@@ -908,4 +893,153 @@ func (vh *vtgateHandler) ComFieldList(c *mysql.Conn, tableName string, callback 
 		Fields: result,
 	}
 	return callback(sqltypeResult)
+}
+
+// SetAuthServer set auth server as property
+func (vh *vtgateHandler) SetAuthServer(authServer mysql.AuthServer) {
+	vh.vtg.executor.authServer = authServer
+}
+
+// ValidUseDB Valid UseDB statement
+func (vh *vtgateHandler) ValidUseDB(c *mysql.Conn, usedb string, authServer mysql.AuthServer) error {
+	//if sqlparser.SystemSchema(usedb) {
+	//	return nil
+	//}
+	userkss, err := authServer.GetKeyspace(c.User)
+	if err != nil {
+		return err
+	}
+	if len(userkss) == 0 {
+		return nil
+	}
+
+	usedb = strings.Split(usedb, ":")[0]
+
+	for _, usks := range userkss {
+		if strings.EqualFold(usks, usedb) {
+			return nil
+		}
+	}
+	err = fmt.Errorf("keyspace %s not found in vschema", usedb)
+	return mysql.NewSQLErrorFromError(err)
+}
+
+func (vh *vtgateHandler) getTabletType(accountType int8, query, user string) (string, error) {
+	var tabletType string
+
+	switch {
+	case accountType == mysql.AccountTypeRW:
+		tabletType = "@PRIMARY"
+	case accountType == mysql.AccountTypeAdmin:
+		tabletType = "@PRIMARY"
+	case accountType == mysql.AccountTypeRR:
+		tabletType = "@REPLICA"
+	case accountType == mysql.AccountTypeStream:
+		tabletType = "@RDONLY"
+	case accountType == mysql.AccountTypeUnknown:
+		tabletType = "@PRIMARY"
+	default:
+		tabletType = "@REPLICA"
+	}
+
+	stmtType := sqlparser.Preview(query)
+
+	if isBasicPrivilege(stmtType) {
+		return tabletType, nil
+	}
+	privileges, err := vh.vtg.executor.authServer.GetPrivilege(user)
+	if err != nil {
+		return "", mysql.NewSQLErrorFromError(err)
+	}
+
+	// In this privileges not set to 0, the following operations need to be interception:
+	// create/drop/alter/truncate/rename
+	if privileges == 0 {
+		err := fmt.Errorf("user %s has no permission to run query, sql: %s", user, query)
+		return "", mysql.NewSQLErrorFromError(err)
+	}
+
+	if !hasPrivilege(stmtType, privileges) {
+		err := fmt.Errorf("user %s has no permission to run query, sql: %s", user, query)
+		return "", mysql.NewSQLErrorFromError(err)
+	}
+
+	return tabletType, nil
+}
+
+// isBasicPrivilege is used to Determine whether it is a
+// basic permission, rw user basic permission.
+func isBasicPrivilege(stmtType sqlparser.StatementType) bool {
+	switch stmtType {
+	case sqlparser.StmtSet, sqlparser.StmtShow,
+		sqlparser.StmtUse, sqlparser.StmtOther, sqlparser.StmtBegin, sqlparser.StmtCommit,
+		sqlparser.StmtRollback, sqlparser.StmtUnknown,
+		sqlparser.StmtComment, sqlparser.StmtPlan, sqlparser.StmtLoadData:
+		return true
+	default:
+		return false
+	}
+}
+
+// isBasicReadPrivilege is used to Determine whether it is a
+// drc basic permission, drc rw user can only do  permission.
+func isBasicReadPrivilege(stmtType sqlparser.StatementType) bool {
+	switch stmtType {
+	case sqlparser.StmtSelect, sqlparser.StmtSet,
+		sqlparser.StmtShow, sqlparser.StmtUse,
+		sqlparser.StmtOther, sqlparser.StmtBegin,
+		sqlparser.StmtCommit, sqlparser.StmtRollback,
+		sqlparser.StmtUnknown, sqlparser.StmtExplain,
+		sqlparser.StmtComment, sqlparser.StmtPlan:
+		return true
+	default:
+		return false
+	}
+}
+
+// privilege type
+const (
+	privilegeSelect   = 1
+	privilegeInsert   = 1 << 1
+	privilegeUpdate   = 1 << 2
+	privilegeDelete   = 1 << 3
+	privilegeCreate   = 1 << 4
+	privilegeAlter    = 1 << 5
+	privilegeDrop     = 1 << 6
+	privilegeTruncate = 1 << 7
+	privilegeRename   = 1 << 8
+)
+
+// hasPrivilege is used to check if the user has permission
+// to execute the corresponding SQL.
+// Privilege is a uint16 number. The structure is as follows:
+// +------+--------+----+-----+------+------+------+------+------+
+// |rename|truncate|drop|alter|create|delete|update|insert|select|
+// +------+--------+----+-----+------+------+------+------+------+
+func hasPrivilege(stmtType sqlparser.StatementType, privileges uint16) bool {
+	pri := privileges
+	switch stmtType {
+	case sqlparser.StmtRename:
+		pri |= privilegeRename
+	case sqlparser.StmtSelect:
+		pri |= privilegeSelect
+	case sqlparser.StmtInsert:
+		pri |= privilegeInsert
+	case sqlparser.StmtUpdate:
+		pri |= privilegeUpdate
+	case sqlparser.StmtDelete:
+		pri |= privilegeDelete
+	case sqlparser.StmtCreate:
+		pri |= privilegeCreate
+	case sqlparser.StmtAlter:
+		pri |= privilegeAlter
+	case sqlparser.StmtDrop:
+		pri |= privilegeDrop
+	case sqlparser.StmtTruncate:
+		pri |= privilegeTruncate
+	case sqlparser.StmtReplace:
+		pri |= privilegeInsert
+		pri |= privilegeDelete
+	}
+	return pri == privileges
 }

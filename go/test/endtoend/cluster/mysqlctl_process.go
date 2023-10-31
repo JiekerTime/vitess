@@ -225,7 +225,7 @@ func (mysqlctl *MysqlctlProcess) CleanupFiles(tabletUID int) {
 func (mysqlctl *MysqlctlProcess) Connect(ctx context.Context, username string) (*mysql.Conn, error) {
 	params := mysql.ConnParams{
 		Uname:      username,
-		UnixSocket: path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", mysqlctl.TabletUID), "/mysql.sock"),
+		UnixSocket: path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", mysqlctl.TabletUID), "/tmp/mysql.socket"),
 	}
 
 	return mysql.Connect(ctx, &params)
@@ -297,7 +297,7 @@ func StartMySQLAndGetConnection(ctx context.Context, tablet *Vttablet, username 
 	}
 	params := mysql.ConnParams{
 		Uname:      username,
-		UnixSocket: path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", tablet.TabletUID), "/mysql.sock"),
+		UnixSocket: path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", tablet.TabletUID), "/tmp/mysql.socket"),
 	}
 
 	return mysql.Connect(ctx, &params)

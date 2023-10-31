@@ -1,8 +1,11 @@
 package compressutil
 
 import (
+	"bytes"
 	sflate "compress/flate"
+	zb "compress/zlib"
 	"encoding/hex"
+	"io"
 
 	"vitess.io/vitess/go/compressutil/flate"
 	"vitess.io/vitess/go/compressutil/gzip"
@@ -53,22 +56,60 @@ func CompressData(val []byte) ([]byte, error) {
 	return []byte(hex.EncodeToString(data)), nil
 }
 
+func zlib_compress(str string) (string, error) {
+	// 创建字节数组输出缓冲区
+	outputBuffer := new(bytes.Buffer)
+	// 创建压缩写入器
+	zlibWriter, err := zb.NewWriterLevel(outputBuffer, zb.DefaultCompression)
+	if err != nil {
+		return "", err
+	}
+	// 将输入字节数组写入压缩写入器
+	_, err = zlibWriter.Write([]byte(str))
+	if err != nil {
+		return "", err
+	}
+	// 关闭压缩写入器
+	err = zlibWriter.Close()
+	if err != nil {
+		return "", err
+	}
+	// 获取压缩后的字节数组
+	compressedBytes := outputBuffer.Bytes()
+	// 将压缩后的字节数组转换为字符串
+	return hex.EncodeToString(compressedBytes), nil
+}
+
+func zlib_uncompress(str []byte) ([]byte, error) {
+	// 将压缩后的字符串转换为字节数组
+	compressedBytes, _ := hex.DecodeString(string(str))
+
+	// 创建字节数组输入缓冲区
+	inputBuffer := bytes.NewBuffer(compressedBytes)
+
+	// 创建解压缩读取器
+	zlibReader, err := zb.NewReader(inputBuffer)
+	if err != nil {
+		return nil, err
+	}
+
+	// 读取解压缩数据
+	decompressedBytes, err := io.ReadAll(zlibReader)
+	if err != nil {
+		return nil, err
+	}
+
+	// 关闭解压缩读取器
+	zlibReader.Close()
+
+	// 将解压缩后的字节数组转换为字符串
+	return decompressedBytes, nil
+}
+
 // UnCompressData is used to decompress the data.
 func UnCompressData(val []byte) ([]byte, error) {
 	if len(val) > 0 && val[0] == '{' {
 		return val, nil
 	}
-
-	data, err := hex.DecodeString(string(val))
-	if err != nil {
-		return nil, err
-	}
-
-	c := NewCompress(defaultCompressType)
-	out, err := c.Decode(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
+	return zlib_uncompress(val)
 }

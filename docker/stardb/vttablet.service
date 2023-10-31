@@ -5,13 +5,13 @@ After=network.target
 [Service]
 User=root
 Type=simple
+Environment=VT_MYSQL_ROOT=/export/servers/mysql
+Environment=VTDATAROOT=/export/data/mysql
+EnvironmentFile=/vt/config/vttablet/podenv
 ExecStart=/vt/config/vttablet_start_script.sh
 Restart=always
 RestartSec=2s
 LimitNOFILE=655350
 WorkingDirectory=/vt
-EnvironmentFile=/vt/config/pod/podenv
-EnvironmentFile=/vt/config/cluster/clusterenv
-EnvironmentFile=/vt/config/keyspace/keyspaceenv
 [Install]
 WantedBy=multi-user.target

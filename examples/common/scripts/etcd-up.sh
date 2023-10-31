@@ -29,27 +29,27 @@ PID=$!
 echo $PID > "${VTDATAROOT}/tmp/etcd.pid"
 sleep 5
 
-echo "add /vitess/global"
+#echo "add /vitess/global"
 etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/global &
 
-echo "add /vitess/$cell"
+#echo "add /vitess/$cell"
 etcdctl --endpoints "http://${ETCD_SERVER}" mkdir /vitess/$cell &
 
-export ETCDCTL_API=3
-echo "add role"
-etcdctl role add root
-echo "add user"
-etcdctl user add root:rootpass
-echo "role grant"
-etcdctl user grant-role root root
-echo "auth enable"
-etcdctl auth enable
+#export ETCDCTL_API=3
+#echo "add role"
+#etcdctl role add root
+#echo "add user"
+#etcdctl user add root:rootpass
+#echo "role grant"
+#etcdctl user grant-role root root
+#echo "auth enable"
+#etcdctl auth enable
 
 # And also add the CellInfo description for the cell.
 # If the node already exists, it's fine, means we used existing data.
 echo "add $cell CellInfo"
 set +e
-# shellcheck disable=SC2086
+ shellcheck disable=SC2086
 vtctl $TOPOLOGY_FLAGS VtctldCommand AddCellInfo \
   --root /vitess/$cell \
   --server-address "${ETCD_SERVER}" \

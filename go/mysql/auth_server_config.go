@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"vitess.io/vitess/go/ipfilters"
 	"vitess.io/vitess/go/vt/servenv"
 
 	"vitess.io/vitess/go/compressutil"
@@ -24,7 +25,7 @@ var (
 	mysqlAuthServerConfigFile   string
 	mysqlAuthServerConfigString string
 	configAuthMethod            string
-	InitMySQLProtocol           = false
+	mysqlAuthServerImpl         = "config"
 )
 
 func init() {
@@ -32,6 +33,7 @@ func init() {
 		fs.StringVar(&mysqlAuthServerConfigFile, "mysql_auth_server_config_file", mysqlAuthServerConfigFile, "JSON File to read the users/passwords from.")
 		fs.StringVar(&mysqlAuthServerConfigString, "mysql_auth_server_config_string", "", "SON representation of the users/passwords config.")
 		fs.StringVar(&configAuthMethod, "mysql_config_auth_method", string(MysqlNativePassword), "client-side authentication method to use. Supported values:mysql_native_password.")
+		fs.StringVar(&mysqlAuthServerImpl, "mysql_auth_server_impl", mysqlAuthServerImpl, "Which auth server implementation to use. Options: none, ldap, clientcert, static, vault.")
 	})
 }
 
@@ -49,12 +51,41 @@ type AuthServerConfig struct {
 	// ClearText can be set to force the use of ClearText auth.
 	ClearText bool
 	// Entries contains the users, passwords and user data.
-	Entries map[string]*AuthServerConfigEntry
+	Entries    map[string]*AuthServerConfigEntry
+	ConfigName string
+}
+
+func (asc *AuthServerConfig) ValidClient(user, keyspace, ip string) bool {
+	//if sqlparser.SystemSchema(keyspace) {
+	//	return true
+	//}
+	entry, ok := asc.Entries[user]
+	if !ok || len(entry.KeySpaces) == 0 || ip == "" {
+		return false
+	}
+	if keyspace == "" {
+		if len(entry.KeySpaces[0].WhiteIPs) == 0 {
+			return true
+		}
+		return entry.KeySpaces[0].IPFilter.FilterIPString(ip)
+	}
+	for _, ks := range entry.KeySpaces {
+		if ks.Name == keyspace {
+			if len(ks.WhiteIPs) == 0 {
+				return true
+			}
+			return ks.IPFilter.FilterIPString(ip)
+		}
+	}
+
+	return false
 }
 
 // KeySpace db
 type KeySpace struct {
-	Name string
+	Name     string
+	WhiteIPs []string
+	IPFilter ipfilters.IPFilter
 }
 
 // AuthServerConfigEntry stores the values for a given user.
@@ -68,6 +99,7 @@ type AuthServerConfigEntry struct {
 	Privilege           uint16
 	SourceHost          string
 	Groups              []string
+	ReadRole            int8
 }
 
 // InitAuthServerConfig Handles initializing the AuthServerConfig if necessary.
@@ -136,7 +168,16 @@ func RegisterAuthServerConfigFromParams(file, str string) {
 	if err := json.Unmarshal(jsonConfig, &authServerConfig.Entries); err != nil {
 		log.Fatalf("Error parsing auth server config: %v", err)
 	}
-
+	//load wirte ip list
+	if len(authServerConfig.Entries) > 0 {
+		for user, en := range authServerConfig.Entries {
+			for index, ks := range en.KeySpaces {
+				for _, ip := range ks.WhiteIPs {
+					authServerConfig.Entries[user].KeySpaces[index].IPFilter.Load([]byte(ip))
+				}
+			}
+		}
+	}
 	// And register the server.
 	RegisterAuthServer("config", authServerConfig)
 	log.Info("init authServerConfig successful")
@@ -169,6 +210,15 @@ func UpdateAuthServerConfigFromParams(file, str string) {
 		return
 	}
 
+	if len(authServerConfig.Entries) > 0 {
+		for user, en := range authServerConfig.Entries {
+			for index, ks := range en.KeySpaces {
+				for _, ip := range ks.WhiteIPs {
+					authServerConfig.Entries[user].KeySpaces[index].IPFilter.Load([]byte(ip))
+				}
+			}
+		}
+	}
 	// And register the server.
 	RegisterAuthServer("config", authServerConfig)
 	log.Info("update authServerConfig successful")
@@ -305,6 +355,18 @@ func (asc *AuthServerConfig) GetKeyspace(user string) ([]string, error) {
 		l[idx] = keyspace.Name
 	}
 	return l, nil
+}
+
+// GetKeyspace get keyspace via user
+func (asc *AuthServerConfig) GetRoleType(user string) (int8, error) {
+	entry, ok := asc.Entries[user]
+	if !ok {
+		return 0, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+	}
+	if len(entry.KeySpaces) == 0 {
+		return 0, nil
+	}
+	return entry.ReadRole, nil
 }
 
 // GetPassword get password via user

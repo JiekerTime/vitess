@@ -79,8 +79,6 @@ const (
 	AccountTypeUnknown = iota
 	// AccountTypeRW is a read write account type
 	AccountTypeRW
-	// AccountTypeRO is a read only account type, read rdonly
-	AccountTypeRO
 	// AccountTypeRR is a read only account type, read replica
 	AccountTypeRR
 	// AccountTypeStream is a stream account type, read only
@@ -219,10 +217,7 @@ type Conn struct {
 	enableQueryInfo bool
 
 	// AccountType is a flag about account authority, inlude rw ro rs
-	AccountType int
-
-	// tablet type set for streamExecute
-	QueryTabletType string
+	AccountType int8
 
 	// ClientHost is the client host addr
 	ClientHost string
@@ -238,6 +233,7 @@ type Conn struct {
 		UserName  string
 		Password  string
 	}
+	Interceptor *CrossInterceptor
 }
 
 // splitStatementFunciton is the function that is used to split the statement in case of a multi-statement query.
@@ -961,6 +957,17 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 		db := c.parseComInitDB(data)
 		c.recycleReadPacket()
 		if c.listener != nil {
+			var clientIP string
+			if c.RemoteAddr() != nil {
+				clientIP = strings.Split(c.RemoteAddr().String(), ":")[0]
+			}
+			if ok := c.listener.authServer.ValidClient(c.User, db, clientIP); !ok {
+				err := c.writeErrorPacketFromError(fmt.Errorf("remote client[%s] is no permissions", clientIP))
+				if err != nil {
+					log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
+					return false
+				}
+			}
 			err := handler.ValidUseDB(c, db, c.listener.authServer)
 			if err != nil {
 				if err := c.writeErrorPacketFromError(err); err != nil {
@@ -1480,7 +1487,7 @@ func (c *Conn) handleComQuery(handler Handler, data []byte) (kontinue bool) {
 	queryStart := time.Now()
 	query := c.parseComQuery(data)
 	c.recycleReadPacket()
-	if c.CrossEnable || c.AttachEnable {
+	if (c.CrossEnable || c.AttachEnable) && c.Interceptor.passthrough(query) {
 		query = fmt.Sprintf("/* uag::%v;%s;%s;%s;disable */ %s", c.User, c.ClientHost, c.GetLocalAddr(), c.RemoteAddr().String(), query)
 		data = make([]byte, len(query)+1)
 		data[0] = ComQuery
@@ -1854,26 +1861,9 @@ func (c *Conn) ReConnectCrossTablet() error {
 	return nil
 }
 
-func (c *Conn) setAccountType() {
-	userLen := len(c.User)
-	if userLen < 3 {
-		c.AccountType = AccountTypeUnknown
-		return
-	}
-
-	if c.User[userLen-3:userLen] == "_rs" {
-		c.AccountType = AccountTypeStream
-	} else if c.User[userLen-3:userLen] == "_ro" {
-		c.AccountType = AccountTypeRO
-	} else if c.User[userLen-3:userLen] == "_rr" {
-		c.AccountType = AccountTypeRR
-	} else if c.User[userLen-3:userLen] == "_rw" {
-		c.AccountType = AccountTypeRW
-	} else if userLen >= 6 && c.User[userLen-6:userLen] == "_admin" {
-		c.AccountType = AccountTypeAdmin
-	} else {
-		c.AccountType = AccountTypeUnknown
-	}
+func (c *Conn) setAccountType(auth AuthServer) {
+	role, _ := auth.GetRoleType(c.User)
+	c.AccountType = role
 }
 
 // writePacket without head

@@ -52,6 +52,9 @@ const (
 	binLogDir        = "bin-logs"
 	innodbDataSubdir = "innodb/data"
 	innodbLogSubdir  = "innodb/logs"
+
+	logDir = "log"
+	tmpDir = "tmp"
 )
 
 var (
@@ -84,19 +87,17 @@ func NewMycnf(tabletUID uint32, mysqlPort int) *Mycnf {
 	cnf.DataDir = path.Join(tabletDir, dataDir)
 	cnf.InnodbDataHomeDir = path.Join(tabletDir, innodbDataSubdir)
 	cnf.InnodbLogGroupHomeDir = path.Join(tabletDir, innodbLogSubdir)
-	cnf.SocketFile = path.Join(tabletDir, "mysql.sock")
-	cnf.GeneralLogPath = path.Join(tabletDir, "general.log")
-	cnf.ErrorLogPath = path.Join(tabletDir, "error.log")
-	cnf.SlowLogPath = path.Join(tabletDir, "slow-query.log")
-	cnf.RelayLogPath = path.Join(tabletDir, relayLogDir,
-		fmt.Sprintf("vt-%010d-relay-bin", tabletUID))
+	cnf.SocketFile = path.Join(tabletDir, tmpDir, "mysql.socket")
+	cnf.GeneralLogPath = path.Join(tabletDir, logDir, "general.log")
+	cnf.ErrorLogPath = path.Join(tabletDir, logDir, "error.log")
+	cnf.SlowLogPath = path.Join(tabletDir, logDir, "slow-query.log")
+	cnf.RelayLogPath = path.Join(tabletDir, relayLogDir, "relay-bin")
 	cnf.RelayLogIndexPath = cnf.RelayLogPath + ".index"
 	cnf.RelayLogInfoPath = path.Join(tabletDir, relayLogDir, "relay-log.info")
-	cnf.BinLogPath = path.Join(tabletDir, binLogDir,
-		fmt.Sprintf("vt-%010d-bin", tabletUID))
+	cnf.BinLogPath = path.Join(tabletDir, binLogDir, "mysql-bin")
 	cnf.MasterInfoFile = path.Join(tabletDir, "master.info")
-	cnf.PidFile = path.Join(tabletDir, "mysql.pid")
-	cnf.TmpDir = path.Join(tabletDir, "tmp")
+	cnf.PidFile = path.Join(tabletDir, tmpDir, "mysql.pid")
+	cnf.TmpDir = path.Join(tabletDir, tmpDir)
 	// by default the secure-file-priv path is `tmp`
 	cnf.SecureFilePriv = cnf.TmpDir
 	return cnf
@@ -131,7 +132,7 @@ func MycnfFile(uid uint32) string {
 // TopLevelDirs returns the list of directories in the toplevel tablet directory
 // that might be located in a different place.
 func TopLevelDirs() []string {
-	return []string{dataDir, innodbDir, relayLogDir, binLogDir}
+	return []string{dataDir, innodbDir, relayLogDir, binLogDir, logDir}
 }
 
 // directoryList returns the list of directories to create in an empty

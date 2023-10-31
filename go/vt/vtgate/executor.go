@@ -120,6 +120,8 @@ type Executor struct {
 	// truncateErrorLen truncates errors sent to client if they are above this value
 	// (0 means do not truncate).
 	truncateErrorLen int
+	//auth
+	authServer mysql.AuthServer
 }
 
 var executorOnce sync.Once
@@ -427,7 +429,9 @@ func (e *Executor) execute(ctx context.Context, safeSession *SafeSession, sql st
 		qr = result
 		return nil
 	})
-
+	if err == planbuilder.ErrPlanNotSupported {
+		return e.legacyExecute(ctx, safeSession, sql, bindVars)
+	}
 	return stmtType, qr, err
 }
 
@@ -1293,7 +1297,17 @@ func (e *Executor) prepare(ctx context.Context, safeSession *SafeSession, sql st
 
 	switch stmtType {
 	case sqlparser.StmtSelect, sqlparser.StmtShow:
-		return e.handlePrepare(ctx, safeSession, sql, bindVars, logStats)
+		qr, err := e.handlePrepare(ctx, safeSession, sql, bindVars, logStats)
+		if err == nil {
+			return qr, nil
+		}
+		if err == planbuilder.ErrPlanNotSupported {
+			res, err := e.handleShow(ctx, sql)
+			if err == nil {
+				return res.Fields, nil
+			}
+		}
+		return nil, err
 	case sqlparser.StmtDDL, sqlparser.StmtBegin, sqlparser.StmtCommit, sqlparser.StmtRollback, sqlparser.StmtSet, sqlparser.StmtInsert, sqlparser.StmtReplace, sqlparser.StmtUpdate, sqlparser.StmtDelete,
 		sqlparser.StmtUse, sqlparser.StmtOther, sqlparser.StmtComment, sqlparser.StmtExplain, sqlparser.StmtFlush:
 		return nil, nil
@@ -1724,6 +1738,107 @@ func (e *Executor) handleLoadData(ctx context.Context, safeSession *SafeSession,
 
 	err = e.scatterConn.txConn.Commit(ctx, safeSession)
 	return result, err
+}
+
+func (e *Executor) legacyExecute(ctx context.Context, safeSession *SafeSession, sql string, bindVars map[string]*querypb.BindVariable) (sqlparser.StatementType, *sqltypes.Result, error) {
+	// Start an implicit transaction if necessary.
+	if !safeSession.Autocommit && !safeSession.InTransaction() {
+		if err := e.txConn.Begin(ctx, safeSession, nil); err != nil {
+			return 0, nil, err
+		}
+	}
+	_, destTabletType, _, err := e.ParseDestinationTarget(safeSession.TargetString)
+	if err != nil {
+		return 0, nil, err
+	}
+	// Legacy gateway allows transactions only on PRIMARY
+	if safeSession.InTransaction() && destTabletType != topodatapb.TabletType_PRIMARY {
+		return 0, nil, vterrors.Errorf(vtrpcpb.Code_UNIMPLEMENTED, "transaction is supported only for primary tablet type, current type: %v", destTabletType)
+	}
+
+	stmtType := sqlparser.Preview(sql)
+
+	// Mysql warnings are scoped to the current session, but are
+	// cleared when a "non-diagnostic statement" is executed:
+	// https://dev.mysql.com/doc/refman/8.0/en/show-warnings.html
+	//
+	// To emulate this behavior, clear warnings from the session
+	// for all statements _except_ SHOW, so that SHOW WARNINGS
+	// can actually return them.
+	if stmtType != sqlparser.StmtShow {
+		safeSession.ClearWarnings()
+	}
+
+	switch stmtType {
+	case sqlparser.StmtSelect, sqlparser.StmtInsert, sqlparser.StmtReplace, sqlparser.StmtUpdate,
+		sqlparser.StmtDelete, sqlparser.StmtDDL, sqlparser.StmtUse, sqlparser.StmtExplain, sqlparser.StmtOther, sqlparser.StmtFlush:
+		return 0, nil, vterrors.New(vtrpcpb.Code_INTERNAL, "[BUG] not reachable, should be handled with plan execute")
+	case sqlparser.StmtShow:
+		qr, err := e.handleShow(ctx, sql)
+		return sqlparser.StmtShow, qr, err
+	}
+	return 0, nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] statement not handled: %s", sql)
+}
+
+func (e *Executor) handleShow(ctx context.Context, sql string) (*sqltypes.Result, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return nil, err
+	}
+	showOuter, ok := stmt.(*sqlparser.Show)
+	if !ok {
+		// This code is unreachable.
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] unrecognized SHOW statement: %v", sql)
+	}
+	show, ok := showOuter.Internal.(*sqlparser.ShowBasic)
+	if !ok {
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] This should only be SHOW Legacy statement type: %v", sql)
+	}
+	switch show.Command {
+	case sqlparser.Database, sqlparser.Keyspace:
+		allKeyspace, err := e.resolver.resolver.GetAllKeyspaces(ctx)
+		if err != nil {
+			return nil, err
+		}
+		userName := callerid.EffectiveCallerIDFromContext(ctx).Principal
+		userKeyspace, err := e.authServer.GetKeyspace(userName)
+		if err != nil {
+			return nil, err
+		}
+
+		var destKeyspaces []string
+		if len(userKeyspace) > 0 {
+			destKeyspaces = intersect(userKeyspace, allKeyspace)
+		} else {
+			destKeyspaces = allKeyspace
+		}
+		rows := make([][]sqltypes.Value, len(destKeyspaces))
+		for i, v := range destKeyspaces {
+			rows[i] = buildVarCharRow(v)
+		}
+		return &sqltypes.Result{
+			Fields:       buildVarCharFields("Database"),
+			Rows:         rows,
+			RowsAffected: uint64(len(rows)),
+		}, nil
+	}
+
+	// This code is unreachable.
+	return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] statement not handled: %s", sql)
+}
+
+func intersect(lhs, rhs []string) []string {
+	lmap := make(map[string]struct{}, len(lhs))
+	for _, v := range lhs {
+		lmap[v] = struct{}{}
+	}
+	var dst []string
+	for _, v := range rhs {
+		if _, ok := lmap[v]; ok {
+			dst = append(dst, v)
+		}
+	}
+	return dst
 }
 
 // ExecuteBatchMultiShard executing a batch of SQL statements on each shard

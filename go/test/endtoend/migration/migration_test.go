@@ -238,8 +238,8 @@ func startCluster(t *testing.T) string {
 	createKeyspace(t, legacyCustomer, []string{"0"})
 	createKeyspace(t, legacyProduct, []string{"0"})
 
-	productSocket := path.Join(keyspaces["product"].Shards[0].Vttablets[0].VttabletProcess.Directory, "mysql.sock")
-	customerSocket := path.Join(keyspaces["customer"].Shards[0].Vttablets[0].VttabletProcess.Directory, "mysql.sock")
+	productSocket := path.Join(keyspaces["product"].Shards[0].Vttablets[0].VttabletProcess.Directory, "/tmp/mysql.socket")
+	customerSocket := path.Join(keyspaces["customer"].Shards[0].Vttablets[0].VttabletProcess.Directory, "/tmp/mysql.socket")
 
 	populate(t, productSocket, legacyProductData)
 	populate(t, customerSocket, legacyCustomerData)

@@ -213,6 +213,8 @@ func buildShowTblPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (e
 }
 
 func buildDBPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (engine.Primitive, error) {
+	return nil, ErrPlanNotSupported
+	/* Show only user.json configuration database
 	ks, err := vschema.AllKeyspace()
 	if err != nil {
 		return nil, err
@@ -231,13 +233,13 @@ func buildDBPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (engine
 	// rows := make([][]sqltypes.Value, 0, len(ks)+4)
 	var rows [][]sqltypes.Value
 
-	if show.Command == sqlparser.Database {
-		// Hard code default databases
-		ks = append(ks, &vindexes.Keyspace{Name: "information_schema"},
-			&vindexes.Keyspace{Name: "mysql"},
-			&vindexes.Keyspace{Name: "sys"},
-			&vindexes.Keyspace{Name: "performance_schema"})
-	}
+	//if show.Command == sqlparser.Database {
+	//	// Hard code default databases
+	//	ks = append(ks, &vindexes.Keyspace{Name: "information_schema"},
+	//		&vindexes.Keyspace{Name: "mysql"},
+	//		&vindexes.Keyspace{Name: "sys"},
+	//		&vindexes.Keyspace{Name: "performance_schema"})
+	//}
 
 	for _, v := range ks {
 		if filter.MatchString(v.Name) {
@@ -245,6 +247,7 @@ func buildDBPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (engine
 		}
 	}
 	return engine.NewRowsPrimitive(rows, buildVarCharFields("Database")), nil
+	*/
 }
 
 // buildShowVMigrationsPlan serves `SHOW VITESS_MIGRATIONS ...` queries.
