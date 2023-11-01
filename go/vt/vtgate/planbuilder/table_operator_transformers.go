@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
-
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
@@ -17,6 +15,7 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator, isRoot bool) (logicalPlan, error) {

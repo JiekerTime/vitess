@@ -139,5 +139,6 @@ CREATE TABLE `t_music` (
                          `col` varchar(100) DEFAULT NULL,
                          `a`          int(16)           DEFAULT NULL,
                          `bar`      int               DEFAULT NULL,
+                         `foo`        int(16)           DEFAULT NULL,
                          PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

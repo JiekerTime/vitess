@@ -20,5 +20,831 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "Multi-table, multi-chunk",
+    "query": "select t_music.col from t_user join t_music",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_music.col from t_user join t_music",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_0 where 1 != 1",
+            "Query": "select 1 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.col from t_music_0 where 1 != 1",
+            "Query": "select t_music.col from t_music",
+            "Table": "t_music"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "select user.t_music.foo from user.t_music join t_user on user.t_music.id = user.id where user.t_music.col = 42",
+    "query": "select user.t_music.foo from user.t_music join t_user on user.t_music.id = t_user.id where user.t_music.col = 42",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select user.t_music.foo from user.t_music join t_user on user.t_music.id = t_user.id where user.t_music.col = 42",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "t_music_id": 1
+        },
+        "TableName": "t_music_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.foo, t_music_0.id from t_music_0 where 1 != 1",
+            "Query": "select t_music.foo, t_music.id from t_music where t_music.col = 42",
+            "Table": "t_music"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_0 where 1 != 1",
+            "Query": "select 1 from t_user where t_user.id = :t_music_id",
+            "Table": "t_user",
+            "Values": [
+              ":t_music_id"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "',' join",
+    "query": "select t_music.col from t_user, t_music",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_music.col from t_user, t_music",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_0 where 1 != 1",
+            "Query": "select 1 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.col from t_music_0 where 1 != 1",
+            "Query": "select t_music.col from t_music",
+            "Table": "t_music"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "sharded join on unique vindex, inequality",
+    "query": "select t_user.col from t_user join t_user_extra on t_user.id < t_user_extra.user_id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra on t_user.id < t_user_extra.user_id",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "t_user_id": 1
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col, t_user_0.id from t_user_0 where 1 != 1",
+            "Query": "select t_user.col, t_user.id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra where :t_user_id < t_user_extra.user_id",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "sharded join, non-col reference RHS",
+    "query": "select t_user.col from t_user join t_user_extra on t_user.id = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra on t_user.id = 5",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user where t_user.id = 5",
+            "Table": "t_user",
+            "Values": [
+              "INT64(5)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "sharded join, non-col reference LHS",
+    "query": "select t_user.col from t_user join t_user_extra on 5 = t_user.id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra on 5 = t_user.id",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user where t_user.id = 5",
+            "Table": "t_user",
+            "Values": [
+              "INT64(5)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "sharded join, non-vindex col",
+    "query": "select t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.col",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_extra_col": 0
+        },
+        "TableName": "t_user_extra_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col from t_user_extra",
+            "Table": "t_user_extra"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user where t_user.id = :t_user_extra_col",
+            "Table": "t_user",
+            "Values": [
+              ":t_user_extra_col"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "sharded join, non-unique vindex",
+    "query": "select t_user.col from t_user_extra join t_user on t_user_extra.user_id = t_user.name",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user_extra join t_user on t_user_extra.user_id = t_user.name",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "t_user_name": 1
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col, t_user_0.`name` from t_user_0 where 1 != 1",
+            "Query": "select t_user.col, t_user.`name` from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra where t_user_extra.user_id = :t_user_name",
+            "Table": "t_user_extra",
+            "Values": [
+              ":t_user_name"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "join with bindvariables",
+    "query": "SELECT `t_user`.`id` FROM `t_user` INNER JOIN `t_user_extra` ON `t_user`.`id` = `t_user_extra`.`assembly_id` WHERE `t_user_extra`.`user_id` = 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT `t_user`.`id` FROM `t_user` INNER JOIN `t_user_extra` ON `t_user`.`id` = `t_user_extra`.`assembly_id` WHERE `t_user_extra`.`user_id` = 2",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_extra_assembly_id": 0
+        },
+        "TableName": "t_user_extra_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.assembly_id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.assembly_id from t_user_extra where t_user_extra.user_id = 2",
+            "Table": "t_user_extra",
+            "Values": [
+              "INT64(2)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.id from t_user_0 where 1 != 1",
+            "Query": "select t_user.id from t_user where t_user.id = :t_user_extra_assembly_id",
+            "Table": "t_user",
+            "Values": [
+              ":t_user_extra_assembly_id"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "join column selected as alias",
+    "query": "SELECT u.id as uid, ue.id as ueid FROM t_user u join t_user_extra ue where u.id = ue.id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT u.id as uid, ue.id as ueid FROM t_user u join t_user_extra ue where u.id = ue.id",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0,L:0",
+        "JoinVars": {
+          "ue_id": 0
+        },
+        "TableName": "t_user_extra_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select ue.id as ueid from t_user_extra_0 as ue where 1 != 1",
+            "Query": "select ue.id as ueid from t_user_extra as ue",
+            "Table": "t_user_extra"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select u.id as uid from t_user_0 as u where 1 != 1",
+            "Query": "select u.id as uid from t_user as u where u.id = :ue_id",
+            "Table": "t_user",
+            "Values": [
+              ":ue_id"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "join on int columns",
+    "query": "select u.id from t_user as u join t_user as uu on u.intcol = uu.intcol",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.id from t_user as u join t_user as uu on u.intcol = uu.intcol",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "u_intcol": 1
+        },
+        "TableName": "t_user_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select u.id, u.intcol from t_user_0 as u where 1 != 1",
+            "Query": "select u.id, u.intcol from t_user as u",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_0 as uu where 1 != 1",
+            "Query": "select 1 from t_user as uu where uu.intcol = :u_intcol",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "left join with expressions",
+    "query": "select t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col",
+      "Instructions": {
+        "OperatorType": "Projection",
+        "Expressions": [
+          "[COLUMN 0] + INT64(1) as t_user_extra.col + 1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "LeftJoin",
+            "JoinColumnIndexes": "R:0",
+            "JoinVars": {
+              "t_user_col": 0
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+                "Query": "select t_user.col from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                "TableValues": [
+                  ":t_user_col"
+                ],
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "left join with expressions, with three-way join (different code path)",
+    "query": "select t_user.id, t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col join t_user_extra e",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id, t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col join t_user_extra e",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:1",
+        "TableName": "t_user_t_user_extra_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] as id",
+              "[COLUMN 1] + INT64(1) as t_user_extra.col + 1"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_col": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
+                    "Query": "select t_user.id, t_user.col from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-EqualUnique",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                    "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                    "TableValues": [
+                      ":t_user_col"
+                    ],
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 as e where 1 != 1",
+            "Query": "select 1 from t_user_extra as e",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "left join with expressions coming from both sides",
+    "query": "select t_user.foo+t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.foo+t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col",
+      "Instructions": {
+        "OperatorType": "Projection",
+        "Expressions": [
+          "([COLUMN 0] + [COLUMN 1]) + INT64(1) as t_user.foo + t_user_extra.col + 1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "LeftJoin",
+            "JoinColumnIndexes": "L:0,R:0",
+            "JoinVars": {
+              "t_user_col": 1
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.foo, t_user_0.col from t_user_0 where 1 != 1",
+                "Query": "select t_user.foo, t_user.col from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                "TableValues": [
+                  ":t_user_col"
+                ],
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "left join where clauses #3 - assert that we can evaluate BETWEEN with the evalengine",
+    "query": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.col between 10 and 20",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.col between 10 and 20",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Filter",
+            "Predicate": "t_user_extra.col between 10 and 20",
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_col": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
+                    "Query": "select t_user.id, t_user.col from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-EqualUnique",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                    "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                    "TableValues": [
+                      ":t_user_col"
+                    ],
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "left join where clauses #2",
+    "query": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where coalesce(t_user_extra.col, 4) = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where coalesce(t_user_extra.col, 4) = 5",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Filter",
+            "Predicate": "coalesce(t_user_extra.col, 4) = 5",
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "LeftJoin",
+                "JoinColumnIndexes": "L:0,R:0",
+                "JoinVars": {
+                  "t_user_col": 1
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
+                    "Query": "select t_user.id, t_user.col from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-EqualUnique",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                    "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                    "TableValues": [
+                      ":t_user_col"
+                    ],
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   }
 ]
