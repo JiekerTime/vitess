@@ -1190,7 +1190,14 @@ func (vc *vcursorImpl) GetPrepareData(stmtName string) *vtgatepb.PrepareData {
 }
 
 func (vc *vcursorImpl) FindSplitTable(keyspace, tableName string) (*vindexes.LogicTableConfig, error) {
+	if keyspace == "" {
+		keyspace = vc.getActualKeyspace()
+	}
 	return vc.vschema.FindSplitTable(keyspace, tableName)
+}
+
+func (vc *vcursorImpl) FindSplitAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, error) {
+	return vc.vschema.FindSplitAllTables(keyspace)
 }
 
 // ExecuteBatchMultiShard executing a batch of SQL statements on each shard

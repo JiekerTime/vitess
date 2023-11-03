@@ -89,6 +89,8 @@ type VSchema interface {
 	StorePrepareData(name string, v *vtgatepb.PrepareData)
 
 	FindSplitTable(keyspace, tableName string) (*vindexes.LogicTableConfig, error)
+
+	FindSplitAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, error)
 }
 
 // PlannerNameToVersion returns the numerical representation of the planner

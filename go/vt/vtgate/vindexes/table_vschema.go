@@ -190,6 +190,22 @@ func (vschema *VSchema) FindSplitTable(
 	return table, nil
 }
 
+func (ks *KeyspaceSchema) findSplitAllTables() (tables map[string]*LogicTableConfig) {
+	return ks.SplitTableTables
+}
+
+func (vschema *VSchema) FindSplitAllTables(
+	keyspace string,
+) (map[string]*LogicTableConfig, error) {
+	ks, ok := vschema.Keyspaces[keyspace]
+	if !ok {
+		return nil, vterrors.VT05003(keyspace)
+	}
+	tables := ks.findSplitAllTables()
+
+	return tables, nil
+}
+
 func (vschema *VSchema) FindActualTable(
 	keyspace,
 	logicTableName string,

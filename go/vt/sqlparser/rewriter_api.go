@@ -156,7 +156,7 @@ func RewriteSplitTableName(in SQLNode, tableMap map[string]string) {
 	case *Update:
 		checkIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
 	default:
-		return
+
 	}
 
 	SafeRewrite(in, func(node SQLNode, parent SQLNode) bool {

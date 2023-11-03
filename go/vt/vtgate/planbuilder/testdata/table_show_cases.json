@@ -1,0 +1,197 @@
+[
+  {
+    "comment": "show tables",
+    "query": "show tables from user",
+    "plan": {
+      "QueryType": "SHOW",
+      "Original": "show tables from user",
+      "Instructions": {
+        "OperatorType": "TableShow",
+        "rows": [
+          [
+            "t_authoritative"
+          ],
+          [
+            "t_music"
+          ],
+          [
+            "t_user"
+          ],
+          [
+            "t_user_extra"
+          ],
+          [
+            "table_engine_test"
+          ]
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "RenameFields",
+            "Columns": [
+              "Tables_in_user"
+            ],
+            "Indices": [
+              0
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Send",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "TargetDestination": "AnyShard()",
+                "Query": "show tables",
+                "SingleShardOnly": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "comment": "Show tables like _%",
+    "query": "show tables from user  like 't_user%';",
+    "plan": {
+      "QueryType": "SHOW",
+      "Original": "show tables from user  like 't_user%';",
+      "Instructions": {
+        "OperatorType": "TableShow",
+        "like": "t_user%",
+        "rows": [
+          [
+            "t_user"
+          ],
+          [
+            "t_user_extra"
+          ]
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "RenameFields",
+            "Columns": [
+              "Tables_in_user"
+            ],
+            "Indices": [
+              0
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Send",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "TargetDestination": "AnyShard()",
+                "Query": "show tables like 't_user%'",
+                "SingleShardOnly": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "comment": "Show tables like %%",
+    "query": "show tables from user  like '%user%';",
+    "plan": {
+      "QueryType": "SHOW",
+      "Original": "show tables from user  like '%user%';",
+      "Instructions": {
+        "OperatorType": "TableShow",
+        "like": "%user%",
+        "rows": [
+          [
+            "t_user"
+          ],
+          [
+            "t_user_extra"
+          ]
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "RenameFields",
+            "Columns": [
+              "Tables_in_user"
+            ],
+            "Indices": [
+              0
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Send",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "TargetDestination": "AnyShard()",
+                "Query": "show tables like '%user%'",
+                "SingleShardOnly": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "comment": "Show tables like %_",
+    "query": "show tables from user  like '%user';",
+    "plan": {
+      "QueryType": "SHOW",
+      "Original": "show tables from user  like '%user';",
+      "Instructions": {
+        "OperatorType": "TableShow",
+        "like": "%user",
+        "rows": [
+          [
+            "t_user"
+          ]
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "RenameFields",
+            "Columns": [
+              "Tables_in_user"
+            ],
+            "Indices": [
+              0
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Send",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "TargetDestination": "AnyShard()",
+                "Query": "show tables like '%user'",
+                "SingleShardOnly": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "comment": "show columns from user keyspace",
+    "query": "show full columns from user.t_user",
+    "plan": {
+      "QueryType": "SHOW",
+      "Original": "show full columns from user.t_user",
+      "Instructions": {
+        "OperatorType": "Send",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetDestination": "AnyShard()",
+        "Query": "show full columns from t_user_0",
+        "SingleShardOnly": true
+      }
+    }
+  }
+]

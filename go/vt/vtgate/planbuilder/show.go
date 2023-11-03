@@ -186,7 +186,15 @@ func buildShowTblPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (e
 			return nil, err
 		}
 	} else {
+		splitTable, _ := vschema.FindSplitTable(show.DbName.String(), show.Tbl.Name.String())
+		if splitTable != nil {
+			splitTableConfig := make(map[string]*vindexes.LogicTableConfig)
+			splitTableConfig[splitTable.LogicTableName] = splitTable
+			tableMap := vindexes.GetFirstActualTableMap(splitTableConfig)
+			sqlparser.RewriteSplitTableName(show, tableMap)
+		}
 		table, _, _, _, destination, err := vschema.FindTableOrVindex(show.Tbl)
+		//这个地方要求实际表的信息也要存在元数据结构中
 		if err != nil {
 			return nil, err
 		}
@@ -332,9 +340,39 @@ func buildPlanWithDB(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (en
 		if err != nil {
 			return nil, err
 		}
+		plan = buildTableForSplitTable(plan, vschema, dbName.String(), show)
+
 	}
 	return plan, nil
 
+}
+
+func buildTableForSplitTable(input engine.Primitive, vschema plancontext.VSchema, dbName string, show *sqlparser.ShowBasic) engine.Primitive {
+	tables, err := vschema.FindSplitAllTables(dbName)
+	if err != nil || tables == nil {
+		return input
+	}
+	if show.Filter != nil {
+		return processFilterTableForSplitTable(input, tables, show)
+	}
+
+	plan := engine.NewTableShow(input, tables, "")
+
+	return plan
+
+}
+
+func processFilterTableForSplitTable(input engine.Primitive, tables map[string]*vindexes.LogicTableConfig, show *sqlparser.ShowBasic) engine.Primitive {
+	if show.Filter.Filter != nil {
+		//todo
+		//目前没支持show tables where Tables_in_dbname='xxx';show tables where Tables_in_dbname in ('xxx'); show tables where Tables_in_dbname like 'xxx'
+		//在tablet会改写 所以where后面写错dbname也能查的到go/vt/vttablet/tabletserver/planbuilder/builder.go#showTableRewrite
+		return input
+	}
+	if show.Filter.Like != "" {
+		return engine.NewTableShow(input, tables, show.Filter.Like)
+	}
+	return input
 }
 
 func buildVarCharFields(names ...string) []*querypb.Field {

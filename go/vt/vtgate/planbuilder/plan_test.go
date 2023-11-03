@@ -703,6 +703,10 @@ func (vw *vschemaWrapper) FindSplitTable(_, tableName string) (*vindexes.LogicTa
 	return vw.v.FindSplitTable("user", tableName)
 }
 
+func (vw *vschemaWrapper) FindSplitAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, error) {
+	return vw.v.FindSplitAllTables(keyspace)
+}
+
 type (
 	planTest struct {
 		Comment  string          `json:"comment,omitempty"`
