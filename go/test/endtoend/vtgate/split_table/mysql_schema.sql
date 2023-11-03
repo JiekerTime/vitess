@@ -130,6 +130,7 @@ CREATE TABLE `t_user_extra` (
                                   `bar`      int               DEFAULT NULL,
                                   `baz`      int               DEFAULT NULL,
                                   `col`        char(32) NOT NULL DEFAULT '',
+                                  `foo`        int(16)           DEFAULT NULL,
                                   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 

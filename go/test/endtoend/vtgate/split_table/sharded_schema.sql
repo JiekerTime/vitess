@@ -261,6 +261,7 @@ CREATE TABLE `t_user_extra_0` (
                               `bar`      int               DEFAULT NULL,
                               `baz`      int               DEFAULT NULL,
                               `col`        char(32) NOT NULL DEFAULT '',
+                              `foo`        int(16)           DEFAULT NULL,
                               PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
@@ -272,6 +273,7 @@ CREATE TABLE `t_user_extra_1` (
                                 `bar`      int               DEFAULT NULL,
                                 `baz`      int               DEFAULT NULL,
                                 `col`        char(32) NOT NULL DEFAULT '',
+                                `foo`        int(16)           DEFAULT NULL,
                                 PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 

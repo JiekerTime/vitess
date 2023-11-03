@@ -8,10 +8,11 @@ func TestTableFromCases(t *testing.T) {
 	defer closer()
 	mcmp.Exec("use user")
 
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo,name) values (1, '1', 'aaa', 1, false,1,2,3,100,200,1),(2, '3', 'bbb', 2, false,2,3,4,1030,200,4),(3, '6', 'ccc', 3, false,3,4,5,100,200,4),(5, '5', 'ccc', 3, false,3,4,5,1030,200,4)")
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo,name) values (6, '2', 'aaa', 1, false,1,2,3,100,300,2),(7, '4', 'bbb', 2, false,2,3,4,100,300,3),(8, '5', 'ccc', 3, false,3,4,5,1020,300,4)")
-	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (1, 1, 2, 200, '1', 200),(2, 2, 4, 200, '3', 200),(3, 3, 4, 200, '5', 200),(4, 4, 4, 200, '7', 200),(5, 5, 2, 200, '7', 300)")
-	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (6, 6, 3, 300, '2', 200),(7, 7, 5, 300, '4', 200),(8, 8, 5, 300, '6', 300),(9, 9, 3, 300, '8', 300),(10, 5, 3, 300, '8', 300)")
+	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo,name) values (1, '11', 'aaa', 1, false,1,2,3,100,200,1),(2, '11', 'bbb', 2, false,2,3,4,1030,200,4),(3, '5', 'ccc', 3, false,3,4,5,100,200,4),(5, '5', 'ccc', 3, false,3,4,5,1030,200,4)")
+	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo,name) values (6, '12', 'aaa', 1, false,1,2,3,100,300,2),(7, '11', 'bbb', 2, false,2,3,4,100,300,3),(8, '5', 'ccc', 3, false,3,4,5,1020,300,4)")
+	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo,name) values (200, '12', 'aaa', 1, false,1,2,3,100,300,2),(300, '12', 'bbb', 2, false,2,3,4,100,300,3)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (1, 1, 2, 200, '11', 200),(2, 2, 4, 200, '3', 200),(3, 2, 4, 200, '11', 200),(4, 4, 4, 200, '7', 200),(5,  5, 2, 200, '5', 300)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (6, 6, 3, 300, '12', 200),(7, 2, 5, 300, '4', 200),(8, 2, 5, 300, '12', 300),(9, 9, 3, 300, '8', 300),(10, 5, 3, 300, '5', 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (1, 11, '42',  10, 200, 202)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (2, 10, '42',  10, 200, 202)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (3, 12, 'bbb', 10, 200, 202)")
@@ -80,6 +81,16 @@ func TestTableFromCases(t *testing.T) {
 	//        [FLOAT64(305)]
 	//        [FLOAT64(207)]
 	//mcmp.Exec("select t_user.foo+t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col")
+	//results mismatched.
+	//        Vitess Results:
+	//        [INT32(206)]
+	//        [INT32(206)]
+	//        [INT32(206)]
+	//        MySQL Results:
+	//        [FLOAT64(206)]
+	//        [FLOAT64(206)]
+	//        [FLOAT64(206)]
+	//mcmp.Exec("select t_user.foo+t_user_extra.col+1 as a from t_user left join t_user_extra on t_user.col = t_user_extra.col order by a")
 	// left join where clauses #3 - assert that we can evaluate BETWEEN with the evalengine
 	mcmp.ExecWithColumnCompare("select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.col between 10 and 20")
 	// left join where clauses #2

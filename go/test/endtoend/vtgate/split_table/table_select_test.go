@@ -8,17 +8,34 @@ func TestSelect(t *testing.T) {
 	mcmp, closer := start(t)
 	defer closer()
 	mcmp.Exec("use user")
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo) values (1, '45', 'aaa', 1, false,1,2,3,100,200),(2, 'b', 'bbb', 2, false,2,3,4,1030,200),(3, 'c', 'ccc', 3, false,3,4,5,100,200),(5, '45', 'ccc', 3, false,3,4,5,1030,200)")
-	mcmp.ExecWithColumnCompare("select id,col,f_key,f_tinyint,f_bit from t_user")
 
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo) values (4, 'a', 'aaa', 1, false,1,2,3,100,300),(6, 'b', 'bbb', 2, false,2,3,4,100,300),(7, '45', 'ccc', 3, false,3,4,5,1020,300)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1,  '3',    'aaa', 1, false, 1, 2, 3, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (2,  '3',    'bbb', 2, false, 2, 3, 4, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (3,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (4,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (5,  '12',   'ccc', 3, true,  3, 4, 5, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (6,  '2',    'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (7,  '1024', 'bbb', 2, false, 2, 3, 4, 100, 300, 3)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  '1024', 'ccc', 3, false, 3, 4, 5, 102, 300, 4)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  '1024', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, '1024', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (11, '12',   'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (12, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (13, '1024', 'aaa', 1, false, 3, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (14, '123',  'aaa', 1, false, 2, 2, 3, 100, 300, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (15, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (1, 101, 101, 200, 'aaa', 200),(2, 102, 102, 200, 'xxx', 200),(3, 103, 103, 200, 'bbb', 200),(4, 104, 104, 200, 'aaa', 200),(5, 105, 105, 200, 'ada', 300)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (6, 101, 101, 300, 'aaa', 200),(7, 102, 102, 300, 'ddd', 200),(8, 103, 103, 300, 'ccc', 300),(9, 104, 104, 300, 'aaa', 300),(10, 105, 105, 300, 'axa', 300)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (101, 11, 'aaa', 10, 200)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (121, 10, 'aaa', 10, 200)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (131, 12, 'bbb', 10, 200)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (141, 13, 'bbb', 10, 200)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (161, 12, 'ccc', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (101,  11, 'aaa', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (121,  10, 'aaa', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (131,  12, 'bbb', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (141,  13, 'bbb', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (161,  12, 'ccc', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (102,  11, 'aaa', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (122,  10, 'aaa', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (132,  12, 'bbb', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (143,  13, 'bbb', 10, 200)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (164,  12, 'ccc', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1010, 11, 'aaa', 10, 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1213, 10, 'aaa', 10, 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1314, 12, 'bbb', 10, 300)")
@@ -48,7 +65,7 @@ func TestSelect(t *testing.T) {
 	// sharded limit offset
 	mcmp.ExecWithColumnCompare("select user_id from t_music order by user_id limit 10, 20")
 	// Sharding Key Condition in Parenthesis
-	mcmp.ExecWithColumnCompare("select * from t_user where name ='abc' AND (id = 4) and (col = 123) limit 5")
+	mcmp.ExecWithColumnCompare("select * from t_user where name ='abc' AND (id = 14) and (col = 123) limit 5")
 	// Multiple parenthesized expressions
 	mcmp.ExecWithColumnCompare("select * from t_user where (id = 4) AND (name ='abc') AND (col = 'abc') limit 5")
 	// Multiple parenthesized expressions
@@ -56,22 +73,21 @@ func TestSelect(t *testing.T) {
 	// Column Aliasing with Table.Column
 	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2")
 	// Column Aliasing with Column
-	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 and col = 12 order by col0_ desc limit 3")
+	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 11 and col = 12 order by col0_ desc limit 3")
 	// Column Aliasing with Table.Column,splitTable Limit
 	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 order by user0_.col desc limit 2")
 	// Column Aliasing with Column,splitTable Limit
 	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 order by col0_ desc limit 3")
 	// Booleans and parenthesis
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 1) and (col = 12) AND name = true limit 5")
+	mcmp.ExecWithColumnCompare("select * from t_user where (id = 11) and (col = 12) AND f_bit = true limit 5")
 	// Column as boolean-ish
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 1) and (col = 12) AND name limit 5")
+	mcmp.ExecWithColumnCompare("select * from t_user where (id = 11) and (col = 12) AND f_bit limit 5")
 	// PK as fake boolean, and column as boolean-ish
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 5) and (col = 12) AND name = true limit 5")
+	mcmp.ExecWithColumnCompare("select * from t_user where (id = 5) and (col = 12) AND f_bit = true limit 5")
 	// group by with non aggregated columns and table alias
 	mcmp.ExecWithColumnCompare("select u.id, u.intcol, u.col from t_user u group by u.id, u.col")
 	// Auto-resolve should work if unique vindex columns are referenced
-	// Column 'id' in field list is ambiguous (errno 1054) (sqlstate 42S22) during query: select id, user_id from t_user join t_user_extra
-	//mcmp.ExecWithColumnCompare("select id, user_id from t_user join t_user_extra")
+	mcmp.AssertContainsError("select id, user_id from t_user join t_user_extra", "Column 'id' in field list is ambiguous")
 	mcmp.ExecWithColumnCompare("select t_user.id, t_user_extra.user_id from t_user join t_user_extra")
 	// RHS TableRoute referenced
 	mcmp.ExecWithColumnCompare("select t_user_extra.id from t_user join t_user_extra")
@@ -82,6 +98,7 @@ func TestSelect(t *testing.T) {
 	// actual  : []string{"col", "t_user_extra_0.id + t_user_extra_0.col"}
 	// column names do not match - the expected values are what mysql produced
 	//mcmp.ExecWithColumnCompare("select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra")
+	mcmp.Exec("select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra")
 	// Jumbled references
 	mcmp.ExecWithColumnCompare("select t_user.col, t_user_extra.id, t_user.col2 from t_user join t_user_extra")
 	// Comments
@@ -94,6 +111,7 @@ func TestSelect(t *testing.T) {
 	// expected: []string{"t_user_extra.col + t_user.col"}
 	// actual  : []string{"'bbb' + t_user_0.col"}
 	//mcmp.ExecWithColumnCompare("select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id")
+	mcmp.Exec("select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id")
 }
 
 // sql_mode not only_full_group_by

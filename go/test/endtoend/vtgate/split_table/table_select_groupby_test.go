@@ -2,6 +2,8 @@ package split_table
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTableGroupBy(t *testing.T) {
@@ -38,7 +40,7 @@ func TestTableGroupBy(t *testing.T) {
 
 	mcmp.ExecWithColumnCompare("select a, b, c, count(*) from t_user group by 3, 2, 1 order by 1 desc, 3 desc, b")
 
-	mcmp.ExecWithColumnCompare("select t_user.col1 as a from t_user where t_user.id = 5 group by a collate utf8_general_ci")
+	mcmp.ExecWithColumnCompare("select t_user.col1 as a from t_user where t_user.id = 3 group by a collate utf8_general_ci")
 
 	mcmp.ExecWithColumnCompare("select col, count(*) k from t_user group by col order by null, k")
 
@@ -80,7 +82,7 @@ func TestTableGroupBy(t *testing.T) {
 
 	mcmp.ExecWithColumnCompare("SELECT t_user.intcol FROM t_user where col = 'a' GROUP BY t_user.intcol ORDER BY COUNT(t_user.intcol)")
 
-	mcmp.ExecWithColumnCompare("SELECT t_user.intcol FROM t_user where col = 'b' and id = 1 GROUP BY t_user.intcol ORDER BY COUNT(t_user.intcol)")
+	mcmp.ExecWithColumnCompare("SELECT t_user.intcol FROM t_user where col = 'a' and id = 1 GROUP BY t_user.intcol ORDER BY COUNT(t_user.intcol)")
 
 	//VT03005: cannot group on 'sum(id)' (errno 1056) (sqlstate 42000) during query: select sum(id) as id,col from t_user group by b, id
 	//mcmp.ExecWithColumnCompare("select sum(id) as id,col from t_user group by b, id")
@@ -111,10 +113,29 @@ func TestTableAggrCases(t *testing.T) {
 	// 分片结果返回的顺序问题
 	//mcmp.ExecWithColumnCompare("select id, count(*) from t_user")
 
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo) values (1, '45', 'aaa', 1, false,1,2,3,100,200),(2, 'b', 'bbb', 2, false,2,3,4,1030,200),(3, 'c', 'ccc', 3, false,3,4,5,100,200),(5, '45', 'ccc', 3, false,3,4,5,1030,200)")
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,a,b,c,intcol,foo) values (1024, 'a', 'aaa', 1, false,1,2,3,100,300),(1536, 'b', 'bbb', 2, false,2,3,4,100,300),(1320, '45', 'ccc', 3, false,3,4,5,1020,300)")
-	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (100, 101, 101, 200, 'aaa', 200),(200, 102, 102, 200, 'xxx', 200),(300, 103, 103, 200, 'bbb', 200),(400, 104, 104, 200, 'aaa', 200),(500, 105, 105, 200, 'ada', 300)")
-	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (130, 101, 101, 300, 'aaa', 200),(250, 102, 102, 300, 'ddd', 200),(370, 103, 103, 300, 'ccc', 300),(489, 104, 104, 300, 'aaa', 300),(520, 105, 105, 300, 'axa', 300)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1,  '3',    'aaa', 1, false, 1, 2, 3, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (2,  '3',    'bbb', 2, false, 2, 3, 4, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (3,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (4,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (5,  '12',   'ccc', 3, true,  3, 4, 5, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (6,  '2',    'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (7,  '1024', 'bbb', 2, false, 2, 3, 4, 100, 300, 3)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  '1024', 'ccc', 3, false, 3, 4, 5, 102, 300, 4)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  '1024', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, '1024', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (11, '12',   'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (12, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (13, '1024', 'aaa', 1, false, 3, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (14, '123',  'aaa', 1, false, 2, 2, 3, 100, 300, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (15, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1019, '45', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1020, '45', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1021, '45', 'aaa', 1, false, 3, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1320, '45', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1536, '45', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1024, '45', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (100, 101, 101, 45, '45', 200),(200, 102, 102, 1024, '45', 200),(300, 103, 103, 1024, 'bbb', 200),(400, 104, 104, 3, '1024', 200),(500, 105, 105, 3, 'ada', 300)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (130, 101, 101, 45, '45', 200),(250, 102, 102, 1024, '1024', 200),(370, 103, 103, 1024, 'ccc', 300),(489, 104, 104, 3, '12', 300),(520, 105, 105, 3, 'axa', 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (101, 11, 'aaa', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (121, 10, 'aaa', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (131, 12, 'bbb', 10, 200)")
@@ -128,9 +149,9 @@ func TestTableAggrCases(t *testing.T) {
 	// scatter aggregate order by null
 	mcmp.ExecWithColumnCompare("select count(*) from t_user order by null")
 	// scatter aggregate symtab lookup error
-	// Column 'id' in order clause is ambiguous (errno 1052) (sqlstate 23000) during query: select id, b as id, count(*) from t_user order by id
 	// [MySQL Error] for query: select id, b as id, count(*) from t_user order by id
-	//mcmp.ExecWithColumnCompare("select id, b as id, count(*) from t_user order by id")
+	_, err := mcmp.ExecAndIgnore("select id, b as id, count(*) from t_user order by id")
+	require.NoError(t, err)
 	// scatter aggregate group by select col
 	mcmp.ExecWithColumnCompare("select col from t_user group by col")
 	// scatter aggregate multiple group by (columns)
@@ -138,15 +159,14 @@ func TestTableAggrCases(t *testing.T) {
 	// scatter aggregate multiple group by (numbers)
 	mcmp.ExecWithColumnCompare("select a, b, count(*) from t_user group by 2, 1")
 	// scatter aggregate group by aggregate function
-	// VT03005: cannot group on 'count(*)'
-	//mcmp.ExecWithColumnCompare("select count(*) b from t_user group by b")
+	_, err = mcmp.ExecAndIgnore("select count(*) b from t_user group by b")
+	require.ErrorContains(t, err, "VT03005: cannot group on 'count(*)'")
 	// scatter aggregate multiple group by columns inverse order
 	mcmp.ExecWithColumnCompare("select a, b, count(*) from t_user group by b, a")
 	// scatter aggregate group by column number
 	mcmp.ExecWithColumnCompare("select col from t_user group by 1")
 	// scatter aggregate group by invalid column number
-	// Unknown column '2' in 'group statement'
-	//mcmp.ExecWithColumnCompare("select col from t_user group by 2")
+	mcmp.AssertContainsError("select col from t_user group by 2", "Unknown column '2' in 'group statement'")
 	// scatter aggregate with numbered order by columns
 	mcmp.ExecWithColumnCompare("select a, b, c, d, count(*) from t_user group by 1, 2, 3 order by 1, 2, 3")
 	// scatter aggregate with named order by columns
@@ -158,8 +178,7 @@ func TestTableAggrCases(t *testing.T) {
 	// scatter aggregate with some descending order by cols
 	mcmp.ExecWithColumnCompare("select a, b, c, count(*) from t_user group by 3, 2, 1 order by 1 desc, 3 desc, b")
 	// invalid order by column numner for scatter
-	// Unknown column '5' in 'order clause'
-	//mcmp.ExecWithColumnCompare("select col, count(*) from t_user group by col order by 5 limit 10")
+	mcmp.AssertContainsError("select col, count(*) from t_user group by col order by 5 limit 10", "Unknown column '5' in 'order clause'")
 	// aggregate with limit
 	mcmp.ExecWithColumnCompare("select col, count(*) from t_user group by col limit 10")
 	// Group by with collate operator
@@ -167,8 +186,7 @@ func TestTableAggrCases(t *testing.T) {
 	// Group by invalid column number (code is duplicated from symab).
 	//mcmp.ExecWithColumnCompare("select id from t_user group by 1.1")
 	// Group by out of range column number (code is duplicated from symab).
-	// Unknown column '2' in 'group statement'
-	//mcmp.ExecWithColumnCompare("select id from t_user group by 2")
+	mcmp.AssertContainsError("select id from t_user group by 2", "Unknown column '2' in 'group statement'")
 	// aggregate query with order by aggregate column along with NULL
 	mcmp.ExecWithColumnCompare("select col, count(*) k from t_user group by col order by null, k")
 	// aggregate query with order by NULL
@@ -193,6 +211,7 @@ func TestTableAggrCases(t *testing.T) {
 	// actual  : []string{"group_concat(f_int order by `name` asc)", "id"}
 	// column names do not match - the expected values are what mysql produced
 	// mcmp.ExecWithColumnCompare("select group_concat(f_int order by name), id from t_user group by id, col")
+	mcmp.Exec("select group_concat(f_int order by name), id from t_user group by id, col")
 	mcmp.ExecWithColumnCompare("select group_concat(f_int order by `name` asc), id from t_user group by id, col")
 	// Scatter order by is complex with aggregates in select
 	mcmp.ExecWithColumnCompare("select col, count(*) from t_user group by col order by col+1")
@@ -237,11 +256,13 @@ func TestTableAggrCases(t *testing.T) {
 	// actual  : []string{"max(t_user_0.col)"}
 	// column names do not match - the expected values are what mysql produced
 	//mcmp.ExecWithColumnCompare("select max(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar")
+	mcmp.Exec("select max(t_user.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar")
 	// min spread across join RHS
 	// expected: []string{"min(t_user_extra.col)"}
 	// actual  : []string{"min(t_user_extra_0.col)"}
 	// column names do not match - the expected values are what mysql produced
 	//mcmp.ExecWithColumnCompare("select min(t_user_extra.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar")
+	mcmp.Exec("select min(t_user_extra.col) from t_user join t_user_extra on t_user.foo = t_user_extra.bar")
 	// Grouping on join
 	mcmp.ExecWithColumnCompare("select t_user.a from t_user join t_user_extra group by t_user.a")
 	// Aggregates and joins
@@ -285,4 +306,5 @@ func TestTableAggrCases(t *testing.T) {
 	// actual  : []string{"col", "min(t_user_extra_0.baz)", "f_key", "max(t_user_extra_0.bar)"}
 	// column names do not match - the expected values are what mysql produced
 	//mcmp.ExecWithColumnCompare("select t_user.col, min(t_user_extra.baz), t_user.f_key, max(t_user_extra.bar) from t_user join t_user_extra on t_user.col = t_user_extra.bar group by t_user.col, t_user.f_key")
+	mcmp.Exec("select t_user.col, min(t_user_extra.baz), t_user.f_key, max(t_user_extra.bar) from t_user join t_user_extra on t_user.col = t_user_extra.bar group by t_user.col, t_user.f_key")
 }

@@ -4,75 +4,129 @@ import (
 	"testing"
 )
 
-func TestOne(t *testing.T) {
+func TestTableFilterCases(t *testing.T) {
 	mcmp, closer := start(t)
 	defer closer()
-	//因为分表会在plan层依赖库名这里要加个use ks语句
 	mcmp.Exec("use user")
-	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,someColumn,name) values (1, 'a', 'aaa', 1, false,null,'a'),(2, 'b', 'bbb', 2, false,null,'b'),(3, 'c', 'ccc', 3, false,'test','c'),(4, '1', 'ccc', 3, false,'test','c'),(5, 'a', 'aaa', 1,false,'test', '\\'')")
+	mcmp.Exec("insert into t_user(id,col,f_key,f_tinyint,f_bit,someColumn,name) values (1, '5', 'aaa', 1, false,null,'a'),(2, 'b', 'bbb', 2, false,null,'b'),(3, '1', 'ccc', 3, false,'test','c'),(4, '1', 'ccc', 3, false,'test','c'),(5, 'a', 'aaa', 1,false,'test', '\\'')")
 
-	// table_filter_cases.json
-	mcmp.ExecWithColumnCompare("select id from t_user")
-	mcmp.ExecWithColumnCompare("select id from t_user where someColumn = null")
-	mcmp.ExecWithColumnCompare("SELECT id from t_user where someColumn <=> null")
-	mcmp.ExecWithColumnCompare("select id from t_user where (col, name) in (('b', 'b')) and id = 2")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (11, 'a', 'aaa', 1, false, 1, 2, 3, 100,  200,  1 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (12, '3', 'bbb', 2, false, 2, 3, 4, 103,  200,  1 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (13, 'a', 'ccc', 3, false, 3, 4, 5, 100,  200, 'a')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (15, '5', 'ccc', 3, false, 3, 4, 5, 103,  200,  4 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (6,  '2', 'aaa', 1, false, 1, 2, 3, 100,  300,  2 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (7,  '2', 'bbb', 2, false, 2, 3, 4, 100,  300,  3 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  '2', 'ccc', 3, false, 3, 4, 5, 102,  300,  4 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  '2', 'aaa', 1, false, 1, 2, 3, 100,  300,  2 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, '2', 'aaa', 1, false, 1, 2, 3, 100,  300,  2 )")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (1,  1, 2, 200, '1', 200, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (2,  2, 4, 200, '3', 200, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (3,  3, 4, 200, '5', 200, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (4,  4, 4, 200, '3', 200, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (5,  2, 2, 5,   '2', 5  , 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (6,  2, 3, 300, '2', 200, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (7,  2, 3, 300, '2', 200, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (8,  8, 5, 300, '4', 300, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (9,  9, 3, 300, '5', 300, 5)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (10, 5, 3, 300, '4', 300, 5)")
 
-	mcmp.ExecWithColumnCompare("select Id from t_user where 1 in ('1','aa', 'bb')")
-	mcmp.ExecWithColumnCompare("select id from t_user where name in (col, 'c')")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 2")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 1+2")
-
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'b' and t_user.id in (1, 2)")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = case t_user.col when 'a' then true else false end and t_user.id in (1, 2)")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'a' and t_user.id in (1, 2) and t_user.name = 'a' and t_user.id = 1")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 1 and t_user.name = 'a' and t_user.id in (1, 2) and t_user.col = 'a'")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 1 or t_user.name = 'a' and t_user.id in (1, 2)")
-	mcmp.ExecWithColumnCompare("select id from t_user where database()")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id > 1")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.name = t_user.col and t_user.col = 'a'")
-	mcmp.ExecWithColumnCompare("select id from t_user where (id, name) = (1, '')")
-	mcmp.ExecWithColumnCompare("select col from t_user where id = 1 or id = 2")
-	mcmp.ExecWithColumnCompare("select col from t_user where id = 1 or id = 2 or id = 3")
-	mcmp.ExecWithColumnCompare("select col from t_user where (id = 1 or id = 2) or (id = 3 or id = 4)")
-
-	mcmp.ExecWithColumnCompare("select a+2 as a from t_user having a = 42")
-	mcmp.ExecWithColumnCompare("select t_user.col + 2 as a from t_user having a = 42")
-	mcmp.ExecWithColumnCompare("select id from t_user where (id = 1 and name ='a') or (id = 2 and someColumn = 'test')")
-	mcmp.ExecWithColumnCompare("select id from t_user where (id = 1 and name ='a') or (id = 3 and name = 'c')")
-
-	mcmp.ExecWithColumnCompare("select textcol1 from t_user where f_tinyint = 2 and t_user.f_tinyint = 2")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'a'")
-	mcmp.ExecWithColumnCompare("select id from t_user where 1 = col")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in (1)")
-
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c')")
-
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c') and col = 'a'")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col is null")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = null")
-
-	mcmp.ExecWithColumnCompare("select id from t_user where not (not col = '3')")
-	mcmp.ExecWithColumnCompare("select id from t_user where (col in ('1', '5') and B or C and col in ('5', '7'))")
-	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 1+0")
-	mcmp.ExecWithColumnCompare("select id from t_user where id = 1 and t_user.col = 1+0")
-
-	//        	            	target: user.80-.primary: vttablet: rpc error: code = InvalidArgument desc = Unknown table 't_user_0' (errno 1051) (sqlstate 42S02) (CallerID: userData1): Sql: "select t_user_0.* from t_user_0 as t_user where col = :col /* INT64 */ and id = :id /* INT64 */", BindVars: {#maxLimit: "type:INT64 value:\"10001\""col: "type:INT64 value:\"5\""id: "type:INT64 value:\"1\""} (errno 1051) (sqlstate 42S02) during query: select t_user.* from t_user t_user where col = 5 and id = 1
-	//mcmp.ExecWithColumnCompare("select t_user.* from t_user t_user where col = 5 and id = 1")
-	//        	            	target: user.80-.primary: vttablet: rpc error: code = NotFound desc = Unknown column 't_user_0.id' in 'field list' (errno 1054) (sqlstate 42S22) (CallerID: userData1): Sql: "select t_user_0.id, `name` from t_user_0 as t_user where t_user_0.id = :t_user_id /* INT64 */ and col = :col /* VARCHAR */", BindVars: {#maxLimit: "type:INT64 value:\"10001\""col: "type:VARCHAR value:\"1\""t_user_id: "type:INT64 value:\"3\""} (errno 1054) (sqlstate 42S22) during query: SELECT t_user.id,name FROM t_user t_user WHERE t_user.id = 3 AND col = '1'
-	//mcmp.ExecWithColumnCompare("SELECT t_user.id,name FROM t_user t_user WHERE t_user.id = 3 AND col = '1'")
-
+	mcmp.ExecWithColumnCompare("select t_user.* from t_user t_user where col = 5 and id = 1")
+	mcmp.ExecWithColumnCompare("SELECT t_user.id,name FROM t_user t_user WHERE t_user.id = 3 AND col = '1'")
 	mcmp.ExecWithColumnCompare("SELECT * FROM t_user  WHERE id = 3 AND col = '1'")
-
 	mcmp.ExecWithColumnCompare("SELECT * FROM t_user  WHERE col = '1' AND col = '1'")
-
 	mcmp.ExecWithColumnCompare("SELECT * /* this is &#x000D;&#x000A; block comment */ FROM /* this is another &#x000A; block comment */ t_user where name='1'")
-
 	mcmp.ExecWithColumnCompare("SELECT * FROM t_user where name='\\'' ")
-
 	mcmp.ExecWithColumnCompare("SELECT name as 'name' FROM t_user")
-
 	mcmp.ExecWithColumnCompare("SELECT INTERVAL(name,1,5) func_status FROM t_user WHERE id = 3 AND col = '1'")
 
-	mcmp.ExecWithColumnCompare("select col from t_user for update")
+	// table_filter_cases.json
 
+	// No where clause
+	mcmp.ExecWithColumnCompare("select id from t_user")
+	// Query that always return empty
+	mcmp.ExecWithColumnCompare("select id from t_user where someColumn = null")
+	// Null Safe Equality Operator is handled correctly
+	mcmp.ExecWithColumnCompare("SELECT id from t_user where someColumn <=> null")
+	// Composite IN clause vs equality
+	mcmp.ExecWithColumnCompare("select id from t_user where (col, name) in (('b', 'b')) and id = 2")
+	// Composite IN: tuple inside tuple, mismiatched values
+	mcmp.AssertContainsError("select id from t_user where ((col1, name), col2) in (('aa', 'bb', 'cc'), (('dd', 'ee'), 'ff'))", "Operand should contain 2 column(s)")
+	// IN clause: LHS is neither column nor composite tuple
+	mcmp.ExecWithColumnCompare("select Id from t_user where 1 in ('aa', 'bb')")
+	// Single table complex in clause
+	mcmp.ExecWithColumnCompare("select id from t_user where name in (col, 'c')")
+	// Single table unique vindex route
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 2")
+	// Single table unique vindex route, but complex expr
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 1+2")
+	// Route with multiple route constraints, SelectIN is the best constraint.
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'b' and t_user.id in (1, 2)")
+	// Route with multiple route constraints and boolean, SelectIN is the best constraint.
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = case t_user.col when 'a' then true else false end and t_user.id in (1, 2)")
+	// Route with multiple route constraints, SelectEqualUnique is the best constraint.
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'a' and t_user.id in (11, 12) and t_user.name = '1' and t_user.id = 11")
+	// Route with multiple route constraints, SelectEqualUnique is the best constraint, order reversed.
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 11 and t_user.name = '1' and t_user.id in (11, 12) and t_user.col = 'a'")
+	// Route with OR and AND clause, must parenthesize correctly.
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id = 1 or t_user.name = 'a' and t_user.id in (1, 2)")
+	// database() call in where clause.
+	mcmp.ExecWithColumnCompare("select id from t_user where database()")
+	// non unique predicate on vindex
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.id > 1")
+	// transitive closures for the win
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.name = t_user.col and t_user.col = 'a'")
+	// deconstruct tuple equality comparisons
+	mcmp.ExecWithColumnCompare("select id from t_user where (id, name) = (1, '')")
+	// optimize ORs to IN route op codes #1
+	mcmp.ExecWithColumnCompare("select col from t_user where id = 1 or id = 2")
+	// optimize ORs to IN route op codes #2
+	mcmp.ExecWithColumnCompare("select col from t_user where id = 1 or id = 2 or id = 3")
+	// optimize ORs to IN route op codes #3
+	mcmp.ExecWithColumnCompare("select col from t_user where (id = 1 or id = 2) or (id = 3 or id = 4)")
+	// Self referencing columns in HAVING should work
+	mcmp.ExecWithColumnCompare("select a+2 as a from t_user having a = 1")
+	// HAVING predicates that use table columns are safe to rewrite if we can move them to the WHERE clause
+	mcmp.ExecWithColumnCompare("select t_user.col + 2 as a from t_user having a = 2")
+	// Single table unique vindex route hiding behind a silly OR
+	mcmp.ExecWithColumnCompare("select id from t_user where (id = 1 and name ='a') or (id = 2 and someColumn = 'test')")
+	// Single table IN vindex route hiding behind OR
+	mcmp.ExecWithColumnCompare("select id from t_user where (id = 1 and name ='a') or (id = 3 and name = 'c')")
+	// two predicates that mean the same thing
+	mcmp.ExecWithColumnCompare("select textcol1 from t_user where foo = 200 and t_user.foo = 200")
+	mcmp.ExecWithColumnCompare("select textcol1 from t_user where f_tinyint = 2 and t_user.f_tinyint = 2")
+	// TableRoute Equal
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 'a'")
+	// TableRoute Equal Swap left and right positions
+	mcmp.ExecWithColumnCompare("select id from t_user where 1 = col")
+	// TableRoute In to Equal
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in (1)")
+	// TableRoute In
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c')")
+	// TableRoute In & Equal PickBestAvailableTindex
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col in ('a', 'b', 'c') and col = 'a'")
+	// TableRoute is null
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.c is null")
+	// TableRoute = null
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.c = null")
+	// TableRoute simplifyExpression
+	mcmp.ExecWithColumnCompare("select id from t_user where not (not col = '3')")
+	// TableRoute or to IN
+	mcmp.ExecWithColumnCompare("select id from t_user where (col in ('1', '5') and B or C and col in ('5', '7'))")
+	// Single table unique tindex route, but complex expr
+	mcmp.ExecWithColumnCompare("select id from t_user where t_user.col = 1+0")
+	// Single table unique tindex route, but complex expr
+	mcmp.ExecWithColumnCompare("select id from t_user where id = 10 and t_user.col = 1+1")
+	// Multi-route unique vindex constraint
+	mcmp.ExecWithColumnCompare("select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where t_user.id = 6")
+	// Multi-route with cross-route constraint
+	mcmp.ExecWithColumnCompare("select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.user_id = t_user.col")
+	// Multi-route with non-route constraint, should use first route.
+	mcmp.ExecWithColumnCompare("select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where 1 = 1")
+	// not supported transitive closures with equality inside of an OR
+	mcmp.AssertContainsError("select id from t_user, t_user_extra where t_user.id = t_user_extra.col and (t_user_extra.col = t_user_extra.user_id or t_user_extra.col2 = t_user_extra.name)", "Column 'id' in field list is ambiguous")
+	mcmp.ExecWithColumnCompare("select t_user.id from t_user, t_user_extra where t_user.id = t_user_extra.col and (t_user_extra.col = t_user_extra.user_id or t_user_extra.bar = t_user_extra.baz)")
+	// left join where clauses where we can optimize into an inner join
+	mcmp.ExecWithColumnCompare("select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.foo = 5")
+	// push filter under aggregation
+	mcmp.ExecWithColumnCompare("select count(*) from t_user left join t_user_extra on t_user.id = t_user_extra.bar where IFNULL(t_user_extra.col, 'NOTSET') != 'collections_lock'")
 }

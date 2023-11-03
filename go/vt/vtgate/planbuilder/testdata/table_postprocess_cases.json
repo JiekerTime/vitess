@@ -951,5 +951,406 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "ORDER BY NULL for join",
+    "query": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user join t_music on t_user.id = t_music.id where t_user.id = 1 order by null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user join t_music on t_user.id = t_music.id where t_user.id = 1 order by null",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:1,R:0",
+        "JoinVars": {
+          "t_user_id": 2
+        },
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2, t_user_0.id from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 as a, t_user.col2, t_user.id from t_user where t_user.id = 1",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.col3 from t_music_0 where 1 != 1",
+            "Query": "select t_music.col3 from t_music where t_music.id = :t_user_id",
+            "Table": "t_music",
+            "Values": [
+              ":t_user_id"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY non-key column for join",
+    "query": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user join t_music on t_user.id = t_music.id where t_user.id = 1 order by a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user join t_music on t_user.id = t_music.id where t_user.id = 1 order by a",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:1,R:0",
+        "JoinVars": {
+          "t_user_id": 2
+        },
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "OrderBy": "(0|3) ASC",
+            "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2, t_user_0.id, weight_string(t_user_0.col1) from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 as a, t_user.col2, t_user.id, weight_string(t_user.col1) from t_user where t_user.id = 1 order by a asc",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.col3 from t_music_0 where 1 != 1",
+            "Query": "select t_music.col3 from t_music where t_music.id = :t_user_id",
+            "Table": "t_music",
+            "Values": [
+              ":t_user_id"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY non-key column for implicit join",
+    "query": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user, t_music where t_user.id = t_music.id and t_user.id = 1 order by a",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user, t_music where t_user.id = t_music.id and t_user.id = 1 order by a",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:1,R:0",
+        "JoinVars": {
+          "t_user_id": 2
+        },
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "OrderBy": "(0|3) ASC",
+            "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2, t_user_0.id, weight_string(t_user_0.col1) from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 as a, t_user.col2, t_user.id, weight_string(t_user.col1) from t_user where t_user.id = 1 order by a asc",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.col3 from t_music_0 where 1 != 1",
+            "Query": "select t_music.col3 from t_music where t_music.id = :t_user_id",
+            "Table": "t_music",
+            "Values": [
+              ":t_user_id"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY RAND() for join",
+    "query": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user join t_music on t_user.id = t_music.id where t_user.id = 1 order by RAND()",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 as a, t_user.col2, t_music.col3 from t_user join t_music on t_user.id = t_music.id where t_user.id = 1 order by RAND()",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:1,R:0",
+        "JoinVars": {
+          "t_user_id": 2
+        },
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2, t_user_0.id from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 as a, t_user.col2, t_user.id from t_user where t_user.id = 1 order by RAND()",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.col3 from t_music_0 where 1 != 1",
+            "Query": "select t_music.col3 from t_music where t_music.id = :t_user_id",
+            "Table": "t_music",
+            "Values": [
+              ":t_user_id"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "limit for joins. Can't push down the limit because result\n# counts get multiplied by join operations.",
+    "query": "select t_user.col from t_user join t_user_extra limit 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra limit 1",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(1)",
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+                "Query": "select t_user.col from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                "Query": "select 1 from t_user_extra",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "ordering on the left side of the join",
+    "query": "select name from t_user, t_music order by name",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select name from t_user, t_music order by name",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select `name`, weight_string(`name`) from t_user_0 where 1 != 1",
+            "OrderBy": "(0|1) ASC",
+            "Query": "select `name`, weight_string(`name`) from t_user order by `name` asc",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_music_0 where 1 != 1",
+            "Query": "select 1 from t_music",
+            "Table": "t_music"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "join order by with ambiguous column reference ; valid in MySQL",
+    "query": "select name, name from t_user, t_music order by name",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select name, name from t_user, t_music order by name",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:0",
+        "TableName": "t_user_t_music",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select `name`, weight_string(`name`) from t_user_0 where 1 != 1",
+            "OrderBy": "(0|1) ASC",
+            "Query": "select `name`, weight_string(`name`) from t_user order by `name` asc",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_music_0 where 1 != 1",
+            "Query": "select 1 from t_music",
+            "Table": "t_music"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by column number with coalesce with columns from both sides",
+    "query": "select id from t_user, t_user_extra order by coalesce(t_user.col, t_user_extra.col)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user, t_user_extra order by coalesce(t_user.col, t_user_extra.col)",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "(1|2) ASC",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,R:0,R:1",
+            "JoinVars": {
+              "t_user_col": 1
+            },
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select id, t_user_0.col from t_user_0 where 1 != 1",
+                "Query": "select id, t_user.col from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select coalesce(:t_user_col, t_user_extra_0.col), weight_string(coalesce(:t_user_col, t_user_extra_0.col)) from t_user_extra_0 where 1 != 1",
+                "Query": "select coalesce(:t_user_col, t_user_extra.col), weight_string(coalesce(:t_user_col, t_user_extra.col)) from t_user_extra",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   }
 ]

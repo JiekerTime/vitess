@@ -921,5 +921,332 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "Multi-route unique vindex constraint",
+    "query": "select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where t_user.id = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where t_user.id = 5",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_col": 0
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user where t_user.id = 5",
+            "Table": "t_user",
+            "Values": [
+              "INT64(5)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id from t_user_extra where t_user_extra.col = :t_user_col",
+            "TableValues": [
+              ":t_user_col"
+            ],
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Multi-route with cross-route constraint",
+    "query": "select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.user_id = t_user.col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.user_id = t_user.col",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_col": 0
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id from t_user_extra where t_user_extra.user_id = :t_user_col and t_user_extra.col = :t_user_col",
+            "Table": "t_user_extra",
+            "Values": [
+              ":t_user_col"
+            ],
+            "TableValues": [
+              ":t_user_col"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Multi-route with non-route constraint, should use first route.",
+    "query": "select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where 1 = 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user_extra.id from t_user join t_user_extra on t_user.col = t_user_extra.col where 1 = 1",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_col": 0
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user where 1 = 1",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.id from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.id from t_user_extra where t_user_extra.col = :t_user_col and 1 = 1",
+            "TableValues": [
+              ":t_user_col"
+            ],
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "not supported transitive closures with equality inside of an OR",
+    "query": "select id from t_user, t_user_extra where t_user.id = t_user_extra.col and (t_user_extra.col = t_user_extra.user_id or t_user_extra.col2 = t_user_extra.name)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user, t_user_extra where t_user.id = t_user_extra.col and (t_user_extra.col = t_user_extra.user_id or t_user_extra.col2 = t_user_extra.name)",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "R:0",
+        "JoinVars": {
+          "t_user_extra_col": 0
+        },
+        "TableName": "t_user_extra_t_user",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = t_user_extra.user_id or t_user_extra.col2 = t_user_extra.`name`",
+            "Table": "t_user_extra"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where t_user.id = :t_user_extra_col",
+            "Table": "t_user",
+            "Values": [
+              ":t_user_extra_col"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "left join where clauses where we can optimize into an inner join",
+    "query": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.foobar = 5",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.foobar = 5",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "t_user_col": 1
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.id, t_user.col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra where t_user_extra.foobar = 5 and t_user_extra.col = :t_user_col",
+            "TableValues": [
+              ":t_user_col"
+            ],
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "push filter under aggregation",
+    "query": "select count(*) from t_user left join t_user_extra on t_user.id = t_user_extra.bar where IFNULL(t_user_extra.collections_status, 'NOTSET') != 'collections_lock'",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user left join t_user_extra on t_user.id = t_user_extra.bar where IFNULL(t_user_extra.collections_status, 'NOTSET') != 'collections_lock'",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] * COALESCE([COLUMN 1], INT64(1)) as count(*)",
+              "[COLUMN 2] as collections_status"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Filter",
+                "Predicate": "IFNULL(t_user_extra.collections_status, 'NOTSET') != 'collections_lock'",
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "LeftJoin",
+                    "JoinColumnIndexes": "L:0,R:0,R:1",
+                    "JoinVars": {
+                      "t_user_id": 1
+                    },
+                    "TableName": "t_user_t_user_extra",
+                    "Inputs": [
+                      {
+                        "OperatorType": "Aggregate",
+                        "Variant": "Ordered",
+                        "Aggregates": "sum_count_star(0) AS count(*)",
+                        "GroupBy": "(1|2)",
+                        "ResultColumns": 2,
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select count(*), t_user_0.id, weight_string(t_user_0.id) from t_user_0 where 1 != 1 group by t_user_0.id, weight_string(t_user_0.id)",
+                            "OrderBy": "(1|2) ASC",
+                            "Query": "select count(*), t_user.id, weight_string(t_user.id) from t_user group by t_user.id, weight_string(t_user.id) order by t_user.id asc",
+                            "Table": "t_user"
+                          }
+                        ]
+                      },
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_user_extra_0.collections_status from t_user_extra_0 where 1 != 1 group by t_user_extra_0.collections_status",
+                        "Query": "select count(*), t_user_extra.collections_status from t_user_extra where t_user_extra.bar = :t_user_id group by t_user_extra.collections_status",
+                        "Table": "t_user_extra"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   }
 ]
