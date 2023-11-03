@@ -2,6 +2,7 @@ package split_table
 
 import (
 	"testing"
+
 	"vitess.io/vitess/go/test/endtoend/utils"
 )
 

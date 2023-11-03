@@ -194,18 +194,9 @@ func TestTableAggrCases(t *testing.T) {
 	// weight_string addition to group by
 	mcmp.ExecWithColumnCompare("select lower(f_key) as v, count(*) from t_user group by v")
 	// weight_string addition to group by when also there in order by
-	// mysql返回结果未聚合
-	//mcmp.ExecWithColumnCompare("select char_length(f_key) as a, count(*) from t_user group by a order by a")
+	mcmp.ExecWithColumnCompare("select char_length(f_key) as a123, count(*) from t_user group by a order by a123")
 	// group by column alias
-	//  Vitess Results:
-	// [INT32(97) INT64(4)]
-	// [INT32(98) INT64(1)]
-	// [INT32(99) INT64(3)]
-	// MySQL Results:
-	// [INT32(97) INT64(2)]
-	// [INT32(98) INT64(3)]
-	// [INT32(99) INT64(3)]
-	//mcmp.ExecWithColumnCompare("select ascii(f_key) as a, count(*) from t_user group by a")
+	mcmp.ExecWithColumnCompare("select ascii(f_key) as a123, count(*) from t_user group by a123")
 	// group_concat on single shards
 	// expected: []string{"group_concat(f_int order by name)", "id"}
 	// actual  : []string{"group_concat(f_int order by `name` asc)", "id"}
