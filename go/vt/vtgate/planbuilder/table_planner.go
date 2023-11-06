@@ -31,6 +31,11 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 				return false, nil, err
 			}
 
+			if node.eroute.TruncateColumnCount != 0 {
+				if tableRoute, ok := tablePlan.Primitive().(*engine.TableRoute); ok {
+					tableRoute.SetTruncateColumnCount(node.eroute.TruncateColumnCount)
+				}
+			}
 			return false, tablePlan, nil
 		case *insert:
 			ctx.KsPrimitive = node.eInsert
