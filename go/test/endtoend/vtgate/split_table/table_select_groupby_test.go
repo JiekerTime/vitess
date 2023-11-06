@@ -111,7 +111,8 @@ func TestTableAggrCases(t *testing.T) {
 	// MySQL Results:
 	// [INT64(18) INT64(1)]
 	// 分片结果返回的顺序问题
-	//mcmp.ExecWithColumnCompare("select id, count(*) from t_user")
+	_, err := mcmp.ExecAndIgnore("select id, count(*) from t_user")
+	require.NoError(t, err)
 
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1,  '3',    'aaa', 1, false, 1, 2, 3, 100, 200, 'abc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (2,  '3',    'bbb', 2, false, 2, 3, 4, 103, 200, 'abc')")
@@ -150,7 +151,7 @@ func TestTableAggrCases(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select count(*) from t_user order by null")
 	// scatter aggregate symtab lookup error
 	// [MySQL Error] for query: select id, b as id, count(*) from t_user order by id
-	_, err := mcmp.ExecAndIgnore("select id, b as id, count(*) from t_user order by id")
+	_, err = mcmp.ExecAndIgnore("select id, b as id, count(*) from t_user order by id")
 	require.NoError(t, err)
 	// scatter aggregate group by select col
 	mcmp.ExecWithColumnCompare("select col from t_user group by col")
@@ -184,6 +185,11 @@ func TestTableAggrCases(t *testing.T) {
 	// Group by with collate operator
 	mcmp.ExecWithColumnCompare("select t_user.col1 as a from t_user where t_user.id = 5 group by a collate utf8_general_ci")
 	// Group by invalid column number (code is duplicated from symab).
+	// results mismatched.
+	//        Vitess Results:
+	//        [INT64(8)]
+	//        MySQL Results:
+	//        [INT64(1)]
 	//mcmp.ExecWithColumnCompare("select id from t_user group by 1.1")
 	// Group by out of range column number (code is duplicated from symab).
 	mcmp.AssertContainsError("select id from t_user group by 2", "Unknown column '2' in 'group statement'")

@@ -372,6 +372,7 @@
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
+                "OrderBy": "(0|4) ASC",
                 "Variant": "Scatter-EqualUnique",
                 "Keyspace": {
                   "Name": "user",

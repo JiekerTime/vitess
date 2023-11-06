@@ -222,7 +222,7 @@ func tryPushingDownOrderingForSplitTable(ctx *plancontext.PlanningContext, in *O
 	return in, rewrite.SameTree, nil
 }
 
-func tryPushingDownProjectionForSplitTable(ctx *plancontext.PlanningContext, p *Projection) (ops.Operator, *rewrite.ApplyResult, error) {
+func tryPushingDownProjectionForSplitTable(_ *plancontext.PlanningContext, p *Projection) (ops.Operator, *rewrite.ApplyResult, error) {
 	switch src := p.Source.(type) {
 	case *TableRoute:
 		return rewrite.Swap(p, src, "pushed projection under tableRoute")
@@ -233,7 +233,7 @@ func tryPushingDownProjectionForSplitTable(ctx *plancontext.PlanningContext, p *
 
 func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horizonLike) (ops.Operator, *rewrite.ApplyResult, error) {
 	rb, isTableRoute := in.src().(*TableRoute)
-	if isTableRoute && rb.IsSingleSplitTable() {
+	if isTableRoute && rb.IsSingleSplitTable() && !isCrossShard(ctx.GetRoute()) {
 		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 

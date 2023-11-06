@@ -114,35 +114,50 @@ func TestTablePostprocessCases(t *testing.T) {
 	//        [INT64(10) NULL]
 	//        MySQL Results:
 	//        [INT64(10) INT32(100)]
-	//mcmp.ExecWithColumnCompare("select count(id), intcol from t_user")
+	// 返回结果不稳定，intcol是随机的一行
+	_, err = mcmp.ExecAndIgnore("select count(id), intcol from t_user")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select count(id) from t_user")
 	// aggregation and non-aggregations column with order by
 	//results mismatched.
 	//        Vitess Results:
 	//        [INT64(10) NULL]
 	//        MySQL Results:
 	//        [INT64(10) INT32(100)]
-	//mcmp.ExecWithColumnCompare("select count(id), intcol from t_user order by 2")
+	// 返回结果不稳定，intcol是随机的一行
+	_, err = mcmp.ExecAndIgnore("select count(id), intcol from t_user order by 2")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select count(id) from t_user order by 1")
 	// min column
 	// results mismatched.
 	//        Vitess Results:
 	//        [INT64(1) CHAR("3")]
 	//        MySQL Results:
 	//        [INT64(1) CHAR("6")]
-	//mcmp.ExecWithColumnCompare("select min(id),col from t_user")
+	// 返回结果不稳定，col是随机的一行
+	_, err = mcmp.ExecAndIgnore("select min(id),col from t_user")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select min(id) from t_user")
 	// max column
 	//results mismatched.
 	//        Vitess Results:
 	//        [INT64(10) CHAR("3")]
 	//        MySQL Results:
 	//        [INT64(10) CHAR("6")]
-	//mcmp.ExecWithColumnCompare("select max(id),col from t_user")
+	// 返回结果不稳定，col是随机的一行
+	_, err = mcmp.ExecAndIgnore("select max(id),col from t_user")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select max(id) from t_user")
 	// select multi aggregator func columns
 	// results mismatched.
 	//         Vitess Results:
 	//        [INT64(100865) INT64(6) INT64(15) CHAR("a")]
 	//        MySQL Results:
 	//        [INT64(100865) INT64(6) INT64(15) CHAR("2")]
-	//mcmp.ExecWithColumnCompare("select max(id),min(id),count(*),col from t_user")
+	// 返回结果不稳定，col是随机的一行
+	_, err = mcmp.ExecAndIgnore("select max(id),min(id),count(*),col from t_user")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select max(id),min(id),count(*) from t_user")
 	// aggregator func columns with single shard
 	mcmp.ExecWithColumnCompare("select count(*) from t_user where id=5")
 	// aggregator func columns with single shard and single table
@@ -167,7 +182,9 @@ func TestTablePostprocessCases(t *testing.T) {
 	//        [CHAR("3")]
 	//        MySQL Results:
 	//        [CHAR("6")]
-	//mcmp.ExecWithColumnCompare("select t_user.col from t_user join t_user_extra limit 1")
+	// 返回结果不稳定，随机返回了一行
+	_, err = mcmp.ExecAndIgnore("select t_user.col from t_user join t_user_extra limit 1")
+	require.NoError(t, err)
 	// ordering on the left side of the join
 	mcmp.ExecWithColumnCompare("select name from t_user, t_music order by name")
 	// join order by with ambiguous column reference ; valid in MySQL

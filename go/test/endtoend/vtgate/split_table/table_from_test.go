@@ -80,6 +80,7 @@ func TestTableFromCases(t *testing.T) {
 	//        [FLOAT64(303)]
 	//        [FLOAT64(305)]
 	//        [FLOAT64(207)]
+	// 未排序，结果集不稳定
 	//mcmp.Exec("select t_user.foo+t_user_extra.col+1 from t_user left join t_user_extra on t_user.col = t_user_extra.col")
 	//results mismatched.
 	//        Vitess Results:
@@ -90,7 +91,11 @@ func TestTableFromCases(t *testing.T) {
 	//        [FLOAT64(206)]
 	//        [FLOAT64(206)]
 	//        [FLOAT64(206)]
+	// 类型不一致
 	//mcmp.Exec("select t_user.foo+t_user_extra.col+1 as a from t_user left join t_user_extra on t_user.col = t_user_extra.col order by a")
+	mcmp.AssertMatchesAnyNoCompare("select t_user.foo+t_user_extra.col+1 as a from t_user left join t_user_extra on t_user.col = t_user_extra.col order by a",
+		"[[INT32(206)] [INT32(206)] [INT32(206)] [INT32(206)] [INT32(212)] [INT32(212)] [INT32(212)] [INT32(212)] [INT32(306)] [INT32(306)] [INT32(312)] [INT32(312)] [INT32(313)] [INT32(313)] [INT32(313)] [INT32(313)] [INT32(313)] [INT32(313)]]",
+		"[[FLOAT64(206)] [FLOAT64(206)] [FLOAT64(206)] [FLOAT64(206)] [FLOAT64(212)] [FLOAT64(212)] [FLOAT64(212)] [FLOAT64(212)] [FLOAT64(306)] [FLOAT64(306)] [FLOAT64(312)] [FLOAT64(312)] [FLOAT64(313)] [FLOAT64(313)] [FLOAT64(313)] [FLOAT64(313)] [FLOAT64(313)] [FLOAT64(313)]]")
 	// left join where clauses #3 - assert that we can evaluate BETWEEN with the evalengine
 	mcmp.ExecWithColumnCompare("select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.col between 10 and 20")
 	// left join where clauses #2

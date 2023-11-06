@@ -1,6 +1,10 @@
 package split_table
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 // table_memory_sort_cases.json
 func TestMemorySortCases(t *testing.T) {
@@ -43,7 +47,10 @@ func TestMemorySortCases(t *testing.T) {
 	//        [INT32(1) INT32(2) INT64(6)]
 	//        [INT32(2) INT32(3) INT64(5)]
 	//        [INT32(3) INT32(4) INT64(4)]
-	//mcmp.ExecWithColumnCompare("select a, b, count(*) from t_user group by a order by b")
+	// b的结果为随机，order by b会出现两边结果不一致的情况
+	_, err := mcmp.ExecAndIgnore("select a, b, count(*) from t_user group by a order by b")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select a, count(*) from t_user group by a order by a")
 	// scatter aggregate order by references aggregate expression
 	// results mismatched.
 	//        Vitess Results:
@@ -54,7 +61,10 @@ func TestMemorySortCases(t *testing.T) {
 	//        [INT32(3) INT32(4) INT64(4)]
 	//        [INT32(2) INT32(3) INT64(5)]
 	//        [INT32(1) INT32(2) INT64(6)]
-	//mcmp.ExecWithColumnCompare("select a, b, count(*) k from t_user group by a order by k")
+	// b的结果为随机，会出现两边结果不一致的情况
+	_, err = mcmp.ExecAndIgnore("select a, b, count(*) k from t_user group by a order by k")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select a, count(*) k from t_user group by a order by k")
 	// select a, b, count(*) k from t_user group by a order by b, a, k
 	// results mismatched.
 	//        Vitess Results:
@@ -65,7 +75,10 @@ func TestMemorySortCases(t *testing.T) {
 	//        [INT32(1) INT32(2) INT64(6)]
 	//        [INT32(2) INT32(3) INT64(5)]
 	//        [INT32(3) INT32(4) INT64(4)]
-	//mcmp.ExecWithColumnCompare("select a, b, count(*) k from t_user group by a order by b, a, k")
+	// b的结果为随机，order by b, a, k会出现两边结果不一致的情况
+	_, err = mcmp.ExecAndIgnore("select a, b, count(*) k from t_user group by a order by b, a, k")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select a, count(*) k from t_user group by a order by b, a, k")
 	// scatter aggregate with memory sort and limit
 	//results mismatched.
 	//        Vitess Results:
@@ -76,7 +89,10 @@ func TestMemorySortCases(t *testing.T) {
 	//        [INT32(1) INT32(2) INT64(6)]
 	//        [INT32(2) INT32(3) INT64(5)]
 	//        [INT32(3) INT32(4) INT64(4)]
-	//mcmp.ExecWithColumnCompare("select a, b, count(*) k from t_user group by a order by k desc limit 10")
+	// b的结果为随机，会出现两边结果不一致的情况
+	_, err = mcmp.ExecAndIgnore("select a, b, count(*) k from t_user group by a order by k desc limit 10")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select a, count(*) k from t_user group by a order by k desc limit 10")
 	// scatter aggregate with memory sort and order by number
 	// results mismatched.
 	//        Vitess Results:
@@ -87,7 +103,10 @@ func TestMemorySortCases(t *testing.T) {
 	//        [INT32(1) INT32(2) INT64(6)]
 	//        [INT32(2) INT32(3) INT64(5)]
 	//        [INT32(3) INT32(4) INT64(4)]
-	//mcmp.ExecWithColumnCompare("select a, b, count(*) k from t_user group by a order by 1,3")
+	// b的结果为随机，会出现两边结果不一致的情况
+	_, err = mcmp.ExecAndIgnore("select a, b, count(*) k from t_user group by a order by 1,3")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select a, count(*) k from t_user group by a order by 1,2")
 	// scatter aggregate with memory sort and order by number, reuse weight_string # we have to use a meaningless construct to test this
 	mcmp.ExecWithColumnCompare("select textcol1 as t, count(*) k from t_user group by textcol1 order by textcol1, k, textcol1")
 	// unary expression
@@ -101,16 +120,17 @@ func TestMemorySortCases(t *testing.T) {
 	// scatter aggregate order by references ungrouped column, table index EqualUnique
 	// results mismatched.
 	//        Vitess Results:
-	//        [INT32(2) INT32(2) INT64(2)]
-	//        [INT32(1) INT32(2) INT64(2)]
-	//        [INT32(1) INT32(2) INT64(2)]
-	//        [INT32(2) INT32(3) INT64(2)]
+	//        [INT32(2) INT32(2) INT64(4)]
+	//        [INT32(1) INT32(2) INT64(4)]
 	//        [INT32(3) INT32(4) INT64(2)]
 	//        MySQL Results:
 	//        [INT32(1) INT32(2) INT64(4)]
 	//        [INT32(2) INT32(3) INT64(4)]
 	//        [INT32(3) INT32(4) INT64(2)]
-	//mcmp.ExecWithColumnCompare("select a, b, count(*) from t_user where col = 1024 group by a order by b")
+	// b的结果为随机，会出现两边结果不一致的情况
+	_, err = mcmp.ExecAndIgnore("select a, b, count(*) from t_user where col = 1024 group by a order by b")
+	require.NoError(t, err)
+	mcmp.ExecWithColumnCompare("select a, count(*) from t_user where col = 1024 group by a order by a")
 	// vindex EqualUnique, table index EqualUnique
 	mcmp.ExecWithColumnCompare("select a, b, count(*) from t_user where col = 1024 and id = 100865 group by a order by b")
 	// order by on a cross-shard query. Note: this happens only when an order by column is from the second table

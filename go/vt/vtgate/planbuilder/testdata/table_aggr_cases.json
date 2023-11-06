@@ -1183,6 +1183,7 @@
                   "Name": "user",
                   "Sharded": true
                 },
+                "OrderBy": "0 ASC",
                 "FieldQuery": "select t_user_0.intcol, count(t_user_0.intcol) from t_user_0 where 1 != 1 group by t_user_0.intcol",
                 "Query": "select t_user.intcol, count(t_user.intcol) from t_user where col = 45 group by t_user.intcol order by t_user.intcol asc",
                 "Table": "t_user",

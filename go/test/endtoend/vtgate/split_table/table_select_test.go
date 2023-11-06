@@ -46,7 +46,8 @@ func TestSelect(t *testing.T) {
 
 	//expected: []string{"1"}
 	//actual  : []string{":vtg1 /* INT64 */"}
-	//mcmp.ExecWithColumnCompare("select 1 from dual")
+	// column names do not match - the expected values are what mysql produced
+	mcmp.Exec("select 1 from dual")
 
 	// No column referenced
 	mcmp.ExecWithColumnCompare("select 1 from t_user")
