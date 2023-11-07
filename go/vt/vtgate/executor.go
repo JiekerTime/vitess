@@ -1808,7 +1808,11 @@ func (e *Executor) handleShow(ctx context.Context, sql string) (*sqltypes.Result
 
 		var destKeyspaces []string
 		if len(userKeyspace) > 0 {
-			destKeyspaces = intersect(userKeyspace, allKeyspace)
+			if len(userKeyspace) == 1 && userKeyspace[0] == "*" {
+				destKeyspaces = allKeyspace
+			} else {
+				destKeyspaces = intersect(userKeyspace, allKeyspace)
+			}
 		} else {
 			destKeyspaces = allKeyspace
 		}

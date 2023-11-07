@@ -916,7 +916,7 @@ func (vh *vtgateHandler) ValidUseDB(c *mysql.Conn, usedb string, authServer mysq
 	usedb = strings.Split(usedb, ":")[0]
 
 	for _, usks := range userkss {
-		if strings.EqualFold(usks, usedb) {
+		if strings.EqualFold(usks, usedb) || usks == "*" {
 			return nil
 		}
 	}

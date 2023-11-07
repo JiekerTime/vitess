@@ -70,7 +70,7 @@ func (asc *AuthServerConfig) ValidClient(user, keyspace, ip string) bool {
 		return entry.KeySpaces[0].IPFilter.FilterIPString(ip)
 	}
 	for _, ks := range entry.KeySpaces {
-		if ks.Name == keyspace {
+		if ks.Name == keyspace || ks.Name == "*" {
 			if len(ks.WhiteIPs) == 0 {
 				return true
 			}
