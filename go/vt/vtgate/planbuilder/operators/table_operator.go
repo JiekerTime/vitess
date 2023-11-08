@@ -187,7 +187,7 @@ func createOperatorFromInsertForSplitTable(ctx *plancontext.PlanningContext, ins
 			if err != nil {
 				return nil, err
 			}*/
-		return nil, err
+		return nil, vterrors.VT12001("Unsupport split table insert into select")
 	}
 	//2、
 

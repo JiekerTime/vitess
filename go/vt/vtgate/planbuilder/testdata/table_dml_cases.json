@@ -957,6 +957,11 @@
     "plan": "VT12001: unsupported: INSERT without splittable column"
   },
   {
+    "comment": "insert into select ",
+    "query": "insert into t_user(id,col) select id ,col from t_user",
+    "plan": "VT12001: unsupported: Unsupport split table insert into select"
+  },
+  {
     "comment": "insert on duplicate key",
     "query": "insert into t_user(id,col) values(1,'col') on duplicate key update intcol = 2",
     "plan": {

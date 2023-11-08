@@ -188,10 +188,7 @@ func buildShowTblPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (e
 	} else {
 		splitTable, _ := vschema.FindSplitTable(show.DbName.String(), show.Tbl.Name.String())
 		if splitTable != nil {
-			splitTableConfig := make(map[string]*vindexes.LogicTableConfig)
-			splitTableConfig[splitTable.LogicTableName] = splitTable
-			tableMap := vindexes.GetFirstActualTableMap(splitTableConfig)
-			sqlparser.RewriteSplitTableName(show, tableMap)
+			RewriteSplitTableNameToFirstTable(show, splitTable)
 		}
 		table, _, _, _, destination, err := vschema.FindTableOrVindex(show.Tbl)
 		//这个地方要求实际表的信息也要存在元数据结构中
@@ -539,6 +536,11 @@ func buildCreateTblPlan(show *sqlparser.ShowCreate, vschema plancontext.VSchema)
 			return nil, err
 		}
 	} else {
+
+		splitTable, _ := vschema.FindSplitTable(show.Op.Qualifier.String(), show.Op.Name.String())
+		if splitTable != nil {
+			RewriteSplitTableNameToFirstTable(show, splitTable)
+		}
 		tbl, _, _, _, destKs, err := vschema.FindTableOrVindex(show.Op)
 		if err != nil {
 			return nil, err
@@ -794,4 +796,9 @@ func buildVschemaVindexesPlan(show *sqlparser.ShowBasic, vschema plancontext.VSc
 		buildVarCharFields("Keyspace", "Name", "Type", "Params", "Owner"),
 	), nil
 
+}
+
+func RewriteSplitTableNameToFirstTable(in sqlparser.SQLNode, splitTable *vindexes.LogicTableConfig) {
+	tableMap := vindexes.GetSingleFirstActualTableMap(splitTable)
+	sqlparser.RewriteSplitTableName(in, tableMap)
 }

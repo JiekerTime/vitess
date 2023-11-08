@@ -63,6 +63,10 @@ func buildVExplainPlan(ctx context.Context, vexplainStmt *sqlparser.VExplainStmt
 }
 
 func explainTabPlan(explain *sqlparser.ExplainTab, vschema plancontext.VSchema) (*planResult, error) {
+	splitTable, _ := vschema.FindSplitTable(explain.Table.Qualifier.String(), explain.Table.Name.String())
+	if splitTable != nil {
+		RewriteSplitTableNameToFirstTable(explain, splitTable)
+	}
 	_, _, ks, _, destination, err := vschema.FindTableOrVindex(explain.Table)
 	if err != nil {
 		return nil, err

@@ -193,5 +193,23 @@
         "SingleShardOnly": true
       }
     }
+  },
+  {
+    "comment": "show create table",
+    "query": "show create table t_user",
+    "plan": {
+      "QueryType": "SHOW",
+      "Original": "show create table t_user",
+      "Instructions": {
+        "OperatorType": "Send",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetDestination": "AnyShard()",
+        "Query": "show create table t_user_0",
+        "SingleShardOnly": true
+      }
+    }
   }
 ]
