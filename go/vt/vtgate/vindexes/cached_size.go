@@ -29,6 +29,18 @@ type cachedObject interface {
 	CachedSize(alloc bool) int64
 }
 
+func (cached *ActualTable) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(24)
+	}
+	// field ActualTableName string
+	size += hack.RuntimeAllocSize(int64(len(cached.ActualTableName)))
+	return size
+}
 func (cached *AutoIncrement) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -44,6 +56,18 @@ func (cached *AutoIncrement) CachedSize(alloc bool) int64 {
 	return size
 }
 func (cached *Binary) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(16)
+	}
+	// field name string
+	size += hack.RuntimeAllocSize(int64(len(cached.name)))
+	return size
+}
+func (cached *BinaryHash) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
 	}
@@ -162,10 +186,44 @@ func (cached *Keyspace) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(24)
+		size += int64(48)
 	}
 	// field Name string
 	size += hack.RuntimeAllocSize(int64(len(cached.Name)))
+	// field AttachTo string
+	size += hack.RuntimeAllocSize(int64(len(cached.AttachTo)))
+	return size
+}
+func (cached *LogicTableConfig) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(112)
+	}
+	// field LogicTableName string
+	size += hack.RuntimeAllocSize(int64(len(cached.LogicTableName)))
+	// field TableVindex vitess.io/vitess/go/vt/vtgate/vindexes.Vindex
+	if cc, ok := cached.TableVindex.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field TableIndexColumn []*vitess.io/vitess/go/vt/vtgate/vindexes.TableColumn
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.TableIndexColumn)) * int64(8))
+		for _, elem := range cached.TableIndexColumn {
+			size += elem.CachedSize(true)
+		}
+	}
+	// field ActualTableList []vitess.io/vitess/go/vt/vtgate/vindexes.ActualTable
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.ActualTableList)) * int64(24))
+		for _, elem := range cached.ActualTableList {
+			size += elem.CachedSize(false)
+		}
+	}
+	// field SequenceColumnName string
+	size += hack.RuntimeAllocSize(int64(len(cached.SequenceColumnName)))
 	return size
 }
 func (cached *LookupHash) CachedSize(alloc bool) int64 {
@@ -250,6 +308,18 @@ func (cached *LookupUnique) CachedSize(alloc bool) int64 {
 	size += hack.RuntimeAllocSize(int64(len(cached.name)))
 	// field lkp vitess.io/vitess/go/vt/vtgate/vindexes.lookupInternal
 	size += cached.lkp.CachedSize(false)
+	return size
+}
+func (cached *Mod) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(24)
+	}
+	// field name string
+	size += hack.RuntimeAllocSize(int64(len(cached.name)))
 	return size
 }
 
@@ -410,6 +480,18 @@ func (cached *Source) CachedSize(alloc bool) int64 {
 	size += cached.TableName.CachedSize(false)
 	return size
 }
+func (cached *SplitTableHash) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(16)
+	}
+	// field name string
+	size += hack.RuntimeAllocSize(int64(len(cached.name)))
+	return size
+}
 
 //go:nocheckptr
 func (cached *Table) CachedSize(alloc bool) int64 {
@@ -477,6 +559,18 @@ func (cached *Table) CachedSize(alloc bool) int64 {
 	}
 	// field Source *vitess.io/vitess/go/vt/vtgate/vindexes.Source
 	size += cached.Source.CachedSize(true)
+	return size
+}
+func (cached *TableColumn) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(48)
+	}
+	// field Column vitess.io/vitess/go/vt/sqlparser.IdentifierCI
+	size += cached.Column.CachedSize(false)
 	return size
 }
 func (cached *UnicodeLooseMD5) CachedSize(alloc bool) int64 {

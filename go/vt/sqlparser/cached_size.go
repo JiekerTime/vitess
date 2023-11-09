@@ -1365,6 +1365,24 @@ func (cached *ExtractedSubquery) CachedSize(alloc bool) int64 {
 	}
 	return size
 }
+func (cached *FieldsClause) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field Terminated string
+	size += hack.RuntimeAllocSize(int64(len(cached.Terminated)))
+	// field Expr vitess.io/vitess/go/vt/sqlparser.Expr
+	if cc, ok := cached.Expr.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field Direction string
+	size += hack.RuntimeAllocSize(int64(len(cached.Direction)))
+	return size
+}
 func (cached *FirstOrLastValueExpr) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -2615,6 +2633,26 @@ func (cached *LineStringExpr) CachedSize(alloc bool) int64 {
 	}
 	return size
 }
+func (cached *LinesClause) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field Starting string
+	size += hack.RuntimeAllocSize(int64(len(cached.Starting)))
+	// field Terminated string
+	size += hack.RuntimeAllocSize(int64(len(cached.Terminated)))
+	// field Expr vitess.io/vitess/go/vt/sqlparser.Expr
+	if cc, ok := cached.Expr.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field Direction string
+	size += hack.RuntimeAllocSize(int64(len(cached.Direction)))
+	return size
+}
 func (cached *LinestrPropertyFuncExpr) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -2643,6 +2681,33 @@ func (cached *Literal) CachedSize(alloc bool) int64 {
 	}
 	// field Val string
 	size += hack.RuntimeAllocSize(int64(len(cached.Val)))
+	return size
+}
+func (cached *LoadDataStmt) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(112)
+	}
+	// field Action string
+	size += hack.RuntimeAllocSize(int64(len(cached.Action)))
+	// field Path string
+	size += hack.RuntimeAllocSize(int64(len(cached.Path)))
+	// field Table vitess.io/vitess/go/vt/sqlparser.TableName
+	size += cached.Table.CachedSize(false)
+	// field Columns vitess.io/vitess/go/vt/sqlparser.Columns
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.Columns)) * int64(32))
+		for _, elem := range cached.Columns {
+			size += elem.CachedSize(false)
+		}
+	}
+	// field FieldsInfo *vitess.io/vitess/go/vt/sqlparser.FieldsClause
+	size += cached.FieldsInfo.CachedSize(true)
+	// field LinesInfo *vitess.io/vitess/go/vt/sqlparser.LinesClause
+	size += cached.LinesInfo.CachedSize(true)
 	return size
 }
 func (cached *LocateExpr) CachedSize(alloc bool) int64 {

@@ -145,10 +145,14 @@ func (cached *DML) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(112)
+		size += int64(128)
 	}
 	// field Query string
 	size += hack.RuntimeAllocSize(int64(len(cached.Query)))
+	// field AST vitess.io/vitess/go/vt/sqlparser.Statement
+	if cc, ok := cached.AST.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
 	// field KsidVindex vitess.io/vitess/go/vt/vtgate/vindexes.Vindex
 	if cc, ok := cached.KsidVindex.(cachedObject); ok {
 		size += cc.CachedSize(true)
@@ -280,7 +284,7 @@ func (cached *Generate) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(48)
+		size += int64(80)
 	}
 	// field Keyspace *vitess.io/vitess/go/vt/vtgate/vindexes.Keyspace
 	size += cached.Keyspace.CachedSize(true)
@@ -289,6 +293,10 @@ func (cached *Generate) CachedSize(alloc bool) int64 {
 	// field Values vitess.io/vitess/go/vt/vtgate/evalengine.Expr
 	if cc, ok := cached.Values.(cachedObject); ok {
 		size += cc.CachedSize(true)
+	}
+	// field Pinned []byte
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.Pinned)))
 	}
 	return size
 }
@@ -338,10 +346,14 @@ func (cached *Insert) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(224)
+		size += int64(320)
 	}
 	// field Keyspace *vitess.io/vitess/go/vt/vtgate/vindexes.Keyspace
 	size += cached.Keyspace.CachedSize(true)
+	// field TargetDestination vitess.io/vitess/go/vt/key.Destination
+	if cc, ok := cached.TargetDestination.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
 	// field Query string
 	size += hack.RuntimeAllocSize(int64(len(cached.Query)))
 	// field VindexValues [][][]vitess.io/vitess/go/vt/vtgate/evalengine.Expr
@@ -397,6 +409,28 @@ func (cached *Insert) CachedSize(alloc bool) int64 {
 	// field Input vitess.io/vitess/go/vt/vtgate/engine.Primitive
 	if cc, ok := cached.Input.(cachedObject); ok {
 		size += cc.CachedSize(true)
+	}
+	// field AST *vitess.io/vitess/go/vt/sqlparser.Insert
+	size += cached.AST.CachedSize(true)
+	// field TableColVindexes *vitess.io/vitess/go/vt/vtgate/vindexes.LogicTableConfig
+	size += cached.TableColVindexes.CachedSize(true)
+	// field TableVindexValues [][]vitess.io/vitess/go/vt/vtgate/evalengine.Expr
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.TableVindexValues)) * int64(24))
+		for _, elem := range cached.TableVindexValues {
+			{
+				size += hack.RuntimeAllocSize(int64(cap(elem)) * int64(16))
+				for _, elem := range elem {
+					if cc, ok := elem.(cachedObject); ok {
+						size += cc.CachedSize(true)
+					}
+				}
+			}
+		}
+	}
+	// field TableVindexValueOffset []int
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.TableVindexValueOffset)) * int64(8))
 	}
 	return size
 }
@@ -1095,6 +1129,173 @@ func (cached *SysVarSetAware) CachedSize(alloc bool) int64 {
 	if cc, ok := cached.Expr.(cachedObject); ok {
 		size += cc.CachedSize(true)
 	}
+	return size
+}
+func (cached *TableDML) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(128)
+	}
+	// field Queries []*vitess.io/vitess/go/vt/proto/query.BoundQuery
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.Queries)) * int64(8))
+		for _, elem := range cached.Queries {
+			size += elem.CachedSize(true)
+		}
+	}
+	// field AST vitess.io/vitess/go/vt/sqlparser.Statement
+	if cc, ok := cached.AST.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field KsidVindex vitess.io/vitess/go/vt/vtgate/vindexes.Vindex
+	if cc, ok := cached.KsidVindex.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field Table []*vitess.io/vitess/go/vt/vtgate/vindexes.Table
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.Table)) * int64(8))
+		for _, elem := range cached.Table {
+			size += elem.CachedSize(true)
+		}
+	}
+	// field ShardRouteParam *vitess.io/vitess/go/vt/vtgate/engine.RoutingParameters
+	size += cached.ShardRouteParam.CachedSize(true)
+	// field TableRouteParam *vitess.io/vitess/go/vt/vtgate/engine.TableRoutingParameters
+	size += cached.TableRouteParam.CachedSize(true)
+	return size
+}
+func (cached *TableDelete) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(8)
+	}
+	// field TableDML *vitess.io/vitess/go/vt/vtgate/engine.TableDML
+	size += cached.TableDML.CachedSize(true)
+	return size
+}
+func (cached *TableRoute) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(112)
+	}
+	// field TableName string
+	size += hack.RuntimeAllocSize(int64(len(cached.TableName)))
+	// field ShardRouteParam *vitess.io/vitess/go/vt/vtgate/engine.RoutingParameters
+	size += cached.ShardRouteParam.CachedSize(true)
+	// field TableRouteParam *vitess.io/vitess/go/vt/vtgate/engine.TableRoutingParameters
+	size += cached.TableRouteParam.CachedSize(true)
+	// field Query vitess.io/vitess/go/vt/sqlparser.Statement
+	if cc, ok := cached.Query.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field FieldQuery string
+	size += hack.RuntimeAllocSize(int64(len(cached.FieldQuery)))
+	// field OrderBy []vitess.io/vitess/go/vt/vtgate/engine.OrderByParams
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.OrderBy)) * int64(42))
+	}
+	return size
+}
+
+//go:nocheckptr
+func (cached *TableRoutingParameters) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(48)
+	}
+	// field TableValues []vitess.io/vitess/go/vt/vtgate/evalengine.Expr
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.TableValues)) * int64(16))
+		for _, elem := range cached.TableValues {
+			if cc, ok := elem.(cachedObject); ok {
+				size += cc.CachedSize(true)
+			}
+		}
+	}
+	// field LogicTable vitess.io/vitess/go/vt/vtgate/vindexes.SplitTableMap
+	if cached.LogicTable != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.LogicTable)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
+		if len(cached.LogicTable) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
+		}
+		for k, v := range cached.LogicTable {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += v.CachedSize(true)
+		}
+	}
+	return size
+}
+
+//go:nocheckptr
+func (cached *TableShow) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field rows [][]vitess.io/vitess/go/sqltypes.Value
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.rows)) * int64(24))
+		for _, elem := range cached.rows {
+			{
+				size += hack.RuntimeAllocSize(int64(cap(elem)) * int64(32))
+				for _, elem := range elem {
+					size += elem.CachedSize(false)
+				}
+			}
+		}
+	}
+	// field Input vitess.io/vitess/go/vt/vtgate/engine.Primitive
+	if cc, ok := cached.Input.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field Like string
+	size += hack.RuntimeAllocSize(int64(len(cached.Like)))
+	// field Tables map[string]*vitess.io/vitess/go/vt/vtgate/vindexes.LogicTableConfig
+	if cached.Tables != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.Tables)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
+		if len(cached.Tables) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
+		}
+		for k, v := range cached.Tables {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += v.CachedSize(true)
+		}
+	}
+	return size
+}
+func (cached *TableUpdate) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(8)
+	}
+	// field TableDML *vitess.io/vitess/go/vt/vtgate/engine.TableDML
+	size += cached.TableDML.CachedSize(true)
 	return size
 }
 

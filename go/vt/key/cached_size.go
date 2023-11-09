@@ -17,6 +17,8 @@ limitations under the License.
 
 package key
 
+import hack "vitess.io/vitess/go/hack"
+
 func (cached *DestinationExactKeyRange) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -39,5 +41,19 @@ func (cached *DestinationKeyRange) CachedSize(alloc bool) int64 {
 	}
 	// field KeyRange *vitess.io/vitess/go/vt/proto/topodata.KeyRange
 	size += cached.KeyRange.CachedSize(true)
+	return size
+}
+func (cached *DestinationTableKeyspaceID) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(24)
+	}
+	// field Table []byte
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.Table)))
+	}
 	return size
 }

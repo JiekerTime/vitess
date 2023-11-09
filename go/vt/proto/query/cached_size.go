@@ -17,7 +17,13 @@ limitations under the License.
 
 package query
 
-import hack "vitess.io/vitess/go/hack"
+import (
+	"math"
+	"reflect"
+	"unsafe"
+
+	hack "vitess.io/vitess/go/hack"
+)
 
 func (cached *BindVariable) CachedSize(alloc bool) int64 {
 	if cached == nil {
@@ -40,6 +46,39 @@ func (cached *BindVariable) CachedSize(alloc bool) int64 {
 		size += hack.RuntimeAllocSize(int64(cap(cached.Values)) * int64(8))
 		for _, elem := range cached.Values {
 			size += elem.CachedSize(true)
+		}
+	}
+	return size
+}
+
+//go:nocheckptr
+func (cached *BoundQuery) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field unknownFields []byte
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.unknownFields)))
+	}
+	// field Sql string
+	size += hack.RuntimeAllocSize(int64(len(cached.Sql)))
+	// field BindVariables map[string]*vitess.io/vitess/go/vt/proto/query.BindVariable
+	if cached.BindVariables != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.BindVariables)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
+		if len(cached.BindVariables) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
+		}
+		for k, v := range cached.BindVariables {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += v.CachedSize(true)
 		}
 	}
 	return size
