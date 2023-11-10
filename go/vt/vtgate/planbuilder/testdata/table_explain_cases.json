@@ -1,0 +1,20 @@
+[
+  {
+    "comment": "explain split table",
+    "query": "explain select * from t_user",
+    "plan": {
+      "QueryType": "EXPLAIN",
+      "Original": "explain select * from t_user",
+      "Instructions": {
+        "OperatorType": "Send",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetDestination": "AnyShard()",
+        "Query": "explain select * from t_user_0",
+        "SingleShardOnly": true
+      }
+    }
+  }
+]

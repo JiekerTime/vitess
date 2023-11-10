@@ -26,15 +26,12 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
 			ctx.KsPrimitive = node.eroute
+			if _, ok := ctx.SplitTableConfig[node.eroute.TableName]; !ok {
+				return false, logicalPlan, err
+			}
 			tablePlan, err := doBuildTablePlan(ctx, node.Select)
 			if err != nil {
 				return false, nil, err
-			}
-
-			if node.eroute.TruncateColumnCount != 0 {
-				if tableRoute, ok := tablePlan.Primitive().(*engine.TableRoute); ok {
-					tableRoute.SetTruncateColumnCount(node.eroute.TruncateColumnCount)
-				}
 			}
 			return false, tablePlan, nil
 		case *insert:
@@ -157,9 +154,13 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 		return plan, nil
 	}
 	sel := sqlparser.GetFirstSelect(ctx.OriginSelStmt)
-	if len(plan.OutputColumns()) == len(sel.SelectExprs) {
-		return plan, nil
+
+	if _, ok := plan.(*concatenateGen4); !ok {
+		if len(plan.OutputColumns()) == len(sel.SelectExprs) {
+			return plan, nil
+		}
 	}
+
 	switch p := plan.(type) {
 	case *tableRoute:
 		p.eroute.SetTruncateColumnCount(len(sel.SelectExprs))
@@ -174,6 +175,22 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 				return nil, err
 			}
 		}
+	case *concatenateGen4:
+		originStatement := ctx.OriginSelStmt
+		defer func() {
+			ctx.OriginSelStmt = originStatement
+		}()
+
+		statements := sqlparser.GetAllSelects(originStatement.(*sqlparser.Union))
+		logicalPlans := plan.Inputs()
+		for index, logicalPlanTemp := range logicalPlans {
+			ctx.OriginSelStmt = &*statements[index]
+			_, errLeft := truncateColumns(ctx, logicalPlanTemp)
+			if errLeft != nil {
+				return nil, errLeft
+			}
+		}
 	}
+
 	return plan, nil
 }

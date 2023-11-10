@@ -46,7 +46,16 @@ func buildExplainPlan(ctx context.Context, stmt sqlparser.Explain, reservedVars 
 			vschema.PlannerWarning("EXPLAIN FORMAT = VTEXPLAIN is deprecated, please use VEXPLAIN QUERIES instead.")
 			return buildVExplainLoggingPlan(ctx, &sqlparser.VExplainStmt{Type: sqlparser.QueriesVExplainType, Statement: explain.Statement, Comments: explain.Comments}, reservedVars, vschema, enableOnlineDDL, enableDirectDDL)
 		default:
-			return buildOtherReadAndAdmin(sqlparser.String(explain), vschema)
+			destination, keyspace, mapTable, found, err := getSplitTableInfo(*explain, vschema)
+			if err != nil {
+				return nil, err
+			}
+			if !found {
+				return buildOtherReadAndAdmin(sqlparser.String(explain), vschema)
+			} else {
+				return buildOtherReadAndAdminForSplitTable(*explain, mapTable, destination, keyspace)
+			}
+
 		}
 	}
 	return nil, vterrors.VT13001(fmt.Sprintf("unexpected explain type: %T", stmt))

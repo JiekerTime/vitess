@@ -29,4 +29,6 @@ func TestTableUnion(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select tbl2.id FROM ((select id from t_user order by id limit 5) union all (select id from t_user order by id desc limit 5)) as tbl1 INNER JOIN t_user as tbl2  ON tbl1.id = tbl2.id")
 	mcmp.ExecWithColumnCompare("select tbl2.id FROM ((select id from t_user order by col limit 5) union all (select id from t_user order by col desc limit 5)) as tbl1 INNER JOIN t_user as tbl2  ON tbl1.id = tbl2.id")
 
+	// union all with group by
+	mcmp.ExecWithColumnCompare("(SELECT id FROM t_user group by id ORDER BY id DESC LIMIT 1 ) UNION ALL (SELECT id FROM t_1 ORDER BY id DESC LIMIT 1)")
 }

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 
 	"github.com/nsf/jsondiff"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,10 @@ func TestSplitTablePlan(t *testing.T) {
 		tabletType:    topodatapb.TabletType_PRIMARY,
 		sysVarEnabled: true,
 		version:       Gen4,
+		keyspace: &vindexes.Keyspace{
+			Name:    "user",
+			Sharded: true,
+		},
 	}
 	output := makeTestOutput(t)
 	testTableFile(t, "table_aggr_cases.json", output, vschema, false)
@@ -33,7 +38,8 @@ func TestSplitTablePlan(t *testing.T) {
 	testTableFile(t, "table_issue.json", output, vschema, false)
 	testTableFile(t, "table_show_cases.json", output, vschema, false)
 	testTableFile(t, "table_union_cases.json", output, vschema, false)
-
+	testTableFile(t, "table_vexplain_cases.json", output, vschema, false)
+	testTableFile(t, "table_explain_cases.json", output, vschema, false)
 }
 
 func TestSplitTableOne(t *testing.T) {
