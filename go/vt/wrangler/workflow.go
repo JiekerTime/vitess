@@ -8,15 +8,16 @@ import (
 	"sync"
 	"time"
 
-	"vitess.io/vitess/go/mysql"
+	"vitess.io/vitess/go/mysql/sqlerror"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/discovery"
 	"vitess.io/vitess/go/vt/log"
 	"vitess.io/vitess/go/vt/topo"
 	"vitess.io/vitess/go/vt/topotools"
 	"vitess.io/vitess/go/vt/vtctl/workflow"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
+	vdiff2 "vitess.io/vitess/go/vt/vttablet/tabletmanager/vdiff"
 
+	binlogdatapb "vitess.io/vitess/go/vt/proto/binlogdata"
 	tabletmanagerdatapb "vitess.io/vitess/go/vt/proto/tabletmanagerdata"
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 )
@@ -56,10 +57,12 @@ type VReplicationWorkflowParams struct {
 	OnDDL                             string
 
 	// MoveTables/Migrate specific
-	SourceKeyspace, Tables  string
-	AllTables, RenameTables bool
-	SourceTimeZone          string
-	DropForeignKeys         bool
+	SourceKeyspace, Tables    string
+	AllTables, RenameTables   bool
+	SourceTimeZone            string
+	DropForeignKeys           bool
+	InitializeTargetSequences bool
+	AtomicCopy                bool
 
 	// Reshard specific
 	SourceShards, TargetShards []string
@@ -71,6 +74,9 @@ type VReplicationWorkflowParams struct {
 
 	// Migrate specific
 	ExternalCluster string
+
+	// MoveTables only
+	NoRoutingRules bool
 }
 
 // VReplicationWorkflow stores various internal objects for a workflow
@@ -267,7 +273,7 @@ func (vrw *VReplicationWorkflow) GetStreamCount() (int64, int64, []*WorkflowErro
 			if st.Pos == "" {
 				continue
 			}
-			if st.State == "Running" || st.State == "Copying" {
+			if st.State == binlogdatapb.VReplicationWorkflowState_Running.String() || st.State == binlogdatapb.VReplicationWorkflowState_Copying.String() {
 				started++
 			}
 		}
@@ -433,7 +439,8 @@ func (vrw *VReplicationWorkflow) initMoveTables() error {
 	return vrw.wr.MoveTables(vrw.ctx, vrw.params.Workflow, vrw.params.SourceKeyspace, vrw.params.TargetKeyspace,
 		vrw.params.Tables, vrw.params.Cells, vrw.params.TabletTypes, vrw.params.AllTables, vrw.params.ExcludeTables,
 		vrw.params.AutoStart, vrw.params.StopAfterCopy, vrw.params.ExternalCluster, vrw.params.DropForeignKeys,
-		vrw.params.DeferSecondaryKeys, vrw.params.SourceTimeZone, vrw.params.OnDDL, vrw.params.SourceShards)
+		vrw.params.DeferSecondaryKeys, vrw.params.SourceTimeZone, vrw.params.OnDDL, vrw.params.SourceShards,
+		vrw.params.NoRoutingRules, vrw.params.AtomicCopy)
 }
 
 func (vrw *VReplicationWorkflow) initReshard() error {
@@ -477,7 +484,8 @@ func (vrw *VReplicationWorkflow) switchWrites() (*[]string, error) {
 		log.Infof("In VReplicationWorkflow.switchWrites(reverse) for %+v", vrw)
 	}
 	journalID, dryRunResults, err = vrw.wr.SwitchWrites(vrw.ctx, vrw.params.TargetKeyspace, vrw.params.Workflow, vrw.params.Timeout,
-		false, vrw.params.Direction == workflow.DirectionBackward, vrw.params.EnableReverseReplication, vrw.params.DryRun)
+		false, vrw.params.Direction == workflow.DirectionBackward, vrw.params.EnableReverseReplication, vrw.params.DryRun,
+		vrw.params.InitializeTargetSequences)
 	if err != nil {
 		return nil, err
 	}
@@ -525,9 +533,9 @@ func (vrw *VReplicationWorkflow) canSwitch(keyspace, workflowName string) (reaso
 		statuses := result.ShardStatuses[ksShard].PrimaryReplicationStatuses
 		for _, st := range statuses {
 			switch st.State {
-			case "Copying":
+			case binlogdatapb.VReplicationWorkflowState_Copying.String():
 				return cannotSwitchCopyIncomplete, nil
-			case "Error":
+			case binlogdatapb.VReplicationWorkflowState_Error.String():
 				return cannotSwitchError, nil
 			}
 		}
@@ -636,11 +644,11 @@ func (vrw *VReplicationWorkflow) GetCopyProgress() (*CopyProgress, error) {
 		qr := sqltypes.Proto3ToResult(p3qr)
 		for i := 0; i < len(qr.Rows); i++ {
 			table := qr.Rows[i][0].ToString()
-			rowCount, err := evalengine.ToInt64(qr.Rows[i][1])
+			rowCount, err := qr.Rows[i][1].ToCastInt64()
 			if err != nil {
 				return err
 			}
-			tableSize, err := evalengine.ToInt64(qr.Rows[i][2])
+			tableSize, err := qr.Rows[i][2].ToCastInt64()
 			if err != nil {
 				return err
 			}
@@ -703,20 +711,16 @@ func (vrw *VReplicationWorkflow) GetCopyProgress() (*CopyProgress, error) {
 
 // region Workflow related utility functions
 
-// deleteWorkflowVDiffData cleans up any potential VDiff related data associated with the workflow on the given tablet
+// deleteWorkflowVDiffData cleans up any potential VDiff related data associated
+// with the workflow on the given tablet.
 func (wr *Wrangler) deleteWorkflowVDiffData(ctx context.Context, tablet *topodatapb.Tablet, workflow string) {
-	sqlDeleteVDiffs := `delete from vd, vdt, vdl using _vt.vdiff as vd inner join _vt.vdiff_table as vdt on (vd.id = vdt.vdiff_id)
-						inner join _vt.vdiff_log as vdl on (vd.id = vdl.vdiff_id)
-						where vd.keyspace = %s and vd.workflow = %s`
-	query := fmt.Sprintf(sqlDeleteVDiffs, encodeString(tablet.Keyspace), encodeString(workflow))
-	rows := -1
-	if _, err := wr.tmc.ExecuteFetchAsDba(ctx, tablet, false, &tabletmanagerdatapb.ExecuteFetchAsDbaRequest{
-		Query:   []byte(query),
-		MaxRows: uint64(rows),
+	if _, err := wr.tmc.VDiff(ctx, tablet, &tabletmanagerdatapb.VDiffRequest{
+		Keyspace:  tablet.Keyspace,
+		Workflow:  workflow,
+		Action:    string(vdiff2.DeleteAction),
+		ActionArg: vdiff2.AllActionArg,
 	}); err != nil {
-		if sqlErr, ok := err.(*mysql.SQLError); ok && sqlErr.Num != mysql.ERNoSuchTable { // the tables may not exist if no vdiffs have been run
-			wr.Logger().Errorf("Error deleting vdiff data for %s.%s workflow: %v", tablet.Keyspace, workflow, err)
-		}
+		log.Errorf("Error deleting vdiff data for %s.%s workflow: %v", tablet.Keyspace, workflow, err)
 	}
 }
 
@@ -754,7 +758,7 @@ func (wr *Wrangler) optimizeCopyStateTable(tablet *topodatapb.Tablet) {
 			Query:   []byte(sqlOptimizeTable),
 			MaxRows: uint64(100), // always produces 1+rows with notes and status
 		}); err != nil {
-			if sqlErr, ok := err.(*mysql.SQLError); ok && sqlErr.Num == mysql.ERNoSuchTable { // the table may not exist
+			if sqlErr, ok := err.(*sqlerror.SQLError); ok && sqlErr.Num == sqlerror.ERNoSuchTable { // the table may not exist
 				return
 			}
 			log.Warningf("Failed to optimize the copy_state table on %q: %v", tablet.Alias.String(), err)

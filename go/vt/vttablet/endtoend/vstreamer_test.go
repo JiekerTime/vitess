@@ -59,8 +59,6 @@ func TestSchemaVersioning(t *testing.T) {
 	tsv.EnableHistorian(false)
 	tsv.SetTracking(false)
 	tsv.EnableHeartbeat(false)
-	tsv.EnableThrottler(false)
-	defer tsv.EnableThrottler(true)
 	defer tsv.EnableHeartbeat(true)
 	defer tsv.EnableHistorian(true)
 	defer tsv.SetTracking(true)
@@ -386,6 +384,10 @@ func expectLogs(ctx context.Context, t *testing.T, query string, eventCh chan []
 				if ev.Type == binlogdatapb.VEventType_HEARTBEAT {
 					continue
 				}
+				if ev.Type == binlogdatapb.VEventType_ROW {
+					ev.RowEvent.Flags = 0 // null Flags, so we don't have to define flags in every wanted row event.
+				}
+
 				if ev.Throttled {
 					continue
 				}

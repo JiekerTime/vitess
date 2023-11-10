@@ -157,7 +157,7 @@ func testPlayerCopyCharPK(t *testing.T) {
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
 
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -264,7 +264,7 @@ func testPlayerCopyVarcharPKCaseInsensitive(t *testing.T) {
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
 
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -387,7 +387,7 @@ func testPlayerCopyVarcharCompositePKCaseSensitiveCollation(t *testing.T) {
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
 
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -470,26 +470,26 @@ func testPlayerCopyTablesWithFK(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	require.NoError(t, err)
 
 	expectDBClientQueries(t, qh.Expect(
 		"/insert into _vt.vreplication",
 		"/update _vt.vreplication set message='Picked source tablet.*",
-		"select @@foreign_key_checks;",
+		"select @@foreign_key_checks",
 		// Create the list of tables to copy and transition to Copying state.
 		"begin",
 		"/insert into _vt.copy_state",
 		"/update _vt.vreplication set state='Copying'",
 		"commit",
-		"set foreign_key_checks=0;",
+		"set @@session.foreign_key_checks=0",
 		// The first fast-forward has no starting point. So, it just saves the current position.
 		"/update _vt.vreplication set pos=",
 	).Then(func(expect qh.ExpectationSequencer) qh.ExpectationSequencer {
 		// With parallel inserts, new db client connects are created on-the-fly.
 		if vreplicationParallelInsertWorkers > 1 {
-			return expect.Then(qh.Eventually("set foreign_key_checks=0;"))
+			return expect.Then(qh.Eventually("set @@session.foreign_key_checks=0"))
 		}
 		return expect
 	}).Then(qh.Eventually(
@@ -500,18 +500,18 @@ func testPlayerCopyTablesWithFK(t *testing.T) {
 		`/insert into _vt.copy_state \(lastpk, vrepl_id, table_name\) values \('fields:{name:\\"id\\" type:INT32 charset:63 flags:53251} rows:{lengths:1 values:\\"2\\"}'.*`,
 		"commit",
 	)).Then(qh.Immediately(
-		"set foreign_key_checks=0;",
+		"set @@session.foreign_key_checks=0",
 		// copy of dst1 is done: delete from copy_state.
 		"/delete cs, pca from _vt.copy_state as cs left join _vt.post_copy_action as pca on cs.vrepl_id=pca.vrepl_id and cs.table_name=pca.table_name.*dst1",
 		// The next FF executes and updates the position before copying.
-		"set foreign_key_checks=0;",
+		"set @@session.foreign_key_checks=0",
 		"begin",
 		"/update _vt.vreplication set pos=",
 		"commit",
 	)).Then(func(expect qh.ExpectationSequencer) qh.ExpectationSequencer {
 		// With parallel inserts, new db client connects are created on-the-fly.
 		if vreplicationParallelInsertWorkers > 1 {
-			return expect.Then(qh.Eventually("set foreign_key_checks=0;"))
+			return expect.Then(qh.Eventually("set @@session.foreign_key_checks=0"))
 		}
 		return expect
 	}).Then(qh.Eventually(
@@ -521,11 +521,11 @@ func testPlayerCopyTablesWithFK(t *testing.T) {
 		`/insert into _vt.copy_state \(lastpk, vrepl_id, table_name\) values \('fields:{name:\\"id\\" type:INT32 charset:63 flags:53251} rows:{lengths:1 values:\\"2\\"}'.*`,
 		"commit",
 	)).Then(qh.Immediately(
-		"set foreign_key_checks=0;",
+		"set @@session.foreign_key_checks=0",
 		// copy of dst1 is done: delete from copy_state.
 		"/delete cs, pca from _vt.copy_state as cs left join _vt.post_copy_action as pca on cs.vrepl_id=pca.vrepl_id and cs.table_name=pca.table_name.*dst2",
 		// All tables copied. Final catch up followed by Running state.
-		"set foreign_key_checks=1;",
+		"set @@session.foreign_key_checks=1",
 		"/update _vt.vreplication set state='Running'",
 	)))
 
@@ -545,7 +545,7 @@ func testPlayerCopyTablesWithFK(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectDBClientQueries(t, qh.Expect(
-		"set foreign_key_checks=1;",
+		"set @@session.foreign_key_checks=1",
 		"begin",
 		"/delete from _vt.vreplication",
 		"/delete from _vt.copy_state",
@@ -563,7 +563,7 @@ func testPlayerCopyTables(t *testing.T) {
 
 	execStatements(t, []string{
 		"create table src1(id int, val varbinary(128), d decimal(8,0), j json, primary key(id))",
-		"insert into src1 values(2, 'bbb', 1, '{\"foo\": \"bar\"}'), (1, 'aaa', 0, JSON_ARRAY(123456789012345678901234567890, \"abcd\"))",
+		"insert into src1 values(2, 'bbb', 1, '{\"foo\": \"bar\"}'), (1, 'aaa', 0, JSON_ARRAY(123456789012345678901234567890, \"abcd\")), (3, 'ccc', 2, 'null'), (4, 'ddd', 3, '{\"name\": \"matt\", \"size\": null}'), (5, 'eee', 4, null)",
 		fmt.Sprintf("create table %s.dst1(id int, val varbinary(128), val2 varbinary(128), d decimal(8,0), j json, primary key(id))", vrepldb),
 		"create table yes(id int, val varbinary(128), primary key(id))",
 		fmt.Sprintf("create table %s.yes(id int, val varbinary(128), primary key(id))", vrepldb),
@@ -593,7 +593,7 @@ func testPlayerCopyTables(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -617,8 +617,8 @@ func testPlayerCopyTables(t *testing.T) {
 		// The first fast-forward has no starting point. So, it just saves the current position.
 		"/update _vt.vreplication set pos=",
 		"begin",
-		"insert into dst1(id,val,val2,d,j) values (1,'aaa','aaa',0,JSON_ARRAY(123456789012345678901234567890, _utf8mb4'abcd')), (2,'bbb','bbb',1,JSON_OBJECT(_utf8mb4'foo', _utf8mb4'bar'))",
-		`/insert into _vt.copy_state \(lastpk, vrepl_id, table_name\) values \('fields:{name:\\"id\\" type:INT32 charset:63 flags:53251} rows:{lengths:1 values:\\"2\\"}'.*`,
+		"insert into dst1(id,val,val2,d,j) values (1,'aaa','aaa',0,JSON_ARRAY(123456789012345678901234567890, _utf8mb4'abcd')), (2,'bbb','bbb',1,JSON_OBJECT(_utf8mb4'foo', _utf8mb4'bar')), (3,'ccc','ccc',2,CAST(_utf8mb4'null' as JSON)), (4,'ddd','ddd',3,JSON_OBJECT(_utf8mb4'name', _utf8mb4'matt', _utf8mb4'size', null)), (5,'eee','eee',4,null)",
+		`/insert into _vt.copy_state \(lastpk, vrepl_id, table_name\) values \('fields:{name:\\"id\\" type:INT32 charset:63 flags:53251} rows:{lengths:1 values:\\"5\\"}'.*`,
 		"commit",
 		// copy of dst1 is done: delete from copy_state.
 		"/delete cs, pca from _vt.copy_state as cs left join _vt.post_copy_action as pca on cs.vrepl_id=pca.vrepl_id and cs.table_name=pca.table_name.*dst1",
@@ -634,9 +634,12 @@ func testPlayerCopyTables(t *testing.T) {
 	expectData(t, "dst1", [][]string{
 		{"1", "aaa", "aaa", "0", "[123456789012345678901234567890, \"abcd\"]"},
 		{"2", "bbb", "bbb", "1", "{\"foo\": \"bar\"}"},
+		{"3", "ccc", "ccc", "2", "null"},
+		{"4", "ddd", "ddd", "3", "{\"name\": \"matt\", \"size\": null}"},
+		{"5", "eee", "eee", "4", ""},
 	})
 	expectData(t, "yes", [][]string{})
-	validateCopyRowCountStat(t, 2)
+	validateCopyRowCountStat(t, 5)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	type logTestCase struct {
@@ -732,7 +735,7 @@ func testPlayerCopyBigTable(t *testing.T) {
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
 
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -862,7 +865,7 @@ func testPlayerCopyWildcardRule(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -999,7 +1002,7 @@ func testPlayerCopyTableContinuation(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.BlpStopped, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Stopped, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1136,7 +1139,7 @@ func testPlayerCopyWildcardTableContinuation(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.BlpStopped, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Stopped, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1233,7 +1236,7 @@ func TestPlayerCopyWildcardTableContinuationWithOptimizeInserts(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.BlpStopped, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Stopped, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1302,7 +1305,7 @@ func testPlayerCopyTablesNone(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1356,7 +1359,7 @@ func testPlayerCopyTablesStopAfterCopy(t *testing.T) {
 		OnDdl:         binlogdatapb.OnDDLAction_IGNORE,
 		StopAfterCopy: true,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1445,7 +1448,7 @@ func testPlayerCopyTablesGIPK(t *testing.T) {
 		OnDdl:         binlogdatapb.OnDDLAction_IGNORE,
 		StopAfterCopy: true,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1543,7 +1546,7 @@ func testPlayerCopyTableCancel(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1626,7 +1629,7 @@ func testPlayerCopyTablesWithGeneratedColumn(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)
@@ -1707,7 +1710,7 @@ func testCopyTablesWithInvalidDates(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	require.NoError(t, err)
 
@@ -1794,7 +1797,7 @@ func testCopyInvisibleColumns(t *testing.T) {
 		Filter:   filter,
 		OnDdl:    binlogdatapb.OnDDLAction_IGNORE,
 	}
-	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogplayer.VReplicationInit, playerEngine.dbName, 0, 0)
+	query := binlogplayer.CreateVReplicationState("test", bls, "", binlogdatapb.VReplicationWorkflowState_Init, playerEngine.dbName, 0, 0)
 	qr, err := playerEngine.Exec(query)
 	if err != nil {
 		t.Fatal(err)

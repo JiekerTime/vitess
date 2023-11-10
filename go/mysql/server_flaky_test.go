@@ -32,6 +32,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"vitess.io/vitess/go/mysql/replication"
+	"vitess.io/vitess/go/mysql/sqlerror"
+
 	"vitess.io/vitess/go/mysql/collations"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -248,7 +251,7 @@ func (th *testHandler) ComRegisterReplica(c *Conn, replicaHost string, replicaPo
 func (th *testHandler) ComBinlogDump(c *Conn, logFile string, binlogPos uint32) error {
 	return nil
 }
-func (th *testHandler) ComBinlogDumpGTID(c *Conn, logFile string, logPos uint64, gtidSet GTIDSet) error {
+func (th *testHandler) ComBinlogDumpGTID(c *Conn, logFile string, logPos uint64, gtidSet replication.GTIDSet) error {
 	return nil
 }
 
@@ -279,7 +282,7 @@ func TestConnectionFromListener(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:")
 	require.NoError(t, err, "net.Listener failed")
 
-	l, err := NewFromListener(listener, authServer, th, 0, 0, false)
+	l, err := NewFromListener(listener, authServer, th, 0, 0, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -308,7 +311,7 @@ func TestConnectionWithoutSourceHost(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -341,7 +344,7 @@ func TestConnectionWithSourceHost(t *testing.T) {
 	}
 	defer authServer.close()
 
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -374,7 +377,7 @@ func TestConnectionUseMysqlNativePasswordWithSourceHost(t *testing.T) {
 	}
 	defer authServer.close()
 
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -412,7 +415,7 @@ func TestConnectionUnixSocket(t *testing.T) {
 
 	os.Remove(unixSocket.Name())
 
-	l, err := NewListener("unix", unixSocket.Name(), authServer, th, 0, 0, false, false)
+	l, err := NewListener("unix", unixSocket.Name(), authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -438,7 +441,7 @@ func TestClientFoundRows(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -487,7 +490,7 @@ func TestConnCounts(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed")
 	defer l.Close()
 	go l.Accept()
@@ -519,12 +522,12 @@ func TestConnCounts(t *testing.T) {
 
 	// Test after closing connections. time.Sleep lets it work, but seems flakey.
 	c.Close()
-	//time.Sleep(10 * time.Millisecond)
-	//checkCountsForUser(t, user, 1)
+	// time.Sleep(10 * time.Millisecond)
+	// checkCountsForUser(t, user, 1)
 
 	c2.Close()
-	//time.Sleep(10 * time.Millisecond)
-	//checkCountsForUser(t, user, 0)
+	// time.Sleep(10 * time.Millisecond)
+	// checkCountsForUser(t, user, 0)
 }
 
 func checkCountsForUser(t *testing.T, user string, expected int64) {
@@ -544,7 +547,7 @@ func TestServer(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	l.SlowConnectWarnThreshold.Store(time.Nanosecond.Nanoseconds())
 	defer l.Close()
@@ -581,7 +584,7 @@ func TestServer(t *testing.T) {
 
 	// If there's an error after streaming has started,
 	// we should get a 2013
-	th.SetErr(NewSQLError(ERUnknownComError, SSNetError, "forced error after send"))
+	th.SetErr(sqlerror.NewSQLError(sqlerror.ERUnknownComError, sqlerror.SSNetError, "forced error after send"))
 	output, err = runMysqlWithErr(t, params, "error after send")
 	require.Error(t, err)
 	assert.Contains(t, output, "ERROR 2013 (HY000)", "Unexpected output for 'panic'")
@@ -644,7 +647,7 @@ func TestServerStats(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	l.SlowConnectWarnThreshold.Store(time.Nanosecond.Nanoseconds())
 	defer l.Close()
@@ -667,7 +670,7 @@ func TestServerStats(t *testing.T) {
 	connRefuse.Reset()
 
 	// Run an 'error' command.
-	th.SetErr(NewSQLError(ERUnknownComError, SSNetError, "forced query error"))
+	th.SetErr(sqlerror.NewSQLError(sqlerror.ERUnknownComError, sqlerror.SSNetError, "forced query error"))
 	output, ok := runMysql(t, params, "error")
 	require.False(t, ok, "mysql should have failed: %v", output)
 
@@ -718,7 +721,7 @@ func TestClearTextServer(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	defer l.Close()
 	go l.Accept()
@@ -791,7 +794,7 @@ func TestDialogServer(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	l.AllowClearTextWithoutTLS.Store(true)
 	defer l.Close()
@@ -834,7 +837,7 @@ func TestTLSServer(t *testing.T) {
 	// Below, we are enabling --ssl-verify-server-cert, which adds
 	// a check that the common name of the certificate matches the
 	// server host name we connect to.
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	defer l.Close()
 
@@ -886,7 +889,7 @@ func TestTLSServer(t *testing.T) {
 
 	// Run a 'select rows' command with results.
 	conn, err := Connect(context.Background(), params)
-	//output, ok := runMysql(t, params, "select rows")
+	// output, ok := runMysql(t, params, "select rows")
 	require.NoError(t, err)
 	results, err := conn.ExecuteFetch("select rows", 1000, true)
 	require.NoError(t, err)
@@ -932,7 +935,7 @@ func TestTLSRequired(t *testing.T) {
 	// Below, we are enabling --ssl-verify-server-cert, which adds
 	// a check that the common name of the certificate matches the
 	// server host name we connect to.
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	defer l.Close()
 
@@ -1021,7 +1024,7 @@ func TestCachingSha2PasswordAuthWithTLS(t *testing.T) {
 	defer authServer.close()
 
 	// Create the listener, so we can get its host.
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed: %v", err)
 	defer l.Close()
 	host := l.Addr().(*net.TCPAddr).IP.String()
@@ -1115,7 +1118,7 @@ func TestCachingSha2PasswordAuthWithMoreData(t *testing.T) {
 	defer authServer.close()
 
 	// Create the listener, so we can get its host.
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed: %v", err)
 	defer l.Close()
 	host := l.Addr().(*net.TCPAddr).IP.String()
@@ -1184,7 +1187,7 @@ func TestCachingSha2PasswordAuthWithoutTLS(t *testing.T) {
 	defer authServer.close()
 
 	// Create the listener.
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err, "NewListener failed: %v", err)
 	defer l.Close()
 	host := l.Addr().(*net.TCPAddr).IP.String()
@@ -1226,7 +1229,7 @@ func TestErrorCodes(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	defer l.Close()
 	go l.Accept()
@@ -1249,7 +1252,7 @@ func TestErrorCodes(t *testing.T) {
 	// internal vitess errors
 	tests := []struct {
 		err      error
-		code     ErrorCode
+		code     sqlerror.ErrorCode
 		sqlState string
 		text     string
 	}{
@@ -1257,48 +1260,48 @@ func TestErrorCodes(t *testing.T) {
 			err: vterrors.Errorf(
 				vtrpcpb.Code_INVALID_ARGUMENT,
 				"invalid argument"),
-			code:     ERUnknownError,
-			sqlState: SSUnknownSQLState,
+			code:     sqlerror.ERUnknownError,
+			sqlState: sqlerror.SSUnknownSQLState,
 			text:     "invalid argument",
 		},
 		{
 			err: vterrors.Errorf(
 				vtrpcpb.Code_INVALID_ARGUMENT,
-				"(errno %v) (sqlstate %v) invalid argument with errno", ERDupEntry, SSConstraintViolation),
-			code:     ERDupEntry,
-			sqlState: SSConstraintViolation,
+				"(errno %v) (sqlstate %v) invalid argument with errno", sqlerror.ERDupEntry, sqlerror.SSConstraintViolation),
+			code:     sqlerror.ERDupEntry,
+			sqlState: sqlerror.SSConstraintViolation,
 			text:     "invalid argument with errno",
 		},
 		{
 			err: vterrors.Errorf(
 				vtrpcpb.Code_DEADLINE_EXCEEDED,
 				"connection deadline exceeded"),
-			code:     ERQueryInterrupted,
-			sqlState: SSQueryInterrupted,
+			code:     sqlerror.ERQueryInterrupted,
+			sqlState: sqlerror.SSQueryInterrupted,
 			text:     "deadline exceeded",
 		},
 		{
 			err: vterrors.Errorf(
 				vtrpcpb.Code_RESOURCE_EXHAUSTED,
 				"query pool timeout"),
-			code:     ERTooManyUserConnections,
-			sqlState: SSClientError,
+			code:     sqlerror.ERTooManyUserConnections,
+			sqlState: sqlerror.SSClientError,
 			text:     "resource exhausted",
 		},
 		{
 			err:      vterrors.Wrap(vterrors.Errorf(vtrpcpb.Code_ABORTED, "Row count exceeded 10000"), "wrapped"),
-			code:     ERQueryInterrupted,
-			sqlState: SSQueryInterrupted,
+			code:     sqlerror.ERQueryInterrupted,
+			sqlState: sqlerror.SSQueryInterrupted,
 			text:     "aborted",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.err.Error(), func(t *testing.T) {
-			th.SetErr(NewSQLErrorFromError(test.err))
+			th.SetErr(sqlerror.NewSQLErrorFromError(test.err))
 			rs, err := client.ExecuteFetch("error", 100, false)
 			require.Error(t, err, "mysql should have failed but returned: %v", rs)
-			serr, ok := err.(*SQLError)
+			serr, ok := err.(*sqlerror.SQLError)
 			require.True(t, ok, "mysql should have returned a SQLError")
 
 			assert.Equal(t, test.code, serr.Number(), "error in %s: want code %v got %v", test.text, test.code, serr.Number())
@@ -1404,7 +1407,7 @@ func TestListenerShutdown(t *testing.T) {
 		UserData: "userData1",
 	}}
 	defer authServer.close()
-	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", authServer, th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	defer l.Close()
 	go l.Accept()
@@ -1435,11 +1438,11 @@ func TestListenerShutdown(t *testing.T) {
 
 	err = conn.Ping()
 	require.EqualError(t, err, "Server shutdown in progress (errno 1053) (sqlstate 08S01)")
-	sqlErr, ok := err.(*SQLError)
+	sqlErr, ok := err.(*sqlerror.SQLError)
 	require.True(t, ok, "Wrong error type: %T", err)
 
-	require.Equal(t, ERServerShutdown, sqlErr.Number())
-	require.Equal(t, SSNetError, sqlErr.SQLState())
+	require.Equal(t, sqlerror.ERServerShutdown, sqlErr.Number())
+	require.Equal(t, sqlerror.SSNetError, sqlErr.SQLState())
 	require.Equal(t, "Server shutdown in progress", sqlErr.Message)
 }
 
@@ -1477,7 +1480,7 @@ func TestServerFlush(t *testing.T) {
 
 	th := &testHandler{}
 
-	l, err := NewListener("tcp", "127.0.0.1:", NewAuthServerNone(), th, 0, 0, false, false)
+	l, err := NewListener("tcp", "127.0.0.1:", NewAuthServerNone(), th, 0, 0, false, false, 0)
 	require.NoError(t, err)
 	defer l.Close()
 	go l.Accept()
@@ -1534,4 +1537,31 @@ func (th *testHandler) ValidUseDB(c *Conn, db string, authServer AuthServer) err
 }
 
 func (th *testHandler) SetAuthServer(authServer AuthServer) {
+
+}
+func TestTcpKeepAlive(t *testing.T) {
+	th := &testHandler{}
+	l, err := NewListener("tcp", "127.0.0.1:", NewAuthServerNone(), th, 0, 0, false, false, 0)
+	require.NoError(t, err)
+	defer l.Close()
+	go l.Accept()
+
+	host, port := getHostPort(t, l.Addr())
+	params := &ConnParams{
+		Host: host,
+		Port: port,
+	}
+
+	// on connect, the tcp method should be called.
+	c, err := Connect(context.Background(), params)
+	require.NoError(t, err)
+	defer c.Close()
+	require.True(t, th.lastConn.keepAliveOn, "tcp property method not called")
+
+	// close the connection
+	th.lastConn.Close()
+
+	// now calling this method should fail.
+	err = setTcpConnProperties(th.lastConn.conn.(*net.TCPConn), 0)
+	require.ErrorContains(t, err, "unable to enable keepalive on tcp connection")
 }

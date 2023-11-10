@@ -53,9 +53,10 @@ vttablet \
  --grpc_port $grpc_port \
  --service_map 'grpc-queryservice,grpc-tabletmanager,grpc-updatestream' \
  --pid_file $VTDATAROOT/$tablet_dir/vttablet.pid \
- --vtctld_addr http://$hostname:$vtctld_web_port/ \
  --queryserver-config-max-result-size 10000000 \
- --heartbeat_enable --heartbeat_interval=250ms --heartbeat_on_demand_duration=5s \
+ --heartbeat_enable \
+ --heartbeat_interval=250ms \
+ --heartbeat_on_demand_duration=5s \
  > $VTDATAROOT/$tablet_dir/vttablet.out 2>&1 &
 
 # Block waiting for the tablet to be listening
@@ -68,3 +69,5 @@ done
 
 # check one last time
 curl -I "http://$hostname:$port/debug/status" || fail "tablet could not be started!"
+
+echo -e "vttablet for $alias is running!"

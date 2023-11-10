@@ -17,7 +17,7 @@ limitations under the License.
 package operators
 
 import (
-	"vitess.io/vitess/go/slices2"
+	"vitess.io/vitess/go/slice"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -52,7 +52,7 @@ type (
 const VindexUnsupported = "WHERE clause for vindex function must be of the form id = <val> or id in(<val>,...)"
 
 // Introduces implements the Operator interface
-func (v *Vindex) Introduces() semantics.TableSet {
+func (v *Vindex) introducesTableID() semantics.TableSet {
 	return v.Solved
 }
 
@@ -62,17 +62,21 @@ func (v *Vindex) Clone([]ops.Operator) ops.Operator {
 	return &clone
 }
 
-func (v *Vindex) AddColumn(ctx *plancontext.PlanningContext, expr *sqlparser.AliasedExpr, _, addToGroupBy bool) (ops.Operator, int, error) {
-	if addToGroupBy {
-		return nil, 0, vterrors.VT13001("tried to add group by to a table")
+func (v *Vindex) AddColumn(ctx *plancontext.PlanningContext, reuse bool, gb bool, ae *sqlparser.AliasedExpr) (int, error) {
+	if gb {
+		return 0, vterrors.VT13001("tried to add group by to a table")
+	}
+	if reuse {
+		offset, err := v.FindCol(ctx, ae.Expr, true)
+		if err != nil {
+			return 0, err
+		}
+		if offset > -1 {
+			return offset, nil
+		}
 	}
 
-	offset, err := addColumn(ctx, v, expr.Expr)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return v, offset, nil
+	return addColumn(ctx, v, ae.Expr)
 }
 
 func colNameToExpr(c *sqlparser.ColName) *sqlparser.AliasedExpr {
@@ -82,8 +86,22 @@ func colNameToExpr(c *sqlparser.ColName) *sqlparser.AliasedExpr {
 	}
 }
 
-func (v *Vindex) GetColumns() ([]*sqlparser.AliasedExpr, error) {
-	return slices2.Map(v.Columns, colNameToExpr), nil
+func (v *Vindex) FindCol(ctx *plancontext.PlanningContext, expr sqlparser.Expr, underRoute bool) (int, error) {
+	for idx, col := range v.Columns {
+		if ctx.SemTable.EqualsExprWithDeps(expr, col) {
+			return idx, nil
+		}
+	}
+
+	return -1, nil
+}
+
+func (v *Vindex) GetColumns(*plancontext.PlanningContext) ([]*sqlparser.AliasedExpr, error) {
+	return slice.Map(v.Columns, colNameToExpr), nil
+}
+
+func (v *Vindex) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
+	return transformColumnsToSelectExprs(ctx, v)
 }
 
 func (v *Vindex) GetOrdering() ([]ops.OrderBy, error) {
@@ -93,6 +111,7 @@ func (v *Vindex) GetOrdering() ([]ops.OrderBy, error) {
 func (v *Vindex) GetColNames() []*sqlparser.ColName {
 	return v.Columns
 }
+
 func (v *Vindex) AddCol(col *sqlparser.ColName) {
 	v.Columns = append(v.Columns, col)
 }
@@ -152,10 +171,6 @@ func (v *Vindex) AddPredicate(ctx *plancontext.PlanningContext, expr sqlparser.E
 // It is not keyspace-qualified.
 func (v *Vindex) TablesUsed() []string {
 	return []string{v.Table.Table.Name.String()}
-}
-
-func (v *Vindex) Description() ops.OpDescription {
-	return ops.OpDescription{OperatorType: "Vindex"}
 }
 
 func (v *Vindex) ShortDescription() string {

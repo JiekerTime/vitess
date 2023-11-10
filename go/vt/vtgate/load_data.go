@@ -26,7 +26,6 @@ import (
 	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
@@ -528,8 +527,7 @@ func (l *LoadDataInfo) GetGeneratedID(ctx context.Context, vcursor engine.VCurso
 	}
 	// If no rows are returned, it's an internal error, and the code
 	// must panic, which will be caught and reported.
-
-	minID, err = evalengine.ToInt64(qr.Rows[0][0])
+	minID, err = qr.Rows[0][0].ToInt64()
 	if err != nil {
 		return 0, 0, err
 	}

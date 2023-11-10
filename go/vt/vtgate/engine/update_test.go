@@ -69,7 +69,7 @@ func TestUpdateUnsharded(t *testing.T) {
 }
 
 func TestUpdateEqual(t *testing.T) {
-	vindex, _ := vindexes.NewHash("", nil)
+	vindex, _ := vindexes.CreateVindex("hash", "", nil)
 	upd := &Update{
 		DML: &DML{
 			RoutingParameters: &RoutingParameters{
@@ -100,7 +100,7 @@ func TestUpdateEqual(t *testing.T) {
 }
 
 func TestUpdateEqualMultiCol(t *testing.T) {
-	vindex, _ := vindexes.NewRegionExperimental("", map[string]string{"region_bytes": "1"})
+	vindex, _ := vindexes.CreateVindex("region_experimental", "", map[string]string{"region_bytes": "1"})
 	upd := &Update{
 		DML: &DML{
 			RoutingParameters: &RoutingParameters{
@@ -126,7 +126,7 @@ func TestUpdateEqualMultiCol(t *testing.T) {
 }
 
 func TestUpdateScatter(t *testing.T) {
-	vindex, _ := vindexes.NewHash("", nil)
+	vindex, _ := vindexes.CreateVindex("hash", "", nil)
 	upd := &Update{
 		DML: &DML{
 			RoutingParameters: &RoutingParameters{
@@ -179,7 +179,7 @@ func TestUpdateScatter(t *testing.T) {
 }
 
 func TestUpdateEqualNoRoute(t *testing.T) {
-	vindex, _ := vindexes.NewLookupUnique("", map[string]string{
+	vindex, _ := vindexes.CreateVindex("lookup_unique", "", map[string]string{
 		"table": "lkp",
 		"from":  "from",
 		"to":    "toc",
@@ -211,7 +211,7 @@ func TestUpdateEqualNoRoute(t *testing.T) {
 
 func TestUpdateEqualNoScatter(t *testing.T) {
 	t.Skip("planner does not produces this plan anymore")
-	vindex, _ := vindexes.NewLookupUnique("", map[string]string{
+	vindex, _ := vindexes.CreateVindex("lookup_unique", "", map[string]string{
 		"table":      "lkp",
 		"from":       "from",
 		"to":         "toc",
@@ -247,24 +247,23 @@ func TestUpdateEqualChangedVindex(t *testing.T) {
 				Vindex:   ks.Vindexes["hash"],
 				Values:   []evalengine.Expr{evalengine.NewLiteralInt(1)},
 			},
-			Query: "dummy_update",
-			Table: []*vindexes.Table{
-				ks.Tables["t1"],
-			},
+			Query:            "dummy_update",
+			TableNames:       []string{ks.Tables["t1"].Name.String()},
+			Vindexes:         ks.Tables["t1"].Owned,
 			OwnedVindexQuery: "dummy_subquery",
 			KsidVindex:       ks.Vindexes["hash"],
 			KsidLength:       1,
 		},
 		ChangedVindexValues: map[string]*VindexValues{
 			"twocol": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"c1": evalengine.NewLiteralInt(1),
 					"c2": evalengine.NewLiteralInt(2),
 				},
 				Offset: 4,
 			},
 			"onecol": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"c3": evalengine.NewLiteralInt(3),
 				},
 				Offset: 5,
@@ -392,17 +391,16 @@ func TestUpdateEqualMultiColChangedVindex(t *testing.T) {
 				Vindex:   ks.Vindexes["rg_vdx"],
 				Values:   []evalengine.Expr{evalengine.NewLiteralInt(1), evalengine.NewLiteralInt(2)},
 			},
-			Query: "dummy_update",
-			Table: []*vindexes.Table{
-				ks.Tables["rg_tbl"],
-			},
+			Query:            "dummy_update",
+			TableNames:       []string{ks.Tables["rg_tbl"].Name.String()},
+			Vindexes:         ks.Tables["rg_tbl"].Owned,
 			OwnedVindexQuery: "dummy_subquery",
 			KsidVindex:       ks.Vindexes["rg_vdx"],
 			KsidLength:       2,
 		},
 		ChangedVindexValues: map[string]*VindexValues{
 			"lkp_rg": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"colc": evalengine.NewLiteralInt(5),
 				},
 				Offset: 3,
@@ -513,24 +511,23 @@ func TestUpdateScatterChangedVindex(t *testing.T) {
 				Opcode:   Scatter,
 				Keyspace: ks.Keyspace,
 			},
-			Query: "dummy_update",
-			Table: []*vindexes.Table{
-				ks.Tables["t1"],
-			},
+			Query:            "dummy_update",
+			TableNames:       []string{ks.Tables["t1"].Name.String()},
+			Vindexes:         ks.Tables["t1"].Owned,
 			OwnedVindexQuery: "dummy_subquery",
 			KsidVindex:       ks.Vindexes["hash"],
 			KsidLength:       1,
 		},
 		ChangedVindexValues: map[string]*VindexValues{
 			"twocol": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"c1": evalengine.NewLiteralInt(1),
 					"c2": evalengine.NewLiteralInt(2),
 				},
 				Offset: 4,
 			},
 			"onecol": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"c3": evalengine.NewLiteralInt(3),
 				},
 				Offset: 5,
@@ -709,24 +706,23 @@ func TestUpdateInChangedVindex(t *testing.T) {
 					evalengine.NewLiteralInt(2),
 				}},
 			},
-			Query: "dummy_update",
-			Table: []*vindexes.Table{
-				ks.Tables["t1"],
-			},
+			Query:            "dummy_update",
+			TableNames:       []string{ks.Tables["t1"].Name.String()},
+			Vindexes:         ks.Tables["t1"].Owned,
 			OwnedVindexQuery: "dummy_subquery",
 			KsidVindex:       ks.Vindexes["hash"],
 			KsidLength:       1,
 		},
 		ChangedVindexValues: map[string]*VindexValues{
 			"twocol": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"c1": evalengine.NewLiteralInt(1),
 					"c2": evalengine.NewLiteralInt(2),
 				},
 				Offset: 4,
 			},
 			"onecol": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"c3": evalengine.NewLiteralInt(3),
 				},
 				Offset: 5,
@@ -840,17 +836,16 @@ func TestUpdateInChangedVindexMultiCol(t *testing.T) {
 					evalengine.NewLiteralInt(3),
 				},
 			},
-			Query: "dummy_update",
-			Table: []*vindexes.Table{
-				ks.Tables["rg_tbl"],
-			},
+			Query:            "dummy_update",
+			TableNames:       []string{ks.Tables["rg_tbl"].Name.String()},
+			Vindexes:         ks.Tables["rg_tbl"].Owned,
 			OwnedVindexQuery: "dummy_subquery",
 			KsidVindex:       ks.Vindexes["rg_vdx"],
 			KsidLength:       2,
 		},
 		ChangedVindexValues: map[string]*VindexValues{
 			"lkp_rg": {
-				PvMap: map[string]evalengine.Expr{
+				EvalExprMap: map[string]evalengine.Expr{
 					"colc": evalengine.NewLiteralInt(5),
 				},
 				Offset: 3,
@@ -891,7 +886,7 @@ func TestUpdateInChangedVindexMultiCol(t *testing.T) {
 }
 
 func TestUpdateEqualSubshard(t *testing.T) {
-	vindex, _ := vindexes.NewRegionExperimental("", map[string]string{"region_bytes": "1"})
+	vindex, _ := vindexes.CreateVindex("region_experimental", "", map[string]string{"region_bytes": "1"})
 	upd := &Update{
 		DML: &DML{
 			RoutingParameters: &RoutingParameters{

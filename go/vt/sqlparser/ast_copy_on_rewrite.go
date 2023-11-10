@@ -52,8 +52,12 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfAlterView(n, parent)
 	case *AlterVschema:
 		return c.copyOnRewriteRefOfAlterVschema(n, parent)
+	case *Analyze:
+		return c.copyOnRewriteRefOfAnalyze(n, parent)
 	case *AndExpr:
 		return c.copyOnRewriteRefOfAndExpr(n, parent)
+	case *AnyValue:
+		return c.copyOnRewriteRefOfAnyValue(n, parent)
 	case *Argument:
 		return c.copyOnRewriteRefOfArgument(n, parent)
 	case *ArgumentLessWindowExpr:
@@ -128,10 +132,6 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfCreateView(n, parent)
 	case *CurTimeFuncExpr:
 		return c.copyOnRewriteRefOfCurTimeFuncExpr(n, parent)
-	case *DateAddExpr:
-		return c.copyOnRewriteRefOfDateAddExpr(n, parent)
-	case *DateSubExpr:
-		return c.copyOnRewriteRefOfDateSubExpr(n, parent)
 	case *DeallocateStmt:
 		return c.copyOnRewriteRefOfDeallocateStmt(n, parent)
 	case *Default:
@@ -166,8 +166,6 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfExtractFuncExpr(n, parent)
 	case *ExtractValueExpr:
 		return c.copyOnRewriteRefOfExtractValueExpr(n, parent)
-	case *ExtractedSubquery:
-		return c.copyOnRewriteRefOfExtractedSubquery(n, parent)
 	case *FieldsClause:
 		return c.copyOnRewriteRefOfFieldsClause(n, parent)
 	case *FirstOrLastValueExpr:
@@ -228,6 +226,8 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfInsert(n, parent)
 	case *InsertExpr:
 		return c.copyOnRewriteRefOfInsertExpr(n, parent)
+	case *IntervalDateExpr:
+		return c.copyOnRewriteRefOfIntervalDateExpr(n, parent)
 	case *IntervalFuncExpr:
 		return c.copyOnRewriteRefOfIntervalFuncExpr(n, parent)
 	case *IntroducerExpr:
@@ -288,6 +288,8 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfJtOnResponse(n, parent)
 	case *KeyState:
 		return c.copyOnRewriteRefOfKeyState(n, parent)
+	case *Kill:
+		return c.copyOnRewriteRefOfKill(n, parent)
 	case *LagLeadExpr:
 		return c.copyOnRewriteRefOfLagLeadExpr(n, parent)
 	case *Limit:
@@ -364,8 +366,6 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfOrderByOption(n, parent)
 	case *OtherAdmin:
 		return c.copyOnRewriteRefOfOtherAdmin(n, parent)
-	case *OtherRead:
-		return c.copyOnRewriteRefOfOtherRead(n, parent)
 	case *OverClause:
 		return c.copyOnRewriteRefOfOverClause(n, parent)
 	case *ParenTableExpr:
@@ -498,8 +498,8 @@ func (c *cow) copyOnRewriteSQLNode(n SQLNode, parent SQLNode) (out SQLNode, chan
 		return c.copyOnRewriteRefOfTableSpec(n, parent)
 	case *TablespaceOperation:
 		return c.copyOnRewriteRefOfTablespaceOperation(n, parent)
-	case *TimestampFuncExpr:
-		return c.copyOnRewriteRefOfTimestampFuncExpr(n, parent)
+	case *TimestampDiffExpr:
+		return c.copyOnRewriteRefOfTimestampDiffExpr(n, parent)
 	case *TrimFuncExpr:
 		return c.copyOnRewriteRefOfTrimFuncExpr(n, parent)
 	case *TruncateTable:
@@ -923,6 +923,28 @@ func (c *cow) copyOnRewriteRefOfAlterVschema(n *AlterVschema, parent SQLNode) (o
 	}
 	return
 }
+func (c *cow) copyOnRewriteRefOfAnalyze(n *Analyze, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+		_Table, changedTable := c.copyOnRewriteTableName(n.Table, n)
+		if changedTable {
+			res := *n
+			res.Table, _ = _Table.(TableName)
+			out = &res
+			if c.cloned != nil {
+				c.cloned(n, out)
+			}
+			changed = true
+		}
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
 func (c *cow) copyOnRewriteRefOfAndExpr(n *AndExpr, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
@@ -935,6 +957,28 @@ func (c *cow) copyOnRewriteRefOfAndExpr(n *AndExpr, parent SQLNode) (out SQLNode
 			res := *n
 			res.Left, _ = _Left.(Expr)
 			res.Right, _ = _Right.(Expr)
+			out = &res
+			if c.cloned != nil {
+				c.cloned(n, out)
+			}
+			changed = true
+		}
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
+func (c *cow) copyOnRewriteRefOfAnyValue(n *AnyValue, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+		_Arg, changedArg := c.copyOnRewriteExpr(n.Arg, n)
+		if changedArg {
+			res := *n
+			res.Arg, _ = _Arg.(Expr)
 			out = &res
 			if c.cloned != nil {
 				c.cloned(n, out)
@@ -1756,54 +1800,6 @@ func (c *cow) copyOnRewriteRefOfCurTimeFuncExpr(n *CurTimeFuncExpr, parent SQLNo
 	}
 	return
 }
-func (c *cow) copyOnRewriteRefOfDateAddExpr(n *DateAddExpr, parent SQLNode) (out SQLNode, changed bool) {
-	if n == nil || c.cursor.stop {
-		return n, false
-	}
-	out = n
-	if c.pre == nil || c.pre(n, parent) {
-		_Date, changedDate := c.copyOnRewriteExpr(n.Date, n)
-		_Expr, changedExpr := c.copyOnRewriteExpr(n.Expr, n)
-		if changedDate || changedExpr {
-			res := *n
-			res.Date, _ = _Date.(Expr)
-			res.Expr, _ = _Expr.(Expr)
-			out = &res
-			if c.cloned != nil {
-				c.cloned(n, out)
-			}
-			changed = true
-		}
-	}
-	if c.post != nil {
-		out, changed = c.postVisit(out, parent, changed)
-	}
-	return
-}
-func (c *cow) copyOnRewriteRefOfDateSubExpr(n *DateSubExpr, parent SQLNode) (out SQLNode, changed bool) {
-	if n == nil || c.cursor.stop {
-		return n, false
-	}
-	out = n
-	if c.pre == nil || c.pre(n, parent) {
-		_Date, changedDate := c.copyOnRewriteExpr(n.Date, n)
-		_Expr, changedExpr := c.copyOnRewriteExpr(n.Expr, n)
-		if changedDate || changedExpr {
-			res := *n
-			res.Date, _ = _Date.(Expr)
-			res.Expr, _ = _Expr.(Expr)
-			out = &res
-			if c.cloned != nil {
-				c.cloned(n, out)
-			}
-			changed = true
-		}
-	}
-	if c.post != nil {
-		out, changed = c.postVisit(out, parent, changed)
-	}
-	return
-}
 func (c *cow) copyOnRewriteRefOfDeallocateStmt(n *DeallocateStmt, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
@@ -2185,34 +2181,6 @@ func (c *cow) copyOnRewriteRefOfExtractValueExpr(n *ExtractValueExpr, parent SQL
 			res := *n
 			res.Fragment, _ = _Fragment.(Expr)
 			res.XPathExpr, _ = _XPathExpr.(Expr)
-			out = &res
-			if c.cloned != nil {
-				c.cloned(n, out)
-			}
-			changed = true
-		}
-	}
-	if c.post != nil {
-		out, changed = c.postVisit(out, parent, changed)
-	}
-	return
-}
-func (c *cow) copyOnRewriteRefOfExtractedSubquery(n *ExtractedSubquery, parent SQLNode) (out SQLNode, changed bool) {
-	if n == nil || c.cursor.stop {
-		return n, false
-	}
-	out = n
-	if c.pre == nil || c.pre(n, parent) {
-		_Original, changedOriginal := c.copyOnRewriteExpr(n.Original, n)
-		_Subquery, changedSubquery := c.copyOnRewriteRefOfSubquery(n.Subquery, n)
-		_OtherSide, changedOtherSide := c.copyOnRewriteExpr(n.OtherSide, n)
-		_alternative, changedalternative := c.copyOnRewriteExpr(n.alternative, n)
-		if changedOriginal || changedSubquery || changedOtherSide || changedalternative {
-			res := *n
-			res.Original, _ = _Original.(Expr)
-			res.Subquery, _ = _Subquery.(*Subquery)
-			res.OtherSide, _ = _OtherSide.(Expr)
-			res.alternative, _ = _alternative.(Expr)
 			out = &res
 			if c.cloned != nil {
 				c.cloned(n, out)
@@ -2907,6 +2875,30 @@ func (c *cow) copyOnRewriteRefOfInsertExpr(n *InsertExpr, parent SQLNode) (out S
 			res.Pos, _ = _Pos.(Expr)
 			res.Len, _ = _Len.(Expr)
 			res.NewStr, _ = _NewStr.(Expr)
+			out = &res
+			if c.cloned != nil {
+				c.cloned(n, out)
+			}
+			changed = true
+		}
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
+func (c *cow) copyOnRewriteRefOfIntervalDateExpr(n *IntervalDateExpr, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+		_Date, changedDate := c.copyOnRewriteExpr(n.Date, n)
+		_Interval, changedInterval := c.copyOnRewriteExpr(n.Interval, n)
+		if changedDate || changedInterval {
+			res := *n
+			res.Date, _ = _Date.(Expr)
+			res.Interval, _ = _Interval.(Expr)
 			out = &res
 			if c.cloned != nil {
 				c.cloned(n, out)
@@ -3662,6 +3654,18 @@ func (c *cow) copyOnRewriteRefOfJtOnResponse(n *JtOnResponse, parent SQLNode) (o
 	return
 }
 func (c *cow) copyOnRewriteRefOfKeyState(n *KeyState, parent SQLNode) (out SQLNode, changed bool) {
+	if n == nil || c.cursor.stop {
+		return n, false
+	}
+	out = n
+	if c.pre == nil || c.pre(n, parent) {
+	}
+	if c.post != nil {
+		out, changed = c.postVisit(out, parent, changed)
+	}
+	return
+}
+func (c *cow) copyOnRewriteRefOfKill(n *Kill, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
 	}
@@ -4437,18 +4441,6 @@ func (c *cow) copyOnRewriteRefOfOrderByOption(n *OrderByOption, parent SQLNode) 
 	return
 }
 func (c *cow) copyOnRewriteRefOfOtherAdmin(n *OtherAdmin, parent SQLNode) (out SQLNode, changed bool) {
-	if n == nil || c.cursor.stop {
-		return n, false
-	}
-	out = n
-	if c.pre == nil || c.pre(n, parent) {
-	}
-	if c.post != nil {
-		out, changed = c.postVisit(out, parent, changed)
-	}
-	return
-}
-func (c *cow) copyOnRewriteRefOfOtherRead(n *OtherRead, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
 	}
@@ -5965,7 +5957,7 @@ func (c *cow) copyOnRewriteRefOfTablespaceOperation(n *TablespaceOperation, pare
 	}
 	return
 }
-func (c *cow) copyOnRewriteRefOfTimestampFuncExpr(n *TimestampFuncExpr, parent SQLNode) (out SQLNode, changed bool) {
+func (c *cow) copyOnRewriteRefOfTimestampDiffExpr(n *TimestampDiffExpr, parent SQLNode) (out SQLNode, changed bool) {
 	if n == nil || c.cursor.stop {
 		return n, false
 	}
@@ -6709,6 +6701,8 @@ func (c *cow) copyOnRewriteAggrFunc(n AggrFunc, parent SQLNode) (out SQLNode, ch
 		return n, false
 	}
 	switch n := n.(type) {
+	case *AnyValue:
+		return c.copyOnRewriteRefOfAnyValue(n, parent)
 	case *Avg:
 		return c.copyOnRewriteRefOfAvg(n, parent)
 	case *BitAnd:
@@ -6807,6 +6801,8 @@ func (c *cow) copyOnRewriteCallable(n Callable, parent SQLNode) (out SQLNode, ch
 		return n, false
 	}
 	switch n := n.(type) {
+	case *AnyValue:
+		return c.copyOnRewriteRefOfAnyValue(n, parent)
 	case *ArgumentLessWindowExpr:
 		return c.copyOnRewriteRefOfArgumentLessWindowExpr(n, parent)
 	case *Avg:
@@ -6823,10 +6819,6 @@ func (c *cow) copyOnRewriteCallable(n Callable, parent SQLNode) (out SQLNode, ch
 		return c.copyOnRewriteRefOfCountStar(n, parent)
 	case *CurTimeFuncExpr:
 		return c.copyOnRewriteRefOfCurTimeFuncExpr(n, parent)
-	case *DateAddExpr:
-		return c.copyOnRewriteRefOfDateAddExpr(n, parent)
-	case *DateSubExpr:
-		return c.copyOnRewriteRefOfDateSubExpr(n, parent)
 	case *ExtractFuncExpr:
 		return c.copyOnRewriteRefOfExtractFuncExpr(n, parent)
 	case *ExtractValueExpr:
@@ -6861,6 +6853,8 @@ func (c *cow) copyOnRewriteCallable(n Callable, parent SQLNode) (out SQLNode, ch
 		return c.copyOnRewriteRefOfGroupConcatExpr(n, parent)
 	case *InsertExpr:
 		return c.copyOnRewriteRefOfInsertExpr(n, parent)
+	case *IntervalDateExpr:
+		return c.copyOnRewriteRefOfIntervalDateExpr(n, parent)
 	case *IntervalFuncExpr:
 		return c.copyOnRewriteRefOfIntervalFuncExpr(n, parent)
 	case *JSONArrayExpr:
@@ -6953,8 +6947,8 @@ func (c *cow) copyOnRewriteCallable(n Callable, parent SQLNode) (out SQLNode, ch
 		return c.copyOnRewriteRefOfSubstrExpr(n, parent)
 	case *Sum:
 		return c.copyOnRewriteRefOfSum(n, parent)
-	case *TimestampFuncExpr:
-		return c.copyOnRewriteRefOfTimestampFuncExpr(n, parent)
+	case *TimestampDiffExpr:
+		return c.copyOnRewriteRefOfTimestampDiffExpr(n, parent)
 	case *TrimFuncExpr:
 		return c.copyOnRewriteRefOfTrimFuncExpr(n, parent)
 	case *UpdateXMLExpr:
@@ -7061,6 +7055,8 @@ func (c *cow) copyOnRewriteExpr(n Expr, parent SQLNode) (out SQLNode, changed bo
 	switch n := n.(type) {
 	case *AndExpr:
 		return c.copyOnRewriteRefOfAndExpr(n, parent)
+	case *AnyValue:
+		return c.copyOnRewriteRefOfAnyValue(n, parent)
 	case *Argument:
 		return c.copyOnRewriteRefOfArgument(n, parent)
 	case *ArgumentLessWindowExpr:
@@ -7103,10 +7099,6 @@ func (c *cow) copyOnRewriteExpr(n Expr, parent SQLNode) (out SQLNode, changed bo
 		return c.copyOnRewriteRefOfCountStar(n, parent)
 	case *CurTimeFuncExpr:
 		return c.copyOnRewriteRefOfCurTimeFuncExpr(n, parent)
-	case *DateAddExpr:
-		return c.copyOnRewriteRefOfDateAddExpr(n, parent)
-	case *DateSubExpr:
-		return c.copyOnRewriteRefOfDateSubExpr(n, parent)
 	case *Default:
 		return c.copyOnRewriteRefOfDefault(n, parent)
 	case *ExistsExpr:
@@ -7115,8 +7107,6 @@ func (c *cow) copyOnRewriteExpr(n Expr, parent SQLNode) (out SQLNode, changed bo
 		return c.copyOnRewriteRefOfExtractFuncExpr(n, parent)
 	case *ExtractValueExpr:
 		return c.copyOnRewriteRefOfExtractValueExpr(n, parent)
-	case *ExtractedSubquery:
-		return c.copyOnRewriteRefOfExtractedSubquery(n, parent)
 	case *FirstOrLastValueExpr:
 		return c.copyOnRewriteRefOfFirstOrLastValueExpr(n, parent)
 	case *FuncExpr:
@@ -7147,6 +7137,8 @@ func (c *cow) copyOnRewriteExpr(n Expr, parent SQLNode) (out SQLNode, changed bo
 		return c.copyOnRewriteRefOfGroupConcatExpr(n, parent)
 	case *InsertExpr:
 		return c.copyOnRewriteRefOfInsertExpr(n, parent)
+	case *IntervalDateExpr:
+		return c.copyOnRewriteRefOfIntervalDateExpr(n, parent)
 	case *IntervalFuncExpr:
 		return c.copyOnRewriteRefOfIntervalFuncExpr(n, parent)
 	case *IntroducerExpr:
@@ -7267,8 +7259,8 @@ func (c *cow) copyOnRewriteExpr(n Expr, parent SQLNode) (out SQLNode, changed bo
 		return c.copyOnRewriteRefOfSubstrExpr(n, parent)
 	case *Sum:
 		return c.copyOnRewriteRefOfSum(n, parent)
-	case *TimestampFuncExpr:
-		return c.copyOnRewriteRefOfTimestampFuncExpr(n, parent)
+	case *TimestampDiffExpr:
+		return c.copyOnRewriteRefOfTimestampDiffExpr(n, parent)
 	case *TrimFuncExpr:
 		return c.copyOnRewriteRefOfTrimFuncExpr(n, parent)
 	case *UnaryExpr:
@@ -7387,6 +7379,8 @@ func (c *cow) copyOnRewriteStatement(n Statement, parent SQLNode) (out SQLNode, 
 		return c.copyOnRewriteRefOfAlterView(n, parent)
 	case *AlterVschema:
 		return c.copyOnRewriteRefOfAlterVschema(n, parent)
+	case *Analyze:
+		return c.copyOnRewriteRefOfAnalyze(n, parent)
 	case *Begin:
 		return c.copyOnRewriteRefOfBegin(n, parent)
 	case *CallProc:
@@ -7421,6 +7415,8 @@ func (c *cow) copyOnRewriteStatement(n Statement, parent SQLNode) (out SQLNode, 
 		return c.copyOnRewriteRefOfFlush(n, parent)
 	case *Insert:
 		return c.copyOnRewriteRefOfInsert(n, parent)
+	case *Kill:
+		return c.copyOnRewriteRefOfKill(n, parent)
 	case *Load:
 		return c.copyOnRewriteRefOfLoad(n, parent)
 	case *LoadDataStmt:
@@ -7429,8 +7425,6 @@ func (c *cow) copyOnRewriteStatement(n Statement, parent SQLNode) (out SQLNode, 
 		return c.copyOnRewriteRefOfLockTables(n, parent)
 	case *OtherAdmin:
 		return c.copyOnRewriteRefOfOtherAdmin(n, parent)
-	case *OtherRead:
-		return c.copyOnRewriteRefOfOtherRead(n, parent)
 	case *PrepareStmt:
 		return c.copyOnRewriteRefOfPrepareStmt(n, parent)
 	case *PurgeBinaryLogs:

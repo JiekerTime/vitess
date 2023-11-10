@@ -25,20 +25,20 @@ import (
 	"sync"
 	"testing"
 
-	"vitess.io/vitess/go/mysql/collations"
 	vtgatepb "vitess.io/vitess/go/vt/proto/vtgate"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
 	"vitess.io/vitess/go/mysql"
+	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/log"
+	"vitess.io/vitess/go/vt/vtgate/vtgateconn"
+
 	binlogdatapb "vitess.io/vitess/go/vt/proto/binlogdata"
-	"vitess.io/vitess/go/vt/proto/query"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
-	"vitess.io/vitess/go/vt/vtgate/vtgateconn"
 )
 
 func initialize(ctx context.Context, t *testing.T) (*vtgateconn.VTGateConn, *mysql.Conn, *mysql.Conn, func()) {
@@ -151,11 +151,12 @@ func TestVStream(t *testing.T) {
 			Keyspace:  "ks",
 			Shard:     "-80",
 			RowChanges: []*binlogdatapb.RowChange{{
-				After: &query.Row{
+				After: &querypb.Row{
 					Lengths: []int64{1, 1},
 					Values:  []byte("11"),
 				},
 			}},
+			Flags: 1, // foreign_key_checks are enabled by default.
 		}
 		gotRows := events[2].RowEvent
 		if !proto.Equal(gotRows, wantRows) {
@@ -177,7 +178,7 @@ func TestVStreamCopyBasic(t *testing.T) {
 	}
 
 	lastPK := sqltypes.Result{
-		Fields: []*query.Field{{Name: "id1", Type: query.Type_INT32}},
+		Fields: []*querypb.Field{{Name: "id1", Type: querypb.Type_INT32}},
 		Rows:   [][]sqltypes.Value{{sqltypes.NewInt32(4)}},
 	}
 	qr := sqltypes.ResultToProto3(&lastPK)
@@ -405,7 +406,7 @@ func TestVStreamCopyResume(t *testing.T) {
 
 	// lastPK is id1=4, meaning we should only copy rows for id1 IN(5,6,7,8,9)
 	lastPK := sqltypes.Result{
-		Fields: []*query.Field{{Name: "id1", Type: query.Type_INT64, Charset: collations.CollationBinaryID, Flags: uint32(query.MySqlFlag_NUM_FLAG | query.MySqlFlag_BINARY_FLAG)}},
+		Fields: []*querypb.Field{{Name: "id1", Type: querypb.Type_INT64, Charset: collations.CollationBinaryID, Flags: uint32(querypb.MySqlFlag_NUM_FLAG | querypb.MySqlFlag_BINARY_FLAG)}},
 		Rows:   [][]sqltypes.Value{{sqltypes.NewInt64(4)}},
 	}
 	tableLastPK := []*binlogdatapb.TableLastPK{{
@@ -478,6 +479,7 @@ func TestVStreamCopyResume(t *testing.T) {
 		case nil:
 			for _, ev := range e {
 				if ev.Type == binlogdatapb.VEventType_ROW {
+					ev.RowEvent.Flags = 0 // null Flags, so we don't have to define flags in every wanted row event.
 					evs = append(evs, ev)
 					if ev.Timestamp == 0 {
 						rowCopyEvents++
@@ -616,9 +618,9 @@ func TestVStreamSharded(t *testing.T) {
 		received bool
 	}
 	expectedEvents := []*expectedEvent{
-		{`type:FIELD field_event:{table_name:"ks.t1_sharded" fields:{name:"id1" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_-80" org_name:"id1" column_length:20 charset:63 flags:53251} fields:{name:"id2" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_-80" org_name:"id2" column_length:20 charset:63 flags:32768} keyspace:"ks" shard:"-80"}`, false},
+		{`type:FIELD field_event:{table_name:"ks.t1_sharded" fields:{name:"id1" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_-80" org_name:"id1" column_length:20 charset:63 flags:53251 column_type:"bigint(20)"} fields:{name:"id2" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_-80" org_name:"id2" column_length:20 charset:63 flags:32768 column_type:"bigint(20)"} keyspace:"ks" shard:"-80"}`, false},
 		{`type:ROW row_event:{table_name:"ks.t1_sharded" row_changes:{after:{lengths:1 lengths:1 values:"11"}} keyspace:"ks" shard:"-80"}`, false},
-		{`type:FIELD field_event:{table_name:"ks.t1_sharded" fields:{name:"id1" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_80-" org_name:"id1" column_length:20 charset:63 flags:53251} fields:{name:"id2" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_80-" org_name:"id2" column_length:20 charset:63 flags:32768} keyspace:"ks" shard:"80-"}`, false},
+		{`type:FIELD field_event:{table_name:"ks.t1_sharded" fields:{name:"id1" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_80-" org_name:"id1" column_length:20 charset:63 flags:53251 column_type:"bigint(20)"} fields:{name:"id2" type:INT64 table:"t1_sharded" org_table:"t1_sharded" database:"ks_80-" org_name:"id2" column_length:20 charset:63 flags:32768 column_type:"bigint(20)"} keyspace:"ks" shard:"80-"}`, false},
 		{`type:ROW row_event:{table_name:"ks.t1_sharded" row_changes:{after:{lengths:1 lengths:1 values:"44"}} keyspace:"ks" shard:"80-"}`, false},
 	}
 	for {
@@ -643,7 +645,7 @@ func TestVStreamSharded(t *testing.T) {
 				for _, ev := range evs {
 					s := fmt.Sprintf("%v", ev)
 					for _, expectedEv := range expectedEvents {
-						if expectedEv.ev == s {
+						if removeAnyDeprecatedDisplayWidths(expectedEv.ev) == removeAnyDeprecatedDisplayWidths(s) {
 							expectedEv.received = true
 							break
 						}

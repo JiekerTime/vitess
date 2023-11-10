@@ -44,6 +44,7 @@ const (
 	StmtShow
 	StmtUse
 	StmtOther
+	StmtAnalyze
 	StmtUnknown
 	StmtComment
 	StmtPriv
@@ -69,6 +70,7 @@ const (
 	StmtTruncate
 	StmtRename
 	StmtPlan
+	StmtKill
 )
 
 // ASTToStatementType returns a StatementType from an AST stmt
@@ -94,8 +96,10 @@ func ASTToStatementType(stmt Statement) StatementType {
 		return StmtShowMigrationLogs
 	case *Use:
 		return StmtUse
-	case *OtherRead, *OtherAdmin, *Load:
+	case *OtherAdmin, *Load:
 		return StmtOther
+	case *Analyze:
+		return StmtAnalyze
 	case Explain, *VExplainStmt:
 		return StmtExplain
 	case *Begin:
@@ -130,6 +134,8 @@ func ASTToStatementType(stmt Statement) StatementType {
 		return StmtExecute
 	case *DeallocateStmt:
 		return StmtDeallocate
+	case *Kill:
+		return StmtKill
 	default:
 		return StmtUnknown
 	}
@@ -251,14 +257,18 @@ func Preview(sql string) StatementType {
 		return StmtUse
 	case "describe", "desc", "explain":
 		return StmtExplain
-	case "analyze", "repair", "optimize":
+	case "repair", "optimize":
 		return StmtOther
+	case "analyze":
+		return StmtAnalyze
 	case "grant", "revoke":
 		return StmtPriv
 	case "release":
 		return StmtRelease
 	case "rollback":
 		return StmtSRollback
+	case "kill":
+		return StmtKill
 	}
 	return StmtUnknown
 }
@@ -297,6 +307,8 @@ func (s StatementType) String() string {
 		return "USE"
 	case StmtOther:
 		return "OTHER"
+	case StmtAnalyze:
+		return "ANALYZE"
 	case StmtPriv:
 		return "PRIV"
 	case StmtExplain:
@@ -323,6 +335,8 @@ func (s StatementType) String() string {
 		return "EXECUTE"
 	case StmtDeallocate:
 		return "DEALLOCATE PREPARE"
+	case StmtKill:
+		return "KILL"
 	default:
 		return "UNKNOWN"
 	}

@@ -42,8 +42,12 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"vitess.io/vitess/go/mysql/sqlerror"
+	"vitess.io/vitess/go/protoutil"
+
 	"vitess.io/vitess/config"
 	"vitess.io/vitess/go/mysql"
+	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/dbconfigs"
 	"vitess.io/vitess/go/vt/dbconnpool"
 	"vitess.io/vitess/go/vt/hook"
@@ -53,6 +57,8 @@ import (
 	"vitess.io/vitess/go/vt/vterrors"
 
 	vtenv "vitess.io/vitess/go/vt/env"
+	mysqlctlpb "vitess.io/vitess/go/vt/proto/mysqlctl"
+	"vitess.io/vitess/go/vt/proto/vtrpc"
 )
 
 var (
@@ -81,6 +87,9 @@ var (
 	replicationConnectRetry = 10 * time.Second
 
 	versionRegex = regexp.MustCompile(`Ver ([0-9]+)\.([0-9]+)\.([0-9]+)`)
+
+	binlogEntryCommittedTimestampRegex = regexp.MustCompile("original_committed_timestamp=([0-9]+)")
+	binlogEntryTimestampGTIDRegexp     = regexp.MustCompile(`^#(.+) server id.*\bGTID\b`)
 )
 
 // How many bytes from MySQL error log to sample for error messages
@@ -568,7 +577,6 @@ func (mysqld *Mysqld) Shutdown(ctx context.Context, cnf *Mycnf, waitForMysqld bo
 // If input is not nil, pipe it to the command's stdin.
 func execCmd(name string, args, env []string, dir string, input io.Reader) (cmd *exec.Cmd, output string, err error) {
 	cmdPath, _ := exec.LookPath(name)
-	log.Infof("execCmd: %v %v %v", name, cmdPath, args)
 
 	cmd = exec.Command(cmdPath, args...)
 	cmd.Env = env
@@ -579,10 +587,9 @@ func execCmd(name string, args, env []string, dir string, input io.Reader) (cmd 
 	out, err := cmd.CombinedOutput()
 	output = string(out)
 	if err != nil {
-		log.Infof("execCmd: %v failed: %v", name, err)
-		err = fmt.Errorf("%v: %v, output: %v", name, err, output)
+		log.Errorf("execCmd: %v failed: %v", name, err)
+		err = fmt.Errorf("%v: %w, output: %v", name, err, output)
 	}
-	log.Infof("execCmd: %v output: %v", name, output)
 	return cmd, output, err
 }
 
@@ -651,7 +658,7 @@ func (mysqld *Mysqld) Init(ctx context.Context, cnf *Mycnf, initDBSQLFile string
 		return err
 	}
 	if initDBSQLFile == "" { // default to built-in
-		if err := mysqld.executeMysqlScript(params, strings.NewReader(config.DefaultInitDB)); err != nil {
+		if err := mysqld.executeMysqlScript(ctx, params, config.DefaultInitDB); err != nil {
 			return fmt.Errorf("failed to initialize mysqld: %v", err)
 		}
 		return nil
@@ -663,7 +670,11 @@ func (mysqld *Mysqld) Init(ctx context.Context, cnf *Mycnf, initDBSQLFile string
 		return fmt.Errorf("can't open init_db_sql_file (%v): %v", initDBSQLFile, err)
 	}
 	defer sqlFile.Close()
-	if err := mysqld.executeMysqlScript(params, sqlFile); err != nil {
+	script, err := io.ReadAll(sqlFile)
+	if err != nil {
+		return fmt.Errorf("can't read init_db_sql_file (%v): %v", initDBSQLFile, err)
+	}
+	if err := mysqld.executeMysqlScript(ctx, params, string(script)); err != nil {
 		return fmt.Errorf("can't run init_db_sql_file (%v): %v", initDBSQLFile, err)
 	}
 	return nil
@@ -1006,34 +1017,25 @@ func deleteTopDir(dir string) (removalErr error) {
 	return
 }
 
-// executeMysqlScript executes a .sql script from an io.Reader with the mysql
-// command line tool. It uses the connParams as is, not adding credentials.
-func (mysqld *Mysqld) executeMysqlScript(connParams *mysql.ConnParams, sql io.Reader) error {
-	dir, err := vtenv.VtMysqlRoot()
+// executeMysqlScript executes the contents of an SQL script as a string.
+// It uses the connParams as is, not adding credentials.
+func (mysqld *Mysqld) executeMysqlScript(ctx context.Context, connParams *mysql.ConnParams, sql string) error {
+	connector := dbconfigs.New(connParams)
+	conn, err := connector.Connect(ctx)
 	if err != nil {
 		return err
 	}
-	name, err := binaryPath(dir, "mysql")
+	defer conn.Close()
+
+	_, more, err := conn.ExecuteFetchMulti(sql, -1, false)
 	if err != nil {
 		return err
 	}
-	cnf, err := mysqld.defaultsExtraFile(connParams)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(cnf)
-	args := []string{
-		"--defaults-extra-file=" + cnf,
-		"--batch",
-		"--default-character-set=utf8mb4",
-	}
-	env, err := buildLdPaths()
-	if err != nil {
-		return err
-	}
-	_, _, err = execCmd(name, args, env, dir, sql)
-	if err != nil {
-		return err
+	for more {
+		_, more, _, err = conn.ReadQueryResult(0, false)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1133,38 +1135,35 @@ func buildLdPaths() ([]string, error) {
 }
 
 // GetVersionString is part of the MysqlExecutor interface.
-func (mysqld *Mysqld) GetVersionString(ctx context.Context) string {
-	qr, err := mysqld.FetchSuperQuery(ctx, "select @@global.version")
-	if err != nil {
-		log.Errorf("Error fetching MySQL version: %v", err)
-		return ""
+func (mysqld *Mysqld) GetVersionString(ctx context.Context) (string, error) {
+	// Execute as remote action on mysqlctld to ensure we get the actual running MySQL version.
+	if socketFile != "" {
+		client, err := mysqlctlclient.New("unix", socketFile)
+		if err != nil {
+			return "", fmt.Errorf("can't dial mysqlctld: %v", err)
+		}
+		defer client.Close()
+		return client.VersionString(ctx)
 	}
-	if len(qr.Rows) != 1 {
-		log.Errorf("Unexpected number of rows: %v", qr.Rows)
-		return ""
-	}
-	res := qr.Named().Row()
-	version, _ := res.ToString("@@global.version")
-	return version
+	return GetVersionString()
 }
 
 // GetVersionComment gets the version comment.
-func (mysqld *Mysqld) GetVersionComment(ctx context.Context) string {
+func (mysqld *Mysqld) GetVersionComment(ctx context.Context) (string, error) {
 	qr, err := mysqld.FetchSuperQuery(ctx, "select @@global.version_comment")
 	if err != nil {
-		return ""
+		return "", err
 	}
 	if len(qr.Rows) != 1 {
-		return ""
+		return "", fmt.Errorf("unexpected result length: %v", len(qr.Rows))
 	}
 	res := qr.Named().Row()
-	versionComment, _ := res.ToString("@@global.version_comment")
-	return versionComment
+	return res.ToString("@@global.version_comment")
 }
 
 // ApplyBinlogFile extracts a binary log file and applies it to MySQL. It is the equivalent of:
 // $ mysqlbinlog --include-gtids binlog.file | mysql
-func (mysqld *Mysqld) ApplyBinlogFile(ctx context.Context, binlogFile string, restorePos mysql.Position) error {
+func (mysqld *Mysqld) ApplyBinlogFile(ctx context.Context, req *mysqlctlpb.ApplyBinlogFileRequest) error {
 	if socketFile != "" {
 		log.Infof("executing Mysqld.ApplyBinlogFile() remotely via mysqlctld server: %v", socketFile)
 		client, err := mysqlctlclient.New("unix", socketFile)
@@ -1172,7 +1171,7 @@ func (mysqld *Mysqld) ApplyBinlogFile(ctx context.Context, binlogFile string, re
 			return fmt.Errorf("can't dial mysqlctld: %v", err)
 		}
 		defer client.Close()
-		return client.ApplyBinlogFile(ctx, binlogFile, mysql.EncodePosition(restorePos))
+		return client.ApplyBinlogFile(ctx, req)
 	}
 	var pipe io.ReadCloser
 	var mysqlbinlogCmd *exec.Cmd
@@ -1192,14 +1191,20 @@ func (mysqld *Mysqld) ApplyBinlogFile(ctx context.Context, binlogFile string, re
 			return err
 		}
 		args := []string{}
-		if gtids := restorePos.GTIDSet.String(); gtids != "" {
+		if gtids := req.BinlogRestorePosition; gtids != "" {
 			args = append(args,
 				"--include-gtids",
 				gtids,
 			)
 		}
+		if restoreToTimestamp := protoutil.TimeFromProto(req.BinlogRestoreDatetime).UTC(); !restoreToTimestamp.IsZero() {
+			args = append(args,
+				"--stop-datetime",
+				restoreToTimestamp.Format(sqltypes.TimestampFormat),
+			)
+		}
 
-		args = append(args, binlogFile)
+		args = append(args, req.BinlogFileName)
 
 		mysqlbinlogCmd = exec.Command(name, args...)
 		mysqlbinlogCmd.Dir = dir
@@ -1241,7 +1246,7 @@ func (mysqld *Mysqld) ApplyBinlogFile(ctx context.Context, binlogFile string, re
 		log.Infof("ApplyBinlogFile: disabling super_read_only")
 		resetFunc, err := mysqld.SetSuperReadOnly(false)
 		if err != nil {
-			if sqlErr, ok := err.(*mysql.SQLError); ok && sqlErr.Number() == mysql.ERUnknownSystemVariable {
+			if sqlErr, ok := err.(*sqlerror.SQLError); ok && sqlErr.Number() == sqlerror.ERUnknownSystemVariable {
 				log.Warningf("ApplyBinlogFile: server does not know about super_read_only, continuing anyway...")
 			} else {
 				log.Errorf("ApplyBinlogFile: unexpected error while trying to set super_read_only: %v", err)
@@ -1288,6 +1293,174 @@ func (mysqld *Mysqld) ApplyBinlogFile(ctx context.Context, binlogFile string, re
 	return nil
 }
 
+// parseBinlogEntryTimestamp attempts to extract a timestamp from a binlog entry.
+func parseBinlogEntryTimestamp(logEntry string) (t time.Time, err error) {
+	if len(logEntry) == 0 {
+		return t, nil
+	}
+	if logEntry[0] != '#' {
+		return t, nil
+	}
+	if submatch := binlogEntryCommittedTimestampRegex.FindStringSubmatch(logEntry); submatch != nil {
+		// MySQL 8.0
+		binlogEntryCommittedTimestamp := submatch[1]
+		unixMicros, err := strconv.ParseInt(binlogEntryCommittedTimestamp, 10, 64)
+		if err != nil {
+			return t, err
+		}
+		return time.UnixMicro(unixMicros), nil
+	}
+	if submatch := binlogEntryTimestampGTIDRegexp.FindStringSubmatch(logEntry); submatch != nil {
+		// MySQL 5.7
+		t, err = ParseBinlogTimestamp(submatch[1])
+		if err != nil {
+			return t, err
+		}
+		return t, nil
+	}
+	return t, nil
+}
+
+// scanBinlogTimestamp invokes a `mysqlbinlog` binary to look for a timestamp in the given binary. The function
+// looks for the first and last timestamps.
+func (mysqld *Mysqld) scanBinlogTimestamp(
+	mysqlbinlogDir string,
+	mysqlbinlogEnv []string,
+	mysqlbinlogName string,
+	binlogFile string,
+	stopAtFirst bool, // unused at this moment, to be used as an optimization hint
+) (
+	firstMatchedTime time.Time,
+	lastMatchedTime time.Time,
+	err error,
+) {
+	args := []string{binlogFile}
+	mysqlbinlogCmd := exec.Command(mysqlbinlogName, args...)
+	mysqlbinlogCmd.Dir = mysqlbinlogDir
+	mysqlbinlogCmd.Env = mysqlbinlogEnv
+	log.Infof("ApplyBinlogFile: running mysqlbinlog command: %#v", mysqlbinlogCmd)
+	pipe, err := mysqlbinlogCmd.StdoutPipe() // to be piped into mysql
+	if err != nil {
+		return firstMatchedTime, lastMatchedTime, err
+	}
+	scan := func() error {
+		// Read line by line and process it
+		scanner := bufio.NewScanner(pipe)
+		for scanner.Scan() {
+			logEntry := scanner.Text()
+
+			t, err := parseBinlogEntryTimestamp(logEntry)
+			if err != nil {
+				return err
+			}
+			if t.IsZero() {
+				continue
+			}
+			if firstMatchedTime.IsZero() {
+				firstMatchedTime = t
+			}
+			lastMatchedTime = t
+		}
+		return nil
+	}
+	if err := mysqlbinlogCmd.Start(); err != nil { // Start() is nonblockig
+		return firstMatchedTime, lastMatchedTime, err
+	}
+	defer mysqlbinlogCmd.Process.Kill()
+	if err := scan(); err != nil { // We must first exhaust reading the command's output, before calling cmd.Wait()
+		return firstMatchedTime, lastMatchedTime, vterrors.Wrapf(err, "scanning mysqlbinlog output in ReadBinlogFilesTimestamps")
+	}
+	if err := mysqlbinlogCmd.Wait(); err != nil {
+		return firstMatchedTime, lastMatchedTime, vterrors.Wrapf(err, "waiting on mysqlbinlog command in ReadBinlogFilesTimestamps")
+	}
+	return firstMatchedTime, lastMatchedTime, nil
+}
+
+// ReadBinlogFilesTimestamps reads all given binlog files via `mysqlbinlog` command and returns the first and last  found transaction timestamps
+func (mysqld *Mysqld) ReadBinlogFilesTimestamps(ctx context.Context, req *mysqlctlpb.ReadBinlogFilesTimestampsRequest) (*mysqlctlpb.ReadBinlogFilesTimestampsResponse, error) {
+	if len(req.BinlogFileNames) == 0 {
+		return nil, vterrors.Errorf(vtrpc.Code_INVALID_ARGUMENT, "empty binlog list in ReadBinlogFilesTimestampsRequest")
+	}
+	if socketFile != "" {
+		log.Infof("executing Mysqld.ReadBinlogFilesTimestamps() remotely via mysqlctld server: %v", socketFile)
+		client, err := mysqlctlclient.New("unix", socketFile)
+		if err != nil {
+			return nil, fmt.Errorf("can't dial mysqlctld: %v", err)
+		}
+		defer client.Close()
+		return client.ReadBinlogFilesTimestamps(ctx, req)
+	}
+	dir, err := vtenv.VtMysqlRoot()
+	if err != nil {
+		return nil, err
+	}
+	env, err := buildLdPaths()
+	if err != nil {
+		return nil, err
+	}
+	mysqlbinlogName, err := binaryPath(dir, "mysqlbinlog")
+	if err != nil {
+		return nil, err
+	}
+
+	lastMatchedTimeMap := map[string]time.Time{} // a simple cache to avoid rescanning same files. Key=binlog file name
+
+	resp := &mysqlctlpb.ReadBinlogFilesTimestampsResponse{}
+	// Find first timestamp
+	err = func() error {
+		for _, binlogFile := range req.BinlogFileNames {
+			firstMatchedTime, lastMatchedTime, err := mysqld.scanBinlogTimestamp(dir, env, mysqlbinlogName, binlogFile, true)
+			if err != nil {
+				return vterrors.Wrapf(err, "while scanning for first binlog timestamp in %v", binlogFile)
+			}
+			if !lastMatchedTime.IsZero() {
+				// cache result
+				lastMatchedTimeMap[binlogFile] = lastMatchedTime
+			}
+			if firstMatchedTime.IsZero() {
+				// Timestamp not found in this file.
+				continue
+			}
+			resp.FirstTimestamp = protoutil.TimeToProto(firstMatchedTime)
+			resp.FirstTimestampBinlog = binlogFile
+			return nil // early break
+		}
+		return nil
+	}()
+	if err != nil {
+		return resp, err
+	}
+	// Find last timestamp
+	err = func() error {
+		for i := len(req.BinlogFileNames) - 1; i >= 0; i-- {
+			binlogFile := req.BinlogFileNames[i]
+
+			// See if we have a cached value for this file. This is certainly be the situation if there's a single binary log file in req.BinlogFileNames,
+			// which means the first file and last file are the same, and so we have already parsed the file while searching for the first timestamp.
+			lastMatchedTime, ok := lastMatchedTimeMap[binlogFile]
+			if !ok {
+				var err error
+				_, lastMatchedTime, err = mysqld.scanBinlogTimestamp(dir, env, mysqlbinlogName, binlogFile, false)
+				if err != nil {
+					return vterrors.Wrapf(err, "while scanning for last binlog timestamp in %v", binlogFile)
+				}
+			}
+			if lastMatchedTime.IsZero() {
+				// Timestamp not found in this file.
+				continue
+			}
+			resp.LastTimestamp = protoutil.TimeToProto(lastMatchedTime)
+			resp.LastTimestampBinlog = binlogFile
+			return nil // early break
+		}
+		return nil
+	}()
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
+}
+
 // noSocketFile panics if socketFile is set. This is to prevent
 // incorrect use of settings not supported when we're running
 // remote through mysqlctl.
@@ -1295,7 +1468,7 @@ func noSocketFile() {
 	if socketFile != "" {
 		// We log an error for now until we fix the issue with ApplySchema surfacing in MoveTables.
 		// See https://github.com/vitessio/vitess/issues/13203 and https://github.com/vitessio/vitess/pull/13178
-		//panic("Running remotely through mysqlctl, socketFile must not be set")
+		// panic("Running remotely through mysqlctl, socketFile must not be set")
 		log.Warning("Running remotely through mysqlctl and thus socketFile should not be set")
 	}
 }

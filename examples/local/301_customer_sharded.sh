@@ -26,3 +26,4 @@ vtctldclient ApplySchema --sql-file create_commerce_seq.sql commerce || fail "Fa
 vtctldclient ApplyVSchema --vschema-file vschema_commerce_seq.json commerce || fail "Failed to create vschema sequences in the commerce keyspace"
 vtctldclient ApplyVSchema --vschema-file vschema_customer_sharded.json customer || fail "Failed to create vschema in sharded customer keyspace"
 vtctldclient ApplySchema --sql-file create_customer_sharded.sql customer || fail "Failed to create schema in sharded customer keyspace"
+vtctldclient ApplySchema --sql-file create_commerce_seq.sql customer || fail "Failed to create schema in sharded customer keyspace"

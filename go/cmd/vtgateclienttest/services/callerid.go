@@ -17,23 +17,21 @@ limitations under the License.
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"vitess.io/vitess/go/mysql"
 
-	"context"
-
 	"google.golang.org/protobuf/proto"
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/callerid"
-	"vitess.io/vitess/go/vt/vtgate/vtgateservice"
-
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtgatepb "vitess.io/vitess/go/vt/proto/vtgate"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/vtgate/vtgateservice"
 )
 
 // CallerIDPrefix is the prefix to send with queries so they go
@@ -79,11 +77,11 @@ func (c *callerIDClient) checkCallerID(ctx context.Context, received string) (bo
 	return true, fmt.Errorf("SUCCESS: callerid matches")
 }
 
-func (c *callerIDClient) Execute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
+func (c *callerIDClient) Execute(ctx context.Context, mysqlCtx vtgateservice.MySQLConnection, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
 	if ok, err := c.checkCallerID(ctx, sql); ok {
 		return session, nil, err
 	}
-	return c.fallbackClient.Execute(ctx, session, sql, bindVariables)
+	return c.fallbackClient.Execute(ctx, mysqlCtx, conn, session, sql, bindVariables)
 }
 
 func (c *callerIDClient) ExecuteBatch(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {
@@ -95,9 +93,9 @@ func (c *callerIDClient) ExecuteBatch(ctx context.Context, conn *mysql.Conn, ses
 	return c.fallbackClient.ExecuteBatch(ctx, session, sqlList, bindVariablesList)
 }
 
-func (c *callerIDClient) StreamExecute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (c *callerIDClient) StreamExecute(ctx context.Context, mysqlCtx vtgateservice.MySQLConnection, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	if ok, err := c.checkCallerID(ctx, sql); ok {
 		return session, err
 	}
-	return c.fallbackClient.StreamExecute(ctx, session, sql, bindVariables, callback)
+	return c.fallbackClient.StreamExecute(ctx, mysqlCtx, nil, session, sql, bindVariables, callback)
 }

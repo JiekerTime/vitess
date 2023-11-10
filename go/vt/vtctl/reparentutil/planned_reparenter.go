@@ -22,21 +22,28 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/protobuf/proto"
+	"golang.org/x/sync/errgroup"
 
 	"vitess.io/vitess/go/event"
-	"vitess.io/vitess/go/mysql"
+	"vitess.io/vitess/go/mysql/replication"
+	"vitess.io/vitess/go/stats"
 	"vitess.io/vitess/go/vt/concurrency"
 	"vitess.io/vitess/go/vt/logutil"
+	logutilpb "vitess.io/vitess/go/vt/proto/logutil"
+	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
+	"vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/topo"
 	"vitess.io/vitess/go/vt/topo/topoproto"
 	"vitess.io/vitess/go/vt/topotools/events"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vttablet/tmclient"
+)
 
-	logutilpb "vitess.io/vitess/go/vt/proto/logutil"
-	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
-	"vitess.io/vitess/go/vt/proto/vtrpc"
+// counters for Planned Reparent Shard
+var (
+	prsCounter = stats.NewCountersWithMultiLabels("planned_reparent_counts", "Number of times Planned Reparent Shard has been run",
+		[]string{"Keyspace", "Shard", "Result"},
+	)
 )
 
 // PlannedReparenter performs PlannedReparentShard operations.
@@ -88,11 +95,14 @@ func NewPlannedReparenter(ts *topo.Server, tmc tmclient.TabletManagerClient, log
 // both the current and desired primary are reachable and in a good state.
 func (pr *PlannedReparenter) ReparentShard(ctx context.Context, keyspace string, shard string, opts PlannedReparentOptions) (*events.Reparent, error) {
 	var err error
+	statsLabels := []string{keyspace, shard}
+
 	if err = topo.CheckShardLocked(ctx, keyspace, shard); err != nil {
 		var unlock func(*error)
 		opts.lockAction = pr.getLockAction(opts)
 		ctx, unlock, err = pr.ts.LockShard(ctx, keyspace, shard, opts.lockAction)
 		if err != nil {
+			prsCounter.Add(append(statsLabels, failureResult), 1)
 			return nil, err
 		}
 		defer unlock(&err)
@@ -101,18 +111,23 @@ func (pr *PlannedReparenter) ReparentShard(ctx context.Context, keyspace string,
 	if opts.NewPrimaryAlias == nil && opts.AvoidPrimaryAlias == nil {
 		shardInfo, err := pr.ts.GetShard(ctx, keyspace, shard)
 		if err != nil {
+			prsCounter.Add(append(statsLabels, failureResult), 1)
 			return nil, err
 		}
 
 		opts.AvoidPrimaryAlias = shardInfo.PrimaryAlias
 	}
 
+	startTime := time.Now()
 	ev := &events.Reparent{}
 	defer func() {
+		reparentShardOpTimings.Add("PlannedReparentShard", time.Since(startTime))
 		switch err {
 		case nil:
+			prsCounter.Add(append(statsLabels, successResult), 1)
 			event.DispatchUpdate(ev, "finished PlannedReparentShard")
 		default:
+			prsCounter.Add(append(statsLabels, failureResult), 1)
 			event.DispatchUpdate(ev, "failed PlannedReparentShard: "+err.Error())
 		}
 	}()
@@ -198,9 +213,7 @@ func (pr *PlannedReparenter) preflightChecks(
 	if !canEstablishForTablet(opts.durability, newPrimaryTabletInfo.Tablet, tabletsReachable) {
 		return true, vterrors.Errorf(vtrpc.Code_FAILED_PRECONDITION, "primary-elect tablet %v won't be able to make forward progress on promotion", primaryElectAliasStr)
 	}
-
-	ev.NewPrimary = proto.Clone(newPrimaryTabletInfo.Tablet).(*topodatapb.Tablet)
-
+	ev.NewPrimary = newPrimaryTabletInfo.Tablet.CloneVT()
 	return false, nil
 }
 
@@ -215,7 +228,7 @@ func (pr *PlannedReparenter) performGracefulPromotion(
 	opts PlannedReparentOptions,
 ) error {
 	primaryElectAliasStr := topoproto.TabletAliasString(primaryElect.Alias)
-	ev.OldPrimary = proto.Clone(currentPrimary.Tablet).(*topodatapb.Tablet)
+	ev.OldPrimary = currentPrimary.Tablet.CloneVT()
 
 	// Before demoting the old primary, we're going to ensure that replication
 	// is working from the old primary to the primary-elect. If replication is
@@ -375,7 +388,7 @@ func (pr *PlannedReparenter) performPotentialPromotion(
 	type tabletPos struct {
 		alias  string
 		tablet *topodatapb.Tablet
-		pos    mysql.Position
+		pos    replication.Position
 	}
 
 	positions := make(chan tabletPos, len(tabletMap))
@@ -422,7 +435,7 @@ func (pr *PlannedReparenter) performPotentialPromotion(
 				return
 			}
 
-			pos, err := mysql.DecodePosition(primaryStatus.Position)
+			pos, err := replication.DecodePosition(primaryStatus.Position)
 			if err != nil {
 				rec.RecordError(vterrors.Wrapf(err, "cannot decode replication position (%v) for demoted tablet %v", primaryStatus.Position, alias))
 
@@ -518,6 +531,11 @@ func (pr *PlannedReparenter) reparentShardLocked(
 		return err
 	}
 
+	err = pr.verifyAllTabletsReachable(ctx, tabletMap)
+	if err != nil {
+		return err
+	}
+
 	// Check invariants that PlannedReparentShard depends on.
 	if isNoop, err := pr.preflightChecks(ctx, ev, keyspace, shard, tabletMap, &opts); err != nil {
 		return err
@@ -572,12 +590,12 @@ func (pr *PlannedReparenter) reparentShardLocked(
 	// inserted in the new primary's journal, so we can use it below to check
 	// that all the replicas have attached to new primary successfully.
 	switch {
-	case currentPrimary == nil && ev.ShardInfo.PrimaryAlias == nil:
+	case currentPrimary == nil && ev.ShardInfo.PrimaryTermStartTime == nil:
 		// Case (1): no primary has been elected ever. Initialize
 		// the primary-elect tablet
 		reparentJournalPos, err = pr.performInitialPromotion(ctx, ev.NewPrimary, opts)
 		needsRefresh = true
-	case currentPrimary == nil && ev.ShardInfo.PrimaryAlias != nil:
+	case currentPrimary == nil && ev.ShardInfo.PrimaryTermStartTime != nil:
 		// Case (2): no clear current primary. Try to find a safe promotion
 		// candidate, and promote to it.
 		err = pr.performPotentialPromotion(ctx, keyspace, shard, ev.NewPrimary, tabletMap, opts)
@@ -712,4 +730,21 @@ func (pr *PlannedReparenter) reparentTablets(
 	}
 
 	return nil
+}
+
+// verifyAllTabletsReachable verifies that all the tablets are reachable when running PRS.
+func (pr *PlannedReparenter) verifyAllTabletsReachable(ctx context.Context, tabletMap map[string]*topo.TabletInfo) error {
+	// Create a cancellable context for the entire set of RPCs to verify reachability.
+	verifyCtx, verifyCancel := context.WithTimeout(ctx, topo.RemoteOperationTimeout)
+	defer verifyCancel()
+
+	errorGroup, groupCtx := errgroup.WithContext(verifyCtx)
+	for _, info := range tabletMap {
+		tablet := info.Tablet
+		errorGroup.Go(func() error {
+			_, err := pr.tmc.PrimaryStatus(groupCtx, tablet)
+			return err
+		})
+	}
+	return errorGroup.Wait()
 }

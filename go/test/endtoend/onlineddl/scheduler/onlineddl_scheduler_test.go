@@ -35,6 +35,7 @@ import (
 	"vitess.io/vitess/go/vt/log"
 	"vitess.io/vitess/go/vt/schema"
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vttablet/tabletserver/throttle/throttlerapp"
 
 	"vitess.io/vitess/go/test/endtoend/cluster"
 	"vitess.io/vitess/go/test/endtoend/onlineddl"
@@ -273,6 +274,9 @@ func TestSchemaChange(t *testing.T) {
 	t.Run("foreign-keys", testForeignKeys)
 	t.Run("summary: validate sequential migration IDs", func(t *testing.T) {
 		onlineddl.ValidateSequentialMigrationIDs(t, &vtParams, shards)
+	})
+	t.Run("summary: validate completed_timestamp", func(t *testing.T) {
+		onlineddl.ValidateCompletedTimestamp(t, &vtParams)
 	})
 }
 
@@ -533,7 +537,7 @@ func testScheduler(t *testing.T) {
 		testTableSequentialTimes(t, t1uuid, t2uuid)
 	})
 
-	t.Run("ALTER both tables, elligible for concurrenct", func(t *testing.T) {
+	t.Run("ALTER both tables, elligible for concurrent", func(t *testing.T) {
 		// ALTER TABLE is allowed to run concurrently when no other ALTER is busy with copy state. Our tables are tiny so we expect to find both migrations running
 		t1uuid = testOnlineDDLStatement(t, createParams(trivialAlterT1Statement, ddlStrategy+" --allow-concurrent --postpone-completion", "vtgate", "", "", true)) // skip wait
 		t2uuid = testOnlineDDLStatement(t, createParams(trivialAlterT2Statement, ddlStrategy+" --allow-concurrent --postpone-completion", "vtgate", "", "", true)) // skip wait
@@ -568,9 +572,11 @@ func testScheduler(t *testing.T) {
 		})
 		testTableCompletionTimes(t, t2uuid, t1uuid)
 	})
-	t.Run("ALTER both tables, elligible for concurrenct, with throttling", func(t *testing.T) {
+	t.Run("ALTER both tables, elligible for concurrent, with throttling", func(t *testing.T) {
 		onlineddl.ThrottleAllMigrations(t, &vtParams)
 		defer onlineddl.UnthrottleAllMigrations(t, &vtParams)
+		onlineddl.CheckThrottledApps(t, &vtParams, throttlerapp.OnlineDDLName, true)
+
 		// ALTER TABLE is allowed to run concurrently when no other ALTER is busy with copy state. Our tables are tiny so we expect to find both migrations running
 		t1uuid = testOnlineDDLStatement(t, createParams(trivialAlterT1Statement, ddlStrategy+" -allow-concurrent -postpone-completion", "vtgate", "", "", true)) // skip wait
 		t2uuid = testOnlineDDLStatement(t, createParams(trivialAlterT2Statement, ddlStrategy+" -allow-concurrent -postpone-completion", "vtgate", "", "", true)) // skip wait
@@ -587,6 +593,7 @@ func testScheduler(t *testing.T) {
 			onlineddl.CheckMigrationStatus(t, &vtParams, shards, t1uuid, schema.OnlineDDLStatusRunning)
 			onlineddl.CheckMigrationStatus(t, &vtParams, shards, t2uuid, schema.OnlineDDLStatusQueued, schema.OnlineDDLStatusReady)
 		})
+
 		t.Run("check ready to complete (before)", func(t *testing.T) {
 			for _, uuid := range []string{t1uuid, t2uuid} {
 				waitForReadyToComplete(t, uuid, false)
@@ -627,6 +634,8 @@ func testScheduler(t *testing.T) {
 
 		testTableCompletionTimes(t, t2uuid, t1uuid)
 	})
+	onlineddl.CheckThrottledApps(t, &vtParams, throttlerapp.OnlineDDLName, false)
+
 	t.Run("REVERT both tables concurrent, postponed", func(t *testing.T) {
 		t1uuid = testRevertMigration(t, createRevertParams(t1uuid, ddlStrategy+" --allow-concurrent --postpone-completion", "vtgate", "", true))
 		t2uuid = testRevertMigration(t, createRevertParams(t2uuid, ddlStrategy+" --allow-concurrent --postpone-completion", "vtgate", "", true))
@@ -872,6 +881,60 @@ func testScheduler(t *testing.T) {
 				retries := row.AsInt64("retries", 0)
 				assert.Greater(t, retries, int64(0))
 			}
+		})
+	})
+
+	t.Run("Cleanup artifacts", func(t *testing.T) {
+		// Create a migration with a low --retain-artifacts value.
+		// We will cancel the migration and expect the artifact to be cleaned.
+		t.Run("start migration", func(t *testing.T) {
+			t1uuid = testOnlineDDLStatement(t, createParams(trivialAlterT1Statement, ddlStrategy+" --postpone-completion --retain-artifacts=1s", "vtctl", "", "", true)) // skip wait
+			onlineddl.WaitForMigrationStatus(t, &vtParams, shards, t1uuid, normalWaitTime, schema.OnlineDDLStatusRunning)
+		})
+		var artifacts []string
+		t.Run("validate artifact exists", func(t *testing.T) {
+			rs := onlineddl.ReadMigrations(t, &vtParams, t1uuid)
+			require.NotNil(t, rs)
+			row := rs.Named().Row()
+			require.NotNil(t, row)
+
+			artifacts = textutil.SplitDelimitedList(row.AsString("artifacts", ""))
+			assert.NotEmpty(t, artifacts)
+			assert.Equal(t, 1, len(artifacts))
+			checkTable(t, artifacts[0], true)
+
+			retainArtifactsSeconds := row.AsInt64("retain_artifacts_seconds", 0)
+			assert.Equal(t, int64(1), retainArtifactsSeconds) // due to --retain-artifacts=1s
+		})
+		t.Run("cancel migration", func(t *testing.T) {
+			onlineddl.CheckCancelMigration(t, &vtParams, shards, t1uuid, true)
+			status := onlineddl.WaitForMigrationStatus(t, &vtParams, shards, t1uuid, normalWaitTime, schema.OnlineDDLStatusFailed, schema.OnlineDDLStatusCancelled)
+			fmt.Printf("# Migration status (for debug purposes): <%s>\n", status)
+			onlineddl.CheckMigrationStatus(t, &vtParams, shards, t1uuid, schema.OnlineDDLStatusCancelled)
+		})
+		t.Run("wait for cleanup", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), normalWaitTime)
+			defer cancel()
+
+			for {
+				rs := onlineddl.ReadMigrations(t, &vtParams, t1uuid)
+				require.NotNil(t, rs)
+				row := rs.Named().Row()
+				require.NotNil(t, row)
+				if !row["cleanup_timestamp"].IsNull() {
+					// This is what we've been waiting for
+					break
+				}
+				select {
+				case <-ctx.Done():
+					assert.Fail(t, "timeout waiting for cleanup")
+					return
+				case <-time.After(time.Second):
+				}
+			}
+		})
+		t.Run("validate artifact does not exist", func(t *testing.T) {
+			checkTable(t, artifacts[0], false)
 		})
 	})
 

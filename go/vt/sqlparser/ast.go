@@ -16,7 +16,10 @@ limitations under the License.
 
 package sqlparser
 
-import "vitess.io/vitess/go/sqltypes"
+import (
+	"vitess.io/vitess/go/mysql/datetime"
+	"vitess.io/vitess/go/sqltypes"
+)
 
 /*
 This is the Vitess AST. This file should only contain pure struct declarations,
@@ -60,6 +63,7 @@ type (
 		GetOrderBy() OrderBy
 		GetLimit() *Limit
 		SetLimit(*Limit)
+		GetLock() Lock
 		SetLock(lock Lock)
 		SetInto(into *SelectInto)
 		SetWith(with *With)
@@ -67,6 +71,7 @@ type (
 		GetColumnCount() int
 		GetColumns() SelectExprs
 		Commented
+		IsDistinct() bool
 	}
 
 	// DDLStatement represents any DDL Statement
@@ -134,10 +139,11 @@ type (
 
 	// AlterColumn is used to add or drop defaults & visibility to columns in alter table command
 	AlterColumn struct {
-		Column      *ColName
-		DropDefault bool
-		DefaultVal  Expr
-		Invisible   *bool
+		Column         *ColName
+		DropDefault    bool
+		DefaultVal     Expr
+		DefaultLiteral bool
+		Invisible      *bool
 	}
 
 	// With contains the lists of common table expression and specifies if it is recursive or not
@@ -676,13 +682,11 @@ type (
 		Name     IdentifierCI
 	}
 
-	// IntervalTypes is an enum to get types of intervals
-	IntervalTypes int8
-
-	// OtherRead represents a DESCRIBE, or EXPLAIN statement.
-	// It should be used only as an indicator. It does not contain
-	// the full AST for the statement.
-	OtherRead struct{}
+	// Analyze represents the Analyze statement.
+	Analyze struct {
+		IsLocal bool
+		Table   TableName
+	}
 
 	// OtherAdmin represents a misc statement that relies on ADMIN privileges,
 	// such as REPAIR, OPTIMIZE, or TRUNCATE statement.
@@ -705,6 +709,14 @@ type (
 		FieldsInfo *FieldsClause
 		LinesInfo  *LinesClause
 	}
+	// KillType is an enum for Kill.Type
+	KillType int8
+
+	// Kill represents a kill statement
+	Kill struct {
+		Type          KillType
+		ProcesslistID uint64
+	}
 )
 
 func (*Union) iStatement()               {}
@@ -725,7 +737,7 @@ func (*Rollback) iStatement()            {}
 func (*SRollback) iStatement()           {}
 func (*Savepoint) iStatement()           {}
 func (*Release) iStatement()             {}
-func (*OtherRead) iStatement()           {}
+func (*Analyze) iStatement()             {}
 func (*OtherAdmin) iStatement()          {}
 func (*CommentOnly) iStatement()         {}
 func (*Select) iSelectStatement()        {}
@@ -757,6 +769,7 @@ func (*PrepareStmt) iStatement()         {}
 func (*ExecuteStmt) iStatement()         {}
 func (*DeallocateStmt) iStatement()      {}
 func (*PurgeBinaryLogs) iStatement()     {}
+func (*Kill) iStatement()                {}
 
 func (*CreateView) iDDLStatement()    {}
 func (*AlterView) iDDLStatement()     {}
@@ -1837,14 +1850,15 @@ type ColumnTypeOptions struct {
 	The complexity arises from the fact that we do not know whether the column will be nullable or not if nothing is specified.
 	Therefore we do not know whether the column is nullable or not in case 3.
 	*/
-	Null          *bool
-	Autoincrement bool
-	Default       Expr
-	OnUpdate      Expr
-	As            Expr
-	Comment       *Literal
-	Storage       ColumnStorage
-	Collate       string
+	Null           *bool
+	Autoincrement  bool
+	Default        Expr
+	DefaultLiteral bool
+	OnUpdate       Expr
+	As             Expr
+	Comment        *Literal
+	Storage        ColumnStorage
+	Collate        string
 	// Reference stores a foreign key constraint for the given column
 	Reference *ReferenceDefinition
 
@@ -2169,7 +2183,7 @@ type (
 	// More information available here: https://dev.mysql.com/doc/refman/8.0/en/window-functions-frames.html
 	FramePoint struct {
 		Type FramePointType
-		Unit IntervalTypes
+		Unit IntervalType
 		Expr Expr
 	}
 
@@ -2209,16 +2223,6 @@ type (
 	// FromFirstLastType is an enum to get types for FromFirstLastClause
 	FromFirstLastType int8
 )
-
-// DateAddExprType is an enum to get types of DateAddExpr.
-// This can be one of ADDDATE, DATE_ADD or a '+' operator
-// with an interval left or right.
-type DateAddExprType int8
-
-// DateSubExprType is an enum to get types of DateAddExpr.
-// This can be one of SUBDATE, DATE_SUB or a '-' operator
-// with an interval right.
-type DateSubExprType int8
 
 // *********** Expressions
 type (
@@ -2312,11 +2316,6 @@ type (
 
 	// ColName represents a column name.
 	ColName struct {
-		// Metadata is not populated by the parser.
-		// It's a placeholder for analyzers to store
-		// additional data, typically info about which
-		// table or column this node references.
-		Metadata  any
 		Name      IdentifierCI
 		Qualifier TableName
 	}
@@ -2366,18 +2365,17 @@ type (
 		Expr         Expr
 	}
 
-	// TimestampFuncExpr represents the function and arguments for TIMESTAMP{ADD,DIFF} functions.
-	TimestampFuncExpr struct {
-		Name  string
+	// TimestampDiffExpr represents the function and arguments for TIMESTAMPDIFF functions.
+	TimestampDiffExpr struct {
 		Expr1 Expr
 		Expr2 Expr
-		Unit  string
+		Unit  IntervalType
 	}
 
 	// ExtractFuncExpr represents the function and arguments for EXTRACT(YEAR FROM '2019-07-02') type functions.
 	ExtractFuncExpr struct {
-		IntervalTypes IntervalTypes
-		Expr          Expr
+		IntervalType IntervalType
+		Expr         Expr
 	}
 
 	// CollateExpr represents dynamic collate operator.
@@ -2497,21 +2495,6 @@ type (
 	CurTimeFuncExpr struct {
 		Name IdentifierCI
 		Fsp  int // fractional seconds precision, integer from 0 to 6 or an Argument
-	}
-
-	// ExtractedSubquery is a subquery that has been extracted from the original AST
-	// This is a struct that the parser will never produce - it's written and read by the gen4 planner
-	// CAUTION: you should only change argName and hasValuesArg through the setter methods
-	ExtractedSubquery struct {
-		Original  Expr // original expression that was replaced by this ExtractedSubquery
-		OpCode    int  // this should really be engine.PulloutOpCode, but we cannot depend on engine :(
-		Subquery  *Subquery
-		OtherSide Expr // represents the side of the comparison, this field will be nil if Original is not a comparison
-		Merged    bool // tells whether we need to rewrite this subquery to Original or not
-
-		hasValuesArg string
-		argName      string
-		alternative  Expr // this is what will be used to Format this struct
 	}
 
 	// JSONPrettyExpr represents the function and argument for JSON_PRETTY()
@@ -2875,10 +2858,15 @@ type (
 
 	AggrFunc interface {
 		Expr
-		AggrName() string
 		GetArg() Expr
-		IsDistinct() bool
 		GetArgs() Exprs
+		// AggrName returns the lower case string representing this aggregation function
+		AggrName() string
+	}
+
+	DistinctableAggr interface {
+		IsDistinct() bool
+		SetDistinct(bool)
 	}
 
 	Count struct {
@@ -2985,6 +2973,13 @@ type (
 		Limit     *Limit
 	}
 
+	// AnyValue is an aggregation function in Vitess, even if the MySQL manual explicitly says it's not
+	// It's just simpler to treat it as one
+	// see https://dev.mysql.com/doc/refman/8.0/en/miscellaneous-functions.html#function_any-value
+	AnyValue struct {
+		Arg Expr
+	}
+
 	// RegexpInstrExpr represents REGEXP_INSTR()
 	// For more information, see https://dev.mysql.com/doc/refman/8.0/en/regexp.html#function_regexp-instr
 	RegexpInstrExpr struct {
@@ -3025,24 +3020,14 @@ type (
 		MatchType  Expr
 	}
 
-	// DateAddExpr represents ADDDATE(), DATE_ADD()
-	// and additions with an interval on the left and right.
-	// For more information, see https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-add
-	DateAddExpr struct {
-		Type DateAddExprType
-		Date Expr
-		Unit IntervalTypes
-		Expr Expr
-	}
+	IntervalType = datetime.IntervalType
 
-	// DateSubExpr represents SUBDATE(), DATE_SUB()
-	// and subtractions with an interval on the right.
-	// For more information, see https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function_date-sub
-	DateSubExpr struct {
-		Type DateSubExprType
-		Date Expr
-		Unit IntervalTypes
-		Expr Expr
+	// IntervalDateExpr represents ADDDATE(), DATE_ADD()
+	IntervalDateExpr struct {
+		Syntax   IntervalExprSyntax
+		Date     Expr
+		Interval Expr
+		Unit     IntervalType
 	}
 
 	// ArgumentLessWindowExpr stands for the following window_functions: CUME_DIST, DENSE_RANK, PERCENT_RANK, RANK, ROW_NUMBER
@@ -3173,7 +3158,7 @@ func (*UnaryExpr) iExpr()                          {}
 func (*IntroducerExpr) iExpr()                     {}
 func (*CollateExpr) iExpr()                        {}
 func (*FuncExpr) iExpr()                           {}
-func (*TimestampFuncExpr) iExpr()                  {}
+func (*TimestampDiffExpr) iExpr()                  {}
 func (*ExtractFuncExpr) iExpr()                    {}
 func (*WeightStringFuncExpr) iExpr()               {}
 func (*CurTimeFuncExpr) iExpr()                    {}
@@ -3189,7 +3174,6 @@ func (*CharExpr) iExpr()                           {}
 func (*ConvertUsingExpr) iExpr()                   {}
 func (*MatchExpr) iExpr()                          {}
 func (*Default) iExpr()                            {}
-func (*ExtractedSubquery) iExpr()                  {}
 func (*TrimFuncExpr) iExpr()                       {}
 func (*JSONSchemaValidFuncExpr) iExpr()            {}
 func (*JSONSchemaValidationReportFuncExpr) iExpr() {}
@@ -3217,8 +3201,7 @@ func (*RegexpInstrExpr) iExpr()                    {}
 func (*RegexpLikeExpr) iExpr()                     {}
 func (*RegexpReplaceExpr) iExpr()                  {}
 func (*RegexpSubstrExpr) iExpr()                   {}
-func (*DateAddExpr) iExpr()                        {}
-func (*DateSubExpr) iExpr()                        {}
+func (*IntervalDateExpr) iExpr()                   {}
 func (*ArgumentLessWindowExpr) iExpr()             {}
 func (*FirstOrLastValueExpr) iExpr()               {}
 func (*NtileExpr) iExpr()                          {}
@@ -3237,6 +3220,7 @@ func (*Avg) iExpr()                                {}
 func (*CountStar) iExpr()                          {}
 func (*Count) iExpr()                              {}
 func (*GroupConcatExpr) iExpr()                    {}
+func (*AnyValue) iExpr()                           {}
 func (*BitAnd) iExpr()                             {}
 func (*BitOr) iExpr()                              {}
 func (*BitXor) iExpr()                             {}
@@ -3270,7 +3254,7 @@ func (*GeomFromGeoJSONExpr) iExpr()                {}
 
 // iCallable marks all expressions that represent function calls
 func (*FuncExpr) iCallable()                           {}
-func (*TimestampFuncExpr) iCallable()                  {}
+func (*TimestampDiffExpr) iCallable()                  {}
 func (*ExtractFuncExpr) iCallable()                    {}
 func (*WeightStringFuncExpr) iCallable()               {}
 func (*CurTimeFuncExpr) iCallable()                    {}
@@ -3285,6 +3269,7 @@ func (*CharExpr) iCallable()                           {}
 func (*ConvertUsingExpr) iCallable()                   {}
 func (*MatchExpr) iCallable()                          {}
 func (*GroupConcatExpr) iCallable()                    {}
+func (*AnyValue) iCallable()                           {}
 func (*JSONSchemaValidFuncExpr) iCallable()            {}
 func (*JSONSchemaValidationReportFuncExpr) iCallable() {}
 func (*JSONPrettyExpr) iCallable()                     {}
@@ -3310,8 +3295,7 @@ func (*RegexpInstrExpr) iCallable()                    {}
 func (*RegexpLikeExpr) iCallable()                     {}
 func (*RegexpReplaceExpr) iCallable()                  {}
 func (*RegexpSubstrExpr) iCallable()                   {}
-func (*DateAddExpr) iCallable()                        {}
-func (*DateSubExpr) iCallable()                        {}
+func (*IntervalDateExpr) iCallable()                   {}
 func (*ArgumentLessWindowExpr) iCallable()             {}
 func (*FirstOrLastValueExpr) iCallable()               {}
 func (*NtileExpr) iCallable()                          {}
@@ -3366,6 +3350,7 @@ func (stdS *StdSamp) GetArg() Expr              { return stdS.Arg }
 func (varP *VarPop) GetArg() Expr               { return varP.Arg }
 func (varS *VarSamp) GetArg() Expr              { return varS.Arg }
 func (variance *Variance) GetArg() Expr         { return variance.Arg }
+func (av *AnyValue) GetArg() Expr               { return av.Arg }
 
 func (sum *Sum) GetArgs() Exprs                   { return Exprs{sum.Arg} }
 func (min *Min) GetArgs() Exprs                   { return Exprs{min.Arg} }
@@ -3384,42 +3369,40 @@ func (stdS *StdSamp) GetArgs() Exprs              { return Exprs{stdS.Arg} }
 func (varP *VarPop) GetArgs() Exprs               { return Exprs{varP.Arg} }
 func (varS *VarSamp) GetArgs() Exprs              { return Exprs{varS.Arg} }
 func (variance *Variance) GetArgs() Exprs         { return Exprs{variance.Arg} }
+func (av *AnyValue) GetArgs() Exprs               { return Exprs{av.Arg} }
 
 func (sum *Sum) IsDistinct() bool                   { return sum.Distinct }
 func (min *Min) IsDistinct() bool                   { return min.Distinct }
 func (max *Max) IsDistinct() bool                   { return max.Distinct }
 func (avg *Avg) IsDistinct() bool                   { return avg.Distinct }
-func (cStar *CountStar) IsDistinct() bool           { return false }
 func (count *Count) IsDistinct() bool               { return count.Distinct }
 func (grpConcat *GroupConcatExpr) IsDistinct() bool { return grpConcat.Distinct }
-func (bAnd *BitAnd) IsDistinct() bool               { return false }
-func (bOr *BitOr) IsDistinct() bool                 { return false }
-func (bXor *BitXor) IsDistinct() bool               { return false }
-func (std *Std) IsDistinct() bool                   { return false }
-func (stdD *StdDev) IsDistinct() bool               { return false }
-func (stdP *StdPop) IsDistinct() bool               { return false }
-func (stdS *StdSamp) IsDistinct() bool              { return false }
-func (varP *VarPop) IsDistinct() bool               { return false }
-func (varS *VarSamp) IsDistinct() bool              { return false }
-func (variance *Variance) IsDistinct() bool         { return false }
 
-func (sum *Sum) AggrName() string                   { return "sum" }
-func (min *Min) AggrName() string                   { return "min" }
-func (max *Max) AggrName() string                   { return "max" }
-func (avg *Avg) AggrName() string                   { return "avg" }
-func (cStar *CountStar) AggrName() string           { return "count" }
-func (count *Count) AggrName() string               { return "count" }
-func (grpConcat *GroupConcatExpr) AggrName() string { return "group_concat" }
-func (bAnd *BitAnd) AggrName() string               { return "bit_and" }
-func (bOr *BitOr) AggrName() string                 { return "bit_or" }
-func (bXor *BitXor) AggrName() string               { return "bit_xor" }
-func (std *Std) AggrName() string                   { return "std" }
-func (stdD *StdDev) AggrName() string               { return "stddev" }
-func (stdP *StdPop) AggrName() string               { return "stddev_pop" }
-func (stdS *StdSamp) AggrName() string              { return "stddev_samp" }
-func (varP *VarPop) AggrName() string               { return "var_pop" }
-func (varS *VarSamp) AggrName() string              { return "var_samp" }
-func (variance *Variance) AggrName() string         { return "variance" }
+func (sum *Sum) SetDistinct(distinct bool)                   { sum.Distinct = distinct }
+func (min *Min) SetDistinct(distinct bool)                   { min.Distinct = distinct }
+func (max *Max) SetDistinct(distinct bool)                   { max.Distinct = distinct }
+func (avg *Avg) SetDistinct(distinct bool)                   { avg.Distinct = distinct }
+func (count *Count) SetDistinct(distinct bool)               { count.Distinct = distinct }
+func (grpConcat *GroupConcatExpr) SetDistinct(distinct bool) { grpConcat.Distinct = distinct }
+
+func (*Sum) AggrName() string             { return "sum" }
+func (*Min) AggrName() string             { return "min" }
+func (*Max) AggrName() string             { return "max" }
+func (*Avg) AggrName() string             { return "avg" }
+func (*CountStar) AggrName() string       { return "count" }
+func (*Count) AggrName() string           { return "count" }
+func (*GroupConcatExpr) AggrName() string { return "group_concat" }
+func (*BitAnd) AggrName() string          { return "bit_and" }
+func (*BitOr) AggrName() string           { return "bit_or" }
+func (*BitXor) AggrName() string          { return "bit_xor" }
+func (*Std) AggrName() string             { return "std" }
+func (*StdDev) AggrName() string          { return "stddev" }
+func (*StdPop) AggrName() string          { return "stddev_pop" }
+func (*StdSamp) AggrName() string         { return "stddev_samp" }
+func (*VarPop) AggrName() string          { return "var_pop" }
+func (*VarSamp) AggrName() string         { return "var_samp" }
+func (*Variance) AggrName() string        { return "variance" }
+func (*AnyValue) AggrName() string        { return "any_value" }
 
 // Exprs represents a list of value expressions.
 // It's not a valid expression because it's not parenthesized.

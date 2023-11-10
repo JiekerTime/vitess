@@ -19,15 +19,16 @@ package engine
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"vitess.io/vitess/go/mysql/collations"
+	"vitess.io/vitess/go/mysql/sqlerror"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
-	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/stats"
 	"vitess.io/vitess/go/vt/key"
@@ -89,16 +90,6 @@ type Route struct {
 	noTxNeeded
 }
 
-// NewSimpleRoute creates a Route with the bare minimum of parameters.
-func NewSimpleRoute(opcode Opcode, keyspace *vindexes.Keyspace) *Route {
-	return &Route{
-		RoutingParameters: &RoutingParameters{
-			Opcode:   opcode,
-			Keyspace: keyspace,
-		},
-	}
-}
-
 // NewRoute creates a Route.
 func NewRoute(opcode Opcode, keyspace *vindexes.Keyspace, query, fieldQuery string) *Route {
 	return &Route{
@@ -120,8 +111,6 @@ type OrderByParams struct {
 	WeightStringCol   int
 	Desc              bool
 	StarColFixedIndex int
-	// v3 specific boolean. Used to also add weight strings originating from GroupBys to the Group by clause
-	FromGroupBy bool
 	// Type for knowing if the collation is relevant
 	Type querypb.Type
 	// Collation ID for comparison using collation
@@ -144,8 +133,7 @@ func (obp OrderByParams) String() string {
 	}
 
 	if sqltypes.IsText(obp.Type) && obp.CollationID != collations.Unknown {
-		collation := obp.CollationID.Get()
-		val += " COLLATE " + collation.Name()
+		val += " COLLATE " + collations.Local().LookupName(obp.CollationID)
 	}
 	return val
 }
@@ -262,7 +250,7 @@ func (route *Route) executeShards(
 		partialSuccessScatterQueries.Add(1)
 
 		for _, err := range errs {
-			serr := mysql.NewSQLErrorFromError(err).(*mysql.SQLError)
+			serr := sqlerror.NewSQLErrorFromError(err).(*sqlerror.SQLError)
 			vcursor.Session().RecordWarning(&querypb.QueryWarning{Code: uint32(serr.Num), Message: err.Error()})
 		}
 	}
@@ -351,7 +339,7 @@ func (route *Route) streamExecuteShards(
 			}
 			partialSuccessScatterQueries.Add(1)
 			for _, err := range errs {
-				sErr := mysql.NewSQLErrorFromError(err).(*mysql.SQLError)
+				sErr := sqlerror.NewSQLErrorFromError(err).(*sqlerror.SQLError)
 				vcursor.Session().RecordWarning(&querypb.QueryWarning{Code: uint32(sErr.Num), Message: err.Error()})
 			}
 		}
@@ -431,10 +419,10 @@ func (route *Route) sort(in *sqltypes.Result) (*sqltypes.Result, error) {
 
 	comparers := extractSlices(route.OrderBy)
 
-	sort.Slice(out.Rows, func(i, j int) bool {
+	slices.SortFunc(out.Rows, func(a, b sqltypes.Row) int {
 		var cmp int
 		if err != nil {
-			return true
+			return -1
 		}
 		// If there are any errors below, the function sets
 		// the external err and returns true. Once err is set,
@@ -442,16 +430,15 @@ func (route *Route) sort(in *sqltypes.Result) (*sqltypes.Result, error) {
 		// Slice think that all elements are in the correct
 		// order and return more quickly.
 		for _, c := range comparers {
-			cmp, err = c.compare(out.Rows[i], out.Rows[j])
+			cmp, err = c.compare(a, b)
 			if err != nil {
-				return true
+				return -1
 			}
-			if cmp == 0 {
-				continue
+			if cmp != 0 {
+				return cmp
 			}
-			return cmp < 0
 		}
-		return true
+		return 0
 	})
 
 	return out.Truncate(route.TruncateColumnCount), err

@@ -15,11 +15,8 @@
             ],
             "auto_increment": {
                 "column": "customer_id",
-                "sequence": "customer_seq"
+                "sequence": "customer.customer_seq"
             }
-        },
-        "messages": {
-	    "pinned": "00"        
         },
         "corder": {
             "column_vindexes": [
@@ -30,8 +27,27 @@
             ],
             "auto_increment": {
                 "column": "order_id",
-                "sequence": "order_seq"
+                "sequence": "customer.order_seq"
             }
+        },
+        "messages": {
+            "pinned": "00"
+        },
+        "test": {
+            "column_vindexes": [
+                {
+                    "column": "id",
+                    "name": "hash"
+                }
+            ]
+        },
+        "customer_seq": {
+            "type": "sequence",
+            "pinned": "00"
+        },
+        "order_seq": {
+            "type": "sequence",
+            "pinned": "00"
         }
     }
 }

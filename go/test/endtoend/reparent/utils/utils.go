@@ -65,7 +65,7 @@ var (
 	replicationWaitTimeout = time.Duration(15 * time.Second)
 )
 
-//region cluster setup/teardown
+// region cluster setup/teardown
 
 // SetupReparentCluster is used to setup the reparent cluster
 func SetupReparentCluster(t *testing.T, durability string) *cluster.LocalProcessCluster {
@@ -139,19 +139,13 @@ func setupCluster(ctx context.Context, t *testing.T, shardName string, cells []s
 		// In this case, the close method and initSchema method of the onlineDDL executor race.
 		// If the initSchema acquires the lock, then it takes about 30 seconds for it to run during which time the
 		// DemotePrimary rpc is stalled!
-		"--queryserver_enable_online_ddl=false",
-		// disabling active reparents on the tablet since we don't want the replication manager
-		// to fix replication if it is stopped. Some tests deliberately do that. Also, we don't want
-		// the replication manager to silently fix the replication in case ERS or PRS mess up. All the
-		// tests in this test suite should work irrespective of this flag. Each run of ERS, PRS should be
-		// setting up the replication correctly.
-		"--disable-replication-manager")
+		"--queryserver_enable_online_ddl=false")
 
 	// Initialize Cluster
 	err = clusterInstance.SetupCluster(keyspace, []cluster.Shard{*shard})
 	require.NoError(t, err, "Cannot launch cluster")
 
-	//Start MySql
+	// Start MySql
 	var mysqlCtlProcessList []*exec.Cmd
 	for _, shard := range clusterInstance.Keyspaces[0].Shards {
 		for _, tablet := range shard.Vttablets {
@@ -254,7 +248,7 @@ func StartNewVTTablet(t *testing.T, clusterInstance *cluster.LocalProcessCluster
 	return tablet
 }
 
-//endregion
+// endregion
 
 // region database queries
 func getMysqlConnParam(tablet *cluster.Vttablet) mysql.ConnParams {
@@ -282,7 +276,7 @@ func execute(t *testing.T, conn *mysql.Conn, query string) *sqltypes.Result {
 	return qr
 }
 
-//endregion
+// endregion
 
 // region ers, prs
 
@@ -630,7 +624,7 @@ func CheckReparentFromOutside(t *testing.T, clusterInstance *cluster.LocalProces
 	streamHealthResponse := shrs[0]
 
 	assert.Equal(t, streamHealthResponse.Target.TabletType, topodatapb.TabletType_PRIMARY)
-	assert.True(t, streamHealthResponse.TabletExternallyReparentedTimestamp >= baseTime)
+	assert.True(t, streamHealthResponse.PrimaryTermStartTimestamp >= baseTime)
 }
 
 // WaitForReplicationPosition waits for tablet B to catch up to the replication position of tablet A.

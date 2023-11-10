@@ -17,6 +17,8 @@ limitations under the License.
 package semantics
 
 import (
+	"fmt"
+
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
@@ -65,6 +67,14 @@ type (
 	// ExprDependencies stores the tables that an expression depends on as a map
 	ExprDependencies map[sqlparser.Expr]TableSet
 
+	// QuerySignature is used to identify shortcuts in the planning process
+	QuerySignature struct {
+		Union       bool
+		Aggregation bool
+		Distinct    bool
+		SubQueries  bool
+	}
+
 	// SemTable contains semantic analysis information about the query.
 	SemTable struct {
 		// Tables stores information about the tables in the query, including derived tables
@@ -99,11 +109,6 @@ type (
 		// It doesn't recurse inside derived tables to find the original dependencies.
 		Direct ExprDependencies
 
-		// SubqueryMap holds extracted subqueries for each statement.
-		SubqueryMap map[sqlparser.Statement][]*sqlparser.ExtractedSubquery
-		// SubqueryRef maps subquery pointers to their extracted subquery.
-		SubqueryRef map[*sqlparser.Subquery]*sqlparser.ExtractedSubquery
-
 		// ColumnEqualities is used for transitive closures (e.g., if a == b and b == c, then a == c).
 		ColumnEqualities map[columnName][]sqlparser.Expr
 
@@ -111,7 +116,15 @@ type (
 		// The columns were added because of the use of `*` in the query
 		ExpandedColumns map[sqlparser.TableName][]*sqlparser.ColName
 
+		columns map[*sqlparser.Union]sqlparser.SelectExprs
+
 		comparator *sqlparser.Comparator
+
+		// StatementIDs is a map of statements and all the table IDs that are contained within
+		StatementIDs map[sqlparser.Statement]TableSet
+
+		// QuerySignature is used to identify shortcuts in the planning process
+		QuerySignature QuerySignature
 	}
 
 	columnName struct {
@@ -133,21 +146,73 @@ var (
 
 // CopyDependencies copies the dependencies from one expression into the other
 func (st *SemTable) CopyDependencies(from, to sqlparser.Expr) {
-	st.Recursive[to] = st.RecursiveDeps(from)
-	st.Direct[to] = st.DirectDeps(from)
+	if ValidAsMapKey(to) {
+		st.Recursive[to] = st.RecursiveDeps(from)
+		st.Direct[to] = st.DirectDeps(from)
+		st.ExprTypes[to] = st.ExprTypes[from]
+	}
 }
 
-// CopyDependenciesOnSQLNodes copies the dependencies from one expression into the other
-func (st *SemTable) CopyDependenciesOnSQLNodes(from, to sqlparser.SQLNode) {
-	f, ok := from.(sqlparser.Expr)
-	if !ok {
+func (st *SemTable) SelectExprs(sel sqlparser.SelectStatement) sqlparser.SelectExprs {
+	switch sel := sel.(type) {
+	case *sqlparser.Select:
+		return sel.SelectExprs
+	case *sqlparser.Union:
+		exprs, found := st.columns[sel]
+		if found {
+			return exprs
+		}
+		for stmt, exprs := range st.columns {
+			if sqlparser.Equals.SelectStatement(stmt, sel) {
+				return exprs
+			}
+		}
+		panic("BUG: union not found in semantic table for select expressions")
+	}
+	panic(fmt.Sprintf("BUG: unexpected select statement type %T", sel))
+}
+
+func getColumnNames(exprs sqlparser.SelectExprs) (expanded bool, selectExprs sqlparser.SelectExprs) {
+	expanded = true
+	for _, col := range exprs {
+		switch col := col.(type) {
+		case *sqlparser.AliasedExpr:
+			expr := sqlparser.NewColName(col.ColumnName())
+			selectExprs = append(selectExprs, &sqlparser.AliasedExpr{Expr: expr})
+		default:
+			selectExprs = append(selectExprs, col)
+			expanded = false
+		}
+	}
+	return
+}
+
+// CopySemanticInfo copies all semantic information we have about this SQLNode so that it also applies to the `to` node
+func (st *SemTable) CopySemanticInfo(from, to sqlparser.SQLNode) {
+	if f, ok := from.(sqlparser.Statement); ok {
+		t, ok := to.(sqlparser.Statement)
+		if ok {
+			st.StatementIDs[t] = st.StatementIDs[f]
+		}
+	}
+
+	switch f := from.(type) {
+	case sqlparser.Expr:
+		t, ok := to.(sqlparser.Expr)
+		if !ok {
+			return
+		}
+		st.CopyDependencies(f, t)
+	case *sqlparser.Union:
+		t, ok := to.(*sqlparser.Union)
+		if !ok {
+			return
+		}
+		exprs := st.columns[f]
+		st.columns[t] = exprs
+	default:
 		return
 	}
-	t, ok := to.(sqlparser.Expr)
-	if !ok {
-		return
-	}
-	st.CopyDependencies(f, t)
 }
 
 // Cloned copies the dependencies from one expression into the other
@@ -166,6 +231,7 @@ func EmptySemTable() *SemTable {
 		Recursive:        map[sqlparser.Expr]TableSet{},
 		Direct:           map[sqlparser.Expr]TableSet{},
 		ColumnEqualities: map[columnName][]sqlparser.Expr{},
+		columns:          map[*sqlparser.Union]sqlparser.SelectExprs{},
 	}
 }
 
@@ -181,6 +247,9 @@ func (st *SemTable) TableSetFor(t *sqlparser.AliasedTableExpr) TableSet {
 
 // ReplaceTableSetFor replaces the given single TabletSet with the new *sqlparser.AliasedTableExpr
 func (st *SemTable) ReplaceTableSetFor(id TableSet, t *sqlparser.AliasedTableExpr) {
+	if st == nil {
+		return
+	}
 	if id.NumberOfTables() != 1 {
 		// This is probably a derived table
 		return
@@ -260,16 +329,30 @@ func (st *SemTable) TypeForExpr(e sqlparser.Expr) (sqltypes.Type, collations.ID,
 	if typ, found := st.ExprTypes[e]; found {
 		return typ.Type, typ.Collation, true
 	}
+
+	// We add a lot of WeightString() expressions to queries at late stages of the planning,
+	// which means that they don't have any type information. We can safely assume that they
+	// are VarBinary, since that's the only type that WeightString() can return.
+	_, isWS := e.(*sqlparser.WeightStringFuncExpr)
+	if isWS {
+		return sqltypes.VarBinary, collations.CollationBinaryID, true
+	}
+
 	return sqltypes.Unknown, collations.Unknown, false
 }
 
 // NeedsWeightString returns true if the given expression needs weight_string to do safe comparisons
 func (st *SemTable) NeedsWeightString(e sqlparser.Expr) bool {
-	typ, found := st.ExprTypes[e]
-	if !found {
-		return true
+	switch e := e.(type) {
+	case *sqlparser.WeightStringFuncExpr, *sqlparser.Literal:
+		return false
+	default:
+		typ, found := st.ExprTypes[e]
+		if !found {
+			return true
+		}
+		return typ.Collation == collations.Unknown && !sqltypes.IsNumber(typ.Type)
 	}
-	return typ.Collation == collations.Unknown && !sqltypes.IsNumber(typ.Type)
 }
 
 func (st *SemTable) DefaultCollation() collations.ID {
@@ -301,13 +384,6 @@ func (d ExprDependencies) dependencies(expr sqlparser.Expr) (deps TableSet) {
 			return true, nil
 		}
 
-		if extracted, ok := expr.(*sqlparser.ExtractedSubquery); ok {
-			if extracted.OtherSide != nil {
-				set := d.dependencies(extracted.OtherSide)
-				deps = deps.Merge(set)
-			}
-			return false, nil
-		}
 		set, found := d[expr]
 		deps = deps.Merge(set)
 
@@ -340,27 +416,6 @@ func RewriteDerivedTableExpression(expr sqlparser.Expr, vt TableInfo) sqlparser.
 		cursor.Replace(&col)
 
 	}, nil).(sqlparser.Expr)
-}
-
-// FindSubqueryReference goes over the sub queries and searches for it by value equality instead of reference equality
-func (st *SemTable) FindSubqueryReference(subquery *sqlparser.Subquery) *sqlparser.ExtractedSubquery {
-	for foundSubq, extractedSubquery := range st.SubqueryRef {
-		if sqlparser.Equals.RefOfSubquery(subquery, foundSubq) {
-			return extractedSubquery
-		}
-	}
-	return nil
-}
-
-// GetSubqueryNeedingRewrite returns a list of sub-queries that need to be rewritten
-func (st *SemTable) GetSubqueryNeedingRewrite() []*sqlparser.ExtractedSubquery {
-	var res []*sqlparser.ExtractedSubquery
-	for _, extractedSubquery := range st.SubqueryRef {
-		if extractedSubquery.Merged {
-			res = append(res, extractedSubquery)
-		}
-	}
-	return res
 }
 
 // CopyExprInfo lookups src in the ExprTypes map and, if a key is found, assign
@@ -434,6 +489,10 @@ func (st *SemTable) SingleUnshardedKeyspace() (*vindexes.Keyspace, []*vindexes.T
 // The expression in the select list is not equal to the one in the ORDER BY,
 // but they point to the same column and would be considered equal by this method
 func (st *SemTable) EqualsExpr(a, b sqlparser.Expr) bool {
+	// If there is no SemTable, then we cannot compare the expressions.
+	if st == nil {
+		return false
+	}
 	return st.ASTEquals().Expr(a, b)
 }
 
@@ -447,8 +506,8 @@ func (st *SemTable) EqualsExprWithDeps(a, b sqlparser.Expr) bool {
 	if !eq {
 		return false
 	}
-	adeps := st.DirectDeps(a)
-	bdeps := st.DirectDeps(b)
+	adeps := st.RecursiveDeps(a)
+	bdeps := st.RecursiveDeps(b)
 	if adeps.IsEmpty() || bdeps.IsEmpty() || adeps == bdeps {
 		return true
 	}
@@ -462,6 +521,23 @@ func (st *SemTable) ContainsExpr(e sqlparser.Expr, expres []sqlparser.Expr) bool
 		}
 	}
 	return false
+}
+
+// Uniquify takes a slice of expressions and removes any duplicates
+func (st *SemTable) Uniquify(in []sqlparser.Expr) []sqlparser.Expr {
+	result := make([]sqlparser.Expr, 0, len(in))
+	idx := 0
+outer:
+	for _, expr := range in {
+		for i := 0; i < idx; i++ {
+			if st.EqualsExprWithDeps(result[i], expr) {
+				continue outer
+			}
+			result = append(result, expr)
+			idx++
+		}
+	}
+	return result
 }
 
 // AndExpressions ands together two or more expressions, minimising the expr when possible
@@ -498,6 +574,9 @@ func (st *SemTable) AndExpressions(exprs ...sqlparser.Expr) sqlparser.Expr {
 // ASTEquals returns a sqlparser.Comparator that uses the semantic information in this SemTable to
 // explicitly compare column names for equality.
 func (st *SemTable) ASTEquals() *sqlparser.Comparator {
+	if st == nil {
+		return sqlparser.Equals
+	}
 	if st.comparator == nil {
 		st.comparator = &sqlparser.Comparator{
 			RefOfColName_: func(a, b *sqlparser.ColName) bool {

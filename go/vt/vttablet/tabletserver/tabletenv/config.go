@@ -26,19 +26,20 @@ import (
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/encoding/prototext"
 
-	"vitess.io/vitess/go/cache"
 	"vitess.io/vitess/go/flagutil"
 	"vitess.io/vitess/go/streamlog"
 	"vitess.io/vitess/go/vt/dbconfigs"
 	"vitess.io/vitess/go/vt/log"
-	querypb "vitess.io/vitess/go/vt/proto/query"
-	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
-	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/servenv"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/throttler"
 	"vitess.io/vitess/go/vt/topo/topoproto"
 	"vitess.io/vitess/go/vt/vterrors"
+
+	querypb "vitess.io/vitess/go/vt/proto/query"
+	throttlerdatapb "vitess.io/vitess/go/vt/proto/throttlerdata"
+	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
+	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 )
 
 // These constants represent values for various config parameters.
@@ -89,6 +90,24 @@ var (
 	txLogHandler    = "/debug/txlog"
 )
 
+type TxThrottlerConfigFlag struct {
+	*throttlerdatapb.Configuration
+}
+
+func NewTxThrottlerConfigFlag() *TxThrottlerConfigFlag {
+	return &TxThrottlerConfigFlag{&throttlerdatapb.Configuration{}}
+}
+
+func (t *TxThrottlerConfigFlag) Get() *throttlerdatapb.Configuration {
+	return t.Configuration
+}
+
+func (t *TxThrottlerConfigFlag) Set(arg string) error {
+	return prototext.Unmarshal([]byte(arg), t.Configuration)
+}
+
+func (t *TxThrottlerConfigFlag) Type() string { return "string" }
+
 // RegisterTabletEnvFlags is a public API to register tabletenv flags for use by test cases that expect
 // some flags to be set with default values
 func RegisterTabletEnvFlags(fs *pflag.FlagSet) {
@@ -100,14 +119,8 @@ func registerTabletEnvFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&txLogHandler, "transaction-log-stream-handler", txLogHandler, "URL handler for streaming transactions log")
 
 	fs.IntVar(&currentConfig.OltpReadPool.Size, "queryserver-config-pool-size", defaultConfig.OltpReadPool.Size, "query server read pool size, connection pool is used by regular queries (non streaming, not in a transaction)")
-	fs.IntVar(&currentConfig.OltpReadPool.PrefillParallelism, "queryserver-config-pool-prefill-parallelism", defaultConfig.OltpReadPool.PrefillParallelism, "Query server read pool prefill parallelism, a non-zero value will prefill the pool using the specified parallism.")
-	_ = fs.MarkDeprecated("queryserver-config-pool-prefill-parallelism", "it will be removed in a future release.")
 	fs.IntVar(&currentConfig.OlapReadPool.Size, "queryserver-config-stream-pool-size", defaultConfig.OlapReadPool.Size, "query server stream connection pool size, stream pool is used by stream queries: queries that return results to client in a streaming fashion")
-	fs.IntVar(&currentConfig.OlapReadPool.PrefillParallelism, "queryserver-config-stream-pool-prefill-parallelism", defaultConfig.OlapReadPool.PrefillParallelism, "Query server stream pool prefill parallelism, a non-zero value will prefill the pool using the specified parallelism")
-	_ = fs.MarkDeprecated("queryserver-config-stream-pool-prefill-parallelism", "it will be removed in a future release.")
 	fs.IntVar(&currentConfig.TxPool.Size, "queryserver-config-transaction-cap", defaultConfig.TxPool.Size, "query server transaction cap is the maximum number of transactions allowed to happen at any given point of a time for a single vttablet. E.g. by setting transaction cap to 100, there are at most 100 transactions will be processed by a vttablet and the 101th transaction will be blocked (and fail if it cannot get connection within specified timeout)")
-	fs.IntVar(&currentConfig.TxPool.PrefillParallelism, "queryserver-config-transaction-prefill-parallelism", defaultConfig.TxPool.PrefillParallelism, "Query server transaction prefill parallelism, a non-zero value will prefill the pool using the specified parallism.")
-	_ = fs.MarkDeprecated("queryserver-config-transaction-prefill-parallelism", "it will be removed in a future release.")
 	fs.IntVar(&currentConfig.MessagePostponeParallelism, "queryserver-config-message-postpone-cap", defaultConfig.MessagePostponeParallelism, "query server message postpone cap is the maximum number of messages that can be postponed at any given time. Set this number to substantially lower than transaction cap, so that the transaction pool isn't exhausted by the message subsystem.")
 	currentConfig.Oltp.TxTimeoutSeconds = defaultConfig.Oltp.TxTimeoutSeconds.Clone()
 	fs.Var(&currentConfig.Oltp.TxTimeoutSeconds, currentConfig.Oltp.TxTimeoutSeconds.Name(), "query server transaction timeout (in seconds), a transaction will be killed if it takes longer than this value")
@@ -118,15 +131,17 @@ func registerTabletEnvFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&currentConfig.PassthroughDML, "queryserver-config-passthrough-dmls", defaultConfig.PassthroughDML, "query server pass through all dml statements without rewriting")
 
 	fs.IntVar(&currentConfig.StreamBufferSize, "queryserver-config-stream-buffer-size", defaultConfig.StreamBufferSize, "query server stream buffer size, the maximum number of bytes sent from vttablet for each stream call. It's recommended to keep this value in sync with vtgate's stream_buffer_size.")
-	fs.IntVar(&currentConfig.QueryCacheSize, "queryserver-config-query-cache-size", defaultConfig.QueryCacheSize, "query server query cache size, maximum number of queries to be cached. vttablet analyzes every incoming query and generate a query plan, these plans are being cached in a lru cache. This config controls the capacity of the lru cache.")
+
+	fs.Int("queryserver-config-query-cache-size", 0, "query server query cache size, maximum number of queries to be cached. vttablet analyzes every incoming query and generate a query plan, these plans are being cached in a lru cache. This config controls the capacity of the lru cache.")
+	_ = fs.MarkDeprecated("queryserver-config-query-cache-size", "`--queryserver-config-query-cache-size` is deprecated and will be removed in `v19.0`. This option only applied to LRU caches, which are now unsupported.")
+
 	fs.Int64Var(&currentConfig.QueryCacheMemory, "queryserver-config-query-cache-memory", defaultConfig.QueryCacheMemory, "query server query cache size in bytes, maximum amount of memory to be used for caching. vttablet analyzes every incoming query and generate a query plan, these plans are being cached in a lru cache. This config controls the capacity of the lru cache.")
-	fs.BoolVar(&currentConfig.QueryCacheLFU, "queryserver-config-query-cache-lfu", defaultConfig.QueryCacheLFU, "query server cache algorithm. when set to true, a new cache algorithm based on a TinyLFU admission policy will be used to improve cache behavior and prevent pollution from sparse queries")
+
+	fs.Bool("queryserver-config-query-cache-lfu", false, "query server cache algorithm. when set to true, a new cache algorithm based on a TinyLFU admission policy will be used to improve cache behavior and prevent pollution from sparse queries")
+	_ = fs.MarkDeprecated("queryserver-config-query-cache-lfu", "`--queryserver-config-query-cache-lfu` is deprecated and will be removed in `v19.0`. The query cache always uses a LFU implementation now.")
 
 	currentConfig.SchemaReloadIntervalSeconds = defaultConfig.SchemaReloadIntervalSeconds.Clone()
 	fs.Var(&currentConfig.SchemaReloadIntervalSeconds, currentConfig.SchemaReloadIntervalSeconds.Name(), "query server schema reload time, how often vttablet reloads schemas from underlying MySQL instance in seconds. vttablet keeps table schemas in its own memory and periodically refreshes it from MySQL. This config controls the reload time.")
-	currentConfig.SignalSchemaChangeReloadIntervalSeconds = defaultConfig.SignalSchemaChangeReloadIntervalSeconds.Clone()
-	fs.Var(&currentConfig.SignalSchemaChangeReloadIntervalSeconds, "queryserver-config-schema-change-signal-interval", "query server schema change signal interval defines at which interval the query server shall send schema updates to vtgate.")
-	_ = fs.MarkDeprecated("queryserver-config-schema-change-signal-interval", "We no longer poll for finding schema changes.")
 	fs.DurationVar(&currentConfig.SchemaChangeReloadTimeout, "schema-change-reload-timeout", defaultConfig.SchemaChangeReloadTimeout, "query server schema change reload timeout, this is how long to wait for the signaled schema reload operation to complete before giving up")
 	fs.BoolVar(&currentConfig.SignalWhenSchemaChange, "queryserver-config-schema-change-signal", defaultConfig.SignalWhenSchemaChange, "query server schema signal, will signal connected vtgates that schema has changed whenever this is detected. VTGates will need to have -schema_change_signal enabled for this to work")
 	currentConfig.Olap.TxTimeoutSeconds = defaultConfig.Olap.TxTimeoutSeconds.Clone()
@@ -161,10 +176,12 @@ func registerTabletEnvFlags(fs *pflag.FlagSet) {
 	SecondsVar(fs, &currentConfig.TwoPCAbandonAge, "twopc_abandon_age", defaultConfig.TwoPCAbandonAge, "time in seconds. Any unresolved transaction older than this time will be sent to the coordinator to be resolved.")
 	// Tx throttler config
 	flagutil.DualFormatBoolVar(fs, &currentConfig.EnableTxThrottler, "enable_tx_throttler", defaultConfig.EnableTxThrottler, "If true replication-lag-based throttling on transactions will be enabled.")
-	flagutil.DualFormatStringVar(fs, &currentConfig.TxThrottlerConfig, "tx_throttler_config", defaultConfig.TxThrottlerConfig, "The configuration of the transaction throttler as a text-formatted throttlerdata.Configuration protocol buffer message.")
+	flagutil.DualFormatVar(fs, currentConfig.TxThrottlerConfig, "tx_throttler_config", "The configuration of the transaction throttler as a text-formatted throttlerdata.Configuration protocol buffer message.")
 	flagutil.DualFormatStringListVar(fs, &currentConfig.TxThrottlerHealthCheckCells, "tx_throttler_healthcheck_cells", defaultConfig.TxThrottlerHealthCheckCells, "A comma-separated list of cells. Only tabletservers running in these cells will be monitored for replication lag by the transaction throttler.")
 	fs.IntVar(&currentConfig.TxThrottlerDefaultPriority, "tx-throttler-default-priority", defaultConfig.TxThrottlerDefaultPriority, "Default priority assigned to queries that lack priority information")
 	fs.Var(currentConfig.TxThrottlerTabletTypes, "tx-throttler-tablet-types", "A comma-separated list of tablet types. Only tablets of this type are monitored for replication lag by the transaction throttler. Supported types are replica and/or rdonly.")
+	fs.BoolVar(&currentConfig.TxThrottlerDryRun, "tx-throttler-dry-run", defaultConfig.TxThrottlerDryRun, "If present, the transaction throttler only records metrics about requests received and throttled, but does not actually throttle any requests.")
+	fs.DurationVar(&currentConfig.TxThrottlerTopoRefreshInterval, "tx-throttler-topo-refresh-interval", time.Minute*5, "The rate that the transaction throttler will refresh the topology to find cells.")
 
 	fs.BoolVar(&enableHotRowProtection, "enable_hot_row_protection", false, "If true, incoming transactions for the same row (range) will be queued and cannot consume all txpool slots.")
 	fs.BoolVar(&enableHotRowProtectionDryRun, "enable_hot_row_protection_dry_run", false, "If true, hot row protection is not enforced but logs if transactions would have been queued.")
@@ -183,7 +200,6 @@ func registerTabletEnvFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&enableHeartbeat, "heartbeat_enable", false, "If true, vttablet records (if master) or checks (if replica) the current time of a replication heartbeat in the sidecar database's heartbeat table. The result is used to inform the serving state of the vttablet via healthchecks.")
 	fs.DurationVar(&heartbeatInterval, "heartbeat_interval", 1*time.Second, "How frequently to read and write replication heartbeat.")
 	fs.DurationVar(&heartbeatOnDemandDuration, "heartbeat_on_demand_duration", 0, "If non-zero, heartbeats are only written upon consumer request, and only run for up to given duration following the request. Frequent requests can keep the heartbeat running consistently; when requests are infrequent heartbeat may completely stop between requests")
-	flagutil.DualFormatBoolVar(fs, &currentConfig.EnableLagThrottler, "enable_lag_throttler", defaultConfig.EnableLagThrottler, "If true, vttablet will run a throttler service, and will implicitly enable heartbeats")
 
 	fs.BoolVar(&currentConfig.EnforceStrictTransTables, "enforce_strict_trans_tables", defaultConfig.EnforceStrictTransTables, "If true, vttablet requires MySQL to run with STRICT_TRANS_TABLES or STRICT_ALL_TABLES on. It is recommended to not turn this flag off. Otherwise MySQL may alter your supplied values before saving them to the database.")
 	flagutil.DualFormatBoolVar(fs, &enableConsolidator, "enable_consolidator", true, "This option enables the query consolidator.")
@@ -315,9 +331,8 @@ type TabletConfig struct {
 	StreamBufferSize                        int                               `json:"streamBufferSize,omitempty"`
 	ConsolidatorStreamTotalSize             int64                             `json:"consolidatorStreamTotalSize,omitempty"`
 	ConsolidatorStreamQuerySize             int64                             `json:"consolidatorStreamQuerySize,omitempty"`
-	QueryCacheSize                          int                               `json:"queryCacheSize,omitempty"`
 	QueryCacheMemory                        int64                             `json:"queryCacheMemory,omitempty"`
-	QueryCacheLFU                           bool                              `json:"queryCacheLFU,omitempty"`
+	QueryCacheDoorkeeper                    bool                              `json:"queryCacheDoorkeeper,omitempty"`
 	SchemaReloadIntervalSeconds             flagutil.DeprecatedFloat64Seconds `json:"schemaReloadIntervalSeconds,omitempty"`
 	SignalSchemaChangeReloadIntervalSeconds flagutil.DeprecatedFloat64Seconds `json:"signalSchemaChangeReloadIntervalSeconds,omitempty"`
 	SchemaChangeReloadTimeout               time.Duration                     `json:"schemaChangeReloadTimeout,omitempty"`
@@ -340,14 +355,15 @@ type TabletConfig struct {
 	TwoPCCoordinatorAddress string  `json:"-"`
 	TwoPCAbandonAge         Seconds `json:"-"`
 
-	EnableTxThrottler           bool                          `json:"-"`
-	TxThrottlerConfig           string                        `json:"-"`
-	TxThrottlerHealthCheckCells []string                      `json:"-"`
-	TxThrottlerDefaultPriority  int                           `json:"-"`
-	TxThrottlerTabletTypes      *topoproto.TabletTypeListFlag `json:"-"`
+	EnableTxThrottler              bool                          `json:"-"`
+	TxThrottlerConfig              *TxThrottlerConfigFlag        `json:"-"`
+	TxThrottlerHealthCheckCells    []string                      `json:"-"`
+	TxThrottlerDefaultPriority     int                           `json:"-"`
+	TxThrottlerTabletTypes         *topoproto.TabletTypeListFlag `json:"-"`
+	TxThrottlerTopoRefreshInterval time.Duration                 `json:"-"`
+	TxThrottlerDryRun              bool                          `json:"-"`
 
-	EnableLagThrottler bool `json:"-"`
-	EnableTableGC      bool `json:"-"` // can be turned off programmatically by tests
+	EnableTableGC bool `json:"-"` // can be turned off programmatically by tests
 
 	TransactionLimitConfig `json:"-"`
 
@@ -659,9 +675,6 @@ func (c *TabletConfig) Verify() error {
 	if v := c.HotRowProtection.MaxConcurrency; v <= 0 {
 		return fmt.Errorf("--hot_row_protection_concurrent_transactions must be > 0 (specified value: %v)", v)
 	}
-	if v := c.TxThrottlerDefaultPriority; v > sqlparser.MaxPriorityValue || v < 0 {
-		return fmt.Errorf("--tx-throttler-default-priority must be > 0 and < 100 (specified value: %d)", v)
-	}
 	return nil
 }
 
@@ -697,6 +710,19 @@ func (c *TabletConfig) verifyTransactionLimitConfig() error {
 
 // verifyTxThrottlerConfig checks the TxThrottler related config for sanity.
 func (c *TabletConfig) verifyTxThrottlerConfig() error {
+	if !c.EnableTxThrottler {
+		return nil
+	}
+
+	err := throttler.MaxReplicationLagModuleConfig{Configuration: c.TxThrottlerConfig.Get()}.Verify()
+	if err != nil {
+		return vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "failed to parse throttlerdatapb.Configuration config: %v", err)
+	}
+
+	if v := c.TxThrottlerDefaultPriority; v > sqlparser.MaxPriorityValue || v < 0 {
+		return vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "--tx-throttler-default-priority must be > 0 and < 100 (specified value: %d)", v)
+	}
+
 	if c.TxThrottlerTabletTypes == nil || len(*c.TxThrottlerTabletTypes) == 0 {
 		return vterrors.New(vtrpcpb.Code_FAILED_PRECONDITION, "--tx-throttler-tablet-types must be defined when transaction throttler is enabled")
 	}
@@ -708,6 +734,7 @@ func (c *TabletConfig) verifyTxThrottlerConfig() error {
 			return vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "unsupported tablet type %q", tabletType)
 		}
 	}
+
 	return nil
 }
 
@@ -782,10 +809,11 @@ var defaultConfig = TabletConfig{
 	// memory copies.  so with the encoding overhead, this seems to work
 	// great (the overhead makes the final packets on the wire about twice
 	// bigger than this).
-	StreamBufferSize:            32 * 1024,
-	QueryCacheSize:              int(cache.DefaultConfig.MaxEntries),
-	QueryCacheMemory:            cache.DefaultConfig.MaxMemoryUsage,
-	QueryCacheLFU:               cache.DefaultConfig.LFU,
+	StreamBufferSize: 32 * 1024,
+	QueryCacheMemory: 32 * 1024 * 1024, // 32 mb for our query cache
+	// The doorkeeper for the plan cache is disabled by default in endtoend tests to ensure
+	// results are consistent between runs.
+	QueryCacheDoorkeeper:        !servenv.TestingEndtoend,
 	SchemaReloadIntervalSeconds: flagutil.NewDeprecatedFloat64Seconds("queryserver-config-schema-reload-time", 30*time.Minute),
 	// SchemaChangeReloadTimeout is used for the signal reload operation where we have to query mysqld.
 	// The queries during the signal reload operation are typically expected to have low load,
@@ -795,13 +823,13 @@ var defaultConfig = TabletConfig{
 	MessagePostponeParallelism: 4,
 	SignalWhenSchemaChange:     true,
 
-	EnableTxThrottler:           false,
-	TxThrottlerConfig:           defaultTxThrottlerConfig(),
-	TxThrottlerHealthCheckCells: []string{},
-	TxThrottlerDefaultPriority:  sqlparser.MaxPriorityValue, // This leads to all queries being candidates to throttle
-	TxThrottlerTabletTypes:      &topoproto.TabletTypeListFlag{topodatapb.TabletType_REPLICA},
-
-	EnableLagThrottler: false, // Feature flag; to switch to 'true' at some stage in the future
+	EnableTxThrottler:              false,
+	TxThrottlerConfig:              defaultTxThrottlerConfig(),
+	TxThrottlerHealthCheckCells:    []string{},
+	TxThrottlerDefaultPriority:     sqlparser.MaxPriorityValue, // This leads to all queries being candidates to throttle
+	TxThrottlerTabletTypes:         &topoproto.TabletTypeListFlag{topodatapb.TabletType_REPLICA},
+	TxThrottlerDryRun:              false,
+	TxThrottlerTopoRefreshInterval: time.Minute * 5,
 
 	TransactionLimitConfig: defaultTransactionLimitConfig(),
 
@@ -818,17 +846,16 @@ var defaultConfig = TabletConfig{
 	EnableSettingsPool:            true,
 }
 
-// defaultTxThrottlerConfig formats the default throttlerdata.Configuration
-// object in text format. It uses the object returned by
-// throttler.DefaultMaxReplicationLagModuleConfig().Configuration and overrides some of its
-// fields. It panics on error.
-func defaultTxThrottlerConfig() string {
+// defaultTxThrottlerConfig returns the default TxThrottlerConfigFlag object based on
+// a throttler.DefaultMaxReplicationLagModuleConfig().Configuration and overrides some of
+// its fields. It panics on error.
+func defaultTxThrottlerConfig() *TxThrottlerConfigFlag {
 	// Take throttler.DefaultMaxReplicationLagModuleConfig and override some fields.
 	config := throttler.DefaultMaxReplicationLagModuleConfig().Configuration
 	// TODO(erez): Make DefaultMaxReplicationLagModuleConfig() return a MaxReplicationLagSec of 10
 	// and remove this line.
 	config.MaxReplicationLagSec = 10
-	return prototext.Format(config)
+	return &TxThrottlerConfigFlag{config}
 }
 
 func defaultTransactionLimitConfig() TransactionLimitConfig {

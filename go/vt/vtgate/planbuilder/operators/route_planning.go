@@ -41,44 +41,7 @@ type (
 	opCacheMap map[tableSetPair]ops.Operator
 )
 
-// TransformToPhysical takes an operator tree and rewrites any parts that have not yet been planned as physical operators.
-// This is where a lot of the optimisations of the query plans are done.
-// Here we try to merge query parts into the same route primitives. At the end of this process,
-// all the operators in the tree are guaranteed to be PhysicalOperators
-func transformToPhysical(ctx *plancontext.PlanningContext, in ops.Operator) (ops.Operator, error) {
-	op, err := rewrite.BottomUpAll(in, TableID, func(operator ops.Operator, ts semantics.TableSet, _ bool) (ops.Operator, *rewrite.ApplyResult, error) {
-		switch op := operator.(type) {
-		case *QueryGraph:
-			return optimizeQueryGraph(ctx, op)
-		case *Join:
-			return optimizeJoin(ctx, op)
-		case *Derived:
-			return pushDownDerived(ctx, op)
-		case *SubQuery:
-			return optimizeSubQuery(ctx, op, ts)
-		case *Filter:
-			return pushDownFilter(op)
-		default:
-			return operator, rewrite.SameTree, nil
-		}
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return compact(ctx, op)
-}
-
-func pushDownFilter(op *Filter) (ops.Operator, *rewrite.ApplyResult, error) {
-	if _, ok := op.Source.(*Route); ok {
-		return rewrite.Swap(op, op.Source, "push filter into Route")
-	}
-
-	return op, rewrite.SameTree, nil
-}
-
-func pushDownDerived(ctx *plancontext.PlanningContext, op *Derived) (ops.Operator, *rewrite.ApplyResult, error) {
+func pushDerived(ctx *plancontext.PlanningContext, op *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
 	innerRoute, ok := op.Source.(*Route)
 	if !ok {
 		return op, rewrite.SameTree, nil
@@ -193,22 +156,27 @@ func getUpdateVindexInformation(
 	updStmt *sqlparser.Update,
 	vindexTable *vindexes.Table,
 	tableID semantics.TableSet,
-	predicates []sqlparser.Expr,
-) ([]*VindexPlusPredicates, map[string]*engine.VindexValues, string, error) {
-	if !vindexTable.Keyspace.Sharded || vindexTable.Pinned != nil {
-		return nil, nil, "", nil
+	assignments []SetExpr,
+) ([]*VindexPlusPredicates, map[string]*engine.VindexValues, string, []string, error) {
+	if !vindexTable.Keyspace.Sharded {
+		return nil, nil, "", nil, nil
 	}
 
-	primaryVindex, vindexAndPredicates, err := getVindexInformation(tableID, predicates, vindexTable)
-	if err != nil {
-		return nil, nil, "", err
+	if vindexTable.Pinned != nil {
+		return nil, nil, "", nil, nil
+
 	}
 
-	changedVindexValues, ownedVindexQuery, err := buildChangedVindexesValues(updStmt, vindexTable, primaryVindex.Columns)
+	primaryVindex, vindexAndPredicates, err := getVindexInformation(tableID, vindexTable)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, nil, "", nil, err
 	}
-	return vindexAndPredicates, changedVindexValues, ownedVindexQuery, nil
+
+	changedVindexValues, ownedVindexQuery, subQueriesArgOnChangedVindex, err := buildChangedVindexesValues(updStmt, vindexTable, primaryVindex.Columns, assignments)
+	if err != nil {
+		return nil, nil, "", nil, err
+	}
+	return vindexAndPredicates, changedVindexValues, ownedVindexQuery, subQueriesArgOnChangedVindex, nil
 }
 
 /*
@@ -392,9 +360,9 @@ func requiresSwitchingSides(ctx *plancontext.PlanningContext, op ops.Operator) b
 	required := false
 
 	_ = rewrite.Visit(op, func(current ops.Operator) error {
-		derived, isDerived := current.(*Derived)
+		horizon, isHorizon := current.(*Horizon)
 
-		if isDerived && !derived.IsMergeable(ctx) {
+		if isHorizon && horizon.IsDerived() && !horizon.IsMergeable(ctx) {
 			required = true
 			return io.EOF
 		}
@@ -406,7 +374,7 @@ func requiresSwitchingSides(ctx *plancontext.PlanningContext, op ops.Operator) b
 }
 
 func mergeOrJoin(ctx *plancontext.PlanningContext, lhs, rhs ops.Operator, joinPredicates []sqlparser.Expr, inner bool) (ops.Operator, *rewrite.ApplyResult, error) {
-	newPlan, err := Merge(ctx, lhs, rhs, joinPredicates, newJoinMerge(ctx, joinPredicates, inner))
+	newPlan, err := mergeJoinInputs(ctx, lhs, rhs, joinPredicates, newJoinMerge(joinPredicates, inner))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -428,7 +396,7 @@ func mergeOrJoin(ctx *plancontext.PlanningContext, lhs, rhs ops.Operator, joinPr
 		if err != nil {
 			return nil, nil, err
 		}
-		return newOp, rewrite.NewTree("merge routes, but switch sides", newOp), nil
+		return newOp, rewrite.NewTree("logical join to applyJoin, switching side because derived table", newOp), nil
 	}
 
 	join := NewApplyJoin(Clone(lhs), Clone(rhs), nil, !inner)
@@ -503,11 +471,11 @@ func findColumnVindex(ctx *plancontext.PlanningContext, a ops.Operator, exp sqlp
 		deps := ctx.SemTable.RecursiveDeps(expr)
 
 		_ = rewrite.Visit(a, func(rel ops.Operator) error {
-			to, isTableOp := rel.(TableIDIntroducer)
+			to, isTableOp := rel.(tableIDIntroducer)
 			if !isTableOp {
 				return nil
 			}
-			id := to.Introduces()
+			id := to.introducesTableID()
 			if deps.IsSolvedBy(id) {
 				tableInfo, err := ctx.SemTable.TableInfoFor(id)
 				if err != nil {
@@ -550,8 +518,9 @@ func unwrapDerivedTables(ctx *plancontext.PlanningContext, exp sqlparser.Expr) s
 		}
 
 		exp = semantics.RewriteDerivedTableExpression(exp, tbl)
-		exp = getColName(exp)
-		if exp == nil {
+		if col := getColName(exp); col != nil {
+			exp = col
+		} else {
 			return nil
 		}
 	}
@@ -564,10 +533,7 @@ func getColName(exp sqlparser.Expr) *sqlparser.ColName {
 		return exp
 	case *sqlparser.Max, *sqlparser.Min:
 		aggr := exp.(sqlparser.AggrFunc).GetArg()
-		colName, ok := aggr.(*sqlparser.ColName)
-		if ok {
-			return colName
-		}
+		return getColName(aggr)
 	}
 	// for any other expression than a column, or the extremum of a column, we return nil
 	return nil

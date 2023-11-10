@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/afero"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
@@ -48,7 +49,17 @@ type Viper struct {
 	subscribers    []chan<- struct{}
 	watchingConfig bool
 
+	fs afero.Fs
+
 	setCh chan struct{}
+
+	// for testing purposes only
+	onConfigWrite func()
+}
+
+func (v *Viper) SetFs(fs afero.Fs) {
+	v.fs = fs
+	v.disk.SetFs(fs)
 }
 
 // New returns a new synced Viper.
@@ -57,6 +68,7 @@ func New() *Viper {
 		disk:  viper.New(),
 		live:  viper.New(),
 		keys:  map[string]*sync.RWMutex{},
+		fs:    afero.NewOsFs(), // default Fs used by viper, but we need this set so loadFromDisk doesn't accidentally nil-out the live fs
 		setCh: make(chan struct{}, 1),
 	}
 }
@@ -217,6 +229,10 @@ func (v *Viper) persistChanges(ctx context.Context, minWaitInterval time.Duratio
 
 // WriteConfig writes the live viper config back to disk.
 func (v *Viper) WriteConfig() error {
+	if v.onConfigWrite != nil {
+		defer v.onConfigWrite()
+	}
+
 	for _, m := range v.keys {
 		m.Lock()
 		// This won't fire until after the config has been written.
@@ -263,6 +279,7 @@ func (v *Viper) loadFromDisk() {
 	// Reset v.live so explicit Set calls don't win over what's just changed on
 	// disk.
 	v.live = viper.New()
+	v.live.SetFs(v.fs)
 
 	// Fun fact! MergeConfigMap actually only ever returns nil. Maybe in an
 	// older version of viper it used to actually handle errors, but now it
@@ -272,10 +289,29 @@ func (v *Viper) loadFromDisk() {
 
 // begin implementation of registry.Bindable for sync.Viper
 
-func (v *Viper) BindEnv(vars ...string) error                 { return v.disk.BindEnv(vars...) }
-func (v *Viper) BindPFlag(key string, flag *pflag.Flag) error { return v.disk.BindPFlag(key, flag) }
-func (v *Viper) RegisterAlias(alias string, key string)       { v.disk.RegisterAlias(alias, key) }
-func (v *Viper) SetDefault(key string, value any)             { v.disk.SetDefault(key, value) }
+func (v *Viper) BindEnv(vars ...string) error {
+	if err := v.disk.BindEnv(vars...); err != nil {
+		return err
+	}
+	return v.live.BindEnv(vars...)
+}
+
+func (v *Viper) BindPFlag(key string, flag *pflag.Flag) error {
+	if err := v.disk.BindPFlag(key, flag); err != nil {
+		return err
+	}
+	return v.live.BindPFlag(key, flag)
+}
+
+func (v *Viper) RegisterAlias(alias string, key string) {
+	v.disk.RegisterAlias(alias, key)
+	v.live.RegisterAlias(alias, key)
+}
+
+func (v *Viper) SetDefault(key string, value any) {
+	v.disk.SetDefault(key, value)
+	v.live.SetDefault(key, value)
+}
 
 // end implementation of registry.Bindable for sync.Viper
 

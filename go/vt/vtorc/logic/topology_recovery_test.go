@@ -26,10 +26,10 @@ import (
 
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	"vitess.io/vitess/go/vt/topo/memorytopo"
+	"vitess.io/vitess/go/vt/topo/topoproto"
+	"vitess.io/vitess/go/vt/vtorc/config"
 	"vitess.io/vitess/go/vt/vtorc/db"
 	"vitess.io/vitess/go/vt/vtorc/inst"
-
-	// import the gRPC client implementation for tablet manager
 	_ "vitess.io/vitess/go/vt/vttablet/grpctmclient"
 )
 
@@ -44,6 +44,11 @@ func TestAnalysisEntriesHaveSameRecovery(t *testing.T) {
 			prevAnalysisCode: inst.DeadPrimary,
 			newAnalysisCode:  inst.DeadPrimaryAndSomeReplicas,
 			shouldBeEqual:    true,
+		}, {
+			// DeadPrimary and PrimaryTabletDeleted are different recoveries.
+			prevAnalysisCode: inst.DeadPrimary,
+			newAnalysisCode:  inst.PrimaryTabletDeleted,
+			shouldBeEqual:    false,
 		}, {
 			// same codes will always have same recovery
 			prevAnalysisCode: inst.DeadPrimary,
@@ -87,7 +92,7 @@ func TestAnalysisEntriesHaveSameRecovery(t *testing.T) {
 	t.Parallel()
 	for _, tt := range tests {
 		t.Run(string(tt.prevAnalysisCode)+","+string(tt.newAnalysisCode), func(t *testing.T) {
-			res := analysisEntriesHaveSameRecovery(inst.ReplicationAnalysis{Analysis: tt.prevAnalysisCode}, inst.ReplicationAnalysis{Analysis: tt.newAnalysisCode})
+			res := analysisEntriesHaveSameRecovery(&inst.ReplicationAnalysis{Analysis: tt.prevAnalysisCode}, &inst.ReplicationAnalysis{Analysis: tt.newAnalysisCode})
 			require.Equal(t, tt.shouldBeEqual, res)
 		})
 	}
@@ -117,14 +122,14 @@ func TestElectNewPrimaryPanic(t *testing.T) {
 	}
 	err = inst.SaveTablet(tablet)
 	require.NoError(t, err)
-	analysisEntry := inst.ReplicationAnalysis{
-		AnalyzedInstanceKey: inst.InstanceKey{
-			Hostname: tablet.MysqlHostname,
-			Port:     int(tablet.MysqlPort),
-		},
+	analysisEntry := &inst.ReplicationAnalysis{
+		AnalyzedInstanceAlias: topoproto.TabletAliasString(tablet.Alias),
 	}
-	ts = memorytopo.NewServer("zone1")
-	recoveryAttempted, _, err := electNewPrimary(context.Background(), analysisEntry, nil, false, false)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ts = memorytopo.NewServer(ctx, "zone1")
+	recoveryAttempted, _, err := electNewPrimary(context.Background(), analysisEntry)
 	require.True(t, recoveryAttempted)
 	require.Error(t, err)
 }
@@ -168,20 +173,17 @@ func TestDifferentAnalysescHaveDifferentCooldowns(t *testing.T) {
 	err = inst.SaveTablet(replica)
 	require.NoError(t, err)
 	primaryAnalysisEntry := inst.ReplicationAnalysis{
-		AnalyzedInstanceKey: inst.InstanceKey{
-			Hostname: primary.MysqlHostname,
-			Port:     int(primary.MysqlPort),
-		},
-		Analysis: inst.ReplicationStopped,
+		AnalyzedInstanceAlias: topoproto.TabletAliasString(primary.Alias),
+		Analysis:              inst.ReplicationStopped,
 	}
 	replicaAnalysisEntry := inst.ReplicationAnalysis{
-		AnalyzedInstanceKey: inst.InstanceKey{
-			Hostname: replica.MysqlHostname,
-			Port:     int(replica.MysqlPort),
-		},
-		Analysis: inst.DeadPrimary,
+		AnalyzedInstanceAlias: topoproto.TabletAliasString(replica.Alias),
+		Analysis:              inst.DeadPrimary,
 	}
-	ts = memorytopo.NewServer("zone1")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ts = memorytopo.NewServer(ctx, "zone1")
 	_, err = AttemptRecoveryRegistration(&replicaAnalysisEntry, false, true)
 	require.Nil(t, err)
 
@@ -189,4 +191,89 @@ func TestDifferentAnalysescHaveDifferentCooldowns(t *testing.T) {
 	// because the analysis is different (ReplicationStopped vs DeadPrimary)
 	_, err = AttemptRecoveryRegistration(&primaryAnalysisEntry, true, true)
 	require.Nil(t, err)
+}
+
+func TestGetCheckAndRecoverFunctionCode(t *testing.T) {
+	tests := []struct {
+		name                         string
+		ersEnabled                   bool
+		convertTabletWithErrantGTIDs bool
+		analysisCode                 inst.AnalysisCode
+		wantRecoveryFunction         recoveryFunction
+	}{
+		{
+			name:                 "DeadPrimary with ERS enabled",
+			ersEnabled:           true,
+			analysisCode:         inst.DeadPrimary,
+			wantRecoveryFunction: recoverDeadPrimaryFunc,
+		}, {
+			name:                 "DeadPrimary with ERS disabled",
+			ersEnabled:           false,
+			analysisCode:         inst.DeadPrimary,
+			wantRecoveryFunction: noRecoveryFunc,
+		}, {
+			name:                 "PrimaryTabletDeleted with ERS enabled",
+			ersEnabled:           true,
+			analysisCode:         inst.PrimaryTabletDeleted,
+			wantRecoveryFunction: recoverPrimaryTabletDeletedFunc,
+		}, {
+			name:                 "PrimaryTabletDeleted with ERS disabled",
+			ersEnabled:           false,
+			analysisCode:         inst.PrimaryTabletDeleted,
+			wantRecoveryFunction: noRecoveryFunc,
+		}, {
+			name:                 "PrimaryHasPrimary",
+			ersEnabled:           false,
+			analysisCode:         inst.PrimaryHasPrimary,
+			wantRecoveryFunction: recoverPrimaryHasPrimaryFunc,
+		}, {
+			name:                 "ClusterHasNoPrimary",
+			ersEnabled:           false,
+			analysisCode:         inst.ClusterHasNoPrimary,
+			wantRecoveryFunction: electNewPrimaryFunc,
+		}, {
+			name:                 "ReplicationStopped",
+			ersEnabled:           false,
+			analysisCode:         inst.ReplicationStopped,
+			wantRecoveryFunction: fixReplicaFunc,
+		}, {
+			name:                 "PrimarySemiSyncMustBeSet",
+			ersEnabled:           false,
+			analysisCode:         inst.PrimarySemiSyncMustBeSet,
+			wantRecoveryFunction: fixPrimaryFunc,
+		}, {
+			name:                         "ErrantGTIDDetected",
+			ersEnabled:                   false,
+			convertTabletWithErrantGTIDs: true,
+			analysisCode:                 inst.ErrantGTIDDetected,
+			wantRecoveryFunction:         recoverErrantGTIDDetectedFunc,
+		}, {
+			name:                         "ErrantGTIDDetected with --change-tablets-with-errant-gtid-to-drained false",
+			ersEnabled:                   false,
+			convertTabletWithErrantGTIDs: false,
+			analysisCode:                 inst.ErrantGTIDDetected,
+			wantRecoveryFunction:         noRecoveryFunc,
+		},
+	}
+
+	// Needed for the test to work
+	oldMap := emergencyOperationGracefulPeriodMap
+	emergencyOperationGracefulPeriodMap = cache.New(time.Second*5, time.Millisecond*500)
+	defer func() {
+		emergencyOperationGracefulPeriodMap = oldMap
+	}()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			prevVal := config.ERSEnabled()
+			config.SetERSEnabled(tt.ersEnabled)
+			defer config.SetERSEnabled(prevVal)
+
+			convertErrantVal := config.ConvertTabletWithErrantGTIDs()
+			config.SetConvertTabletWithErrantGTIDs(tt.convertTabletWithErrantGTIDs)
+			defer config.SetConvertTabletWithErrantGTIDs(convertErrantVal)
+
+			gotFunc := getCheckAndRecoverFunctionCode(tt.analysisCode, "")
+			require.EqualValues(t, tt.wantRecoveryFunction, gotFunc)
+		})
+	}
 }

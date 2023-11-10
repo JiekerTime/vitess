@@ -79,6 +79,8 @@ const (
 	GreaterThanEqual
 	// NotEqual is used to filter a comparable column if != specific value
 	NotEqual
+	// IsNotNull is used to filter a column if it is NULL
+	IsNotNull
 )
 
 // Filter contains opcodes for filtering.
@@ -135,7 +137,7 @@ func (ta *Table) FindColumn(name sqlparser.IdentifierCI) int {
 func (plan *Plan) fields() []*querypb.Field {
 	fields := make([]*querypb.Field, len(plan.ColExprs))
 	for i, ce := range plan.ColExprs {
-		fields[i] = ce.Field
+		fields[i] = ce.Field.CloneVT()
 	}
 	return fields
 }
@@ -222,6 +224,10 @@ func (plan *Plan) filter(values, result []sqltypes.Value, charsets []collations.
 				return false, err
 			}
 			if !key.KeyRangeContains(filter.KeyRange, ksid) {
+				return false, nil
+			}
+		case IsNotNull:
+			if values[filter.ColNum].IsNull() {
 				return false, nil
 			}
 		default:
@@ -550,6 +556,25 @@ func (plan *Plan) analyzeWhere(vschema *localVSchema, where *sqlparser.Where) er
 			if err := plan.analyzeInKeyRange(vschema, expr.Exprs); err != nil {
 				return err
 			}
+		case *sqlparser.IsExpr: // Needed for CreateLookupVindex with ignore_nulls
+			if expr.Right != sqlparser.IsNotNullOp {
+				return fmt.Errorf("unsupported constraint: %v", sqlparser.String(expr))
+			}
+			qualifiedName, ok := expr.Left.(*sqlparser.ColName)
+			if !ok {
+				return fmt.Errorf("unexpected: %v", sqlparser.String(expr))
+			}
+			if !qualifiedName.Qualifier.IsEmpty() {
+				return fmt.Errorf("unsupported qualifier for column: %v", sqlparser.String(qualifiedName))
+			}
+			colnum, err := findColumn(plan.Table, qualifiedName.Name)
+			if err != nil {
+				return err
+			}
+			plan.Filters = append(plan.Filters, Filter{
+				Opcode: IsNotNull,
+				ColNum: colnum,
+			})
 		default:
 			return fmt.Errorf("unsupported constraint: %v", sqlparser.String(expr))
 		}
@@ -613,7 +638,7 @@ func (plan *Plan) analyzeExpr(vschema *localVSchema, selExpr sqlparser.SelectExp
 			Field:  plan.Table.Fields[colnum],
 		}, nil
 	case sqlparser.AggrFunc:
-		if strings.ToLower(inner.AggrName()) != "keyspace_id" {
+		if inner.AggrName() != "keyspace_id" {
 			return ColExpr{}, fmt.Errorf("unsupported function: %v", sqlparser.String(inner))
 		}
 		if len(inner.GetArgs()) != 0 {
@@ -702,7 +727,26 @@ func (plan *Plan) analyzeExpr(vschema *localVSchema, selExpr sqlparser.SelectExp
 			FixedValue: sqltypes.NewInt64(num),
 		}, nil
 	case *sqlparser.ConvertUsingExpr:
-		colnum, err := findColumn(plan.Table, aliased.As)
+		// Here we find the actual column name in the convert, in case
+		// this is a column rename and the AS is the new column.
+		// For example, in convert(c1 using utf8mb4) as c2, we want to find
+		// c1, because c1 exists in the current table whereas c2 is the renamed column
+		// in the desired table.
+		var colName sqlparser.IdentifierCI
+		err := sqlparser.Walk(func(node sqlparser.SQLNode) (kontinue bool, err error) {
+			switch node := node.(type) {
+			case *sqlparser.ColName:
+				if !node.Qualifier.IsEmpty() {
+					return false, fmt.Errorf("unsupported qualifier for column: %v", sqlparser.String(node))
+				}
+				colName = node.Name
+			}
+			return true, nil
+		}, aliased.Expr)
+		if err != nil {
+			return ColExpr{}, fmt.Errorf("failed to find column name for convert using expression: %v, %v", sqlparser.String(aliased.Expr), err)
+		}
+		colnum, err := findColumn(plan.Table, colName)
 		if err != nil {
 			return ColExpr{}, err
 		}

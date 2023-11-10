@@ -359,10 +359,18 @@ func (node *AlterVschema) formatFast(buf *TrackedBuffer) {
 	case AddSequenceDDLAction:
 		buf.WriteString("alter vschema add sequence ")
 		node.Table.formatFast(buf)
+	case DropSequenceDDLAction:
+		buf.WriteString("alter vschema drop sequence ")
+		node.Table.formatFast(buf)
 	case AddAutoIncDDLAction:
 		buf.WriteString("alter vschema on ")
 		node.Table.formatFast(buf)
 		buf.WriteString(" add auto_increment ")
+		node.AutoIncSpec.formatFast(buf)
+	case DropAutoIncDDLAction:
+		buf.WriteString("alter vschema on ")
+		node.Table.formatFast(buf)
+		buf.WriteString(" drop auto_increment ")
 		node.AutoIncSpec.formatFast(buf)
 	default:
 		buf.WriteString(node.Action.ToString())
@@ -951,13 +959,13 @@ func (ct *ColumnType) formatFast(buf *TrackedBuffer) {
 		if ct.Options.Default != nil {
 			buf.WriteByte(' ')
 			buf.WriteString(keywordStrings[DEFAULT])
-			if defaultRequiresParens(ct) {
+			if ct.Options.DefaultLiteral {
+				buf.WriteByte(' ')
+				ct.Options.Default.formatFast(buf)
+			} else {
 				buf.WriteString(" (")
 				ct.Options.Default.formatFast(buf)
 				buf.WriteByte(')')
-			} else {
-				buf.WriteByte(' ')
-				ct.Options.Default.formatFast(buf)
 			}
 		}
 		if ct.Options.OnUpdate != nil {
@@ -1400,8 +1408,13 @@ func (node *CallProc) formatFast(buf *TrackedBuffer) {
 }
 
 // formatFast formats the node.
-func (node *OtherRead) formatFast(buf *TrackedBuffer) {
-	buf.WriteString("otherread")
+func (node *Analyze) formatFast(buf *TrackedBuffer) {
+	buf.WriteString("analyze ")
+	if node.IsLocal {
+		buf.WriteString("local ")
+	}
+	buf.WriteString("table ")
+	node.Table.formatFast(buf)
 }
 
 // formatFast formats the node.
@@ -1820,10 +1833,9 @@ func (node *IntroducerExpr) formatFast(buf *TrackedBuffer) {
 }
 
 // formatFast formats the node.
-func (node *TimestampFuncExpr) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.Name)
-	buf.WriteByte('(')
-	buf.WriteString(node.Unit)
+func (node *TimestampDiffExpr) formatFast(buf *TrackedBuffer) {
+	buf.WriteString("timestampdiff(")
+	buf.WriteString(node.Unit.ToString())
 	buf.WriteString(", ")
 	buf.printExpr(node, node.Expr1, true)
 	buf.WriteString(", ")
@@ -1834,7 +1846,7 @@ func (node *TimestampFuncExpr) formatFast(buf *TrackedBuffer) {
 // formatFast formats the node.
 func (node *ExtractFuncExpr) formatFast(buf *TrackedBuffer) {
 	buf.WriteString("extract(")
-	buf.WriteString(node.IntervalTypes.ToString())
+	buf.WriteString(node.IntervalType.ToString())
 	buf.WriteString(" from ")
 	buf.printExpr(node, node.Expr, true)
 	buf.WriteByte(')')
@@ -1923,75 +1935,55 @@ func (node *RegexpSubstrExpr) formatFast(buf *TrackedBuffer) {
 }
 
 // formatFast formats the node
-func (node *DateAddExpr) formatFast(buf *TrackedBuffer) {
-	switch node.Type {
-	case AdddateType:
-		buf.WriteString("adddate(")
-		buf.printExpr(node, node.Date, true)
-		buf.WriteString(", ")
-		if node.Unit == IntervalUnknown {
-			buf.printExpr(node, node.Expr, true)
-		} else {
-			buf.WriteString("interval ")
-			buf.printExpr(node, node.Expr, true)
-			buf.WriteByte(' ')
-			buf.WriteString(node.Unit.ToString())
+func (node *IntervalDateExpr) formatFast(buf *TrackedBuffer) {
+	switch node.Syntax {
+	case IntervalDateExprAdddate, IntervalDateExprSubdate:
+		if node.Unit == IntervalNone {
+			buf.WriteString(node.FnName())
+			buf.WriteByte('(')
+			buf.printExpr(node, node.Date, true)
+			buf.WriteString(", ")
+			buf.printExpr(node, node.Interval, true)
+			buf.WriteByte(')')
+			return
 		}
-		buf.WriteByte(')')
-	case DateAddType:
-		buf.WriteString("date_add(")
+		fallthrough
+	case IntervalDateExprDateAdd, IntervalDateExprDateSub:
+		buf.WriteString(node.FnName())
+		buf.WriteByte('(')
 		buf.printExpr(node, node.Date, true)
 		buf.WriteString(", interval ")
-		buf.printExpr(node, node.Expr, true)
+		buf.printExpr(node, node.Interval, true)
 		buf.WriteByte(' ')
 		buf.WriteString(node.Unit.ToString())
 		buf.WriteByte(')')
-	case PlusIntervalLeftType:
+	case IntervalDateExprBinaryAdd:
+		buf.printExpr(node, node.Date, true)
+		buf.WriteString(" + interval ")
+		buf.printExpr(node, node.Interval, false)
+		buf.WriteByte(' ')
+		buf.WriteString(node.Unit.ToString())
+	case IntervalDateExprBinaryAddLeft:
 		buf.WriteString("interval ")
-		buf.printExpr(node, node.Expr, true)
+		buf.printExpr(node, node.Interval, true)
 		buf.WriteByte(' ')
 		buf.WriteString(node.Unit.ToString())
 		buf.WriteString(" + ")
-		buf.printExpr(node, node.Date, true)
-	case PlusIntervalRightType:
-		buf.printExpr(node, node.Date, true)
-		buf.WriteString(" + interval ")
-		buf.printExpr(node, node.Expr, true)
-		buf.WriteByte(' ')
-		buf.WriteString(node.Unit.ToString())
-	}
-}
-
-// formatFast formats the node
-func (node *DateSubExpr) formatFast(buf *TrackedBuffer) {
-	switch node.Type {
-	case SubdateType:
-		buf.WriteString("subdate(")
-		buf.printExpr(node, node.Date, true)
-		buf.WriteString(", ")
-		if node.Unit == IntervalUnknown {
-			buf.printExpr(node, node.Expr, true)
-		} else {
-			buf.WriteString("interval ")
-			buf.printExpr(node, node.Expr, true)
-			buf.WriteByte(' ')
-			buf.WriteString(node.Unit.ToString())
-		}
-		buf.WriteByte(')')
-	case DateSubType:
-		buf.WriteString("date_sub(")
-		buf.printExpr(node, node.Date, true)
-		buf.WriteString(", interval ")
-		buf.printExpr(node, node.Expr, true)
-		buf.WriteByte(' ')
-		buf.WriteString(node.Unit.ToString())
-		buf.WriteByte(')')
-	case MinusIntervalRightType:
+		buf.printExpr(node, node.Date, false)
+	case IntervalDateExprBinarySub:
 		buf.printExpr(node, node.Date, true)
 		buf.WriteString(" - interval ")
-		buf.printExpr(node, node.Expr, true)
+		buf.printExpr(node, node.Interval, false)
 		buf.WriteByte(' ')
 		buf.WriteString(node.Unit.ToString())
+	case IntervalDateExprTimestampadd:
+		buf.WriteString("timestampadd(")
+		buf.WriteString(node.Unit.ToString())
+		buf.WriteString(", ")
+		buf.printExpr(node, node.Interval, true)
+		buf.WriteString(", ")
+		buf.printExpr(node, node.Date, true)
+		buf.WriteByte(')')
 	}
 }
 
@@ -2189,7 +2181,7 @@ func (node *FromFirstLastClause) formatFast(buf *TrackedBuffer) {
 // formatFast formats the node
 func (node *FramePoint) formatFast(buf *TrackedBuffer) {
 	if node.Expr != nil {
-		if node.Unit != IntervalUnknown {
+		if node.Unit != IntervalNone {
 			buf.WriteString(" interval ")
 			node.Expr.formatFast(buf)
 			buf.WriteByte(' ')
@@ -3007,8 +2999,14 @@ func (node *AlterColumn) formatFast(buf *TrackedBuffer) {
 	if node.DropDefault {
 		buf.WriteString(" drop default")
 	} else if node.DefaultVal != nil {
-		buf.WriteString(" set default ")
-		node.DefaultVal.formatFast(buf)
+		if node.DefaultLiteral {
+			buf.WriteString(" set default ")
+			node.DefaultVal.formatFast(buf)
+		} else {
+			buf.WriteString(" set default (")
+			node.DefaultVal.formatFast(buf)
+			buf.WriteByte(')')
+		}
 	}
 	if node.Invisible != nil {
 		if *node.Invisible {
@@ -3200,14 +3198,6 @@ func (node *RenameTable) formatFast(buf *TrackedBuffer) {
 		pair.ToTable.formatFast(buf)
 		prefix = ", "
 	}
-}
-
-// formatFast formats the node.
-// If an extracted subquery is still in the AST when we print it,
-// it will be formatted as if the subquery has been extracted, and instead
-// show up like argument comparisons
-func (node *ExtractedSubquery) formatFast(buf *TrackedBuffer) {
-	node.alternative.Format(buf)
 }
 
 func (node *JSONTableExpr) formatFast(buf *TrackedBuffer) {
@@ -3554,14 +3544,17 @@ func (node *Count) formatFast(buf *TrackedBuffer) {
 }
 
 func (node *CountStar) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
-	buf.WriteString("*)")
+	buf.WriteString("count(*)")
+}
+
+func (node *AnyValue) formatFast(buf *TrackedBuffer) {
+	buf.WriteString("any_value(")
+	buf.printExpr(node, node.Arg, true)
+	buf.WriteByte(')')
 }
 
 func (node *Avg) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("avg(")
 	if node.Distinct {
 		buf.WriteString(DistinctStr)
 	}
@@ -3570,8 +3563,7 @@ func (node *Avg) formatFast(buf *TrackedBuffer) {
 }
 
 func (node *Max) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("max(")
 	if node.Distinct {
 		buf.WriteString(DistinctStr)
 	}
@@ -3580,8 +3572,7 @@ func (node *Max) formatFast(buf *TrackedBuffer) {
 }
 
 func (node *Min) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("min(")
 	if node.Distinct {
 		buf.WriteString(DistinctStr)
 	}
@@ -3590,8 +3581,7 @@ func (node *Min) formatFast(buf *TrackedBuffer) {
 }
 
 func (node *Sum) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("sum(")
 	if node.Distinct {
 		buf.WriteString(DistinctStr)
 	}
@@ -3600,71 +3590,61 @@ func (node *Sum) formatFast(buf *TrackedBuffer) {
 }
 
 func (node *BitAnd) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("bit_and(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *BitOr) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("bit_or(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *BitXor) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("bit_xor(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *Std) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("std(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *StdDev) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("stddev(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *StdPop) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("stddev_pop(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *StdSamp) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("stddev_samp(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *VarPop) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("var_pop(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *VarSamp) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("var_samp(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
 
 func (node *Variance) formatFast(buf *TrackedBuffer) {
-	buf.WriteString(node.AggrName())
-	buf.WriteByte('(')
+	buf.WriteString("variance(")
 	buf.printExpr(node, node.Arg, true)
 	buf.WriteByte(')')
 }
@@ -3924,4 +3904,12 @@ func (node *GeomFromGeoJSONExpr) formatFast(buf *TrackedBuffer) {
 		buf.printExpr(node, node.Srid, true)
 	}
 	buf.WriteByte(')')
+}
+
+// formatFast formats the kill statement
+func (node *Kill) formatFast(buf *TrackedBuffer) {
+	buf.WriteString("kill ")
+	buf.WriteString(node.Type.ToString())
+	buf.WriteByte(' ')
+	buf.WriteString(fmt.Sprintf("%d", node.ProcesslistID))
 }

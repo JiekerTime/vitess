@@ -53,6 +53,7 @@ func TestDownPrimary(t *testing.T) {
 	assert.NotNil(t, curPrimary, "should have elected a primary")
 	vtOrcProcess := clusterInfo.ClusterInstance.VTOrcProcesses[0]
 	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.ElectNewPrimaryRecoveryName, 1)
+	utils.WaitForSuccessfulPRSCount(t, vtOrcProcess, keyspace.Name, shard0.Name, 1)
 
 	// find the replica and rdonly tablets
 	var replica, rdonly *cluster.Vttablet
@@ -99,6 +100,128 @@ func TestDownPrimary(t *testing.T) {
 	// also check that the replication is working correctly after failover
 	utils.VerifyWritesSucceed(t, clusterInfo, replica, []*cluster.Vttablet{crossCellReplica}, 10*time.Second)
 	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.RecoverDeadPrimaryRecoveryName, 1)
+	utils.WaitForSuccessfulERSCount(t, vtOrcProcess, keyspace.Name, shard0.Name, 1)
+}
+
+// bring down primary before VTOrc has started, let vtorc repair.
+func TestDownPrimaryBeforeVTOrc(t *testing.T) {
+	defer utils.PrintVTOrcLogsOnFailure(t, clusterInfo.ClusterInstance)
+	defer cluster.PanicHandler(t)
+	utils.SetupVttabletsAndVTOrcs(t, clusterInfo, 2, 1, nil, cluster.VTOrcConfiguration{}, 0, "none")
+	keyspace := &clusterInfo.ClusterInstance.Keyspaces[0]
+	shard0 := &keyspace.Shards[0]
+	curPrimary := shard0.Vttablets[0]
+
+	// Promote the first tablet as the primary
+	err := clusterInfo.ClusterInstance.VtctlclientProcess.InitializeShard(keyspace.Name, shard0.Name, clusterInfo.ClusterInstance.Cell, curPrimary.TabletUID)
+	require.NoError(t, err)
+
+	// find the replica and rdonly tablets
+	var replica, rdonly *cluster.Vttablet
+	for _, tablet := range shard0.Vttablets {
+		// we know we have only two replcia tablets, so the one not the primary must be the other replica
+		if tablet.Alias != curPrimary.Alias && tablet.Type == "replica" {
+			replica = tablet
+		}
+		if tablet.Type == "rdonly" {
+			rdonly = tablet
+		}
+	}
+	assert.NotNil(t, replica, "could not find replica tablet")
+	assert.NotNil(t, rdonly, "could not find rdonly tablet")
+
+	// check that the replication is setup correctly before we failover
+	utils.CheckReplication(t, clusterInfo, curPrimary, []*cluster.Vttablet{rdonly, replica}, 10*time.Second)
+
+	// Make the current primary vttablet unavailable.
+	_ = curPrimary.VttabletProcess.TearDown()
+	err = curPrimary.MysqlctlProcess.Stop()
+	require.NoError(t, err)
+
+	// Start a VTOrc instance
+	utils.StartVTOrcs(t, clusterInfo, []string{"--remote_operation_timeout=10s"}, cluster.VTOrcConfiguration{
+		PreventCrossDataCenterPrimaryFailover: true,
+	}, 1)
+
+	vtOrcProcess := clusterInfo.ClusterInstance.VTOrcProcesses[0]
+
+	defer func() {
+		// we remove the tablet from our global list
+		utils.PermanentlyRemoveVttablet(clusterInfo, curPrimary)
+	}()
+
+	// check that the replica gets promoted
+	utils.CheckPrimaryTablet(t, clusterInfo, replica, true)
+
+	// also check that the replication is working correctly after failover
+	utils.VerifyWritesSucceed(t, clusterInfo, replica, []*cluster.Vttablet{rdonly}, 10*time.Second)
+	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.RecoverDeadPrimaryRecoveryName, 1)
+	utils.WaitForSuccessfulERSCount(t, vtOrcProcess, keyspace.Name, shard0.Name, 1)
+}
+
+// delete the primary record and let vtorc repair.
+func TestDeletedPrimaryTablet(t *testing.T) {
+	defer utils.PrintVTOrcLogsOnFailure(t, clusterInfo.ClusterInstance)
+	defer cluster.PanicHandler(t)
+	utils.SetupVttabletsAndVTOrcs(t, clusterInfo, 2, 1, []string{"--remote_operation_timeout=10s"}, cluster.VTOrcConfiguration{}, 1, "none")
+	keyspace := &clusterInfo.ClusterInstance.Keyspaces[0]
+	shard0 := &keyspace.Shards[0]
+	// find primary from topo
+	curPrimary := utils.ShardPrimaryTablet(t, clusterInfo, keyspace, shard0)
+	assert.NotNil(t, curPrimary, "should have elected a primary")
+	vtOrcProcess := clusterInfo.ClusterInstance.VTOrcProcesses[0]
+	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.ElectNewPrimaryRecoveryName, 1)
+	utils.WaitForSuccessfulPRSCount(t, vtOrcProcess, keyspace.Name, shard0.Name, 1)
+
+	// find the replica and rdonly tablets
+	var replica, rdonly *cluster.Vttablet
+	for _, tablet := range shard0.Vttablets {
+		// we know we have only two replcia tablets, so the one not the primary must be the other replica
+		if tablet.Alias != curPrimary.Alias && tablet.Type == "replica" {
+			replica = tablet
+		}
+		if tablet.Type == "rdonly" {
+			rdonly = tablet
+		}
+	}
+	assert.NotNil(t, replica, "could not find replica tablet")
+	assert.NotNil(t, rdonly, "could not find rdonly tablet")
+
+	// check that the replication is setup correctly before we failover
+	utils.CheckReplication(t, clusterInfo, curPrimary, []*cluster.Vttablet{replica, rdonly}, 10*time.Second)
+
+	// Disable VTOrc recoveries
+	vtOrcProcess.DisableGlobalRecoveries(t)
+	// use vtctlclient to stop replication on the replica
+	_, err := clusterInfo.ClusterInstance.VtctldClientProcess.ExecuteCommandWithOutput("StopReplication", replica.Alias)
+	require.NoError(t, err)
+	// insert a write that is not available on the replica.
+	utils.VerifyWritesSucceed(t, clusterInfo, curPrimary, []*cluster.Vttablet{rdonly}, 10*time.Second)
+
+	// Make the current primary vttablet unavailable and delete its tablet record.
+	_ = curPrimary.VttabletProcess.TearDown()
+	err = curPrimary.MysqlctlProcess.Stop()
+	require.NoError(t, err)
+	// use vtctlclient to start replication on the replica back
+	_, err = clusterInfo.ClusterInstance.VtctldClientProcess.ExecuteCommandWithOutput("StartReplication", replica.Alias)
+	require.NoError(t, err)
+	err = clusterInfo.ClusterInstance.VtctldClientProcess.ExecuteCommand("DeleteTablets", "--allow-primary", curPrimary.Alias)
+	require.NoError(t, err)
+	// Enable VTOrc recoveries now
+	vtOrcProcess.EnableGlobalRecoveries(t)
+
+	defer func() {
+		// we remove the tablet from our global list
+		utils.PermanentlyRemoveVttablet(clusterInfo, curPrimary)
+	}()
+
+	// check that the replica gets promoted. Also verify that it has all the writes.
+	utils.CheckPrimaryTablet(t, clusterInfo, replica, true)
+	utils.CheckTabletUptoDate(t, clusterInfo, replica)
+
+	// also check that the replication is working correctly after failover
+	utils.VerifyWritesSucceed(t, clusterInfo, replica, []*cluster.Vttablet{rdonly}, 10*time.Second)
+	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.RecoverPrimaryTabletDeletedRecoveryName, 1)
 }
 
 // TestDeadPrimaryRecoversImmediately test Vtorc ability to recover immediately if primary is dead.
@@ -120,6 +243,7 @@ func TestDeadPrimaryRecoversImmediately(t *testing.T) {
 	assert.NotNil(t, curPrimary, "should have elected a primary")
 	vtOrcProcess := clusterInfo.ClusterInstance.VTOrcProcesses[0]
 	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.ElectNewPrimaryRecoveryName, 1)
+	utils.WaitForSuccessfulPRSCount(t, vtOrcProcess, keyspace.Name, shard0.Name, 1)
 
 	// find the replica and rdonly tablets
 	var replica, rdonly *cluster.Vttablet
@@ -156,13 +280,14 @@ func TestDeadPrimaryRecoversImmediately(t *testing.T) {
 	// also check that the replication is working correctly after failover
 	utils.VerifyWritesSucceed(t, clusterInfo, replica, []*cluster.Vttablet{crossCellReplica}, 10*time.Second)
 	utils.WaitForSuccessfulRecoveryCount(t, vtOrcProcess, logic.RecoverDeadPrimaryRecoveryName, 1)
+	utils.WaitForSuccessfulERSCount(t, vtOrcProcess, keyspace.Name, shard0.Name, 1)
 
 	// Parse log file and find out how much time it took for DeadPrimary to recover.
 	logFile := path.Join(vtOrcProcess.LogDir, vtOrcProcess.LogFileName)
 	// log prefix printed at the end of analysis where we conclude we have DeadPrimary
-	t1 := extractTimeFromLog(t, logFile, "Proceeding with DeadPrimary recovery validation after acquiring shard lock")
+	t1 := extractTimeFromLog(t, logFile, "Proceeding with DeadPrimary recovery")
 	// log prefix printed at the end of recovery
-	t2 := extractTimeFromLog(t, logFile, "auditType:recover-dead-primary")
+	t2 := extractTimeFromLog(t, logFile, "auditType:RecoverDeadPrimary")
 	curr := time.Now().Format("2006-01-02")
 	timeLayout := "2006-01-02 15:04:05.000000"
 	timeStr1 := fmt.Sprintf("%s %s", curr, t1)

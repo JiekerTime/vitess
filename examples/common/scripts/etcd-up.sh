@@ -24,7 +24,7 @@ export ETCDCTL_API=2
 # Check that etcd is not already running
 curl "http://${ETCD_SERVER}" > /dev/null 2>&1 && fail "etcd is already running. Exiting."
 
-etcd --enable-v2=true --data-dir "${VTDATAROOT}/etcd/"  --listen-client-urls "http://${ETCD_SERVER}" --advertise-client-urls "http://${ETCD_SERVER}" > "${VTDATAROOT}"/tmp/etcd.out 2>&1 &
+etcd --data-dir "${VTDATAROOT}/etcd/"  --listen-client-urls "http://${ETCD_SERVER}" --advertise-client-urls "http://${ETCD_SERVER}" > "${VTDATAROOT}"/tmp/etcd.out 2>&1 &
 PID=$!
 echo $PID > "${VTDATAROOT}/tmp/etcd.pid"
 sleep 5
@@ -56,6 +56,6 @@ vtctl $TOPOLOGY_FLAGS VtctldCommand AddCellInfo \
   $cell
 set -e
 
-echo "etcd start done..."
+echo "etcd is running!"
 
 

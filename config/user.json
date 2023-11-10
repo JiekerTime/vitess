@@ -40,7 +40,7 @@
     "KeySpaces": [
       {"Name":"*", "WhiteIPs": []}
     ],
-    "Privilege": 1,
+    "Privilege": 255,
     "ReadRole": 1
   },
   "mysql_rs": {
