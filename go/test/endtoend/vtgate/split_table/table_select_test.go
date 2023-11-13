@@ -41,7 +41,7 @@ func TestSelect(t *testing.T) {
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1314, 12, 'bbb', 10, 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1415, 13, 'bbb', 10, 300)")
 
-	// table_select_case.json
+	// table_select_cases.json
 	mcmp.ExecWithColumnCompare("select t_user.* from t_user  t_user")
 
 	//expected: []string{"1"}

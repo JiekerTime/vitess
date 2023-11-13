@@ -1,0 +1,298 @@
+[
+  {
+    "comment": "HAVING uses subquery",
+    "query": "select id from t_user having id in (select col from t_user)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user having id in (select col from t_user)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where :__sq_has_values1 = 1 and id in ::__vals",
+            "Table": "t_user",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY after pull-out subquery",
+    "query": "select col from t_user where col in (select col2 from t_user) order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col2 from t_user) order by col",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col2 from t_user_0 where 1 != 1",
+            "Query": "select col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "OrderBy": "0 ASC",
+            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 order by col asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY NULL after pull-out subquery",
+    "query": "select col from t_user where col in (select col2 from t_user) order by null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col2 from t_user) order by null",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col2 from t_user_0 where 1 != 1",
+            "Query": "select col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY RAND() after pull-out subquery",
+    "query": "select col from t_user where col in (select col2 from t_user) order by rand()",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col2 from t_user) order by rand()",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col2 from t_user_0 where 1 != 1",
+            "Query": "select col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 order by rand()",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, '*' expression in a subquery",
+    "query": "select u.id, e.id from t_user u join t_user_extra e where u.col = e.col and u.col in (select * from t_user where t_user.id = u.id order by col)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.id, e.id from t_user u join t_user_extra e where u.col = e.col and u.col in (select * from t_user where t_user.id = u.id order by col)",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:1,R:0",
+        "JoinVars": {
+          "u_col": 0
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select u.col, u.id from t_user_0 as u where 1 != 1",
+            "Query": "select u.col, u.id from t_user as u where u.col in (select * from t_user where t_user.id = u.id order by col asc)",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select e.id from t_user_extra_0 as e where 1 != 1",
+            "Query": "select e.id from t_user_extra as e where e.col = :u_col",
+            "Table": "t_user_extra",
+            "TableValues": [
+              ":u_col"
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, verify outer symtab is searched according to its own context.",
+    "query": "select u.id from t_user u having u.id in (select col2 from t_user where t_user.id = u.id order by u.col)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.id from t_user u having u.id in (select col2 from t_user where t_user.id = u.id order by u.col)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select u.id from t_user_0 as u where 1 != 1",
+        "Query": "select u.id from t_user as u where u.id in (select col2 from t_user where t_user.id = u.id order by u.col asc)",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter limit after pullout subquery",
+    "query": "select col from t_user where col in (select col1 from t_user) limit 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col1 from t_user) limit 1",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(1)",
+        "Inputs": [
+          {
+            "OperatorType": "Subquery",
+            "Variant": "PulloutIn",
+            "PulloutVars": [
+              "__sq_has_values1",
+              "__sq1"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select col1 from t_user_0 where 1 != 1",
+                "Query": "select col1 from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select col from t_user_0 where 1 != 1",
+                "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 limit :__upper_limit",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

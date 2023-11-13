@@ -1,0 +1,25 @@
+[
+  {
+    "comment": "Order by has subqueries",
+    "query": "select id from unsharded order by (select id from unsharded)",
+    "v3-plan": "VT12001: unsupported: subqueries disallowed in sqlparser.OrderBy",
+    "gen4-plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from unsharded order by (select id from unsharded)",
+      "Instructions": {
+        "OperatorType": "Route",
+        "Variant": "Unsharded",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "FieldQuery": "select id from unsharded where 1 != 1",
+        "Query": "select id from unsharded order by (select id from unsharded) asc",
+        "Table": "unsharded"
+      },
+      "TablesUsed": [
+        "main.unsharded"
+      ]
+    }
+  }
+]

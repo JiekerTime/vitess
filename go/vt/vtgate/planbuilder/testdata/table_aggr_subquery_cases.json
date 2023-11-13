@@ -1,0 +1,142 @@
+[
+  {
+    "comment": "scatter aggregate in a subquery",
+    "query": "select a from (select count(*) as a from t_user) t",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a from (select count(*) as a from t_user) t",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum_count_star(0) AS a",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select count(*) as a from t_user_0 where 1 != 1",
+                "Query": "select count(*) as a from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "select (select 1 from t_user u having count(ue.col) > 10) from t_user_extra ue",
+    "query": "select (select 1 from t_user u having count(ue.col) > 10) from t_user_extra ue",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select (select 1 from t_user u having count(ue.col) > 10) from t_user_extra ue",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutValue",
+        "PulloutVars": [
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "SimpleProjection",
+            "Columns": [
+              0
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Filter",
+                "Predicate": ":1 > 10",
+                "Inputs": [
+                  {
+                    "OperatorType": "Aggregate",
+                    "Variant": "Scalar",
+                    "Aggregates": "random(0) AS 1, sum_count(1) AS count(ue.col)",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select 1, count(ue.col) from t_user_0 as u where 1 != 1",
+                        "Query": "select 1, count(ue.col) from t_user as u",
+                        "Table": "t_user"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select :__sq1 from t_user_extra_0 as ue where 1 != 1",
+            "Query": "select :__sq1 from t_user_extra as ue",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Aggregations from derived table used in arithmetic outside derived table",
+    "query": "select A.a, A.b, (A.a / A.b) as d from (select sum(a) as a, sum(b) as b from t_user) A",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select A.a, A.b, (A.a / A.b) as d from (select sum(a) as a, sum(b) as b from t_user) A",
+      "Instructions": {
+        "OperatorType": "Projection",
+        "Expressions": [
+          "[COLUMN 0] as a",
+          "[COLUMN 1] as b",
+          "[COLUMN 0] / [COLUMN 1] as d"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum(0) AS a, sum(1) AS b",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select sum(a) as a, sum(b) as b from t_user_0 where 1 != 1",
+                "Query": "select sum(a) as a, sum(b) as b from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

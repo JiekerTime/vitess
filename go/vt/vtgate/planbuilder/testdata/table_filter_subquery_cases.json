@@ -1,0 +1,260 @@
+[
+  {
+    "comment": "cross-shard subquery in IN clause.\n# Note the improved Underlying plan as SelectIN.",
+    "query": "select id from t_user where id in (select col from t_user)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id in (select col from t_user)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where :__sq_has_values1 = 1 and id in ::__vals",
+            "Table": "t_user",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "cross-shard subquery in NOT IN clause.",
+    "query": "select id from t_user where id not in (select col from t_user)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id not in (select col from t_user)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutNotIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where :__sq_has_values1 = 0 or id not in ::__sq1",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "cross-shard subquery as expression",
+    "query": "select id from t_user where id = (select col from t_user)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id = (select col from t_user)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutValue",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where id = :__sq1",
+            "Table": "t_user",
+            "Values": [
+              ":__sq1"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "multi-level pullout",
+    "query": "select id1 from t_user where id = (select id2 from t_user where id2 in (select id3 from t_user))",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id1 from t_user where id = (select id2 from t_user where id2 in (select id3 from t_user))",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutValue",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Subquery",
+            "Variant": "PulloutIn",
+            "PulloutVars": [
+              "__sq_has_values2",
+              "__sq2"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select id3 from t_user_0 where 1 != 1",
+                "Query": "select id3 from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select id2 from t_user_0 where 1 != 1",
+                "Query": "select id2 from t_user where :__sq_has_values2 = 1 and id2 in ::__sq2",
+                "Table": "t_user"
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id1 from t_user_0 where 1 != 1",
+            "Query": "select id1 from t_user where id = :__sq1",
+            "Table": "t_user",
+            "Values": [
+              ":__sq1"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "subquery on other table",
+    "query": "select distinct t_user.id, t_user.col from t_user where t_user.col in (select id from t_music where col2 = 'a')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct t_user.id, t_user.col from t_user where t_user.col in (select id from t_music where col2 = 'a')",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|2), 1",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Subquery",
+            "Variant": "PulloutIn",
+            "PulloutVars": [
+              "__sq_has_values1",
+              "__sq1"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select id from t_music_0 where 1 != 1",
+                "Query": "select id from t_music where col2 = 'a'",
+                "Table": "t_music"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.id, t_user_0.col, weight_string(t_user_0.id) from t_user_0 where 1 != 1",
+                "OrderBy": "(0|2) ASC, 1 ASC",
+                "Query": "select t_user.id, t_user.col, weight_string(t_user.id) from t_user where :__sq_has_values1 = 1 and t_user.col in ::__sq1 order by t_user.id asc, t_user.col asc",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+  }
+]

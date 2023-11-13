@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 
 	"vitess.io/vitess/go/sqltypes"
