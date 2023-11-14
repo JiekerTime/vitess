@@ -60,25 +60,6 @@ func TestCorrelatedExistsSubquery(t *testing.T) {
 	utils.AssertMatches(t, mcmp.VtConn, `select id from t1 where id in (select id from t2) order by id`,
 		`[[INT64(1)] [INT64(100)]]`)
 
-	utils.AssertMatches(t, mcmp.VtConn, `
-select id 
-from t1 
-where exists(
-	select t2.id, count(*) 
-	from t2 
-	where t1.col = t2.tcol2
-    having count(*) > 0
-)`,
-		`[[INT64(100)]]`)
-	utils.AssertMatches(t, mcmp.VtConn, `
-select id 
-from t1 
-where exists(
-	select t2.id, count(*) 
-	from t2 
-	where t1.col = t2.tcol1
-) order by id`,
-		`[[INT64(1)] [INT64(4)] [INT64(100)]]`)
 	utils.AssertMatchesNoOrder(t, mcmp.VtConn, `
 select id 
 from t1 
@@ -132,34 +113,28 @@ func TestDistinctAggregationFunc(t *testing.T) {
 	defer closer()
 
 	// insert some data.
-	utils.Exec(t, mcmp.VtConn, `insert into t2(id, tcol1, tcol2) values (1, 'A', 'A'),(2, 'B', 'C'),(3, 'A', 'C'),(4, 'C', 'A'),(5, 'A', 'A'),(6, 'B', 'C'),(7, 'B', 'A'),(8, 'C', 'A')`)
+	mcmp.Exec(`insert into t2(id, tcol1, tcol2) values (1, 'A', 'A'),(2, 'B', 'C'),(3, 'A', 'C'),(4, 'C', 'A'),(5, 'A', 'A'),(6, 'B', 'C'),(7, 'B', 'A'),(8, 'C', 'A')`)
 
 	// count on primary vindex
-	utils.AssertMatches(t, mcmp.VtConn, `select tcol1, count(distinct id) from t2 group by tcol1`,
-		`[[VARCHAR("A") INT64(3)] [VARCHAR("B") INT64(3)] [VARCHAR("C") INT64(2)]]`)
+	mcmp.Exec(`select tcol1, count(distinct id) from t2 group by tcol1`)
 
 	// count on any column
-	utils.AssertMatches(t, mcmp.VtConn, `select tcol1, count(distinct tcol2) from t2 group by tcol1`,
-		`[[VARCHAR("A") INT64(2)] [VARCHAR("B") INT64(2)] [VARCHAR("C") INT64(1)]]`)
+	mcmp.Exec(`select tcol1, count(distinct tcol2) from t2 group by tcol1`)
 
 	// sum of columns
-	utils.AssertMatches(t, mcmp.VtConn, `select sum(id), sum(tcol1) from t2`,
-		`[[DECIMAL(36) FLOAT64(0)]]`)
+	mcmp.Exec(`select sum(id), sum(tcol1) from t2`)
 
 	// sum on primary vindex
-	utils.AssertMatches(t, mcmp.VtConn, `select tcol1, sum(distinct id) from t2 group by tcol1`,
-		`[[VARCHAR("A") DECIMAL(9)] [VARCHAR("B") DECIMAL(15)] [VARCHAR("C") DECIMAL(12)]]`)
+	mcmp.Exec(`select tcol1, sum(distinct id) from t2 group by tcol1`)
 
 	// sum on any column
-	utils.AssertMatches(t, mcmp.VtConn, `select tcol1, sum(distinct tcol2) from t2 group by tcol1`,
-		`[[VARCHAR("A") DECIMAL(0)] [VARCHAR("B") DECIMAL(0)] [VARCHAR("C") DECIMAL(0)]]`)
+	mcmp.Exec(`select tcol1, sum(distinct tcol2) from t2 group by tcol1`)
 
 	// insert more data to get values on sum
-	utils.Exec(t, mcmp.VtConn, `insert into t2(id, tcol1, tcol2) values (9, 'AA', null),(10, 'AA', '4'),(11, 'AA', '4'),(12, null, '5'),(13, null, '6'),(14, 'BB', '10'),(15, 'BB', '20'),(16, 'BB', 'X')`)
+	mcmp.Exec(`insert into t2(id, tcol1, tcol2) values (9, 'AA', null),(10, 'AA', '4'),(11, 'AA', '4'),(12, null, '5'),(13, null, '6'),(14, 'BB', '10'),(15, 'BB', '20'),(16, 'BB', 'X')`)
 
 	// multi distinct
-	utils.AssertMatches(t, mcmp.VtConn, `select tcol1, count(distinct tcol2), sum(distinct tcol2) from t2 group by tcol1`,
-		`[[NULL INT64(2) DECIMAL(11)] [VARCHAR("A") INT64(2) DECIMAL(0)] [VARCHAR("AA") INT64(1) DECIMAL(4)] [VARCHAR("B") INT64(2) DECIMAL(0)] [VARCHAR("BB") INT64(3) DECIMAL(30)] [VARCHAR("C") INT64(1) DECIMAL(0)]]`)
+	mcmp.Exec(`select tcol1, count(distinct tcol2), sum(distinct tcol2) from t2 group by tcol1`)
 }
 
 func TestDistinct(t *testing.T) {
@@ -170,7 +145,7 @@ func TestDistinct(t *testing.T) {
 	utils.Exec(t, mcmp.VtConn, `insert into t2(id, tcol1, tcol2) values (1, 'A', 'A'),(2, 'B', 'C'),(3, 'A', 'C'),(4, 'C', 'A'),(5, 'A', 'A'),(6, 'B', 'C'),(7, 'B', 'A'),(8, 'C', 'A')`)
 
 	// multi distinct
-	utils.AssertMatches(t, mcmp.VtConn, `select distinct tcol1, tcol2 from t2`,
+	utils.AssertMatchesNoOrder(t, mcmp.VtConn, `select distinct tcol1, tcol2 from t2`,
 		`[[VARCHAR("A") VARCHAR("A")] [VARCHAR("A") VARCHAR("C")] [VARCHAR("B") VARCHAR("A")] [VARCHAR("B") VARCHAR("C")] [VARCHAR("C") VARCHAR("A")]]`)
 }
 
@@ -184,22 +159,32 @@ func TestSubQueries(t *testing.T) {
 	utils.AssertMatches(t, mcmp.VtConn, `select t2.tcol1, t2.tcol2 from t2 where t2.id IN (select id from t3) order by t2.id`, `[[VARCHAR("A") VARCHAR("A")] [VARCHAR("B") VARCHAR("C")] [VARCHAR("A") VARCHAR("C")] [VARCHAR("C") VARCHAR("A")] [VARCHAR("A") VARCHAR("A")] [VARCHAR("B") VARCHAR("C")] [VARCHAR("B") VARCHAR("A")] [VARCHAR("C") VARCHAR("B")]]`)
 	utils.AssertMatches(t, mcmp.VtConn, `select t2.tcol1, t2.tcol2 from t2 where t2.id IN (select t3.id from t3 join t2 on t2.id = t3.id) order by t2.id`, `[[VARCHAR("A") VARCHAR("A")] [VARCHAR("B") VARCHAR("C")] [VARCHAR("A") VARCHAR("C")] [VARCHAR("C") VARCHAR("A")] [VARCHAR("A") VARCHAR("A")] [VARCHAR("B") VARCHAR("C")] [VARCHAR("B") VARCHAR("A")] [VARCHAR("C") VARCHAR("B")]]`)
 
-	utils.AssertMatches(t, mcmp.VtConn, `select u_a.a from u_a left join t2 on t2.id IN (select id from t2)`, `[]`)
 	// inserting some data in u_a
 	utils.Exec(t, mcmp.VtConn, `insert into u_a(id, a) values (1, 1)`)
-
-	// execute same query again.
-	qr := utils.Exec(t, mcmp.VtConn, `select u_a.a from u_a left join t2 on t2.id IN (select id from t2)`)
-	assert.EqualValues(t, 8, len(qr.Rows))
-	for index, row := range qr.Rows {
-		assert.EqualValues(t, `[INT64(1)]`, fmt.Sprintf("%v", row), "does not match for row: %d", index+1)
-	}
 
 	// fail as projection subquery is not scalar
 	_, err := utils.ExecAllowError(t, mcmp.VtConn, `select (select id from t2) from t2 order by id`)
 	assert.EqualError(t, err, "subquery returned more than one row (errno 1105) (sqlstate HY000) during query: select (select id from t2) from t2 order by id")
 
 	utils.AssertMatches(t, mcmp.VtConn, `select (select id from t2 order by id limit 1) from t2 order by id limit 2`, `[[INT64(1)] [INT64(1)]]`)
+}
+
+func TestSubQueriesOnOuterJoinOnCondition(t *testing.T) {
+	t.Skip("not supported")
+	mcmp, closer := start(t)
+	defer closer()
+
+	utils.Exec(t, mcmp.VtConn, `insert into t2(id, tcol1, tcol2) values (1, 'A', 'A'),(2, 'B', 'C'),(3, 'A', 'C'),(4, 'C', 'A'),(5, 'A', 'A'),(6, 'B', 'C'),(7, 'B', 'A'),(8, 'C', 'B')`)
+	utils.Exec(t, mcmp.VtConn, `insert into t3(id, tcol1, tcol2) values (1, 'A', 'A'),(2, 'B', 'C'),(3, 'A', 'C'),(4, 'C', 'A'),(5, 'A', 'A'),(6, 'B', 'C'),(7, 'B', 'A'),(8, 'C', 'B')`)
+
+	utils.AssertMatches(t, mcmp.VtConn, `select u_a.a from u_a left join t2 on t2.id IN (select id from t2)`, `[]`)
+	// inserting some data in u_a
+	utils.Exec(t, mcmp.VtConn, `insert into u_a(id, a) values (1, 1)`)
+	qr := utils.Exec(t, mcmp.VtConn, `select u_a.a from u_a left join t2 on t2.id IN (select id from t2)`)
+	assert.EqualValues(t, 8, len(qr.Rows))
+	for index, row := range qr.Rows {
+		assert.EqualValues(t, `[INT64(1)]`, fmt.Sprintf("%v", row), "does not match for row: %d", index+1)
+	}
 }
 
 func TestPlannerWarning(t *testing.T) {

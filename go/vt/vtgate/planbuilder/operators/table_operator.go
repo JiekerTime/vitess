@@ -70,7 +70,7 @@ func createOperatorFromSelectForSplitTable(ctx *plancontext.PlanningContext, sel
 	}
 	return &Horizon{
 		Source: op,
-		Select: sel,
+		Query:  sel,
 	}, nil
 }
 

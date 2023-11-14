@@ -31,6 +31,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"vitess.io/vitess/go/constants/sidecar"
+
+	"vitess.io/vitess/go/mysql/replication"
+	"vitess.io/vitess/go/mysql/sqlerror"
+
 	"vitess.io/vitess/go/event/syslogger"
 	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/mysql/fakesqldb"
@@ -39,7 +44,6 @@ import (
 	"vitess.io/vitess/go/test/utils"
 	"vitess.io/vitess/go/vt/dbconfigs"
 	querypb "vitess.io/vitess/go/vt/proto/query"
-	"vitess.io/vitess/go/vt/sidecardb"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vttablet/tabletserver/connpool"
 	"vitess.io/vitess/go/vt/vttablet/tabletserver/schema/schematest"
@@ -78,7 +82,7 @@ func TestOpenAndReload(t *testing.T) {
 	))
 	firstReadRowsValue := 12
 	AddFakeInnoDBReadRowsResult(db, firstReadRowsValue)
-	se := newEngine(10, 10*time.Second, 10*time.Second, 0, db)
+	se := newEngine(10*time.Second, 10*time.Second, 0, db)
 	se.Open()
 	defer se.Close()
 
@@ -205,13 +209,13 @@ func TestOpenAndReload(t *testing.T) {
 	assert.Equal(t, int64(0), se.tableFileSizeGauge.Counts()["msg"])
 
 	// ReloadAt tests
-	pos1, err := mysql.DecodePosition("MariaDB/0-41983-20")
+	pos1, err := replication.DecodePosition("MariaDB/0-41983-20")
 	require.NoError(t, err)
-	pos2, err := mysql.DecodePosition("MariaDB/0-41983-40")
+	pos2, err := replication.DecodePosition("MariaDB/0-41983-40")
 	require.NoError(t, err)
 	se.UnregisterNotifier("test")
 
-	err = se.ReloadAt(context.Background(), mysql.Position{})
+	err = se.ReloadAt(context.Background(), replication.Position{})
 	require.NoError(t, err)
 	assert.Equal(t, want, se.GetSchema())
 
@@ -269,7 +273,7 @@ func TestReloadWithSwappedTables(t *testing.T) {
 	firstReadRowsValue := 12
 	AddFakeInnoDBReadRowsResult(db, firstReadRowsValue)
 
-	se := newEngine(10, 10*time.Second, 10*time.Second, 0, db)
+	se := newEngine(10*time.Second, 10*time.Second, 0, db)
 	se.Open()
 	defer se.Close()
 	want := initialSchema()
@@ -419,7 +423,7 @@ func TestOpenFailedDueToExecErr(t *testing.T) {
 	schematest.AddDefaultQueries(db)
 	want := "injected error"
 	db.RejectQueryPattern(baseShowTablesPattern, want)
-	se := newEngine(10, 1*time.Second, 1*time.Second, 0, db)
+	se := newEngine(1*time.Second, 1*time.Second, 0, db)
 	err := se.Open()
 	if err == nil || !strings.Contains(err.Error(), want) {
 		t.Errorf("se.Open: %v, want %s", err, want)
@@ -447,10 +451,10 @@ func TestOpenFailedDueToLoadTableErr(t *testing.T) {
 	db.AddQueryPattern(fmt.Sprintf(mysql.GetColumnNamesQueryPatternForTable, "test_view"),
 		sqltypes.MakeTestResult(sqltypes.MakeTestFields("column_name", "varchar"), ""))
 	// rejecting the impossible query
-	db.AddRejectedQuery("SELECT * FROM `fakesqldb`.`test_view` WHERE 1 != 1", mysql.NewSQLErrorFromError(errors.New("The user specified as a definer ('root'@'%') does not exist (errno 1449) (sqlstate HY000)")))
+	db.AddRejectedQuery("SELECT * FROM `fakesqldb`.`test_view` WHERE 1 != 1", sqlerror.NewSQLErrorFromError(errors.New("The user specified as a definer ('root'@'%') does not exist (errno 1449) (sqlstate HY000)")))
 
 	AddFakeInnoDBReadRowsResult(db, 0)
-	se := newEngine(10, 1*time.Second, 1*time.Second, 0, db)
+	se := newEngine(1*time.Second, 1*time.Second, 0, db)
 	err := se.Open()
 	// failed load should return an error because of test_table
 	assert.ErrorContains(t, err, "Row count exceeded")
@@ -482,10 +486,10 @@ func TestOpenNoErrorDueToInvalidViews(t *testing.T) {
 	db.AddQueryPattern(fmt.Sprintf(mysql.GetColumnNamesQueryPatternForTable, "bar_view"),
 		sqltypes.MakeTestResult(sqltypes.MakeTestFields("column_name", "varchar"), "col1", "col2"))
 	// rejecting the impossible query
-	db.AddRejectedQuery("SELECT `col1`, `col2` FROM `fakesqldb`.`bar_view` WHERE 1 != 1", mysql.NewSQLError(mysql.ERWrongFieldWithGroup, mysql.SSClientError, "random error for table bar_view"))
+	db.AddRejectedQuery("SELECT `col1`, `col2` FROM `fakesqldb`.`bar_view` WHERE 1 != 1", sqlerror.NewSQLError(sqlerror.ERWrongFieldWithGroup, sqlerror.SSClientError, "random error for table bar_view"))
 
 	AddFakeInnoDBReadRowsResult(db, 0)
-	se := newEngine(10, 1*time.Second, 1*time.Second, 0, db)
+	se := newEngine(1*time.Second, 1*time.Second, 0, db)
 	err := se.Open()
 	require.NoError(t, err)
 
@@ -501,7 +505,7 @@ func TestExportVars(t *testing.T) {
 	db := fakesqldb.New(t)
 	defer db.Close()
 	schematest.AddDefaultQueries(db)
-	se := newEngine(10, 1*time.Second, 1*time.Second, 0, db)
+	se := newEngine(1*time.Second, 1*time.Second, 0, db)
 	se.Open()
 	defer se.Close()
 	expvar.Do(func(kv expvar.KeyValue) {
@@ -513,7 +517,7 @@ func TestStatsURL(t *testing.T) {
 	db := fakesqldb.New(t)
 	defer db.Close()
 	schematest.AddDefaultQueries(db)
-	se := newEngine(10, 1*time.Second, 1*time.Second, 0, db)
+	se := newEngine(1*time.Second, 1*time.Second, 0, db)
 	se.Open()
 	defer se.Close()
 
@@ -543,7 +547,7 @@ func TestSchemaEngineCloseTickRace(t *testing.T) {
 		})
 	AddFakeInnoDBReadRowsResult(db, 12)
 	// Start the engine with a small reload tick
-	se := newEngine(10, 100*time.Millisecond, 1*time.Second, 0, db)
+	se := newEngine(100*time.Millisecond, 1*time.Second, 0, db)
 	err := se.Open()
 	require.NoError(t, err)
 
@@ -570,9 +574,8 @@ func TestSchemaEngineCloseTickRace(t *testing.T) {
 	}
 }
 
-func newEngine(queryCacheSize int, reloadTime time.Duration, idleTimeout time.Duration, schemaMaxAgeSeconds int64, db *fakesqldb.DB) *Engine {
+func newEngine(reloadTime time.Duration, idleTimeout time.Duration, schemaMaxAgeSeconds int64, db *fakesqldb.DB) *Engine {
 	config := tabletenv.NewDefaultConfig()
-	config.QueryCacheSize = queryCacheSize
 	_ = config.SchemaReloadIntervalSeconds.Set(reloadTime.String())
 	_ = config.OltpReadPool.IdleTimeoutSeconds.Set(idleTimeout.String())
 	_ = config.OlapReadPool.IdleTimeoutSeconds.Set(idleTimeout.String())
@@ -1110,7 +1113,7 @@ func TestEngineReload(t *testing.T) {
 	conn, err := connpool.NewDBConnNoPool(context.Background(), db.ConnParams(), nil, nil)
 	require.NoError(t, err)
 
-	se := newEngine(10, 10*time.Second, 10*time.Second, 0, db)
+	se := newEngine(10*time.Second, 10*time.Second, 0, db)
 	se.conns.Open(se.cp, se.cp, se.cp)
 	se.isOpen = true
 	se.notifiers = make(map[string]notifier)
@@ -1173,7 +1176,7 @@ func TestEngineReload(t *testing.T) {
 
 	// Detecting view changes.
 	// According to the database, v2, v3, v4, and v5 require updating.
-	db.AddQuery(fmt.Sprintf(detectViewChange, sidecardb.GetIdentifier()), sqltypes.MakeTestResult(sqltypes.MakeTestFields("table_name", "varchar"),
+	db.AddQuery(fmt.Sprintf(detectViewChange, sidecar.GetIdentifier()), sqltypes.MakeTestResult(sqltypes.MakeTestFields("table_name", "varchar"),
 		"v2",
 		"v3",
 		"v4",

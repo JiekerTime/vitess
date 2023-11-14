@@ -22,10 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/protobuf/proto"
+	"vitess.io/vitess/go/mysql/replication"
 
 	"vitess.io/vitess/go/event"
-	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/sets"
 	"vitess.io/vitess/go/stats"
 	"vitess.io/vitess/go/vt/concurrency"
@@ -54,8 +53,11 @@ type EmergencyReparenter struct {
 // EmergencyReparentShard operations. Options are passed by value, so it is safe
 // for callers to mutate and reuse options structs for multiple calls.
 type EmergencyReparentOptions struct {
-	NewPrimaryAlias           *topodatapb.TabletAlias
-	IgnoreReplicas            sets.Set[string]
+	NewPrimaryAlias *topodatapb.TabletAlias
+	IgnoreReplicas  sets.Set[string]
+	// WaitAllTablets is used to specify whether ERS should wait for all the tablets to return and not proceed
+	// further after n-1 tablets have returned.
+	WaitAllTablets            bool
 	WaitReplicasTimeout       time.Duration
 	PreventCrossCellPromotion bool
 
@@ -67,9 +69,14 @@ type EmergencyReparentOptions struct {
 
 // counters for Emergency Reparent Shard
 var (
-	ersCounter        = stats.NewGauge("ers_counter", "Number of times Emergency Reparent Shard has been run")
-	ersSuccessCounter = stats.NewGauge("ers_success_counter", "Number of times Emergency Reparent Shard has succeeded")
-	ersFailureCounter = stats.NewGauge("ers_failure_counter", "Number of times Emergency Reparent Shard has failed")
+	// TODO(timvaillancourt): remove legacyERS* gauges in v19+.
+	legacyERSCounter        = stats.NewGauge("ers_counter", "Number of times Emergency Reparent Shard has been run")
+	legacyERSSuccessCounter = stats.NewGauge("ers_success_counter", "Number of times Emergency Reparent Shard has succeeded")
+	legacyERSFailureCounter = stats.NewGauge("ers_failure_counter", "Number of times Emergency Reparent Shard has failed")
+
+	ersCounter = stats.NewCountersWithMultiLabels("emergency_reparent_counts", "Number of times Emergency Reparent Shard has been run",
+		[]string{"Keyspace", "Shard", "Result"},
+	)
 )
 
 // NewEmergencyReparenter returns a new EmergencyReparenter object, ready to
@@ -97,26 +104,33 @@ func NewEmergencyReparenter(ts *topo.Server, tmc tmclient.TabletManagerClient, l
 // keyspace and shard.
 func (erp *EmergencyReparenter) ReparentShard(ctx context.Context, keyspace string, shard string, opts EmergencyReparentOptions) (*events.Reparent, error) {
 	var err error
+	statsLabels := []string{keyspace, shard}
+
+	opts.lockAction = erp.getLockAction(opts.NewPrimaryAlias)
 	// First step is to lock the shard for the given operation, if not already locked
 	if err = topo.CheckShardLocked(ctx, keyspace, shard); err != nil {
 		var unlock func(*error)
-		opts.lockAction = erp.getLockAction(opts.NewPrimaryAlias)
 		ctx, unlock, err = erp.ts.LockShard(ctx, keyspace, shard, opts.lockAction)
 		if err != nil {
+			ersCounter.Add(append(statsLabels, failureResult), 1)
 			return nil, err
 		}
 		defer unlock(&err)
 	}
 
 	// dispatch success or failure of ERS
+	startTime := time.Now()
 	ev := &events.Reparent{}
 	defer func() {
+		reparentShardOpTimings.Add("EmergencyReparentShard", time.Since(startTime))
 		switch err {
 		case nil:
-			ersSuccessCounter.Add(1)
+			legacyERSSuccessCounter.Add(1)
+			ersCounter.Add(append(statsLabels, successResult), 1)
 			event.DispatchUpdate(ev, "finished EmergencyReparentShard")
 		default:
-			ersFailureCounter.Add(1)
+			legacyERSFailureCounter.Add(1)
+			ersCounter.Add(append(statsLabels, failureResult), 1)
 			event.DispatchUpdate(ev, "failed EmergencyReparentShard: "+err.Error())
 		}
 	}()
@@ -140,14 +154,14 @@ func (erp *EmergencyReparenter) getLockAction(newPrimaryAlias *topodatapb.Tablet
 func (erp *EmergencyReparenter) reparentShardLocked(ctx context.Context, ev *events.Reparent, keyspace, shard string, opts EmergencyReparentOptions) (err error) {
 	// log the starting of the operation and increment the counter
 	erp.logger.Infof("will initiate emergency reparent shard in keyspace - %s, shard - %s", keyspace, shard)
-	ersCounter.Add(1)
+	legacyERSCounter.Add(1)
 
 	var (
 		stoppedReplicationSnapshot *replicationSnapshot
 		shardInfo                  *topo.ShardInfo
 		prevPrimary                *topodatapb.Tablet
 		tabletMap                  map[string]*topo.TabletInfo
-		validCandidates            map[string]mysql.Position
+		validCandidates            map[string]replication.Position
 		intermediateSource         *topodatapb.Tablet
 		validCandidateTablets      []*topodatapb.Tablet
 		validReplacementCandidates []*topodatapb.Tablet
@@ -191,7 +205,7 @@ func (erp *EmergencyReparenter) reparentShardLocked(ctx context.Context, ev *eve
 	}
 
 	// Stop replication on all the tablets and build their status map
-	stoppedReplicationSnapshot, err = stopReplicationAndBuildStatusMaps(ctx, erp.tmc, ev, tabletMap, topo.RemoteOperationTimeout, opts.IgnoreReplicas, opts.NewPrimaryAlias, opts.durability, erp.logger)
+	stoppedReplicationSnapshot, err = stopReplicationAndBuildStatusMaps(ctx, erp.tmc, ev, tabletMap, topo.RemoteOperationTimeout, opts.IgnoreReplicas, opts.NewPrimaryAlias, opts.durability, opts.WaitAllTablets, erp.logger)
 	if err != nil {
 		return vterrors.Wrapf(err, "failed to stop replication and build status maps: %v", err)
 	}
@@ -298,14 +312,13 @@ func (erp *EmergencyReparenter) reparentShardLocked(ctx context.Context, ev *eve
 	if err != nil {
 		return err
 	}
-
-	ev.NewPrimary = proto.Clone(newPrimary).(*topodatapb.Tablet)
+	ev.NewPrimary = newPrimary.CloneVT()
 	return err
 }
 
 func (erp *EmergencyReparenter) waitForAllRelayLogsToApply(
 	ctx context.Context,
-	validCandidates map[string]mysql.Position,
+	validCandidates map[string]replication.Position,
 	tabletMap map[string]*topo.TabletInfo,
 	statusMap map[string]*replicationdatapb.StopReplicationStatus,
 	waitReplicasTimeout time.Duration,
@@ -371,7 +384,7 @@ func (erp *EmergencyReparenter) waitForAllRelayLogsToApply(
 
 // findMostAdvanced finds the intermediate source for ERS. We always choose the most advanced one from our valid candidates list. Further ties are broken by looking at the promotion rules.
 func (erp *EmergencyReparenter) findMostAdvanced(
-	validCandidates map[string]mysql.Position,
+	validCandidates map[string]replication.Position,
 	tabletMap map[string]*topo.TabletInfo,
 	opts EmergencyReparentOptions,
 ) (*topodatapb.Tablet, []*topodatapb.Tablet, error) {

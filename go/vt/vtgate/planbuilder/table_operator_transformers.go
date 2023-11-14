@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"vitess.io/vitess/go/mysql/collations"
-	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -54,7 +52,7 @@ func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, op *operat
 }
 
 func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *operators.Projection) (logicalPlan, error) {
-	src, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	src, err := transformToLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -62,46 +60,36 @@ func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *oper
 	if cols := op.AllOffsets(); cols != nil {
 		// if all this op is doing is passing through columns from the input, we
 		// can use the faster SimpleProjection
-		return useSimpleProjection(op, cols, src)
+		return useSimpleProjection(ctx, op, cols, src)
 	}
 
-	expressions := slices2.Map(op.Projections, func(from operators.ProjExpr) sqlparser.Expr {
-		return from.GetExpr()
-	})
+	ap, err := op.GetAliasedProjections()
+	if err != nil {
+		return nil, err
+	}
 
-	failed := false
-	evalengineExprs := slices2.Map(op.Projections, func(from operators.ProjExpr) evalengine.Expr {
-		switch e := from.(type) {
-		case operators.Eval:
-			return e.EExpr
-		case operators.Offset:
-			t := ctx.SemTable.ExprTypes[e.Expr]
-			return &evalengine.Column{
-				Offset:    e.Offset,
-				Type:      t.Type,
-				Collation: collations.TypedCollation{},
-			}
-		default:
-			failed = true
-			return nil
+	var exprs []sqlparser.Expr
+	var evalengineExprs []evalengine.Expr
+	var columnNames []string
+	for _, pe := range ap {
+		ee, err := getEvalEngingeExpr(ctx, pe)
+		if err != nil {
+			return nil, err
 		}
-	})
-	var primitive *engine.Projection
-	columnNames := slices2.Map(op.Columns, func(from *sqlparser.AliasedExpr) string {
-		return from.ColumnName()
-	})
+		evalengineExprs = append(evalengineExprs, ee)
+		exprs = append(exprs, pe.EvalExpr)
+		columnNames = append(columnNames, pe.Original.ColumnName())
+	}
 
-	if !failed {
-		primitive = &engine.Projection{
-			Cols:  columnNames,
-			Exprs: evalengineExprs,
-		}
+	primitive := &engine.Projection{
+		Cols:  columnNames,
+		Exprs: evalengineExprs,
 	}
 
 	return &projection{
 		source:      src,
 		columnNames: columnNames,
-		columns:     expressions,
+		columns:     exprs,
 		primitive:   primitive,
 	}, nil
 }
@@ -116,11 +104,14 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 		return transformInsertPlanForSplitTable(ctx, op, src)
 	}
 
-	sel, err := operators.ToSQL(ctx, op.Source)
+	sel, _, err := operators.ToSQL(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
-
+	selStmt, ok := sel.(sqlparser.SelectStatement)
+	if !ok {
+		return nil, vterrors.VT13001(fmt.Sprintf("dont know how to %T", selStmt))
+	}
 	ksERoute := ctx.GetRoute()
 	eroute, err := routeToEngineTableRoute(ctx, ksERoute.RoutingParameters, op)
 	if err != nil {
@@ -139,7 +130,7 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 	}
 
 	return &tableRoute{
-		Select: sel,
+		Select: selStmt,
 		eroute: eroute,
 	}, nil
 }
@@ -155,7 +146,8 @@ func transformTableDeletePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 		AST:             ast,
 		KsidVindex:      ctx.DMLEngine.KsidVindex,
 		KsidLength:      ctx.DMLEngine.KsidLength,
-		Table:           ctx.DMLEngine.Table,
+		TableNames:      []string{del.VTable.Name.String()},
+		Vindexes:        del.VTable.Owned,
 		ShardRouteParam: ctx.DMLEngine.RoutingParameters,
 		TableRouteParam: rp,
 	}
@@ -177,7 +169,8 @@ func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 		AST:             ast,
 		KsidVindex:      ctx.DMLEngine.KsidVindex,
 		KsidLength:      ctx.DMLEngine.KsidLength,
-		Table:           ctx.DMLEngine.Table,
+		TableNames:      []string{updateOperator.VTable.Name.String()},
+		Vindexes:        updateOperator.VTable.ColumnVindexes,
 		ShardRouteParam: ctx.DMLEngine.RoutingParameters,
 		TableRouteParam: rp,
 	}
@@ -189,34 +182,26 @@ func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 }
 
 func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *operators.Aggregator) (logicalPlan, error) {
-	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	plan, err := transformToLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
 
 	oa := &orderedAggregate{
-		resultsBuilder: resultsBuilder{
-			logicalPlanCommon: newBuilderCommon(plan),
-			weightStrings:     make(map[*resultColumn]int),
-		},
+		resultsBuilder: newResultsBuilder(plan, nil),
 	}
 
 	for _, aggr := range op.Aggregations {
 		if aggr.OpCode == opcode.AggregateUnassigned {
 			return nil, vterrors.VT12001(fmt.Sprintf("in scatter query: aggregation function '%s'", sqlparser.String(aggr.Original)))
 		}
-		typ, col := aggr.GetTypeCollation(ctx)
-		oa.aggregates = append(oa.aggregates, &engine.AggregateParams{
-			Opcode:      aggr.OpCode,
-			Col:         aggr.ColOffset,
-			Alias:       aggr.Alias,
-			Expr:        aggr.Func,
-			Original:    aggr.Original,
-			OrigOpcode:  aggr.OriginalOpCode,
-			WCol:        aggr.WSOffset,
-			Type:        typ,
-			CollationID: col,
-		})
+		aggrParam := engine.NewAggregateParam(aggr.OpCode, aggr.ColOffset, aggr.Alias)
+		aggrParam.Expr = aggr.Func
+		aggrParam.Original = aggr.Original
+		aggrParam.OrigOpcode = aggr.OriginalOpCode
+		aggrParam.WCol = aggr.WSOffset
+		aggrParam.Type, aggrParam.CollationID = aggr.GetTypeCollation(ctx)
+		oa.aggregates = append(oa.aggregates, aggrParam)
 	}
 	for _, groupBy := range op.Grouping {
 		typ, col, _ := ctx.SemTable.TypeForExpr(groupBy.SimplifiedExpr)
@@ -229,6 +214,9 @@ func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *oper
 		})
 	}
 
+	if err != nil {
+		return nil, err
+	}
 	oa.truncateColumnCount = op.ResultColumns
 	return oa, nil
 }
@@ -308,10 +296,10 @@ func transformInsertPlanForSplitTable(ctx *plancontext.PlanningContext, op *oper
 	if ins.Input == nil {
 		eins.Query = generateQuery(eins.AST)
 	} else {
-		i.source, err = transformToLogicalPlan(ctx, ins.Input, true)
-		if err != nil {
-			return
-		}
+		//i.source, err = transformToLogicalPlan(ctx, ins.Input, true)
+		//if err != nil {
+		//	return
+		//}
 	}
 	return
 }

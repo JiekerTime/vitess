@@ -22,15 +22,10 @@ import (
 	"strconv"
 
 	"vitess.io/vitess/go/mysql/collations"
-
-	"vitess.io/vitess/go/vt/sqlparser"
-
 	"vitess.io/vitess/go/sqltypes"
-	. "vitess.io/vitess/go/vt/vtgate/engine/opcode"
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-
-	binlogdatapb "vitess.io/vitess/go/vt/proto/binlogdata"
 	querypb "vitess.io/vitess/go/vt/proto/query"
+	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
 )
 
 var (
@@ -48,14 +43,9 @@ var _ Primitive = (*OrderedAggregate)(nil)
 // is that the underlying primitive is a scatter select with pre-sorted
 // rows.
 type OrderedAggregate struct {
-	// PreProcess is true if one of the aggregates needs preprocessing.
-	PreProcess bool `json:",omitempty"`
-
 	// Aggregates specifies the aggregation parameters for each
 	// aggregation function: function opcode and input column number.
 	Aggregates []*AggregateParams
-
-	AggrOnEngine bool
 
 	// GroupByKeys specifies the input values that must be used for
 	// the aggregation key.
@@ -90,59 +80,10 @@ func (gbp GroupByParams) String() string {
 	}
 
 	if sqltypes.IsText(gbp.Type) && gbp.CollationID != collations.Unknown {
-		collation := gbp.CollationID.Get()
-		out += " COLLATE " + collation.Name()
+		out += " COLLATE " + collations.Local().LookupName(gbp.CollationID)
 	}
 
 	return out
-}
-
-// AggregateParams specify the parameters for each aggregation.
-// It contains the opcode and input column number.
-type AggregateParams struct {
-	Opcode AggregateOpcode
-	Col    int
-
-	// These are used only for distinct opcodes.
-	KeyCol      int
-	WCol        int
-	WAssigned   bool
-	Type        sqltypes.Type
-	CollationID collations.ID
-
-	Alias    string `json:",omitempty"`
-	Expr     sqlparser.Expr
-	Original *sqlparser.AliasedExpr
-
-	// This is based on the function passed in the select expression and
-	// not what we use to aggregate at the engine primitive level.
-	OrigOpcode AggregateOpcode
-}
-
-func (ap *AggregateParams) isDistinct() bool {
-	return ap.Opcode == AggregateCountDistinct || ap.Opcode == AggregateSumDistinct
-}
-
-func (ap *AggregateParams) preProcess() bool {
-	return ap.Opcode == AggregateCountDistinct || ap.Opcode == AggregateSumDistinct || ap.Opcode == AggregateGtid || ap.Opcode == AggregateCount
-}
-
-func (ap *AggregateParams) String() string {
-	keyCol := strconv.Itoa(ap.Col)
-	if ap.WAssigned {
-		keyCol = fmt.Sprintf("%s|%d", keyCol, ap.WCol)
-	}
-	if sqltypes.IsText(ap.Type) && ap.CollationID != collations.Unknown {
-		keyCol += " COLLATE " + ap.CollationID.Get().Name()
-	}
-	dispOrigOp := ""
-	if ap.OrigOpcode != AggregateUnassigned && ap.OrigOpcode != ap.Opcode {
-		dispOrigOp = "_" + ap.OrigOpcode.String()
-	}
-	if ap.Alias != "" {
-		return fmt.Sprintf("%s%s(%s) AS %s", ap.Opcode.String(), dispOrigOp, keyCol, ap.Alias)
-	}
-	return fmt.Sprintf("%s%s(%s)", ap.Opcode.String(), dispOrigOp, keyCol)
 }
 
 // RouteType returns a description of the query routing type used by the primitive
@@ -166,196 +107,208 @@ func (oa *OrderedAggregate) SetTruncateColumnCount(count int) {
 }
 
 // TryExecute is a Primitive function.
-func (oa *OrderedAggregate) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
-	qr, err := oa.execute(ctx, vcursor, bindVars, wantfields)
+func (oa *OrderedAggregate) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, _ bool) (*sqltypes.Result, error) {
+	qr, err := oa.execute(ctx, vcursor, bindVars)
 	if err != nil {
 		return nil, err
 	}
 	return qr.Truncate(oa.TruncateColumnCount), nil
 }
 
-func (oa *OrderedAggregate) execute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
-	result, err := vcursor.ExecutePrimitive(ctx, oa.Input, bindVars, wantfields)
-	if err != nil {
-		return nil, err
+func (oa *OrderedAggregate) executeGroupBy(result *sqltypes.Result) (*sqltypes.Result, error) {
+	if len(result.Rows) < 1 {
+		return result, nil
 	}
+
 	out := &sqltypes.Result{
-		Fields: convertFields(result.Fields, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine),
-		Rows:   make([][]sqltypes.Value, 0, len(result.Rows)),
+		Fields: result.Fields,
+		Rows:   result.Rows[:0],
 	}
-	// This code is similar to the one in StreamExecute.
-	var current []sqltypes.Value
-	var curDistincts []sqltypes.Value
+
+	var currentKey []sqltypes.Value
+	var lastRow sqltypes.Row
+	var err error
 	for _, row := range result.Rows {
-		if current == nil {
-			current, curDistincts = convertRow(row, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine)
-			continue
-		}
-		equal, err := oa.keysEqual(current, row)
+		var nextGroup bool
+
+		currentKey, nextGroup, err = oa.nextGroupBy(currentKey, row)
 		if err != nil {
 			return nil, err
 		}
-
-		if equal {
-			current, curDistincts, err = merge(result.Fields, current, row, curDistincts, oa.Aggregates)
-			if err != nil {
-				return nil, err
-			}
-			continue
+		if nextGroup {
+			out.Rows = append(out.Rows, lastRow)
 		}
-		out.Rows = append(out.Rows, current)
-		current, curDistincts = convertRow(row, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine)
+		lastRow = row
 	}
-
-	if current != nil {
-		final, err := convertFinal(current, oa.Aggregates)
-		if err != nil {
-			return nil, err
-		}
-		out.Rows = append(out.Rows, final)
-	}
+	out.Rows = append(out.Rows, lastRow)
 	return out, nil
 }
 
-// TryStreamExecute is a Primitive function.
-func (oa *OrderedAggregate) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
-	var current []sqltypes.Value
-	var curDistincts []sqltypes.Value
-	var fields []*querypb.Field
+func (oa *OrderedAggregate) execute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
+	result, err := vcursor.ExecutePrimitive(
+		ctx,
+		oa.Input,
+		bindVars,
+		true, /*wantFields - we need the input fields types to correctly calculate the output types*/
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(oa.Aggregates) == 0 {
+		return oa.executeGroupBy(result)
+	}
 
+	agg, fields, err := newAggregation(result.Fields, oa.Aggregates)
+	if err != nil {
+		return nil, err
+	}
+
+	out := &sqltypes.Result{
+		Fields: fields,
+		Rows:   make([][]sqltypes.Value, 0, len(result.Rows)),
+	}
+
+	var currentKey []sqltypes.Value
+	for _, row := range result.Rows {
+		var nextGroup bool
+
+		currentKey, nextGroup, err = oa.nextGroupBy(currentKey, row)
+		if err != nil {
+			return nil, err
+		}
+
+		if nextGroup {
+			out.Rows = append(out.Rows, agg.finish())
+			agg.reset()
+		}
+
+		if err := agg.add(row); err != nil {
+			return nil, err
+		}
+	}
+
+	if currentKey != nil {
+		out.Rows = append(out.Rows, agg.finish())
+	}
+
+	return out, nil
+}
+
+func (oa *OrderedAggregate) executeStreamGroupBy(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) error {
 	cb := func(qr *sqltypes.Result) error {
 		return callback(qr.Truncate(oa.TruncateColumnCount))
 	}
 
-	err := vcursor.StreamExecutePrimitive(ctx, oa.Input, bindVars, wantfields, func(qr *sqltypes.Result) error {
-		if len(qr.Fields) != 0 {
-			fields = convertFields(qr.Fields, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine)
-			if err := cb(&sqltypes.Result{Fields: fields}); err != nil {
+	var fields []*querypb.Field
+	var currentKey []sqltypes.Value
+	var lastRow sqltypes.Row
+
+	visitor := func(qr *sqltypes.Result) error {
+		var err error
+		if fields == nil && len(qr.Fields) > 0 {
+			fields = qr.Fields
+			if err = cb(&sqltypes.Result{Fields: fields}); err != nil {
 				return err
 			}
 		}
-		// This code is similar to the one in Execute.
 		for _, row := range qr.Rows {
-			if current == nil {
-				current, curDistincts = convertRow(row, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine)
-				continue
-			}
+			var nextGroup bool
 
-			equal, err := oa.keysEqual(current, row)
+			currentKey, nextGroup, err = oa.nextGroupBy(currentKey, row)
 			if err != nil {
 				return err
 			}
 
-			if equal {
-				current, curDistincts, err = merge(fields, current, row, curDistincts, oa.Aggregates)
-				if err != nil {
+			if nextGroup {
+				// this is a new grouping. let's yield the old one, and start a new
+				if err := cb(&sqltypes.Result{Rows: []sqltypes.Row{lastRow}}); err != nil {
 					return err
 				}
-				continue
 			}
-			if err := cb(&sqltypes.Result{Rows: [][]sqltypes.Value{current}}); err != nil {
-				return err
-			}
-			current, curDistincts = convertRow(row, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine)
+
+			lastRow = row
 		}
 		return nil
-	})
+	}
+
+	/* we need the input fields types to correctly calculate the output types */
+	err := vcursor.StreamExecutePrimitive(ctx, oa.Input, bindVars, true, visitor)
 	if err != nil {
 		return err
 	}
 
-	if current != nil {
-		if err := cb(&sqltypes.Result{Rows: [][]sqltypes.Value{current}}); err != nil {
+	if lastRow != nil {
+		if err := cb(&sqltypes.Result{Rows: [][]sqltypes.Value{lastRow}}); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func convertFields(fields []*querypb.Field, preProcess bool, aggrs []*AggregateParams, aggrOnEngine bool) []*querypb.Field {
-	if !preProcess {
-		return fields
+// TryStreamExecute is a Primitive function.
+func (oa *OrderedAggregate) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, _ bool, callback func(*sqltypes.Result) error) error {
+	if len(oa.Aggregates) == 0 {
+		return oa.executeStreamGroupBy(ctx, vcursor, bindVars, callback)
 	}
-	for _, aggr := range aggrs {
-		if !aggr.preProcess() && !aggrOnEngine {
-			continue
-		}
-		fields[aggr.Col] = &querypb.Field{
-			Name: aggr.Alias,
-			Type: OpcodeType[aggr.Opcode],
-		}
-		if aggr.isDistinct() {
-			aggr.KeyCol = aggr.Col
-		}
-	}
-	return fields
-}
 
-func convertRow(row []sqltypes.Value, preProcess bool, aggregates []*AggregateParams, aggrOnEngine bool) (newRow []sqltypes.Value, curDistincts []sqltypes.Value) {
-	if !preProcess {
-		return row, nil
+	cb := func(qr *sqltypes.Result) error {
+		return callback(qr.Truncate(oa.TruncateColumnCount))
 	}
-	newRow = append(newRow, row...)
-	curDistincts = make([]sqltypes.Value, len(aggregates))
-	for index, aggr := range aggregates {
-		switch aggr.Opcode {
-		case AggregateCountStar:
-			newRow[aggr.Col] = countOne
-		case AggregateCount:
-			val := countOne
-			if row[aggr.Col].IsNull() {
-				val = countZero
-			}
-			newRow[aggr.Col] = val
-		case AggregateCountDistinct:
-			curDistincts[index] = findComparableCurrentDistinct(row, aggr)
-			// Type is int64. Ok to call MakeTrusted.
-			if row[aggr.KeyCol].IsNull() {
-				newRow[aggr.Col] = countZero
-			} else {
-				newRow[aggr.Col] = countOne
-			}
-		case AggregateSum:
-			if !aggrOnEngine {
-				break
-			}
-			if row[aggr.Col].IsNull() {
-				break
-			}
-			var err error
-			newRow[aggr.Col], err = evalengine.Cast(row[aggr.Col], OpcodeType[aggr.Opcode])
+
+	var agg aggregationState
+	var fields []*querypb.Field
+	var currentKey []sqltypes.Value
+
+	visitor := func(qr *sqltypes.Result) error {
+		var err error
+
+		if agg == nil && len(qr.Fields) != 0 {
+			agg, fields, err = newAggregation(qr.Fields, oa.Aggregates)
 			if err != nil {
-				newRow[aggr.Col] = sumZero
+				return err
 			}
-		case AggregateSumDistinct:
-			curDistincts[index] = findComparableCurrentDistinct(row, aggr)
-			var err error
-			newRow[aggr.Col], err = evalengine.Cast(row[aggr.Col], OpcodeType[aggr.Opcode])
+			if err = cb(&sqltypes.Result{Fields: fields}); err != nil {
+				return err
+			}
+		}
+
+		// This code is similar to the one in Execute.
+		for _, row := range qr.Rows {
+			var nextGroup bool
+
+			currentKey, nextGroup, err = oa.nextGroupBy(currentKey, row)
 			if err != nil {
-				newRow[aggr.Col] = sumZero
+				return err
 			}
-		case AggregateGtid:
-			vgtid := &binlogdatapb.VGtid{}
-			vgtid.ShardGtids = append(vgtid.ShardGtids, &binlogdatapb.ShardGtid{
-				Keyspace: row[aggr.Col-1].ToString(),
-				Shard:    row[aggr.Col+1].ToString(),
-				Gtid:     row[aggr.Col].ToString(),
-			})
-			data, _ := vgtid.MarshalVT()
-			val, _ := sqltypes.NewValue(sqltypes.VarBinary, data)
-			newRow[aggr.Col] = val
+
+			if nextGroup {
+				// this is a new grouping. let's yield the old one, and start a new
+				if err := cb(&sqltypes.Result{Rows: [][]sqltypes.Value{agg.finish()}}); err != nil {
+					return err
+				}
+
+				agg.reset()
+			}
+
+			if err := agg.add(row); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	/* we need the input fields types to correctly calculate the output types */
+	err := vcursor.StreamExecutePrimitive(ctx, oa.Input, bindVars, true, visitor)
+	if err != nil {
+		return err
+	}
+
+	if currentKey != nil {
+		if err := cb(&sqltypes.Result{Rows: [][]sqltypes.Value{agg.finish()}}); err != nil {
+			return err
 		}
 	}
-	return newRow, curDistincts
-}
-
-func findComparableCurrentDistinct(row []sqltypes.Value, aggr *AggregateParams) sqltypes.Value {
-	curDistinct := row[aggr.KeyCol]
-	if aggr.WAssigned && !curDistinct.IsComparable() {
-		aggr.KeyCol = aggr.WCol
-		curDistinct = row[aggr.KeyCol]
-	}
-	return curDistinct
+	return nil
 }
 
 // GetFields is a Primitive function.
@@ -364,13 +317,19 @@ func (oa *OrderedAggregate) GetFields(ctx context.Context, vcursor VCursor, bind
 	if err != nil {
 		return nil, err
 	}
-	qr = &sqltypes.Result{Fields: convertFields(qr.Fields, oa.PreProcess, oa.Aggregates, oa.AggrOnEngine)}
+
+	_, fields, err := newAggregation(qr.Fields, oa.Aggregates)
+	if err != nil {
+		return nil, err
+	}
+
+	qr = &sqltypes.Result{Fields: fields}
 	return qr.Truncate(oa.TruncateColumnCount), nil
 }
 
 // Inputs returns the Primitive input for this aggregation
-func (oa *OrderedAggregate) Inputs() []Primitive {
-	return []Primitive{oa.Input}
+func (oa *OrderedAggregate) Inputs() ([]Primitive, []map[string]any) {
+	return []Primitive{oa.Input}, nil
 }
 
 // NeedsTransaction implements the Primitive interface
@@ -378,104 +337,30 @@ func (oa *OrderedAggregate) NeedsTransaction() bool {
 	return oa.Input.NeedsTransaction()
 }
 
-func (oa *OrderedAggregate) keysEqual(row1, row2 []sqltypes.Value) (bool, error) {
+func (oa *OrderedAggregate) nextGroupBy(currentKey, nextRow []sqltypes.Value) (nextKey []sqltypes.Value, nextGroup bool, err error) {
+	if currentKey == nil {
+		return nextRow, false, nil
+	}
+
 	for _, gb := range oa.GroupByKeys {
-		cmp, err := evalengine.NullsafeCompare(row1[gb.KeyCol], row2[gb.KeyCol], gb.CollationID)
+		cmp, err := evalengine.NullsafeCompare(currentKey[gb.KeyCol], nextRow[gb.KeyCol], gb.CollationID)
 		if err != nil {
 			_, isComparisonErr := err.(evalengine.UnsupportedComparisonError)
 			_, isCollationErr := err.(evalengine.UnsupportedCollationError)
 			if !isComparisonErr && !isCollationErr || gb.WeightStringCol == -1 {
-				return false, err
+				return nil, false, err
 			}
 			gb.KeyCol = gb.WeightStringCol
-			cmp, err = evalengine.NullsafeCompare(row1[gb.WeightStringCol], row2[gb.WeightStringCol], gb.CollationID)
+			cmp, err = evalengine.NullsafeCompare(currentKey[gb.WeightStringCol], nextRow[gb.WeightStringCol], gb.CollationID)
 			if err != nil {
-				return false, err
+				return nil, false, err
 			}
 		}
 		if cmp != 0 {
-			return false, nil
+			return nextRow, true, nil
 		}
 	}
-	return true, nil
-}
-
-func merge(
-	fields []*querypb.Field,
-	row1, row2 []sqltypes.Value,
-	curDistincts []sqltypes.Value,
-	aggregates []*AggregateParams,
-) ([]sqltypes.Value, []sqltypes.Value, error) {
-	result := sqltypes.CopyRow(row1)
-	for index, aggr := range aggregates {
-		if aggr.isDistinct() {
-			if row2[aggr.KeyCol].IsNull() {
-				continue
-			}
-			cmp, err := evalengine.NullsafeCompare(curDistincts[index], row2[aggr.KeyCol], aggr.CollationID)
-			if err != nil {
-				return nil, nil, err
-			}
-			if cmp == 0 {
-				continue
-			}
-			curDistincts[index] = findComparableCurrentDistinct(row2, aggr)
-		}
-		var err error
-		switch aggr.Opcode {
-		case AggregateCountStar:
-			value := row1[aggr.Col]
-			result[aggr.Col], err = evalengine.NullSafeAdd(value, countOne, fields[aggr.Col].Type)
-		case AggregateCount:
-			val := countOne
-			if row2[aggr.Col].IsNull() {
-				val = countZero
-			}
-			result[aggr.Col], err = evalengine.NullSafeAdd(row1[aggr.Col], val, fields[aggr.Col].Type)
-		case AggregateSum:
-			value := row1[aggr.Col]
-			v2 := row2[aggr.Col]
-			if value.IsNull() && v2.IsNull() {
-				result[aggr.Col] = sqltypes.NULL
-				break
-			}
-			result[aggr.Col], err = evalengine.NullSafeAdd(value, v2, fields[aggr.Col].Type)
-		case AggregateMin:
-			result[aggr.Col], err = evalengine.Min(row1[aggr.Col], row2[aggr.Col], aggr.CollationID)
-		case AggregateMax:
-			result[aggr.Col], err = evalengine.Max(row1[aggr.Col], row2[aggr.Col], aggr.CollationID)
-		case AggregateCountDistinct:
-			result[aggr.Col], err = evalengine.NullSafeAdd(row1[aggr.Col], countOne, OpcodeType[aggr.Opcode])
-		case AggregateSumDistinct:
-			result[aggr.Col], err = evalengine.NullSafeAdd(row1[aggr.Col], row2[aggr.Col], OpcodeType[aggr.Opcode])
-		case AggregateGtid:
-			vgtid := &binlogdatapb.VGtid{}
-			rowBytes, err := row1[aggr.Col].ToBytes()
-			if err != nil {
-				return nil, nil, err
-			}
-			err = vgtid.UnmarshalVT(rowBytes)
-			if err != nil {
-				return nil, nil, err
-			}
-			vgtid.ShardGtids = append(vgtid.ShardGtids, &binlogdatapb.ShardGtid{
-				Keyspace: row2[aggr.Col-1].ToString(),
-				Shard:    row2[aggr.Col+1].ToString(),
-				Gtid:     row2[aggr.Col].ToString(),
-			})
-			data, _ := vgtid.MarshalVT()
-			val, _ := sqltypes.NewValue(sqltypes.VarBinary, data)
-			result[aggr.Col] = val
-		case AggregateRandom:
-			// we just grab the first value per grouping. no need to do anything more complicated here
-		default:
-			return nil, nil, fmt.Errorf("BUG: Unexpected opcode: %v", aggr.Opcode)
-		}
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	return result, curDistincts, nil
+	return currentKey, false, nil
 }
 
 func aggregateParamsToString(in any) string {
@@ -501,24 +386,4 @@ func (oa *OrderedAggregate) description() PrimitiveDescription {
 		Variant:      "Ordered",
 		Other:        other,
 	}
-}
-
-func convertFinal(current []sqltypes.Value, aggregates []*AggregateParams) ([]sqltypes.Value, error) {
-	result := sqltypes.CopyRow(current)
-	for _, aggr := range aggregates {
-		switch aggr.Opcode {
-		case AggregateGtid:
-			vgtid := &binlogdatapb.VGtid{}
-			currentBytes, err := current[aggr.Col].ToBytes()
-			if err != nil {
-				return nil, err
-			}
-			err = vgtid.UnmarshalVT(currentBytes)
-			if err != nil {
-				return nil, err
-			}
-			result[aggr.Col] = sqltypes.NewVarChar(vgtid.String())
-		}
-	}
-	return result, nil
 }

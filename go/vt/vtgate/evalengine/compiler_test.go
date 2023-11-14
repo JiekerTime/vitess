@@ -179,19 +179,6 @@ func TestCompilerReference(t *testing.T) {
 	t.Logf("\n%s", track.String())
 }
 
-type debugCompiler struct {
-	t testing.TB
-}
-
-func (d *debugCompiler) Instruction(ins string, args ...any) {
-	ins = fmt.Sprintf(ins, args...)
-	d.t.Logf("> %s", ins)
-}
-
-func (d *debugCompiler) Stack(old, new int) {
-	d.t.Logf("\tsp = %d -> %d", old, new)
-}
-
 func TestCompilerSingle(t *testing.T) {
 	var testCases = []struct {
 		expression string
@@ -444,6 +431,30 @@ func TestCompilerSingle(t *testing.T) {
 			expression: `INTERVAL(0, 0, 0, -1, NULL, NULL, 1)`,
 			result:     `INT64(5)`,
 		},
+		{
+			expression: `REGEXP_REPLACE(1234, 12, 6, 1)`,
+			result:     `TEXT("634")`,
+		},
+		{
+			expression: `_latin1 0xFF`,
+			result:     `VARCHAR("ÿ")`,
+		},
+		{
+			expression: `TRIM(_latin1 0xA078A0 FROM _utf8mb4 0xC2A078C2A0)`,
+			result:     `VARCHAR("")`,
+		},
+		{
+			expression: `CONCAT_WS("😊😂🤢", date '2000-01-01', _latin1 0xFF)`,
+			result:     `VARCHAR("2000-01-01😊😂🤢ÿ")`,
+		},
+		{
+			expression: `concat('test', _latin1 0xff)`,
+			result:     `VARCHAR("testÿ")`,
+		},
+		{
+			expression: `WEIGHT_STRING('foobar' as char(3))`,
+			result:     `VARBINARY("\x1c\xe5\x1d\xdd\x1d\xdd")`,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -572,6 +583,68 @@ func TestBindVarLiteral(t *testing.T) {
 				if res.String() != result {
 					t.Errorf("bad evaluation from compiler: got %s, want %s (iteration %d)", res, result, i)
 				}
+			}
+		})
+	}
+}
+
+func TestCompilerNonConstant(t *testing.T) {
+	var testCases = []struct {
+		expression string
+	}{
+		{
+			expression: "RANDOM_BYTES(4)",
+		},
+		{
+			expression: "UUID()",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.expression, func(t *testing.T) {
+			expr, err := sqlparser.ParseExpr(tc.expression)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			cfg := &evalengine.Config{
+				Collation:    collations.CollationUtf8mb4ID,
+				Optimization: evalengine.OptimizationLevelCompile,
+			}
+
+			converted, err := evalengine.Translate(expr, cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			env := evalengine.EmptyExpressionEnv()
+			var prev string
+			for i := 0; i < 1000; i++ {
+				expected, err := env.Evaluate(evalengine.Deoptimize(converted))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if expected.String() == prev {
+					t.Fatalf("constant evaluation from eval engine: got %s multiple times", expected.String())
+				}
+				prev = expected.String()
+			}
+
+			if cfg.CompilerErr != nil {
+				t.Fatalf("bad compilation: %v", cfg.CompilerErr)
+			}
+
+			// re-run the same evaluation multiple times to ensure results are always consistent
+			for i := 0; i < 1000; i++ {
+				res, err := env.EvaluateVM(converted.(*evalengine.CompiledExpr))
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if res.String() == prev {
+					t.Fatalf("constant evaluation from eval engine: got %s multiple times", res.String())
+				}
+				prev = res.String()
 			}
 		})
 	}

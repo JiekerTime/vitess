@@ -100,7 +100,7 @@ func echoQueryResult(vals map[string]any) *sqltypes.Result {
 	return qr
 }
 
-func (c *echoClient) Execute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
+func (c *echoClient) Execute(ctx context.Context, mysqlCtx vtgateservice.MySQLConnection, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable) (*vtgatepb.Session, *sqltypes.Result, error) {
 	if strings.HasPrefix(sql, EchoPrefix) {
 		return session, echoQueryResult(map[string]any{
 			"callerId": callerid.EffectiveCallerIDFromContext(ctx),
@@ -109,10 +109,10 @@ func (c *echoClient) Execute(ctx context.Context, conn *mysql.Conn, session *vtg
 			"session":  session,
 		}), nil
 	}
-	return c.fallbackClient.Execute(ctx, session, sql, bindVariables)
+	return c.fallbackClient.Execute(ctx, mysqlCtx, conn, session, sql, bindVariables)
 }
 
-func (c *echoClient) StreamExecute(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
+func (c *echoClient) StreamExecute(ctx context.Context, mysqlCtx vtgateservice.MySQLConnection, conn *mysql.Conn, session *vtgatepb.Session, sql string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) (*vtgatepb.Session, error) {
 	if strings.HasPrefix(sql, EchoPrefix) {
 		callback(echoQueryResult(map[string]any{
 			"callerId": callerid.EffectiveCallerIDFromContext(ctx),
@@ -122,7 +122,7 @@ func (c *echoClient) StreamExecute(ctx context.Context, conn *mysql.Conn, sessio
 		}))
 		return session, nil
 	}
-	return c.fallbackClient.StreamExecute(ctx, session, sql, bindVariables, callback)
+	return c.fallbackClient.StreamExecute(ctx, mysqlCtx, conn, session, sql, bindVariables, callback)
 }
 
 func (c *echoClient) ExecuteBatch(ctx context.Context, conn *mysql.Conn, session *vtgatepb.Session, sqlList []string, bindVariablesList []map[string]*querypb.BindVariable) (*vtgatepb.Session, []sqltypes.QueryResponse, error) {

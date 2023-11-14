@@ -10,6 +10,8 @@ import (
 	"os"
 	"sync"
 
+	"vitess.io/vitess/go/mysql/sqlerror"
+
 	"github.com/spf13/pflag"
 
 	"vitess.io/vitess/go/ipfilters"
@@ -70,7 +72,7 @@ func (asc *AuthServerConfig) ValidClient(user, keyspace, ip string) bool {
 		return entry.KeySpaces[0].IPFilter.FilterIPString(ip)
 	}
 	for _, ks := range entry.KeySpaces {
-		if ks.Name == keyspace {
+		if ks.Name == keyspace || ks.Name == "*" {
 			if len(ks.WhiteIPs) == 0 {
 				return true
 			}
@@ -249,13 +251,13 @@ func (asc *AuthServerConfig) UserEntryWithHash(conn *Conn, salt []byte, user str
 	entry, ok := asc.Entries[user]
 	asc.mu.Unlock()
 	if !ok {
-		return &ConfigUserData{}, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return &ConfigUserData{}, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 
 	if entry.MysqlNativePassword != "" {
 		hash, err := DecodeMysqlNativePasswordHex(entry.MysqlNativePassword)
 		if err != nil {
-			return &ConfigUserData{username: entry.UserData, groups: entry.Groups}, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+			return &ConfigUserData{username: entry.UserData, groups: entry.Groups}, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 		}
 		isPass := VerifyHashedMysqlNativePassword(authResponse, salt, hash)
 		if isPass {
@@ -274,17 +276,17 @@ func (asc *AuthServerConfig) UserEntryWithHash(conn *Conn, salt []byte, user str
 	} else if encryptFromEnt.UserData == "v_0001" {
 		ecnPass, err := aseV001(entry.Password, []byte("akArIfh/a28N8w=="))
 		if err != nil {
-			return &ConfigUserData{}, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v' error ses descryption", user)
+			return &ConfigUserData{}, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v' error ses descryption", user)
 		}
 		ecnPassStr = ecnPass
 	} else {
-		return &ConfigUserData{}, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v' error desencryption verssion", user)
+		return &ConfigUserData{}, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v' error desencryption verssion", user)
 	}
 
 	computedAuthResponse := ScrambleMysqlNativePassword(salt, []byte(ecnPassStr))
 
 	if !bytes.Equal(authResponse, computedAuthResponse) {
-		return &ConfigUserData{}, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return &ConfigUserData{}, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 	return &ConfigUserData{entry.UserData, entry.Groups}, nil
 }
@@ -301,12 +303,12 @@ func (asc *AuthServerConfig) ValidateClearText(user, password string) (string, e
 	entry, ok := asc.Entries[user]
 	asc.mu.Unlock()
 	if !ok {
-		return "", NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return "", sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 
 	// Validate the password.
 	if entry.Password != password {
-		return "", NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return "", sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 
 	return entry.UserData, nil
@@ -319,7 +321,7 @@ func (asc *AuthServerConfig) GetPrivilege(user string) (uint16, error) {
 	entry, ok := asc.Entries[user]
 	asc.mu.Unlock()
 	if !ok {
-		return 0, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return 0, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 	return entry.Privilege, nil
 }
@@ -332,7 +334,7 @@ func (asc *AuthServerConfig) GetUserKeyspaces(user string) ([]string, error) {
 	entry, ok := asc.Entries[user]
 	asc.mu.Unlock()
 	if !ok {
-		return nil, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return nil, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 	for _, v := range entry.KeySpaces {
 		userKeyspaces = append(userKeyspaces, v.Name)
@@ -344,7 +346,7 @@ func (asc *AuthServerConfig) GetUserKeyspaces(user string) ([]string, error) {
 func (asc *AuthServerConfig) GetKeyspace(user string) ([]string, error) {
 	entry, ok := asc.Entries[user]
 	if !ok {
-		return nil, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return nil, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 	if len(entry.KeySpaces) == 0 {
 		return nil, nil
@@ -361,7 +363,7 @@ func (asc *AuthServerConfig) GetKeyspace(user string) ([]string, error) {
 func (asc *AuthServerConfig) GetRoleType(user string) (int8, error) {
 	entry, ok := asc.Entries[user]
 	if !ok {
-		return 0, NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return 0, sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 	if len(entry.KeySpaces) == 0 {
 		return 0, nil
@@ -374,7 +376,7 @@ func (asc *AuthServerConfig) GetPassword(user string) (string, error) {
 	// Find the entry.
 	entry, ok := asc.Entries[user]
 	if !ok {
-		return "", NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v'", user)
+		return "", sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v'", user)
 	}
 
 	encryptFromEnt := asc.Entries["encrypt_version"]
@@ -385,12 +387,12 @@ func (asc *AuthServerConfig) GetPassword(user string) (string, error) {
 	if encryptFromEnt.UserData == "v_0001" {
 		ecnPass, err := aseV001(entry.Password, []byte("akArIfh/a28N8w=="))
 		if err != nil {
-			return "", NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "Access denied for user '%v' error ses descryption", user)
+			return "", sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "Access denied for user '%v' error ses descryption", user)
 		}
 		return ecnPass, nil
 	}
 
-	return "", NewSQLError(ERAccessDeniedError, SSAccessDeniedError, "unsupported encrypt version for user :%v", user)
+	return "", sqlerror.NewSQLError(sqlerror.ERAccessDeniedError, sqlerror.SSAccessDeniedError, "unsupported encrypt version for user :%v", user)
 }
 
 // ConfigUserData holds the username and groups

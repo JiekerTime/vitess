@@ -39,11 +39,6 @@ func (t *TableInsert) SetInputs(operators []ops.Operator) {
 	panic("implement me")
 }
 
-func (t *TableInsert) Description() ops.OpDescription {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (t *TableInsert) ShortDescription() string {
 	//TODO implement me
 	panic("implement me")

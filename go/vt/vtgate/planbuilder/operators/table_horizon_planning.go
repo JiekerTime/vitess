@@ -1,9 +1,8 @@
 package operators
 
 import (
-	"fmt"
+	"vitess.io/vitess/go/slice"
 
-	"vitess.io/vitess/go/slices2"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -62,14 +61,14 @@ func addOrderBysAndGroupBysForAggregationsForSplitTable(ctx *plancontext.Plannin
 		case *Aggregator:
 			if in.Pushed {
 				// first we update the incoming columns, so we know about any new columns that have been added
-				columns, err := in.Source.GetColumns()
+				columns, err := in.Source.GetColumns(ctx)
 				if err != nil {
 					return nil, nil, err
 				}
 				in.Columns = columns
 			}
 
-			requireOrdering, err := needsOrdering(in, ctx)
+			requireOrdering, err := needsOrdering(ctx, in)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -78,7 +77,7 @@ func addOrderBysAndGroupBysForAggregationsForSplitTable(ctx *plancontext.Plannin
 			}
 			in.Source = &Ordering{
 				Source: in.Source,
-				Order: slices2.Map(in.Grouping, func(from GroupBy) ops.OrderBy {
+				Order: slice.Map(in.Grouping, func(from GroupBy) ops.OrderBy {
 					return from.AsOrderBy()
 				}),
 			}
@@ -105,7 +104,7 @@ func addOrderBysAndGroupBysForAggregationsForSplitTable(ctx *plancontext.Plannin
 func optimizeHorizonPlanningForSplitTable(ctx *plancontext.PlanningContext, root ops.Operator) (ops.Operator, error) {
 	visitor := func(in ops.Operator, _ semantics.TableSet, isRoot bool) (ops.Operator, *rewrite.ApplyResult, error) {
 		switch in := in.(type) {
-		case horizonLike:
+		case *Horizon:
 			return pushOrExpandHorizonForSplitTable(ctx, in)
 		case *Ordering:
 			return tryPushingDownOrderingForSplitTable(ctx, in)
@@ -231,16 +230,13 @@ func tryPushingDownProjectionForSplitTable(_ *plancontext.PlanningContext, p *Pr
 	}
 }
 
-func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horizonLike) (ops.Operator, *rewrite.ApplyResult, error) {
+func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
 	rb, isTableRoute := in.src().(*TableRoute)
 	if isTableRoute && rb.IsSingleSplitTable() && !isCrossShard(ctx.GetRoute()) {
 		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 
 	sel, isSel := in.selectStatement().(*sqlparser.Select)
-	if !isSel {
-		return nil, nil, errHorizonNotPlanned()
-	}
 
 	qp, err := in.getQP(ctx)
 	if err != nil {
@@ -248,16 +244,23 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horiz
 	}
 
 	needsOrdering := len(qp.OrderExprs) > 0
-	canPushDown := isTableRoute && sel.Having == nil && !needsOrdering && !qp.NeedsAggregation() && !sel.Distinct && sel.Limit == nil
+	hasHaving := isSel && sel.Having != nil
 
-	if canPushDown {
+	canPush := isTableRoute &&
+		!hasHaving &&
+		!needsOrdering &&
+		!qp.NeedsAggregation() &&
+		!in.selectStatement().IsDistinct() &&
+		in.selectStatement().GetLimit() == nil
+
+	if canPush {
 		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 
 	return expandHorizonForSplitTable(ctx, in)
 }
 
-func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon horizonLike) (ops.Operator, *rewrite.ApplyResult, error) {
+func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
 	sel, _ := horizon.selectStatement().(*sqlparser.Select)
 
 	op, err := createProjectionFromSelectForSplitTable(ctx, horizon)
@@ -303,7 +306,7 @@ func addTruncationOrProjectionToReturnOutputForSplitTable(ctx *plancontext.Plann
 
 	horizon := oldHorizon.(*Horizon)
 
-	sel := sqlparser.GetFirstSelect(horizon.Select)
+	sel := sqlparser.GetFirstSelect(horizon.Query)
 
 	if len(sel.SelectExprs) == len(cols) {
 		return output, nil
@@ -317,26 +320,33 @@ func addTruncationOrProjectionToReturnOutputForSplitTable(ctx *plancontext.Plann
 }
 
 // createProjectionFromSelectForSplitTable is simplified to createProjectionFromSelect.
-func createProjectionFromSelectForSplitTable(ctx *plancontext.PlanningContext, horizon horizonLike) (out ops.Operator, err error) {
+func createProjectionFromSelectForSplitTable(ctx *plancontext.PlanningContext, horizon *Horizon) (out ops.Operator, err error) {
 	qp, err := horizon.getQP(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	var dt *DerivedTable
+	if horizon.TableId != nil {
+		dt = &DerivedTable{
+			TableID: *horizon.TableId,
+			Alias:   horizon.Alias,
+			Columns: horizon.ColumnAliases,
+		}
+	}
+
 	if !qp.NeedsAggregation() {
-		projX, err := createProjectionWithoutAggr(qp, horizon.src())
+		projX, err := createProjectionWithoutAggr(ctx, qp, horizon.src())
 		if err != nil {
 			return nil, err
 		}
-		if _, isDerived := horizon.(*Derived); isDerived {
-			return nil, vterrors.VT13001("todo: Derived")
-		}
+		projX.DT = dt
 		out = projX
 
 		return out, nil
 	}
 
-	aggregations, err := qp.AggregationExpressions(ctx)
+	aggregations, complexAggr, err := qp.AggregationExpressions(ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -347,42 +357,11 @@ func createProjectionFromSelectForSplitTable(ctx *plancontext.PlanningContext, h
 		QP:           qp,
 		Grouping:     qp.GetGrouping(),
 		Aggregations: aggregations,
+		DT:           dt,
 	}
 
-	if _, isDerived := horizon.(*Derived); isDerived {
-		return nil, vterrors.VT13001("todo: Derived")
+	if complexAggr {
+		return createProjectionForComplexAggregation(a, qp)
 	}
-
-outer:
-	for colIdx, expr := range qp.SelectExprs {
-		ae, err := expr.GetAliasedExpr()
-		if err != nil {
-			return nil, err
-		}
-		addedToCol := false
-		for idx, groupBy := range a.Grouping {
-			if ctx.SemTable.EqualsExprWithDeps(groupBy.SimplifiedExpr, ae.Expr) {
-				if !addedToCol {
-					a.Columns = append(a.Columns, ae)
-					addedToCol = true
-				}
-				if groupBy.ColOffset < 0 {
-					a.Grouping[idx].ColOffset = colIdx
-				}
-			}
-		}
-		if addedToCol {
-			continue
-		}
-		for idx, aggr := range a.Aggregations {
-			if ctx.SemTable.EqualsExprWithDeps(aggr.Original.Expr, ae.Expr) && aggr.ColOffset < 0 {
-				a.Columns = append(a.Columns, ae)
-				a.Aggregations[idx].ColOffset = colIdx
-				continue outer
-			}
-		}
-		return nil, vterrors.VT13001(fmt.Sprintf("Could not find the %s in aggregation in the original query", sqlparser.String(ae)))
-	}
-
-	return a, nil
+	return createProjectionForSimpleAggregation(ctx, a, qp)
 }

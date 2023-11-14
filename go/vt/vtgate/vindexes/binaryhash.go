@@ -24,8 +24,6 @@ import (
 	"strconv"
 	"strings"
 
-	"vitess.io/vitess/go/vt/vtgate/evalengine"
-
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 )
@@ -81,7 +79,7 @@ func (vind *BinaryHash) Map(ctx context.Context, cursor VCursor, ids []sqltypes.
 			ival, err = strconv.ParseInt(str, 10, 64)
 			num = uint64(ival)
 		} else {
-			num, err = evalengine.ToUint64(id)
+			num, err = id.ToUint64()
 		}
 
 		if err != nil {
@@ -103,7 +101,7 @@ func (vind *BinaryHash) Map(ctx context.Context, cursor VCursor, ids []sqltypes.
 func (vind *BinaryHash) Verify(_ context.Context, _ VCursor, ids []sqltypes.Value, ksids [][]byte) ([]bool, error) {
 	out := make([]bool, len(ids))
 	for i := range ids {
-		num, err := evalengine.ToUint64(ids[i])
+		num, err := ids[i].ToUint64()
 		if err != nil {
 			return nil, fmt.Errorf("hash.Verify: %v", err)
 		}

@@ -17,16 +17,16 @@ limitations under the License.
 package operators
 
 import (
-	"golang.org/x/exp/slices"
+	"fmt"
+	"slices"
 
 	"vitess.io/vitess/go/mysql/collations"
-	"vitess.io/vitess/go/slices2"
+
+	"vitess.io/vitess/go/slice"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
-	popcode "vitess.io/vitess/go/vt/vtgate/engine/opcode"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
-	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
@@ -64,7 +64,7 @@ func newShardedRouting(vtable *vindexes.Table, id semantics.TableSet) Routing {
 		// Use the Binary vindex, which is the identity function
 		// for keyspace id.
 		routing.RouteOpCode = engine.EqualUnique
-		vindex, _ := vindexes.NewBinary("binary", nil)
+		vindex, _ := vindexes.CreateVindex("binary", "binary", nil)
 		routing.Selected = &VindexOption{
 			Ready:       true,
 			Values:      []evalengine.Expr{evalengine.NewLiteralString(vtable.Pinned, collations.SystemCollation)},
@@ -162,7 +162,7 @@ func (tr *ShardedRouting) Clone() Routing {
 		selected = &t
 	}
 	return &ShardedRouting{
-		VindexPreds: slices2.Map(tr.VindexPreds, func(from *VindexPlusPredicates) *VindexPlusPredicates {
+		VindexPreds: slice.Map(tr.VindexPreds, func(from *VindexPlusPredicates) *VindexPlusPredicates {
 			// we do this to create a copy of the struct
 			p := *from
 			return &p
@@ -195,7 +195,7 @@ func (tr *ShardedRouting) updateRoutingLogic(ctx *plancontext.PlanningContext, e
 	return tr, nil
 }
 
-func (tr *ShardedRouting) ResetRoutingLogic(ctx *plancontext.PlanningContext) (Routing, error) {
+func (tr *ShardedRouting) resetRoutingLogic(ctx *plancontext.PlanningContext) (Routing, error) {
 	tr.RouteOpCode = engine.Scatter
 	tr.Selected = nil
 	for i, vp := range tr.VindexPreds {
@@ -216,19 +216,6 @@ func (tr *ShardedRouting) ResetRoutingLogic(ctx *plancontext.PlanningContext) (R
 func (tr *ShardedRouting) searchForNewVindexes(ctx *plancontext.PlanningContext, predicate sqlparser.Expr) (Routing, bool, error) {
 	newVindexFound := false
 	switch node := predicate.(type) {
-	case *sqlparser.ExtractedSubquery:
-		originalCmp, ok := node.Original.(*sqlparser.ComparisonExpr)
-		if !ok {
-			break
-		}
-
-		// using the node.subquery which is the rewritten version of our subquery
-		cmp := &sqlparser.ComparisonExpr{
-			Left:     node.OtherSide,
-			Right:    &sqlparser.Subquery{Select: node.Subquery.Select},
-			Operator: originalCmp.Operator,
-		}
-		return tr.planComparison(ctx, cmp)
 	case *sqlparser.ComparisonExpr:
 		return tr.planComparison(ctx, node)
 
@@ -334,7 +321,7 @@ func (tr *ShardedRouting) Cost() int {
 	switch tr.RouteOpCode {
 	case engine.EqualUnique:
 		return 1
-	case engine.Equal:
+	case engine.Equal, engine.SubShard:
 		return 5
 	case engine.IN:
 		return 10
@@ -564,29 +551,6 @@ func (tr *ShardedRouting) hasVindex(column *sqlparser.ColName) bool {
 	return false
 }
 
-// Reset all vindex predicates on this route and re-build their options from
-// the list of seen routing predicates.
-func (tr *ShardedRouting) resetRoutingSelections(ctx *plancontext.PlanningContext) error {
-	tr.RouteOpCode = engine.Scatter
-	tr.Selected = nil
-	for i, vp := range tr.VindexPreds {
-		tr.VindexPreds[i] = &VindexPlusPredicates{ColVindex: vp.ColVindex, TableID: vp.TableID}
-	}
-
-	var routing Routing = tr
-	for _, predicate := range tr.SeenPredicates {
-		var err error
-		routing, err = UpdateRoutingLogic(ctx, predicate, routing)
-		if err != nil {
-			return err
-		}
-	}
-	if routing != tr {
-		return vterrors.VT13001("uh-oh. we ended up with a different type of routing")
-	}
-	return nil
-}
-
 func (tr *ShardedRouting) SelectedVindex() vindexes.Vindex {
 	if tr.Selected == nil {
 		return nil
@@ -601,7 +565,28 @@ func (tr *ShardedRouting) VindexExpressions() []sqlparser.Expr {
 	return tr.Selected.ValueExprs
 }
 
-func tryMergeShardedRouting(ctx *plancontext.PlanningContext, routeA *Route, routeB *Route, m merger, joinPredicates []sqlparser.Expr) (ops.Operator, error) {
+func (tr *ShardedRouting) extraInfo() string {
+	if tr.Selected == nil {
+		return fmt.Sprintf(
+			"Seen:[%s]",
+			sqlparser.String(sqlparser.AndExpressions(tr.SeenPredicates...)),
+		)
+	}
+
+	return fmt.Sprintf(
+		"Vindex[%s] Values[%s] Seen:[%s]",
+		tr.Selected.FoundVindex.String(),
+		sqlparser.String(sqlparser.Exprs(tr.Selected.ValueExprs)),
+		sqlparser.String(sqlparser.AndExpressions(tr.SeenPredicates...)),
+	)
+}
+
+func tryMergeJoinShardedRouting(
+	ctx *plancontext.PlanningContext,
+	routeA, routeB *Route,
+	m merger,
+	joinPredicates []sqlparser.Expr,
+) (*Route, error) {
 	sameKeyspace := routeA.Routing.Keyspace() == routeB.Routing.Keyspace()
 	tblA := routeA.Routing.(*ShardedRouting)
 	tblB := routeB.Routing.(*ShardedRouting)
@@ -615,7 +600,7 @@ func tryMergeShardedRouting(ctx *plancontext.PlanningContext, routeA *Route, rou
 			aExpr := tblA.VindexExpressions()
 			bExpr := tblB.VindexExpressions()
 			if aVdx == bVdx && gen4ValuesEqual(ctx, aExpr, bExpr) {
-				return m.mergeTables(tblA, tblB, routeA, routeB)
+				return m.mergeShardedRouting(ctx, tblA, tblB, routeA, routeB)
 			}
 		}
 
@@ -639,30 +624,14 @@ func tryMergeShardedRouting(ctx *plancontext.PlanningContext, routeA *Route, rou
 		if !canMerge {
 			return nil, nil
 		}
-		return m.mergeTables(tblA, tblB, routeA, routeB)
+		return m.mergeShardedRouting(ctx, tblA, tblB, routeA, routeB)
 	}
 	return nil, nil
 }
 
 // makeEvalEngineExpr transforms the given sqlparser.Expr into an evalengine expression
 func makeEvalEngineExpr(ctx *plancontext.PlanningContext, n sqlparser.Expr) evalengine.Expr {
-	if ctx.IsSubQueryToReplace(n) {
-		return nil
-	}
-
 	for _, expr := range ctx.SemTable.GetExprAndEqualities(n) {
-		if subq, isSubq := expr.(*sqlparser.Subquery); isSubq {
-			extractedSubquery := ctx.SemTable.FindSubqueryReference(subq)
-			if extractedSubquery == nil {
-				continue
-			}
-			switch popcode.PulloutOpcode(extractedSubquery.OpCode) {
-			case popcode.PulloutIn, popcode.PulloutNotIn:
-				expr = sqlparser.NewListArg(extractedSubquery.GetArgName())
-			case popcode.PulloutValue, popcode.PulloutExists:
-				expr = sqlparser.NewArgument(extractedSubquery.GetArgName())
-			}
-		}
 		ee, _ := evalengine.Translate(expr, &evalengine.Config{
 			Collation:   ctx.SemTable.Collation,
 			ResolveType: ctx.SemTable.TypeForExpr,

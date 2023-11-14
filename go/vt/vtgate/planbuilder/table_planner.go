@@ -24,7 +24,7 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 	// Replace routePlan with tablePlan
 	ksAndTablePlan, err = visit(ksPlan, func(logicalPlan logicalPlan) (bool, logicalPlan, error) {
 		switch node := logicalPlan.(type) {
-		case *routeGen4:
+		case *route:
 			ctx.KsPrimitive = node.eroute
 			if _, ok := ctx.SplitTableConfig[node.eroute.TableName]; !ok {
 				return false, logicalPlan, err
@@ -125,7 +125,7 @@ func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement
 		}
 	}
 
-	if err = tablePlan.WireupGen4(ctx); err != nil {
+	if err = tablePlan.Wireup(ctx); err != nil {
 		return nil, err
 	}
 
@@ -155,7 +155,7 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 	}
 	sel := sqlparser.GetFirstSelect(ctx.OriginSelStmt)
 
-	if _, ok := plan.(*concatenateGen4); !ok {
+	if _, ok := plan.(*concatenate); !ok {
 		if len(plan.OutputColumns()) == len(sel.SelectExprs) {
 			return plan, nil
 		}
@@ -175,7 +175,7 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 				return nil, err
 			}
 		}
-	case *concatenateGen4:
+	case *concatenate:
 		originStatement := ctx.OriginSelStmt
 		defer func() {
 			ctx.OriginSelStmt = originStatement

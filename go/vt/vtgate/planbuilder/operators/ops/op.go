@@ -23,11 +23,11 @@ import (
 
 type (
 	// Operator forms the tree of operators, representing the declarative query provided.
-	// While planning, the operator tree starts with logical operators, and later moves to physical operators.
-	// The difference between the two is that when we get to a physical operator, we have made decisions on in
-	// which order to do the joins, and how to split them up across shards and keyspaces.
-	// In some situation we go straight to the physical operator - when there are no options to consider,
-	// we can go straight to the end result.
+	// The operator tree is no actually runnable, it's an intermediate representation used
+	// while query planning
+	// The mental model are operators that pull data from each other, the root being the
+	// full query output, and the leaves are most often `Route`s, representing communication
+	// with one or more shards. We want to push down as much work as possible under these Routes
 	Operator interface {
 		// Clone will return a copy of this operator, protected so changed to the original will not impact the clone
 		Clone(inputs []Operator) Operator
@@ -41,16 +41,16 @@ type (
 		// AddPredicate is used to push predicates. It pushed it as far down as is possible in the tree.
 		// If we encounter a join and the predicate depends on both sides of the join, the predicate will be split into two parts,
 		// where data is fetched from the LHS of the join to be used in the evaluation on the RHS
+		// TODO: we should remove this and replace it with rewriters
 		AddPredicate(ctx *plancontext.PlanningContext, expr sqlparser.Expr) (Operator, error)
 
-		// AddColumn tells an operator to also output an additional column specified.
-		// The offset to the column is returned.
-		AddColumn(ctx *plancontext.PlanningContext, expr *sqlparser.AliasedExpr, reuseExisting, addToGroupBy bool) (Operator, int, error)
+		AddColumn(ctx *plancontext.PlanningContext, reuseExisting bool, addToGroupBy bool, expr *sqlparser.AliasedExpr) (int, error)
 
-		GetColumns() ([]*sqlparser.AliasedExpr, error)
+		FindCol(ctx *plancontext.PlanningContext, expr sqlparser.Expr, underRoute bool) (int, error)
+
+		GetColumns(ctx *plancontext.PlanningContext) ([]*sqlparser.AliasedExpr, error)
 		GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error)
 
-		Description() OpDescription
 		ShortDescription() string
 
 		GetOrdering() ([]OrderBy, error)
@@ -63,13 +63,15 @@ type (
 		// See GroupBy#SimplifiedExpr for more details about this
 		SimplifiedExpr sqlparser.Expr
 	}
-
-	OpDescription struct {
-		OperatorType string
-		Variant      string         `json:",omitempty"`
-		Other        map[string]any `json:",omitempty"`
-
-		// This field will be filled in by the JSON producer. No need to set it manually
-		Inputs []OpDescription `json:",omitempty"`
-	}
 )
+
+// Map takes in a mapping function and applies it to both the expression in OrderBy.
+func (ob OrderBy) Map(mappingFunc func(sqlparser.Expr) sqlparser.Expr) OrderBy {
+	return OrderBy{
+		Inner: &sqlparser.Order{
+			Expr:      mappingFunc(ob.Inner.Expr),
+			Direction: ob.Inner.Direction,
+		},
+		SimplifiedExpr: mappingFunc(ob.SimplifiedExpr),
+	}
+}

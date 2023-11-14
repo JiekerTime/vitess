@@ -26,11 +26,13 @@ import (
 
 	"vitess.io/vitess/go/test/utils"
 	"vitess.io/vitess/go/vt/dbconfigs"
-	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
-	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/throttler"
 	"vitess.io/vitess/go/vt/topo/topoproto"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/yaml2"
+
+	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
+	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 )
 
 func TestConfigParse(t *testing.T) {
@@ -45,9 +47,8 @@ func TestConfigParse(t *testing.T) {
 			},
 		},
 		OltpReadPool: ConnPoolConfig{
-			Size:               16,
-			PrefillParallelism: 30,
-			MaxWaiters:         40,
+			Size:       16,
+			MaxWaiters: 40,
 		},
 		RowStreamer: RowStreamerConfig{
 			MaxInnoDBTrxHistLen: 1000,
@@ -87,7 +88,6 @@ oltpReadPool:
   idleTimeoutSeconds: 20s
   maxLifetimeSeconds: 50s
   maxWaiters: 40
-  prefillParallelism: 30
   size: 16
   timeoutSeconds: 10s
 replicationTracker: {}
@@ -110,7 +110,6 @@ txPool: {}
 oltpReadPool:
   size: 16
   idleTimeoutSeconds: 20
-  prefillParallelism: 30
   maxWaiters: 40
   maxLifetimeSeconds: 50
 `)
@@ -152,9 +151,8 @@ oltpReadPool:
   idleTimeoutSeconds: 30m0s
   maxWaiters: 5000
   size: 16
-queryCacheLFU: true
+queryCacheDoorkeeper: true
 queryCacheMemory: 33554432
-queryCacheSize: 5000
 replicationTracker:
   heartbeatIntervalSeconds: 250ms
   mode: disable
@@ -180,9 +178,8 @@ func TestClone(t *testing.T) {
 
 	cfg1 := &TabletConfig{
 		OltpReadPool: ConnPoolConfig{
-			Size:               16,
-			PrefillParallelism: 30,
-			MaxWaiters:         40,
+			Size:       16,
+			MaxWaiters: 40,
 		},
 		RowStreamer: RowStreamerConfig{
 			MaxInnoDBTrxHistLen: 1000000,
@@ -331,31 +328,126 @@ func TestFlags(t *testing.T) {
 	assert.Equal(t, want, currentConfig)
 }
 
+func TestTxThrottlerConfigFlag(t *testing.T) {
+	f := NewTxThrottlerConfigFlag()
+	defaultMaxReplicationLagModuleConfig := throttler.DefaultMaxReplicationLagModuleConfig().Configuration
+
+	{
+		assert.Nil(t, f.Set(defaultMaxReplicationLagModuleConfig.String()))
+		assert.Equal(t, defaultMaxReplicationLagModuleConfig.String(), f.String())
+		assert.Equal(t, "string", f.Type())
+	}
+	{
+		defaultMaxReplicationLagModuleConfig.TargetReplicationLagSec = 5
+		assert.Nil(t, f.Set(defaultMaxReplicationLagModuleConfig.String()))
+		assert.NotNil(t, f.Get())
+		assert.Equal(t, int64(5), f.Get().TargetReplicationLagSec)
+	}
+	{
+		assert.NotNil(t, f.Set("should not parse"))
+	}
+}
+
 func TestVerifyTxThrottlerConfig(t *testing.T) {
-	{
-		// default config (replica)
-		assert.Nil(t, currentConfig.verifyTxThrottlerConfig())
+	defaultMaxReplicationLagModuleConfig := throttler.DefaultMaxReplicationLagModuleConfig().Configuration
+	invalidMaxReplicationLagModuleConfig := throttler.DefaultMaxReplicationLagModuleConfig().Configuration
+	invalidMaxReplicationLagModuleConfig.TargetReplicationLagSec = -1
+
+	type testConfig struct {
+		Name              string
+		ExpectedErrorCode vtrpcpb.Code
+		//
+		EnableTxThrottler           bool
+		TxThrottlerConfig           *TxThrottlerConfigFlag
+		TxThrottlerHealthCheckCells []string
+		TxThrottlerTabletTypes      *topoproto.TabletTypeListFlag
+		TxThrottlerDefaultPriority  int
 	}
-	{
-		// replica + rdonly (allowed)
-		currentConfig.TxThrottlerTabletTypes = &topoproto.TabletTypeListFlag{
-			topodatapb.TabletType_REPLICA,
-			topodatapb.TabletType_RDONLY,
-		}
-		assert.Nil(t, currentConfig.verifyTxThrottlerConfig())
+
+	tests := []testConfig{
+		{
+			// default (disabled)
+			Name:              "default",
+			EnableTxThrottler: false,
+		},
+		{
+			// enabled with invalid throttler config
+			Name:              "enabled invalid config",
+			ExpectedErrorCode: vtrpcpb.Code_INVALID_ARGUMENT,
+			EnableTxThrottler: true,
+			TxThrottlerConfig: &TxThrottlerConfigFlag{invalidMaxReplicationLagModuleConfig},
+		},
+		{
+			// enabled with good config (default/replica tablet type)
+			Name:                        "enabled",
+			EnableTxThrottler:           true,
+			TxThrottlerConfig:           &TxThrottlerConfigFlag{defaultMaxReplicationLagModuleConfig},
+			TxThrottlerHealthCheckCells: []string{"cell1"},
+		},
+		{
+			// enabled + replica and rdonly tablet types
+			Name:                        "enabled plus rdonly",
+			EnableTxThrottler:           true,
+			TxThrottlerConfig:           &TxThrottlerConfigFlag{defaultMaxReplicationLagModuleConfig},
+			TxThrottlerHealthCheckCells: []string{"cell1"},
+			TxThrottlerTabletTypes: &topoproto.TabletTypeListFlag{
+				topodatapb.TabletType_REPLICA,
+				topodatapb.TabletType_RDONLY,
+			},
+		},
+		{
+			// enabled without tablet types
+			Name:                        "enabled without tablet types",
+			ExpectedErrorCode:           vtrpcpb.Code_FAILED_PRECONDITION,
+			EnableTxThrottler:           true,
+			TxThrottlerConfig:           &TxThrottlerConfigFlag{defaultMaxReplicationLagModuleConfig},
+			TxThrottlerHealthCheckCells: []string{"cell1"},
+			TxThrottlerTabletTypes:      &topoproto.TabletTypeListFlag{},
+		},
+		{
+			// enabled + disallowed tablet type
+			Name:                        "enabled disallowed tablet type",
+			ExpectedErrorCode:           vtrpcpb.Code_INVALID_ARGUMENT,
+			EnableTxThrottler:           true,
+			TxThrottlerConfig:           &TxThrottlerConfigFlag{defaultMaxReplicationLagModuleConfig},
+			TxThrottlerHealthCheckCells: []string{"cell1"},
+			TxThrottlerTabletTypes:      &topoproto.TabletTypeListFlag{topodatapb.TabletType_DRAINED},
+		},
+		{
+			// enabled + disallowed priority
+			Name:                        "enabled disallowed priority",
+			ExpectedErrorCode:           vtrpcpb.Code_INVALID_ARGUMENT,
+			EnableTxThrottler:           true,
+			TxThrottlerConfig:           &TxThrottlerConfigFlag{defaultMaxReplicationLagModuleConfig},
+			TxThrottlerDefaultPriority:  12345,
+			TxThrottlerHealthCheckCells: []string{"cell1"},
+		},
 	}
-	{
-		// no tablet types
-		currentConfig.TxThrottlerTabletTypes = &topoproto.TabletTypeListFlag{}
-		err := currentConfig.verifyTxThrottlerConfig()
-		assert.NotNil(t, err)
-		assert.Equal(t, vtrpcpb.Code_FAILED_PRECONDITION, vterrors.Code(err))
-	}
-	{
-		// disallowed tablet type
-		currentConfig.TxThrottlerTabletTypes = &topoproto.TabletTypeListFlag{topodatapb.TabletType_DRAINED}
-		err := currentConfig.verifyTxThrottlerConfig()
-		assert.NotNil(t, err)
-		assert.Equal(t, vtrpcpb.Code_INVALID_ARGUMENT, vterrors.Code(err))
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.Name, func(t *testing.T) {
+			t.Parallel()
+
+			config := defaultConfig
+			config.EnableTxThrottler = test.EnableTxThrottler
+			if test.TxThrottlerConfig == nil {
+				test.TxThrottlerConfig = NewTxThrottlerConfigFlag()
+			}
+			config.TxThrottlerConfig = test.TxThrottlerConfig
+			config.TxThrottlerHealthCheckCells = test.TxThrottlerHealthCheckCells
+			config.TxThrottlerDefaultPriority = test.TxThrottlerDefaultPriority
+			if test.TxThrottlerTabletTypes != nil {
+				config.TxThrottlerTabletTypes = test.TxThrottlerTabletTypes
+			}
+
+			err := config.verifyTxThrottlerConfig()
+			if test.ExpectedErrorCode == vtrpcpb.Code_OK {
+				assert.Nil(t, err)
+			} else {
+				assert.NotNil(t, err)
+				assert.Equal(t, test.ExpectedErrorCode, vterrors.Code(err))
+			}
+		})
 	}
 }

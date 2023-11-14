@@ -23,11 +23,9 @@ import (
 	"sync"
 	"time"
 
+	"vitess.io/vitess/go/constants/sidecar"
+	"vitess.io/vitess/go/mysql/replication"
 	"vitess.io/vitess/go/vt/schema"
-	"vitess.io/vitess/go/vt/sidecardb"
-
-	"vitess.io/vitess/go/mysql"
-
 	"vitess.io/vitess/go/vt/sqlparser"
 
 	"vitess.io/vitess/go/sqltypes"
@@ -157,10 +155,10 @@ func (tr *Tracker) process(ctx context.Context) {
 	}
 }
 
-func (tr *Tracker) currentPosition(ctx context.Context) (mysql.Position, error) {
+func (tr *Tracker) currentPosition(ctx context.Context) (replication.Position, error) {
 	conn, err := tr.engine.cp.Connect(ctx)
 	if err != nil {
-		return mysql.Position{}, err
+		return replication.Position{}, err
 	}
 	defer conn.Close()
 	return conn.PrimaryPosition()
@@ -173,7 +171,7 @@ func (tr *Tracker) isSchemaVersionTableEmpty(ctx context.Context) (bool, error) 
 	}
 	defer conn.Recycle()
 	result, err := conn.Exec(ctx, sqlparser.BuildParsedQuery("select id from %s.schema_version limit 1",
-		sidecardb.GetIdentifier()).Query, 1, false)
+		sidecar.GetIdentifier()).Query, 1, false)
 	if err != nil {
 		return false, err
 	}
@@ -204,7 +202,7 @@ func (tr *Tracker) possiblyInsertInitialSchema(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	gtid := mysql.EncodePosition(pos)
+	gtid := replication.EncodePosition(pos)
 	log.Infof("Saving initial schema for gtid %s", gtid)
 
 	return tr.saveCurrentSchemaToDb(ctx, gtid, ddl, timestamp)
@@ -221,14 +219,10 @@ func (tr *Tracker) schemaUpdated(gtid string, ddl string, timestamp int64) error
 }
 
 func (tr *Tracker) saveCurrentSchemaToDb(ctx context.Context, gtid, ddl string, timestamp int64) error {
-	tables := tr.engine.GetSchema()
-	dbSchema := &binlogdatapb.MinimalSchema{
-		Tables: []*binlogdatapb.MinimalTable{},
+	blob, err := tr.engine.MarshalMinimalSchema()
+	if err != nil {
+		return err
 	}
-	for _, table := range tables {
-		dbSchema.Tables = append(dbSchema.Tables, newMinimalTable(table))
-	}
-	blob, _ := dbSchema.MarshalVT()
 
 	conn, err := tr.engine.GetConnection(ctx)
 	if err != nil {
@@ -238,26 +232,13 @@ func (tr *Tracker) saveCurrentSchemaToDb(ctx context.Context, gtid, ddl string, 
 
 	query := sqlparser.BuildParsedQuery("insert into %s.schema_version "+
 		"(pos, ddl, schemax, time_updated) "+
-		"values (%s, %s, %s, %d)", sidecardb.GetIdentifier(), encodeString(gtid),
+		"values (%s, %s, %s, %d)", sidecar.GetIdentifier(), encodeString(gtid),
 		encodeString(ddl), encodeString(string(blob)), timestamp).Query
 	_, err = conn.Exec(ctx, query, 1, false)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func newMinimalTable(st *Table) *binlogdatapb.MinimalTable {
-	table := &binlogdatapb.MinimalTable{
-		Name:   st.Name.String(),
-		Fields: st.Fields,
-	}
-	var pkc []int64
-	for _, pk := range st.PKColumns {
-		pkc = append(pkc, int64(pk))
-	}
-	table.PKColumns = pkc
-	return table
 }
 
 func encodeString(in string) string {

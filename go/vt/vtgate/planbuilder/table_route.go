@@ -12,7 +12,6 @@ import (
 var _ logicalPlan = (*tableRoute)(nil)
 
 type tableRoute struct {
-	gen4Plan
 
 	// Select is the AST for the query fragment that will be
 	// executed by this route.
@@ -21,7 +20,7 @@ type tableRoute struct {
 	eroute *engine.TableRoute
 }
 
-func (t *tableRoute) WireupGen4(context *plancontext.PlanningContext) error {
+func (t *tableRoute) Wireup(context *plancontext.PlanningContext) error {
 
 	t.eroute.Query = t.Select
 	nodeClone, _ := sqlparser.DeepCloneStatement(t.Select).(*sqlparser.Select)

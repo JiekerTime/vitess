@@ -111,8 +111,8 @@ func (r *TableShow) GetFields(ctx context.Context, vcursor VCursor, bindVars map
 }
 
 // Inputs implements the primitive interface
-func (r *TableShow) Inputs() []Primitive {
-	return []Primitive{r.Input}
+func (r *TableShow) Inputs() ([]Primitive, []map[string]any) {
+	return []Primitive{r.Input}, nil
 }
 
 func convertPatternToRegex(pattern string) *regexp.Regexp {

@@ -3,7 +3,7 @@ package operators
 import (
 	"golang.org/x/exp/slices"
 
-	"vitess.io/vitess/go/slices2"
+	"vitess.io/vitess/go/slice"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
@@ -50,7 +50,7 @@ func (tableRouting *TableShardedRouting) Clone() Routing {
 		selected = &t
 	}
 	return &TableShardedRouting{
-		TindexPreds: slices2.Map(tableRouting.TindexPreds, func(from *TableVindexPlusPredicates) *TableVindexPlusPredicates {
+		TindexPreds: slice.Map(tableRouting.TindexPreds, func(from *TableVindexPlusPredicates) *TableVindexPlusPredicates {
 			// we do this to create a copy of the struct
 			p := *from
 			return &p

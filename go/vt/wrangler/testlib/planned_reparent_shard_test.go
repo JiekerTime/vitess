@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"vitess.io/vitess/go/mysql/replication"
 	"vitess.io/vitess/go/vt/mysqlctl"
 
 	"github.com/stretchr/testify/assert"
@@ -47,7 +48,9 @@ func TestPlannedReparentShardNoPrimaryProvided(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -61,18 +64,18 @@ func TestPlannedReparentShardNoPrimaryProvided(t *testing.T) {
 	// new primary
 	newPrimary.FakeMysqlDaemon.ReadOnly = true
 	newPrimary.FakeMysqlDaemon.Replicating = true
-	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []mysql.Position{{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []replication.Position{{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
 			},
 		},
 	}}
-	newPrimary.FakeMysqlDaemon.PromoteResult = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.PromoteResult = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   456,
 				Sequence: 991,
@@ -161,7 +164,9 @@ func TestPlannedReparentShardNoError(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -176,18 +181,18 @@ func TestPlannedReparentShardNoError(t *testing.T) {
 	// new primary
 	newPrimary.FakeMysqlDaemon.ReadOnly = true
 	newPrimary.FakeMysqlDaemon.Replicating = true
-	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []mysql.Position{{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []replication.Position{{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
 			},
 		},
 	}}
-	newPrimary.FakeMysqlDaemon.PromoteResult = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.PromoteResult = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   456,
 				Sequence: 991,
@@ -295,7 +300,9 @@ func TestPlannedReparentInitialization(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -309,9 +316,9 @@ func TestPlannedReparentInitialization(t *testing.T) {
 	// new primary
 	newPrimary.FakeMysqlDaemon.ReadOnly = true
 	newPrimary.FakeMysqlDaemon.Replicating = true
-	newPrimary.FakeMysqlDaemon.PromoteResult = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.PromoteResult = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   456,
 				Sequence: 991,
@@ -379,7 +386,9 @@ func TestPlannedReparentShardWaitForPositionFail(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -393,18 +402,18 @@ func TestPlannedReparentShardWaitForPositionFail(t *testing.T) {
 	// new primary
 	newPrimary.FakeMysqlDaemon.ReadOnly = true
 	newPrimary.FakeMysqlDaemon.Replicating = true
-	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []mysql.Position{{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []replication.Position{{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
 			},
 		},
 	}}
-	newPrimary.FakeMysqlDaemon.PromoteResult = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.PromoteResult = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   456,
 				Sequence: 991,
@@ -485,7 +494,9 @@ func TestPlannedReparentShardWaitForPositionTimeout(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -500,18 +511,18 @@ func TestPlannedReparentShardWaitForPositionTimeout(t *testing.T) {
 	newPrimary.FakeMysqlDaemon.TimeoutHook = func() error { return context.DeadlineExceeded }
 	newPrimary.FakeMysqlDaemon.ReadOnly = true
 	newPrimary.FakeMysqlDaemon.Replicating = true
-	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []mysql.Position{{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []replication.Position{{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
 			},
 		},
 	}}
-	newPrimary.FakeMysqlDaemon.PromoteResult = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.PromoteResult = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   456,
 				Sequence: 991,
@@ -589,7 +600,9 @@ func TestPlannedReparentShardRelayLogError(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -602,9 +615,9 @@ func TestPlannedReparentShardRelayLogError(t *testing.T) {
 	primary.FakeMysqlDaemon.ReadOnly = false
 	primary.FakeMysqlDaemon.Replicating = false
 	primary.FakeMysqlDaemon.ReplicationStatusError = mysql.ErrNotReplica
-	primary.FakeMysqlDaemon.CurrentPrimaryPosition = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	primary.FakeMysqlDaemon.CurrentPrimaryPosition = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
@@ -631,9 +644,10 @@ func TestPlannedReparentShardRelayLogError(t *testing.T) {
 		"STOP SLAVE",
 		"RESET SLAVE",
 		"START SLAVE",
+		"START SLAVE",
 	}
 	goodReplica1.StartActionLoop(t, wr)
-	goodReplica1.FakeMysqlDaemon.SetReplicationSourceError = errors.New("Slave failed to initialize relay log info structure from the repository")
+	goodReplica1.FakeMysqlDaemon.StopReplicationError = errors.New("Slave failed to initialize relay log info structure from the repository")
 	defer goodReplica1.StopActionLoop(t)
 
 	// run PlannedReparentShard
@@ -666,7 +680,9 @@ func TestPlannedReparentShardRelayLogErrorStartReplication(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -680,9 +696,9 @@ func TestPlannedReparentShardRelayLogErrorStartReplication(t *testing.T) {
 	primary.FakeMysqlDaemon.ReadOnly = false
 	primary.FakeMysqlDaemon.Replicating = false
 	primary.FakeMysqlDaemon.ReplicationStatusError = mysql.ErrNotReplica
-	primary.FakeMysqlDaemon.CurrentPrimaryPosition = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	primary.FakeMysqlDaemon.CurrentPrimaryPosition = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
@@ -749,7 +765,9 @@ func TestPlannedReparentShardPromoteReplicaFail(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -765,18 +783,18 @@ func TestPlannedReparentShardPromoteReplicaFail(t *testing.T) {
 	newPrimary.FakeMysqlDaemon.Replicating = true
 	// make promote fail
 	newPrimary.FakeMysqlDaemon.PromoteError = errors.New("some error")
-	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []mysql.Position{{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.WaitPrimaryPositions = []replication.Position{{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
 			},
 		},
 	}}
-	newPrimary.FakeMysqlDaemon.PromoteResult = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	newPrimary.FakeMysqlDaemon.PromoteResult = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   456,
 				Sequence: 991,
@@ -823,12 +841,12 @@ func TestPlannedReparentShardPromoteReplicaFail(t *testing.T) {
 		"STOP SLAVE",
 		"FAKE SET MASTER",
 		"START SLAVE",
+		// extra SetReplicationSource call due to retry
 		"STOP SLAVE",
 		"FAKE SET MASTER",
 		"START SLAVE",
 		// extra SetReplicationSource call due to retry
 		"STOP SLAVE",
-		"FAKE SET MASTER",
 		"START SLAVE",
 	}
 	goodReplica1.StartActionLoop(t, wr)
@@ -842,8 +860,6 @@ func TestPlannedReparentShardPromoteReplicaFail(t *testing.T) {
 		"STOP SLAVE",
 		"FAKE SET MASTER",
 		"START SLAVE",
-		"FAKE SET MASTER",
-		// extra SetReplicationSource call due to retry
 		"FAKE SET MASTER",
 	}
 	goodReplica2.StartActionLoop(t, wr)
@@ -890,7 +906,9 @@ func TestPlannedReparentShardSamePrimary(t *testing.T) {
 	}()
 	discovery.SetTabletPickerRetryDelay(5 * time.Millisecond)
 
-	ts := memorytopo.NewServer("cell1", "cell2")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ts := memorytopo.NewServer(ctx, "cell1", "cell2")
 	wr := wrangler.New(logutil.NewConsoleLogger(), ts, tmclient.NewTabletManagerClient())
 	vp := NewVtctlPipe(t, ts)
 	defer vp.Close()
@@ -904,9 +922,9 @@ func TestPlannedReparentShardSamePrimary(t *testing.T) {
 	oldPrimary.FakeMysqlDaemon.ReadOnly = true
 	oldPrimary.FakeMysqlDaemon.Replicating = false
 	oldPrimary.FakeMysqlDaemon.ReplicationStatusError = mysql.ErrNotReplica
-	oldPrimary.FakeMysqlDaemon.CurrentPrimaryPosition = mysql.Position{
-		GTIDSet: mysql.MariadbGTIDSet{
-			7: mysql.MariadbGTID{
+	oldPrimary.FakeMysqlDaemon.CurrentPrimaryPosition = replication.Position{
+		GTIDSet: replication.MariadbGTIDSet{
+			7: replication.MariadbGTID{
 				Domain:   7,
 				Server:   123,
 				Sequence: 990,
@@ -930,7 +948,6 @@ func TestPlannedReparentShardSamePrimary(t *testing.T) {
 		"FAKE SET MASTER",
 		"START SLAVE",
 		"STOP SLAVE",
-		"FAKE SET MASTER",
 		"START SLAVE",
 	}
 	goodReplica1.StartActionLoop(t, wr)

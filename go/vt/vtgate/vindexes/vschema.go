@@ -23,6 +23,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
@@ -68,6 +69,9 @@ type VSchema struct {
 	uniqueVindexes    map[string]Vindex
 	Keyspaces         map[string]*KeyspaceSchema `json:"keyspaces"`
 	ShardRoutingRules map[string]string          `json:"shard_routing_rules"`
+	// created is the time when the VSchema object was created. Used to detect if a cached
+	// copy of the vschema is stale.
+	created time.Time
 }
 
 // RoutingRule represents one routing rule.
@@ -110,6 +114,14 @@ type Table struct {
 	// Source is a keyspace-qualified table name that points to the source of a
 	// reference table. Only applicable for tables with Type set to "reference".
 	Source *Source `json:"source,omitempty"`
+
+	ChildForeignKeys  []ChildFKInfo  `json:"child_foreign_keys,omitempty"`
+	ParentForeignKeys []ParentFKInfo `json:"parent_foreign_keys,omitempty"`
+}
+
+// GetTableName gets the sqlparser.TableName for the vindex Table.
+func (t *Table) GetTableName() sqlparser.TableName {
+	return sqlparser.NewTableNameWithQualifier(t.Name.String(), t.Keyspace.Name)
 }
 
 // Keyspace contains the keyspcae info for each Table.
@@ -132,6 +144,12 @@ type ColumnVindex struct {
 	cost     int
 	partial  bool
 	backfill bool
+}
+
+// TableInfo contains column and foreign key info for a table.
+type TableInfo struct {
+	Columns     []Column
+	ForeignKeys []*sqlparser.ForeignKeyDefinition
 }
 
 // IsUnique is used to tell whether the ColumnVindex
@@ -177,23 +195,25 @@ func (col *Column) MarshalJSON() ([]byte, error) {
 
 // KeyspaceSchema contains the schema(table) for a keyspace.
 type KeyspaceSchema struct {
-	Keyspace           *Keyspace
-	Tables             map[string]*Table
-	Vindexes           map[string]Vindex
+	Keyspace       *Keyspace
+	ForeignKeyMode vschemapb.Keyspace_ForeignKeyMode
+	Tables         map[string]*Table
+	Vindexes       map[string]Vindex
+	Views          map[string]sqlparser.SelectStatement
+	Error          error
 	SplitTableTables   map[string]*LogicTableConfig
 	SplitTableVindexes map[string]Vindex
-	Views              map[string]sqlparser.SelectStatement
-	Error              error
 }
 
 type ksJSON struct {
-	Sharded            bool                         `json:"sharded,omitempty"`
-	Tables             map[string]*Table            `json:"tables,omitempty"`
-	Vindexes           map[string]Vindex            `json:"vindexes,omitempty"`
+	Sharded        bool              `json:"sharded,omitempty"`
+	ForeignKeyMode string            `json:"foreignKeyMode,omitempty"`
+	Tables         map[string]*Table `json:"tables,omitempty"`
+	Vindexes       map[string]Vindex `json:"vindexes,omitempty"`
+	Views          map[string]string `json:"views,omitempty"`
+	Error          string            `json:"error,omitempty"`
 	SplitTableTables   map[string]*LogicTableConfig `json:"splitable_tables,omitempty"`
 	SplitTableVindexes map[string]Vindex            `json:"splittable_vindexes,omitempty"`
-	Views              map[string]string            `json:"views,omitempty"`
-	Error              string                       `json:"error,omitempty"`
 }
 
 // findTable looks for the table with the requested tablename in the keyspace.
@@ -222,9 +242,10 @@ func (ks *KeyspaceSchema) findTable(
 // MarshalJSON returns a JSON representation of KeyspaceSchema.
 func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 	ksJ := ksJSON{
-		Sharded:            ks.Keyspace.Sharded,
-		Tables:             ks.Tables,
-		Vindexes:           ks.Vindexes,
+		Sharded:        ks.Keyspace.Sharded,
+		Tables:         ks.Tables,
+		ForeignKeyMode: ks.ForeignKeyMode.String(),
+		Vindexes:       ks.Vindexes,
 		SplitTableTables:   ks.SplitTableTables,
 		SplitTableVindexes: ks.SplitTableVindexes,
 	}
@@ -270,15 +291,17 @@ func BuildVSchema(source *vschemapb.SrvVSchema) (vschema *VSchema) {
 		globalTables:   make(map[string]*Table),
 		uniqueVindexes: make(map[string]Vindex),
 		Keyspaces:      make(map[string]*KeyspaceSchema),
+		created:        time.Now(),
 	}
 	buildKeyspaces(source, vschema)
 	// buildGlobalTables before buildReferences so that buildReferences can
 	// resolve sources which reference global tables.
 	buildGlobalTables(source, vschema)
 	buildReferences(source, vschema)
-	resolveAutoIncrement(source, vschema)
 	buildRoutingRule(source, vschema)
 	buildShardRoutingRule(source, vschema)
+	// Resolve auto-increments after routing rules are built since sequence tables also obey routing rules.
+	resolveAutoIncrement(source, vschema)
 	return vschema
 }
 
@@ -304,11 +327,10 @@ func BuildKeyspaceSchema(input *vschemapb.Keyspace, keyspace string) (*KeyspaceS
 	return vschema.Keyspaces[keyspace], err
 }
 
-// ValidateKeyspace ensures that the keyspace vschema is valid.
+// BuildKeyspace ensures that the keyspace vschema is valid.
 // External references (like sequence) are not validated.
-func ValidateKeyspace(input *vschemapb.Keyspace) error {
-	_, err := BuildKeyspaceSchema(input, "")
-	return err
+func BuildKeyspace(input *vschemapb.Keyspace) (*KeyspaceSchema, error) {
+	return BuildKeyspaceSchema(input, "")
 }
 
 func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
@@ -321,8 +343,9 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 				AttachEnable: ks.AttachEnable,
 				AttachTo:     ks.AttachTo,
 			},
-			Tables:   make(map[string]*Table),
-			Vindexes: make(map[string]Vindex),
+			ForeignKeyMode: replaceUnspecifiedForeignKeyMode(ks.ForeignKeyMode),
+			Tables:         make(map[string]*Table),
+			Vindexes:       make(map[string]Vindex),
 		}
 		if len(ks.SplittableTables) > 0 {
 			ksvschema.SplitTableTables = make(map[string]*LogicTableConfig)
@@ -340,6 +363,14 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 			ksvschema.Error = err
 		}
 	}
+}
+
+// replaceUnspecifiedForeignKeyMode replaces the default value of the foreign key mode enum with the default we want to keep.
+func replaceUnspecifiedForeignKeyMode(fkMode vschemapb.Keyspace_ForeignKeyMode) vschemapb.Keyspace_ForeignKeyMode {
+	if fkMode == vschemapb.Keyspace_unspecified {
+		return vschemapb.Keyspace_unmanaged
+	}
+	return fkMode
 }
 
 func (vschema *VSchema) AddView(ksname string, viewName, query string) error {
@@ -737,6 +768,7 @@ func buildTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSc
 
 	return nil
 }
+
 func (vschema *VSchema) addTableName(t *Table) {
 	tname := t.Name.String()
 	if _, ok := vschema.globalTables[tname]; ok {
@@ -757,7 +789,11 @@ func resolveAutoIncrement(source *vschemapb.SrvVSchema, vschema *VSchema) {
 			seqks, seqtab, err := sqlparser.ParseTable(table.AutoIncrement.Sequence)
 			var seq *Table
 			if err == nil {
-				seq, err = vschema.FindTable(seqks, seqtab)
+				// Ensure that sequence tables also obey routing rules.
+				seq, err = vschema.FindRoutedTable(seqks, seqtab, topodatapb.TabletType_PRIMARY)
+				if seq == nil && err == nil {
+					err = vterrors.Errorf(vtrpcpb.Code_NOT_FOUND, "table %s not found", seqtab)
+				}
 			}
 			if err != nil {
 				// Better to remove the table than to leave it partially initialized.
@@ -1160,6 +1196,17 @@ func (vschema *VSchema) FindRoutedShard(keyspace, shard string) (string, error) 
 	return keyspace, nil
 }
 
+// GetCreated returns the time when the VSchema was created.
+func (vschema *VSchema) GetCreated() time.Time {
+	return vschema.created
+}
+
+// ResetCreated resets the created time to zero value.
+// Used only in tests where vschema protos are compared.
+func (vschema *VSchema) ResetCreated() {
+	vschema.created = time.Time{}
+}
+
 // ByCost provides the interface needed for ColumnVindexes to
 // be sorted by cost order.
 type ByCost []*ColumnVindex
@@ -1209,11 +1256,12 @@ func LoadFormalKeyspace(filename string) (*vschemapb.Keyspace, error) {
 	return formal, nil
 }
 
-// ChooseVindexForType chooses the most appropriate vindex for the give type.
+// ChooseVindexForType chooses the most appropriate vindex type for
+// the given SQL data type.
 func ChooseVindexForType(typ querypb.Type) (string, error) {
 	switch {
 	case sqltypes.IsIntegral(typ):
-		return "hash", nil
+		return "xxhash", nil
 	case sqltypes.IsText(typ):
 		return "unicode_loose_md5", nil
 	case sqltypes.IsBinary(typ):

@@ -40,6 +40,13 @@ var (
 	NullBindVariable = &querypb.BindVariable{Type: querypb.Type_NULL_TYPE}
 )
 
+func TupleToProto(v []Value) *querypb.Value {
+	return &querypb.Value{
+		Type:  querypb.Type_TUPLE,
+		Value: encodeTuple(v),
+	}
+}
+
 // ValueToProto converts Value to a *querypb.Value.
 func ValueToProto(v Value) *querypb.Value {
 	return &querypb.Value{Type: v.typ, Value: v.val}

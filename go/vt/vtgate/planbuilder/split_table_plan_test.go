@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"vitess.io/vitess/go/test/vschemawrapper"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 
 	"github.com/nsf/jsondiff"
@@ -17,12 +18,12 @@ import (
 )
 
 func TestSplitTablePlan(t *testing.T) {
-	vschema := &vschemaWrapper{
-		v:             loadSchema(t, "vschemas/table_schema.json", true),
-		tabletType:    topodatapb.TabletType_PRIMARY,
-		sysVarEnabled: true,
-		version:       Gen4,
-		keyspace: &vindexes.Keyspace{
+	vschema := &vschemawrapper.VSchemaWrapper{
+		V:             loadSchema(t, "vschemas/table_schema.json", true),
+		TabletType_:   topodatapb.TabletType_PRIMARY,
+		SysVarEnabled: true,
+		Version:       Gen4,
+		Keyspace: &vindexes.Keyspace{
 			Name:    "user",
 			Sharded: true,
 		},
@@ -49,11 +50,11 @@ func TestSplitTablePlan(t *testing.T) {
 
 func TestSplitTableOne(t *testing.T) {
 	oprewriters.DebugOperatorTree = true
-	vschema := &vschemaWrapper{
-		v:             loadSchema(t, "vschemas/table_schema.json", true),
-		tabletType:    topodatapb.TabletType_PRIMARY,
-		sysVarEnabled: true,
-		version:       Gen4,
+	vschema := &vschemawrapper.VSchemaWrapper{
+		V:             loadSchema(t, "vschemas/table_schema.json", true),
+		TabletType_:   topodatapb.TabletType_PRIMARY,
+		SysVarEnabled: true,
+		Version:       Gen4,
 	}
 	output := makeTestOutput(t)
 	testTableFile(t, "table_onecase.json", output, vschema, false)
@@ -64,7 +65,7 @@ func TestPrintSplitTable(t *testing.T) {
 	printTableFile(t, "table_aggr_cases.json")
 }
 
-func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemaWrapper, render bool) {
+func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemawrapper.VSchemaWrapper, render bool) {
 	opts := jsondiff.DefaultConsoleOptions()
 
 	t.Run(filename, func(t *testing.T) {
@@ -81,7 +82,7 @@ func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemaWrapp
 				Comment: testName,
 				Query:   tcase.Query,
 			}
-			out, _ := getPlanOutput(tcase, vschema, render)
+			out := getPlanOutput(tcase, vschema, render)
 
 			// our expectation for the planner on the query is one of three
 			// - produces same plan as expected

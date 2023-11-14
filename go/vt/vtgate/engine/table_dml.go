@@ -8,7 +8,6 @@ import (
 
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
-	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -29,8 +28,11 @@ type TableDML struct {
 	// KsidLength is number of columns that represents KsidVindex
 	KsidLength int
 
-	// Table specifies the table for the update.
-	Table []*vindexes.Table
+	// TableNames are the name of the tables involved in the query.
+	TableNames []string
+
+	// Vindexes are the column vindexes modified by this DML.
+	Vindexes []*vindexes.ColumnVindex
 
 	// Option to override the standard behavior and allow a multi-shard update
 	// to use single round trip autocommit.
@@ -87,7 +89,7 @@ func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primiti
 	}
 
 	for _, field := range result.Fields {
-		field.Table = dml.TableRouteParam.LogicTable[dml.Table[0].Name.String()].LogicTableName
+		field.Table = dml.TableRouteParam.LogicTable[dml.TableNames[0]].LogicTableName
 	}
 	return result, nil
 }
@@ -101,28 +103,16 @@ func (dml *TableDML) GetKeyspaceName() string {
 }
 
 func (dml *TableDML) GetTableName() string {
-	if dml.Table != nil {
-		tableNameMap := map[string]any{}
-		for _, table := range dml.Table {
-			tableNameMap[table.Name.String()] = nil
-		}
-
-		var tableNames []string
-		for name := range tableNameMap {
+	sort.Strings(dml.TableNames)
+	var tableNames []string
+	var previousTbl string
+	for _, name := range dml.TableNames {
+		if name != previousTbl {
 			tableNames = append(tableNames, name)
+			previousTbl = name
 		}
-		sort.Strings(tableNames)
-
-		return strings.Join(tableNames, ", ")
 	}
-	return ""
-}
-
-func (dml *TableDML) GetSingleTable() (*vindexes.Table, error) {
-	if len(dml.Table) > 1 {
-		return nil, vterrors.Errorf(vtrpcpb.Code_UNIMPLEMENTED, "unsupported dml on complex table expression")
-	}
-	return dml.Table[0], nil
+	return strings.Join(tableNames, ", ")
 }
 
 func (dml *TableDML) getSplitQueries(bindVars map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) error {

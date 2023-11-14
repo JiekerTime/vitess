@@ -51,6 +51,10 @@ var _ SessionActions = (*noopVCursor)(nil)
 type noopVCursor struct {
 }
 
+func (t *noopVCursor) Commit(ctx context.Context) error {
+	return nil
+}
+
 func (t *noopVCursor) GetUDV(key string) *querypb.BindVariable {
 	// TODO implement me
 	panic("implement me")
@@ -90,6 +94,10 @@ func (t *noopVCursor) ReleaseLock(context.Context) error {
 }
 
 func (t *noopVCursor) SetExec(ctx context.Context, name string, value string) error {
+	panic("implement me")
+}
+
+func (t *noopVCursor) ThrottleApp(ctx context.Context, throttleAppRule *topodatapb.ThrottledAppRule) error {
 	panic("implement me")
 }
 
@@ -152,6 +160,14 @@ func (t *noopVCursor) SetDDLStrategy(strategy string) {
 }
 
 func (t *noopVCursor) GetDDLStrategy() string {
+	return ""
+}
+
+func (t *noopVCursor) SetMigrationContext(migrationContext string) {
+	panic("implement me")
+}
+
+func (t *noopVCursor) GetMigrationContext() string {
 	panic("implement me")
 }
 
@@ -379,6 +395,15 @@ type loggingVCursor struct {
 	ksShardMap map[string][]string
 
 	shardSession []*srvtopo.ResolvedShard
+}
+
+func (f *loggingVCursor) HasCreatedTempTable() {
+	f.log = append(f.log, "temp table getting created")
+}
+
+func (f *loggingVCursor) Commit(_ context.Context) error {
+	f.log = append(f.log, "commit")
+	return nil
 }
 
 func (f *loggingVCursor) GetUDV(key string) *querypb.BindVariable {

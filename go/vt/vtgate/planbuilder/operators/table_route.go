@@ -94,42 +94,44 @@ func (r *TableRoute) AddPredicate(ctx *plancontext.PlanningContext, expr sqlpars
 	return r, err
 }
 
-func (r *TableRoute) AddColumn(ctx *plancontext.PlanningContext, expr *sqlparser.AliasedExpr, _, addToGroupBy bool) (ops.Operator, int, error) {
-	// check if columns is already added.
-	cols, err := r.GetColumns()
-	if err != nil {
-		return nil, 0, err
-	}
-	colAsExpr := func(e *sqlparser.AliasedExpr) sqlparser.Expr {
-		return e.Expr
-	}
-	if offset, found := canReuseColumn(ctx, cols, expr.Expr, colAsExpr); found {
-		return r, offset, nil
+func (r *TableRoute) AddColumn(ctx *plancontext.PlanningContext, reuse bool, gb bool, expr *sqlparser.AliasedExpr) (int, error) {
+	removeKeyspaceFromSelectExpr(expr)
+
+	if reuse {
+		offset, err := r.FindCol(ctx, expr.Expr, true)
+		if err != nil {
+			return 0, err
+		}
+		if offset != -1 {
+			return offset, nil
+		}
 	}
 
-	// if column is not already present, we check if we can easily find a projection
+	// if at least one column is not already present, we check if we can easily find a projection
 	// or aggregation in our source that we can add to
-	if ok, offset := addColumnToInput(r.Source, expr, addToGroupBy); ok {
-		return r, offset, nil
+	op, ok, offsets := addMultipleColumnsToInput(ctx, r.Source, reuse, []bool{gb}, []*sqlparser.AliasedExpr{expr})
+	r.Source = op
+	if ok {
+		return offsets[0], nil
 	}
 
 	// If no-one could be found, we probably don't have one yet, so we add one here
-	src, err := createProjection(r.Source)
+	src, err := createProjection(ctx, r.Source)
 	if err != nil {
-		return nil, 0, err
+		return 0, err
 	}
 	r.Source = src
 
-	// And since we are under the route, we don't need to continue pushing anything further down
-	offset := src.addColumnWithoutPushing(expr, false)
-	if err != nil {
-		return nil, 0, err
-	}
-	return r, offset, nil
+	offsets, _ = src.addColumnsWithoutPushing(ctx, reuse, []bool{gb}, []*sqlparser.AliasedExpr{expr})
+	return offsets[0], nil
 }
 
-func (r *TableRoute) GetColumns() ([]*sqlparser.AliasedExpr, error) {
-	return r.Source.GetColumns()
+func (r *TableRoute) FindCol(ctx *plancontext.PlanningContext, expr sqlparser.Expr, _ bool) (int, error) {
+	return r.Source.FindCol(ctx, expr, true)
+}
+
+func (r *TableRoute) GetColumns(ctx *plancontext.PlanningContext) ([]*sqlparser.AliasedExpr, error) {
+	return r.Source.GetColumns(ctx)
 }
 
 func (r *TableRoute) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
@@ -165,20 +167,18 @@ func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
 		return err
 	}
 
-	columns, err := r.Source.GetColumns()
-	if err != nil {
-		return err
-	}
-
 	for _, order := range ordering {
 		if isSpecialOrderBy(order) {
 			continue
 		}
-		offset, err := r.getOffsetFor(ctx, order, columns)
+		offset, err := r.AddColumn(ctx, true, false, aeWrap(order.SimplifiedExpr))
 		if err != nil {
 			return err
 		}
 
+		if err != nil {
+			return err
+		}
 		o := RouteOrdering{
 			AST:       order.Inner.Expr,
 			Offset:    offset,
@@ -186,8 +186,8 @@ func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
 			Direction: order.Inner.Direction,
 		}
 		if ctx.SemTable.NeedsWeightString(order.SimplifiedExpr) {
-			wrap := aeWrap(weightStringFor(order.SimplifiedExpr))
-			_, offset, err = r.AddColumn(ctx, wrap, true, false)
+			ws := weightStringFor(order.SimplifiedExpr)
+			offset, err := r.AddColumn(ctx, true, false, aeWrap(ws))
 			if err != nil {
 				return err
 			}
@@ -197,30 +197,6 @@ func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
 	}
 
 	return nil
-}
-
-func (r *TableRoute) getOffsetFor(ctx *plancontext.PlanningContext, order ops.OrderBy, columns []*sqlparser.AliasedExpr) (int, error) {
-	for idx, column := range columns {
-		if sqlparser.Equals.Expr(order.SimplifiedExpr, column.Expr) {
-			return idx, nil
-		}
-	}
-
-	_, offset, err := r.AddColumn(ctx, aeWrap(order.Inner.Expr), true, false)
-	if err != nil {
-		return 0, err
-	}
-	return offset, nil
-}
-
-func (r *TableRoute) Description() ops.OpDescription {
-	return ops.OpDescription{
-		OperatorType: "TableRoute",
-		Other: map[string]any{
-			"OpCode":   r.Routing.OpCode(),
-			"Keyspace": r.Routing.Keyspace(),
-		},
-	}
 }
 
 func (r *TableRoute) ShortDescription() string {

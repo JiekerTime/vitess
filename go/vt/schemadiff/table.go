@@ -25,6 +25,8 @@ import (
 
 	golcs "github.com/yudai/golcs"
 
+	"vitess.io/vitess/go/mysql/collations/colldata"
+
 	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/vt/sqlparser"
 )
@@ -392,7 +394,7 @@ const mysqlCollationVersion = "8.0.0"
 var collationEnv = collations.NewEnvironment(mysqlCollationVersion)
 
 func defaultCharset() string {
-	collation := collations.ID(collationEnv.DefaultConnectionCharset()).Get()
+	collation := colldata.Lookup(collations.ID(collationEnv.DefaultConnectionCharset()))
 	if collation == nil {
 		return ""
 	}
@@ -401,10 +403,10 @@ func defaultCharset() string {
 
 func defaultCharsetCollation(charset string) string {
 	collation := collationEnv.DefaultCollationForCharset(charset)
-	if collation == nil {
+	if collation == collations.Unknown {
 		return ""
 	}
-	return collation.Name()
+	return collationEnv.LookupName(collation)
 }
 
 func (c *CreateTableEntity) normalizeColumnOptions() {
@@ -457,6 +459,7 @@ func (c *CreateTableEntity) normalizeColumnOptions() {
 			// See also https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html
 			if _, ok := col.Type.Options.Default.(*sqlparser.NullVal); ok {
 				col.Type.Options.Default = nil
+				col.Type.Options.DefaultLiteral = false
 			}
 		}
 
@@ -507,6 +510,7 @@ func (c *CreateTableEntity) normalizeColumnOptions() {
 						Type: sqlparser.StrVal,
 						Val:  defaultVal,
 					}
+					col.Type.Options.DefaultLiteral = true
 				} else {
 					col.Type.Options.Default = nil
 				}
@@ -1281,11 +1285,14 @@ func (c *CreateTableEntity) diffConstraints(alterTable *sqlparser.AlterTable,
 	}
 	t1ConstraintsMap := map[string]*sqlparser.ConstraintDefinition{}
 	t2ConstraintsMap := map[string]*sqlparser.ConstraintDefinition{}
+	t2ConstraintsCountMap := map[string]int{}
 	for _, constraint := range t1Constraints {
 		t1ConstraintsMap[normalizeConstraintName(t1Name, constraint)] = constraint
 	}
 	for _, constraint := range t2Constraints {
-		t2ConstraintsMap[normalizeConstraintName(t2Name, constraint)] = constraint
+		constraintName := normalizeConstraintName(t2Name, constraint)
+		t2ConstraintsMap[constraintName] = constraint
+		t2ConstraintsCountMap[constraintName]++
 	}
 
 	dropConstraintStatement := func(constraint *sqlparser.ConstraintDefinition) *sqlparser.DropKey {
@@ -1298,12 +1305,22 @@ func (c *CreateTableEntity) diffConstraints(alterTable *sqlparser.AlterTable,
 	// evaluate dropped constraints
 	//
 	for _, t1Constraint := range t1Constraints {
-		if _, ok := t2ConstraintsMap[normalizeConstraintName(t1Name, t1Constraint)]; !ok {
+		// Due to how we normalize the constraint string (e.g. in ConstraintNamesIgnoreAll we
+		// completely discard the constraint name), it's possible to have multiple constraints under
+		// the same string. Effectively, this means the schema design has duplicate/redundant constraints,
+		// which of course is poor design -- but still valid.
+		// To deal with dropping constraints, we need to not only account for the _existence_ of a constraint,
+		// but also to _how many times_ it appears.
+		constraintName := normalizeConstraintName(t1Name, t1Constraint)
+		if t2ConstraintsCountMap[constraintName] == 0 {
 			// constraint exists in t1 but not in t2, hence it is dropped
 			dropConstraint := dropConstraintStatement(t1Constraint)
 			alterTable.AlterOptions = append(alterTable.AlterOptions, dropConstraint)
+		} else {
+			t2ConstraintsCountMap[constraintName]--
 		}
 	}
+	// t2ConstraintsCountMap should not be used henceforth.
 
 	for _, t2Constraint := range t2Constraints {
 		normalizedT2ConstraintName := normalizeConstraintName(t2Name, t2Constraint)
@@ -2046,8 +2063,10 @@ func (c *CreateTableEntity) apply(diff *AlterTableEntityDiff) error {
 					found = true
 					if opt.DropDefault {
 						col.Type.Options.Default = nil
+						col.Type.Options.DefaultLiteral = false
 					} else if opt.DefaultVal != nil {
 						col.Type.Options.Default = opt.DefaultVal
+						col.Type.Options.DefaultLiteral = opt.DefaultLiteral
 					}
 					col.Type.Options.Invisible = opt.Invisible
 					break

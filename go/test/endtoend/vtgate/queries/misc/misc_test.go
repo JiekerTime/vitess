@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -37,7 +36,7 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 	require.NoError(t, err)
 
 	deleteAll := func() {
-		tables := []string{"t1"}
+		tables := []string{"t1", "uks.unsharded"}
 		for _, table := range tables {
 			_, _ = mcmp.ExecAndIgnore("delete from " + table)
 		}
@@ -213,10 +212,12 @@ func TestHighNumberOfParams(t *testing.T) {
 	// connect to the vitess cluster
 	db, err := sql.Open("mysql", fmt.Sprintf("@tcp(%s:%v)/%s", vtParams.Host, vtParams.Port, vtParams.DbName))
 	require.NoError(t, err)
+	defer db.Close()
 
 	// run the query
-	r, err := db.Query(fmt.Sprintf("SELECT /*vt+ QUERY_TIMEOUT_MS=10000 */ id1 FROM t1 WHERE id1 in (%s) ORDER BY id1 ASC", strings.Join(params, ", ")), vals...)
+	r, err := db.Query(fmt.Sprintf("SELECT id1 FROM t1 WHERE id1 in (%s) ORDER BY id1 ASC", strings.Join(params, ", ")), vals...)
 	require.NoError(t, err)
+	defer r.Close()
 
 	// check the results we got, we should get 5 rows with each: 0, 1, 2, 3, 4
 	// count is the row number we are currently visiting, also correspond to the
@@ -288,12 +289,35 @@ func TestPrepareStatements(t *testing.T) {
 	assert.ErrorContains(t, err, "VT09011: Unknown prepared statement handler (prep_art) given to DEALLOCATE PREPARE")
 }
 
+// TestBuggyOuterJoin validates inconsistencies around outer joins, adding these tests to stop regressions.
 func TestBuggyOuterJoin(t *testing.T) {
-	// We found a couple of inconsistencies around outer joins, adding these tests to stop regressions
 	mcmp, closer := start(t)
 	defer closer()
 
 	mcmp.Exec("insert into t1(id1, id2) values (1,2), (42,5), (5, 42)")
 
 	mcmp.Exec("select t1.id1, t2.id1 from t1 left join t1 as t2 on t2.id1 = t2.id2")
+}
+
+func TestLeftJoinUsingUnsharded(t *testing.T) {
+	mcmp, closer := start(t)
+	defer closer()
+
+	utils.Exec(t, mcmp.VtConn, "insert into uks.unsharded(id1) values (1),(2),(3),(4),(5)")
+	utils.Exec(t, mcmp.VtConn, "select * from uks.unsharded as A left join uks.unsharded as B using(id1)")
+}
+
+// TestAnalyze executes different analyze statement and validates that they run successfully.
+func TestAnalyze(t *testing.T) {
+	mcmp, closer := start(t)
+	defer closer()
+
+	for _, workload := range []string{"olap", "oltp"} {
+		t.Run(workload, func(t *testing.T) {
+			utils.Exec(t, mcmp.VtConn, fmt.Sprintf("set workload = %s", workload))
+			utils.Exec(t, mcmp.VtConn, "analyze table t1")
+			utils.Exec(t, mcmp.VtConn, "analyze table uks.unsharded")
+			utils.Exec(t, mcmp.VtConn, "analyze table mysql.user")
+		})
+	}
 }

@@ -41,17 +41,20 @@ var (
 	//go:embed mysqlctld.txt
 	mysqlctldTxt string
 
+	//go:embed topo2topo.txt
+	topo2topoTxt string
+
 	//go:embed vtaclcheck.txt
 	vtaclcheckTxt string
+
+	//go:embed vtcombo.txt
+	vtcomboTxt string
 
 	//go:embed vtexplain.txt
 	vtexplainTxt string
 
 	//go:embed vtgate.txt
 	vtgateTxt string
-
-	//go:embed vtgr.txt
-	vtgrTxt string
 
 	//go:embed vttablet.txt
 	vttabletTxt string
@@ -71,6 +74,9 @@ var (
 	//go:embed vtctldclient.txt
 	vtctldclientTxt string
 
+	//go:embed vtgateclienttest.txt
+	vtgateclienttestTxt string
+
 	//go:embed vttestserver.txt
 	vttestserverTxt string
 
@@ -87,23 +93,25 @@ var (
 	zkTxt string
 
 	helpOutput = map[string]string{
-		"mysqlctl":     mysqlctlTxt,
-		"mysqlctld":    mysqlctldTxt,
-		"vtaclcheck":   vtaclcheckTxt,
-		"vtexplain":    vtexplainTxt,
-		"vtgate":       vtgateTxt,
-		"vtgr":         vtgrTxt,
-		"vttablet":     vttabletTxt,
-		"vttlstest":    vttlstestTxt,
-		"vtctld":       vtctldTxt,
-		"vtctlclient":  vtctlclientTxt,
-		"vtctldclient": vtctldclientTxt,
-		"vtorc":        vtorcTxt,
-		"vttestserver": vttestserverTxt,
-		"zkctld":       zkctldTxt,
-		"vtbackup":     vtbackupTxt,
-		"zk":           zkTxt,
-		"zkctl":        zkctlTxt,
+		"mysqlctl":         mysqlctlTxt,
+		"mysqlctld":        mysqlctldTxt,
+		"topo2topo":        topo2topoTxt,
+		"vtaclcheck":       vtaclcheckTxt,
+		"vtbackup":         vtbackupTxt,
+		"vtcombo":          vtcomboTxt,
+		"vtctlclient":      vtctlclientTxt,
+		"vtctld":           vtctldTxt,
+		"vtctldclient":     vtctldclientTxt,
+		"vtexplain":        vtexplainTxt,
+		"vtgate":           vtgateTxt,
+		"vtgateclienttest": vtgateclienttestTxt,
+		"vtorc":            vtorcTxt,
+		"vttablet":         vttabletTxt,
+		"vttestserver":     vttestserverTxt,
+		"vttlstest":        vttlstestTxt,
+		"zk":               zkTxt,
+		"zkctl":            zkctlTxt,
+		"zkctld":           zkctldTxt,
 	}
 )
 

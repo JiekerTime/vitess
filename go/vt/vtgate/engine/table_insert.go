@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"vitess.io/vitess/go/vt/sqlparser"
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
@@ -50,9 +51,6 @@ func (ins *Insert) getInsertTableShardedRoute(
 	rowCount := 0
 	env := evalengine.NewExpressionEnv(ctx, bindVars, vcursor)
 	colVindexes := ins.ColVindexes
-	if colVindexes == nil {
-		colVindexes = ins.Table.ColumnVindexes
-	}
 	for vIdx, vColValues := range ins.VindexValues {
 		if len(vColValues) != len(colVindexes[vIdx].Columns) {
 			return nil, nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] supplied vindex column values don't match vschema: %v %v", vColValues, colVindexes[vIdx].Columns)
@@ -91,7 +89,7 @@ func (ins *Insert) getInsertTableShardedRoute(
 	// results in an error. For 'ignore' type inserts, the keyspace
 	// id is returned as nil, which is used later to drop the corresponding rows.
 	if len(vindexRowsValues) == 0 || len(colVindexes) == 0 {
-		return nil, nil, vterrors.NewErrorf(vtrpcpb.Code_FAILED_PRECONDITION, vterrors.RequiresPrimaryKey, vterrors.PrimaryVindexNotSet, ins.Table.Name)
+		return nil, nil, vterrors.NewErrorf(vtrpcpb.Code_FAILED_PRECONDITION, vterrors.RequiresPrimaryKey, vterrors.PrimaryVindexNotSet, ins.TableName)
 	}
 	keyspaceIDs, err := ins.processPrimary(ctx, vcursor, vindexRowsValues[0], colVindexes[0])
 	if err != nil {
@@ -179,7 +177,7 @@ func (ins *Insert) getInsertTableShardedRoute(
 				if _, ok := mids[tableName]; !ok {
 					sortedKeys = append(sortedKeys, tableName)
 				}
-				mids[actualTables[index].ActualTableName] = append(mids[actualTables[index].ActualTableName], ins.Mid[index])
+				mids[actualTables[index].ActualTableName] = append(mids[actualTables[index].ActualTableName], sqlparser.String(ins.Mid[index]))
 			}
 		}
 		sort.Strings(sortedKeys) // 对表名进行排序

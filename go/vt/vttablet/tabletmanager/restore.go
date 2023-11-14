@@ -24,6 +24,9 @@ import (
 
 	"github.com/spf13/pflag"
 
+	"vitess.io/vitess/go/mysql/replication"
+	"vitess.io/vitess/go/protoutil"
+
 	"vitess.io/vitess/go/stats"
 
 	"vitess.io/vitess/go/mysql"
@@ -68,7 +71,18 @@ func registerRestoreFlags(fs *pflag.FlagSet) {
 }
 
 var (
-	// Flags for PITR
+	// Flags for incremental restore (PITR) - new iteration
+	restoreToTimestampStr string
+	restoreToPos          string
+)
+
+func registerIncrementalRestoreFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&restoreToTimestampStr, "restore-to-timestamp", restoreToTimestampStr, "(init incremental restore parameter) if set, run a point in time recovery that restores up to the given timestamp, if possible. Given timestamp in RFC3339 format. Example: '2006-01-02T15:04:05Z07:00'")
+	fs.StringVar(&restoreToPos, "restore-to-pos", restoreToPos, "(init incremental restore parameter) if set, run a point in time recovery that ends with the given position. This will attempt to use one full backup followed by zero or more incremental backups")
+}
+
+var (
+	// Flags for PITR - old iteration
 	binlogHost           string
 	binlogPort           int
 	binlogUser           string
@@ -96,6 +110,9 @@ func init() {
 	servenv.OnParseFor("vtcombo", registerRestoreFlags)
 	servenv.OnParseFor("vttablet", registerRestoreFlags)
 
+	servenv.OnParseFor("vtcombo", registerIncrementalRestoreFlags)
+	servenv.OnParseFor("vttablet", registerIncrementalRestoreFlags)
+
 	servenv.OnParseFor("vtcombo", registerPointInTimeRestoreFlags)
 	servenv.OnParseFor("vttablet", registerPointInTimeRestoreFlags)
 
@@ -107,7 +124,14 @@ func init() {
 // It will either work, fail gracefully, or return
 // an error in case of a non-recoverable error.
 // It takes the action lock so no RPC interferes.
-func (tm *TabletManager) RestoreData(ctx context.Context, logger logutil.Logger, waitForBackupInterval time.Duration, deleteBeforeRestore bool, backupTime time.Time) error {
+func (tm *TabletManager) RestoreData(
+	ctx context.Context,
+	logger logutil.Logger,
+	waitForBackupInterval time.Duration,
+	deleteBeforeRestore bool,
+	backupTime time.Time,
+	restoreToTimetamp time.Time,
+	restoreToPos string) error {
 	if err := tm.lock(ctx); err != nil {
 		return err
 	}
@@ -152,7 +176,9 @@ func (tm *TabletManager) RestoreData(ctx context.Context, logger logutil.Logger,
 	startTime = time.Now()
 
 	req := &tabletmanagerdatapb.RestoreFromBackupRequest{
-		BackupTime: logutil.TimeToProto(backupTime),
+		BackupTime:         protoutil.TimeToProto(backupTime),
+		RestoreToPos:       restoreToPos,
+		RestoreToTimestamp: protoutil.TimeToProto(restoreToTimetamp),
 	}
 	err = tm.restoreDataLocked(ctx, logger, waitForBackupInterval, deleteBeforeRestore, req)
 	if err != nil {
@@ -182,12 +208,12 @@ func (tm *TabletManager) restoreDataLocked(ctx context.Context, logger logutil.L
 			return vterrors.New(vtrpcpb.Code_INVALID_ARGUMENT, fmt.Sprintf("snapshot keyspace %v has no base_keyspace set", tablet.Keyspace))
 		}
 		keyspace = keyspaceInfo.BaseKeyspace
-		log.Infof("Using base_keyspace %v to restore keyspace %v using a backup time of %v", keyspace, tablet.Keyspace, logutil.ProtoToTime(request.BackupTime))
+		log.Infof("Using base_keyspace %v to restore keyspace %v using a backup time of %v", keyspace, tablet.Keyspace, protoutil.TimeFromProto(request.BackupTime).UTC())
 	}
 
-	startTime := logutil.ProtoToTime(request.BackupTime)
+	startTime := protoutil.TimeFromProto(request.BackupTime).UTC()
 	if startTime.IsZero() {
-		startTime = logutil.ProtoToTime(keyspaceInfo.SnapshotTime)
+		startTime = protoutil.TimeFromProto(keyspaceInfo.SnapshotTime).UTC()
 	}
 
 	params := mysqlctl.RestoreParams{
@@ -204,12 +230,20 @@ func (tm *TabletManager) restoreDataLocked(ctx context.Context, logger logutil.L
 		DryRun:              request.DryRun,
 		Stats:               backupstats.RestoreStats(),
 	}
+	restoreToTimestamp := protoutil.TimeFromProto(request.RestoreToTimestamp).UTC()
+	if request.RestoreToPos != "" && !restoreToTimestamp.IsZero() {
+		return vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "--restore-to-pos and --restore-to-timestamp are mutually exclusive")
+	}
 	if request.RestoreToPos != "" {
-		pos, err := mysql.DecodePosition(request.RestoreToPos)
+		pos, err := replication.DecodePosition(request.RestoreToPos)
 		if err != nil {
-			return vterrors.Wrapf(err, "restore failed: unable to decode --restore_to_pos: %s", request.RestoreToPos)
+			return vterrors.Wrapf(err, "restore failed: unable to decode --restore-to-pos: %s", request.RestoreToPos)
 		}
 		params.RestoreToPos = pos
+	}
+	if !restoreToTimestamp.IsZero() {
+		// Restore to given timestamp
+		params.RestoreToTimestamp = restoreToTimestamp
 	}
 	params.Logger.Infof("Restore: original tablet type=%v", originalType)
 
@@ -236,7 +270,7 @@ func (tm *TabletManager) restoreDataLocked(ctx context.Context, logger logutil.L
 	for {
 		backupManifest, err = mysqlctl.Restore(ctx, params)
 		if backupManifest != nil {
-			statsRestoreBackupPosition.Set(mysql.EncodePosition(backupManifest.Position))
+			statsRestoreBackupPosition.Set(replication.EncodePosition(backupManifest.Position))
 			statsRestoreBackupTime.Set(backupManifest.BackupTime)
 		}
 		params.Logger.Infof("Restore: got a restore manifest: %v, err=%v, waitForBackupInterval=%v", backupManifest, err, waitForBackupInterval)
@@ -256,10 +290,10 @@ func (tm *TabletManager) restoreDataLocked(ctx context.Context, logger logutil.L
 		}
 	}
 
-	var pos mysql.Position
+	var pos replication.Position
 	if backupManifest != nil {
 		pos = backupManifest.Position
-		params.Logger.Infof("Restore: pos=%v", mysql.EncodePosition(pos))
+		params.Logger.Infof("Restore: pos=%v", replication.EncodePosition(pos))
 	}
 	// If SnapshotTime is set , then apply the incremental change
 	if keyspaceInfo.SnapshotTime != nil {
@@ -329,7 +363,7 @@ func (tm *TabletManager) restoreDataLocked(ctx context.Context, logger logutil.L
 
 // restoreToTimeFromBinlog restores to the snapshot time of the keyspace
 // currently this works with mysql based database only (as it uses mysql specific queries for restoring)
-func (tm *TabletManager) restoreToTimeFromBinlog(ctx context.Context, pos mysql.Position, restoreTime *vttime.Time) error {
+func (tm *TabletManager) restoreToTimeFromBinlog(ctx context.Context, pos replication.Position, restoreTime *vttime.Time) error {
 	// validate the minimal settings necessary for connecting to binlog server
 	if binlogHost == "" || binlogPort <= 0 || binlogUser == "" {
 		log.Warning("invalid binlog server setting, restoring to last available backup.")
@@ -369,7 +403,7 @@ func (tm *TabletManager) restoreToTimeFromBinlog(ctx context.Context, pos mysql.
 // beforePos is the GTID of the last event before restoreTime. This is the GTID upto which replication will be applied
 // afterPos can be used directly in the query `START SLAVE UNTIL SQL_BEFORE_GTIDS = ”`
 // beforePos will be used to check if replication was able to catch up from the binlog server
-func (tm *TabletManager) getGTIDFromTimestamp(ctx context.Context, pos mysql.Position, restoreTime int64) (afterPos string, beforePos string, err error) {
+func (tm *TabletManager) getGTIDFromTimestamp(ctx context.Context, pos replication.Position, restoreTime int64) (afterPos string, beforePos string, err error) {
 	connParams := &mysql.ConnParams{
 		Host:       binlogHost,
 		Port:       binlogPort,
@@ -412,11 +446,11 @@ func (tm *TabletManager) getGTIDFromTimestamp(ctx context.Context, pos mysql.Pos
 	gtidsChan := make(chan []string, 1)
 
 	go func() {
-		err := vsClient.VStream(ctx, mysql.EncodePosition(pos), filter, func(events []*binlogdatapb.VEvent) error {
+		err := vsClient.VStream(ctx, replication.EncodePosition(pos), filter, func(events []*binlogdatapb.VEvent) error {
 			for _, event := range events {
 				if event.Gtid != "" {
 					// check if we reached the lastPos then return
-					eventPos, err := mysql.DecodePosition(event.Gtid)
+					eventPos, err := replication.DecodePosition(event.Gtid)
 					if err != nil {
 						return err
 					}
@@ -459,14 +493,14 @@ func (tm *TabletManager) getGTIDFromTimestamp(ctx context.Context, pos mysql.Pos
 func (tm *TabletManager) catchupToGTID(ctx context.Context, afterGTIDPos string, beforeGTIDPos string) error {
 	var afterGTIDStr string
 	if afterGTIDPos != "" {
-		afterGTIDParsed, err := mysql.DecodePosition(afterGTIDPos)
+		afterGTIDParsed, err := replication.DecodePosition(afterGTIDPos)
 		if err != nil {
 			return err
 		}
 		afterGTIDStr = afterGTIDParsed.GTIDSet.Last()
 	}
 
-	beforeGTIDPosParsed, err := mysql.DecodePosition(beforeGTIDPos)
+	beforeGTIDPosParsed, err := replication.DecodePosition(beforeGTIDPos)
 	if err != nil {
 		return err
 	}
@@ -565,7 +599,7 @@ func (tm *TabletManager) disableReplication(ctx context.Context) error {
 	return nil
 }
 
-func (tm *TabletManager) startReplication(ctx context.Context, pos mysql.Position, tabletType topodatapb.TabletType) error {
+func (tm *TabletManager) startReplication(ctx context.Context, pos replication.Position, tabletType topodatapb.TabletType) error {
 	cmds := []string{
 		"STOP SLAVE",
 		"RESET SLAVE ALL", // "ALL" makes it forget primary host:port.
@@ -605,7 +639,7 @@ func (tm *TabletManager) startReplication(ctx context.Context, pos mysql.Positio
 		log.Warningf("Can't get primary replication position after restore: %v", err)
 		return nil
 	}
-	primaryPos, err := mysql.DecodePosition(posStr)
+	primaryPos, err := replication.DecodePosition(posStr)
 	if err != nil {
 		return vterrors.Wrapf(err, "can't decode primary replication position: %q", posStr)
 	}
@@ -628,18 +662,4 @@ func (tm *TabletManager) startReplication(ctx context.Context, pos mysql.Positio
 	}
 
 	return nil
-}
-
-func (tm *TabletManager) getLocalMetadataValues(tabletType topodatapb.TabletType) map[string]string {
-	tablet := tm.Tablet()
-	values := map[string]string{
-		"Alias":         topoproto.TabletAliasString(tablet.Alias),
-		"ClusterAlias":  fmt.Sprintf("%s.%s", tablet.Keyspace, tablet.Shard),
-		"DataCenter":    tablet.Alias.Cell,
-		"PromotionRule": "must_not",
-	}
-	if isPrimaryEligible(tabletType) {
-		values["PromotionRule"] = "neutral"
-	}
-	return values
 }
