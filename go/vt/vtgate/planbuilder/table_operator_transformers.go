@@ -296,10 +296,7 @@ func transformInsertPlanForSplitTable(ctx *plancontext.PlanningContext, op *oper
 	if ins.Input == nil {
 		eins.Query = generateQuery(eins.AST)
 	} else {
-		//i.source, err = transformToLogicalPlan(ctx, ins.Input, true)
-		//if err != nil {
-		//	return
-		//}
+		return nil, vterrors.VT12001("Unsupport split table insert into select")
 	}
 	return
 }

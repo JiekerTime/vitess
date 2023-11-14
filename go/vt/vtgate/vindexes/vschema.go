@@ -195,23 +195,23 @@ func (col *Column) MarshalJSON() ([]byte, error) {
 
 // KeyspaceSchema contains the schema(table) for a keyspace.
 type KeyspaceSchema struct {
-	Keyspace       *Keyspace
-	ForeignKeyMode vschemapb.Keyspace_ForeignKeyMode
-	Tables         map[string]*Table
-	Vindexes       map[string]Vindex
-	Views          map[string]sqlparser.SelectStatement
-	Error          error
+	Keyspace           *Keyspace
+	ForeignKeyMode     vschemapb.Keyspace_ForeignKeyMode
+	Tables             map[string]*Table
+	Vindexes           map[string]Vindex
+	Views              map[string]sqlparser.SelectStatement
+	Error              error
 	SplitTableTables   map[string]*LogicTableConfig
 	SplitTableVindexes map[string]Vindex
 }
 
 type ksJSON struct {
-	Sharded        bool              `json:"sharded,omitempty"`
-	ForeignKeyMode string            `json:"foreignKeyMode,omitempty"`
-	Tables         map[string]*Table `json:"tables,omitempty"`
-	Vindexes       map[string]Vindex `json:"vindexes,omitempty"`
-	Views          map[string]string `json:"views,omitempty"`
-	Error          string            `json:"error,omitempty"`
+	Sharded            bool                         `json:"sharded,omitempty"`
+	ForeignKeyMode     string                       `json:"foreignKeyMode,omitempty"`
+	Tables             map[string]*Table            `json:"tables,omitempty"`
+	Vindexes           map[string]Vindex            `json:"vindexes,omitempty"`
+	Views              map[string]string            `json:"views,omitempty"`
+	Error              string                       `json:"error,omitempty"`
 	SplitTableTables   map[string]*LogicTableConfig `json:"splitable_tables,omitempty"`
 	SplitTableVindexes map[string]Vindex            `json:"splittable_vindexes,omitempty"`
 }
@@ -242,10 +242,10 @@ func (ks *KeyspaceSchema) findTable(
 // MarshalJSON returns a JSON representation of KeyspaceSchema.
 func (ks *KeyspaceSchema) MarshalJSON() ([]byte, error) {
 	ksJ := ksJSON{
-		Sharded:        ks.Keyspace.Sharded,
-		Tables:         ks.Tables,
-		ForeignKeyMode: ks.ForeignKeyMode.String(),
-		Vindexes:       ks.Vindexes,
+		Sharded:            ks.Keyspace.Sharded,
+		Tables:             ks.Tables,
+		ForeignKeyMode:     ks.ForeignKeyMode.String(),
+		Vindexes:           ks.Vindexes,
 		SplitTableTables:   ks.SplitTableTables,
 		SplitTableVindexes: ks.SplitTableVindexes,
 	}

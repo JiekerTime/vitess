@@ -7,6 +7,7 @@ import (
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
@@ -57,9 +58,10 @@ func TestInsertTableShardedSimple(t *testing.T) {
 				evalengine.NewLiteralInt(1),
 			},
 		}},
-		Table:            ks.Tables["t1"],
-		Prefix:           "prefix t1",
-		Mid:              []string{" mid1"},
+		Prefix: "prefix t1",
+		Mid: sqlparser.Values{
+			{&sqlparser.Argument{Name: " mid1", Type: sqltypes.Int64}},
+		},
 		Suffix:           " suffix",
 		TableColVindexes: ks.SplitTableTables["t1"],
 		TableVindexValues: [][]evalengine.Expr{
@@ -69,6 +71,7 @@ func TestInsertTableShardedSimple(t *testing.T) {
 			},
 		},
 	}
+	ins.ColVindexes = append(ins.ColVindexes, ks.Tables["t1"].ColumnVindexes...)
 
 	vc := newDMLTestVCursor("-20", "20-")
 	vc.shardForKsid = []string{"20-", "-20", "20-"}
@@ -100,9 +103,12 @@ func TestInsertTableShardedSimple(t *testing.T) {
 				evalengine.NewLiteralInt(3),
 			},
 		}},
-		Table:            ks.Tables["t1"],
-		Prefix:           "prefix t1",
-		Mid:              []string{" mid1", " mid2", " mid3"},
+		Prefix: "prefix t1",
+		Mid: sqlparser.Values{
+			{&sqlparser.Argument{Name: " mid1", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: " mid2", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: " mid3", Type: sqltypes.Int64}},
+		},
 		Suffix:           " suffix",
 		TableColVindexes: ks.SplitTableTables["t1"],
 		TableVindexValues: [][]evalengine.Expr{
@@ -115,6 +121,7 @@ func TestInsertTableShardedSimple(t *testing.T) {
 	}
 	vc = newDMLTestVCursor("-20", "20-")
 	vc.shardForKsid = []string{"20-", "-20", "20-"}
+	ins.ColVindexes = append(ins.ColVindexes, ks.Tables["t1"].ColumnVindexes...)
 
 	_, err = ins.TryExecute(context.Background(), vc, map[string]*querypb.BindVariable{}, false)
 	if err != nil {
@@ -176,9 +183,12 @@ func TestInsertTableShardedGenerate(t *testing.T) {
 				evalengine.NewLiteralInt(3),
 			},
 		}},
-		Table:            ks.Tables["t1"],
-		Prefix:           "prefix t1",
-		Mid:              []string{" mid1", " mid2", " mid3"},
+		Prefix: "prefix t1",
+		Mid: sqlparser.Values{
+			{&sqlparser.Argument{Name: " mid1", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: " mid2", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: " mid3", Type: sqltypes.Int64}},
+		},
 		Suffix:           " suffix",
 		TableColVindexes: ks.SplitTableTables["t1"],
 		TableVindexValues: [][]evalengine.Expr{
@@ -189,6 +199,7 @@ func TestInsertTableShardedGenerate(t *testing.T) {
 			},
 		},
 	}
+	ins.ColVindexes = append(ins.ColVindexes, ks.Tables["t1"].ColumnVindexes...)
 
 	ins.Generate = &Generate{
 		Keyspace: &vindexes.Keyspace{

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
 	"vitess.io/vitess/go/vt/sqlparser"
 
 	"vitess.io/vitess/go/sqltypes"

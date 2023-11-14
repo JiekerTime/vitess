@@ -40,13 +40,11 @@ import (
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	vtctldatapb "vitess.io/vitess/go/vt/proto/vtctldata"
-	"vitess.io/vitess/go/vt/topo/memorytopo"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
-const mzUpdateQuery = "update _vt.vreplication set state='Running' where db_name='targetks' and workflow='workflow'"
-const mzSelectIDQuery = "select id from _vt.vreplication where db_name='targetks' and workflow='workflow'"
-const mzSelectFrozenQuery = "select 1 from _vt.vreplication where db_name='targetks' and message='FROZEN' and workflow_sub_type != 1"
+const mzUpdateQuery = "update _vt.vreplication set state='Running' where db_name='vt_targetks' and workflow='workflow'"
+const mzSelectIDQuery = "select id from _vt.vreplication where db_name='vt_targetks' and workflow='workflow'"
+const mzSelectFrozenQuery = "select 1 from _vt.vreplication where db_name='vt_targetks' and message='FROZEN' and workflow_sub_type != 1"
 const mzCheckJournal = "/select val from _vt.resharding_journal where id="
 
 var defaultOnDDL = binlogdatapb.OnDDLAction_IGNORE.String()
@@ -364,7 +362,7 @@ func TestCreateLookupVindexFull(t *testing.T) {
 	env.tmc.expectVRQuery(200, mzSelectFrozenQuery, &sqltypes.Result{})
 	env.tmc.expectVRQuery(200, "/CREATE TABLE `lkp`", &sqltypes.Result{})
 	env.tmc.expectVRQuery(200, insertPrefix, &sqltypes.Result{})
-	env.tmc.expectVRQuery(200, "update _vt.vreplication set state='Running' where db_name='targetks' and workflow='lkp_vdx'", &sqltypes.Result{})
+	env.tmc.expectVRQuery(200, "update _vt.vreplication set state='Running' where db_name='vt_targetks' and workflow='lkp_vdx'", &sqltypes.Result{})
 
 	err := env.wr.CreateLookupVindex(ctx, ms.SourceKeyspace, specs, "cell", "PRIMARY", false)
 	require.NoError(t, err)
@@ -1910,13 +1908,13 @@ func TestExternalizeVindex(t *testing.T) {
 			t.Fatal(err)
 		}
 		if tcase.vrResponse != nil {
-			validationQuery := "select id, state, message, source from _vt.vreplication where workflow='lkp_vdx' and db_name='targetks'"
+			validationQuery := "select id, state, message, source from _vt.vreplication where workflow='lkp_vdx' and db_name='vt_targetks'"
 			env.tmc.expectVRQuery(200, validationQuery, tcase.vrResponse)
 			env.tmc.expectVRQuery(210, validationQuery, tcase.vrResponse)
 		}
 
 		if tcase.expectDelete {
-			deleteQuery := "delete from _vt.vreplication where db_name='targetks' and workflow='lkp_vdx'"
+			deleteQuery := "delete from _vt.vreplication where db_name='vt_targetks' and workflow='lkp_vdx'"
 			env.tmc.expectVRQuery(200, deleteQuery, &sqltypes.Result{})
 			env.tmc.expectVRQuery(210, deleteQuery, &sqltypes.Result{})
 		}
@@ -1983,7 +1981,7 @@ func TestMaterializerOneToOne(t *testing.T) {
 				`rules:{match:\\"t2\\" filter:\\"select.*t3\\"} `+
 				`rules:{match:\\"t4\\"}`+
 				`}', `)+
-			`'', [0-9]*, [0-9]*, 'zone1', 'primary,rdonly', [0-9]*, 0, 'Stopped', 'targetks', 0, 0, false`+
+			`'', [0-9]*, [0-9]*, 'zone1', 'primary,rdonly', [0-9]*, 0, 'Stopped', 'vt_targetks', 0, 0, false`+
 			`\)`+eol,
 		&sqltypes.Result{},
 	)
@@ -2019,9 +2017,9 @@ func TestMaterializerManyToOne(t *testing.T) {
 	env.tmc.expectVRQuery(
 		200,
 		insertPrefix+
-			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"-80\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'targetks', 0, 0, false\)`+
+			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"-80\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'vt_targetks', 0, 0, false\)`+
 			`, `+
-			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"80-\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'targetks', 0, 0, false\)`+
+			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"80-\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'vt_targetks', 0, 0, false\)`+
 			eol,
 		&sqltypes.Result{},
 	)
@@ -2244,7 +2242,7 @@ func TestMaterializerDeploySchema(t *testing.T) {
 	env.tmc.expectVRQuery(
 		200,
 		insertPrefix+
-			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"0\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'targetks', 0, 0, false\)`+
+			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"0\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'vt_targetks', 0, 0, false\)`+
 			eol,
 		&sqltypes.Result{},
 	)
@@ -2285,7 +2283,7 @@ func TestMaterializerCopySchema(t *testing.T) {
 	env.tmc.expectVRQuery(
 		200,
 		insertPrefix+
-			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"0\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'targetks', 0, 0, false\)`+
+			`\('workflow', 'keyspace:\\"sourceks\\" shard:\\"0\\" filter:{rules:{match:\\"t1\\" filter:\\"select.*t1\\"} rules:{match:\\"t2\\" filter:\\"select.*t3\\"}}', '', [0-9]*, [0-9]*, '', '', [0-9]*, 0, 'Stopped', 'vt_targetks', 0, 0, false\)`+
 			eol,
 		&sqltypes.Result{},
 	)
@@ -3446,198 +3444,6 @@ func TestAddTablesToVSchema(t *testing.T) {
 							{
 								Column: "c1",
 								Name:   "xxhash",
-							},
-						},
-					},
-				},
-			},
-			inTargetVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {},
-					"t3": {},
-					"t4": {},
-				},
-			},
-			tables:      []string{"t1", "t2", "t3", "t4"},
-			copyVSchema: true,
-			wantTargetVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {},
-					"t3": {},
-					"t4": {},
-				},
-			},
-		},
-		{
-			name: "no target vschema; do not copy source vschema",
-			sourceVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {
-						Type: vindexes.TypeSequence,
-					},
-					"t3": {
-						AutoIncrement: &vschemapb.AutoIncrement{
-							Column:   "c1",
-							Sequence: "t2",
-						},
-					},
-				},
-			},
-			inTargetVSchema: &vschemapb.Keyspace{},
-			tables:          []string{"t1", "t2"},
-			copyVSchema:     false,
-			wantTargetVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {},
-					"t2": {},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ts.SaveVSchema(ctx, srcks, tt.sourceVSchema)
-			err := wr.addTablesToVSchema(ctx, srcks, tt.inTargetVSchema, tt.tables, tt.copyVSchema)
-			require.NoError(t, err)
-			require.Equal(t, tt.wantTargetVSchema, tt.inTargetVSchema)
-		})
-	}
-}
-
-func TestAddTablesToVSchema(t *testing.T) {
-	ctx := context.Background()
-	ts := memorytopo.NewServer("zone1")
-	srcks := "source"
-	wr := &Wrangler{
-		logger:   logutil.NewMemoryLogger(),
-		ts:       ts,
-		sourceTs: ts,
-	}
-	tests := []struct {
-		name              string
-		sourceVSchema     *vschemapb.Keyspace
-		inTargetVSchema   *vschemapb.Keyspace
-		tables            []string
-		copyVSchema       bool
-		wantTargetVSchema *vschemapb.Keyspace
-	}{
-		{
-			name: "no target vschema; copy source vschema",
-			sourceVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {
-						Type: vindexes.TypeSequence,
-					},
-					"t3": {
-						AutoIncrement: &vschemapb.AutoIncrement{
-							Column:   "c1",
-							Sequence: "t2",
-						},
-					},
-				},
-			},
-			inTargetVSchema: &vschemapb.Keyspace{},
-			tables:          []string{"t1", "t2", "t3", "t4"},
-			copyVSchema:     true,
-			wantTargetVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {
-						Type: vindexes.TypeSequence,
-					},
-					"t3": {
-						AutoIncrement: &vschemapb.AutoIncrement{
-							Column:   "c1",
-							Sequence: "t2",
-						},
-					},
-					"t4": {},
-				},
-			},
-		},
-		{
-			name: "no target vschema; copy source vschema; sharded source",
-			sourceVSchema: &vschemapb.Keyspace{
-				Sharded: true,
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {
-						Type: vindexes.TypeSequence,
-					},
-					"t3": {
-						AutoIncrement: &vschemapb.AutoIncrement{
-							Column:   "c1",
-							Sequence: "t2",
-						},
-					},
-					"t4": {
-						ColumnVindexes: []*vschemapb.ColumnVindex{ // Should be stripped on target
-							{
-								Column: "c1",
-								Name:   "hash",
-							},
-						},
-					},
-				},
-			},
-			inTargetVSchema: &vschemapb.Keyspace{},
-			tables:          []string{"t1", "t2", "t3", "t4"},
-			copyVSchema:     true,
-			wantTargetVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {
-						Type: vindexes.TypeSequence,
-					},
-					"t3": {
-						AutoIncrement: &vschemapb.AutoIncrement{
-							Column:   "c1",
-							Sequence: "t2",
-						},
-					},
-					"t4": {},
-				},
-			},
-		},
-		{
-			name: "target vschema; copy source vschema",
-			sourceVSchema: &vschemapb.Keyspace{
-				Tables: map[string]*vschemapb.Table{
-					"t1": {
-						Type: vindexes.TypeReference,
-					},
-					"t2": {
-						Type: vindexes.TypeSequence,
-					},
-					"t3": {
-						AutoIncrement: &vschemapb.AutoIncrement{
-							Column:   "c1",
-							Sequence: "t2",
-						},
-					},
-					"t4": {
-						ColumnVindexes: []*vschemapb.ColumnVindex{ // Should be stripped on target
-							{
-								Column: "c1",
-								Name:   "hash",
 							},
 						},
 					},

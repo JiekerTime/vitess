@@ -36,8 +36,8 @@ func TestDeleteShardedTableEqualUnique(t *testing.T) {
 
 	del := &TableDelete{
 		TableDML: &TableDML{
-			AST:   delStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        delStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: Scatter,
 				Keyspace: &vindexes.Keyspace{
@@ -68,8 +68,8 @@ func TestDeleteShardedTableEqualUniqueWithDifColm(t *testing.T) {
 
 	del := &TableDelete{
 		TableDML: &TableDML{
-			AST:   delStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        delStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: EqualUnique,
 				Keyspace: &vindexes.Keyspace{
@@ -101,8 +101,8 @@ func TestDeleteShardedTableIn(t *testing.T) {
 
 	del := &TableDelete{
 		TableDML: &TableDML{
-			AST:   delStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        delStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: Scatter,
 				Keyspace: &vindexes.Keyspace{
@@ -136,8 +136,8 @@ func TestDeleteShardedTableMultiEqual(t *testing.T) {
 
 	del := &TableDelete{
 		TableDML: &TableDML{
-			AST:   delStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        delStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: Scatter,
 				Keyspace: &vindexes.Keyspace{
@@ -170,8 +170,8 @@ func TestDeleteShardedTableSharded(t *testing.T) {
 
 	del := &TableDelete{
 		TableDML: &TableDML{
-			AST:   delStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        delStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: Scatter,
 				Keyspace: &vindexes.Keyspace{

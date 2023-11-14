@@ -184,7 +184,7 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 		statements := sqlparser.GetAllSelects(originStatement.(*sqlparser.Union))
 		logicalPlans := plan.Inputs()
 		for index, logicalPlanTemp := range logicalPlans {
-			ctx.OriginSelStmt = &*statements[index]
+			ctx.OriginSelStmt = statements[index]
 			_, errLeft := truncateColumns(ctx, logicalPlanTemp)
 			if errLeft != nil {
 				return nil, errLeft

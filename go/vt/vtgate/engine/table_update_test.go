@@ -18,8 +18,8 @@ func TestTableUpdateEqual(t *testing.T) {
 	updStmt, _, _ := sqlparser.Parse2("update t_user set a = 1 where col = 5")
 	upd := &TableUpdate{
 		TableDML: &TableDML{
-			AST:   updStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        updStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: Scatter,
 				Keyspace: &vindexes.Keyspace{
@@ -55,8 +55,8 @@ func TestTableUpdateEqual2(t *testing.T) {
 	updStmt, _, _ := sqlparser.Parse2("update t_user set a = 1 where col =99 and id=1")
 	upd := &TableUpdate{
 		TableDML: &TableDML{
-			AST:   updStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        updStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: EqualUnique,
 				Keyspace: &vindexes.Keyspace{
@@ -88,8 +88,8 @@ func TestTableUpdateScatter(t *testing.T) {
 	updStmt, _, _ := sqlparser.Parse2("update t_user set a = 1 ")
 	upd := &TableUpdate{
 		TableDML: &TableDML{
-			AST:   updStmt,
-			Table: []*vindexes.Table{{Name: sqlparser.NewIdentifierCS("t_user")}},
+			AST:        updStmt,
+			TableNames: []string{"t_user"},
 			ShardRouteParam: &RoutingParameters{
 				Opcode: Scatter,
 				Keyspace: &vindexes.Keyspace{

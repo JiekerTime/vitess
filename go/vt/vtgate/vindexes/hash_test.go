@@ -18,7 +18,6 @@ package vindexes
 
 import (
 	"context"
-	"hash"
 	"reflect"
 	"testing"
 
@@ -143,7 +142,7 @@ func TestHashVerify(t *testing.T) {
 	}
 
 	// Failure test
-	_, err = hash.Verify(context.Background(), nil, []sqltypes.Value{sqltypes.NewVarBinary("aa")}, [][]byte{nil})
+	_, err = hashSingleColumn.Verify(context.Background(), nil, []sqltypes.Value{sqltypes.NewVarBinary("aa")}, [][]byte{nil})
 	require.EqualError(t, err, "cannot parse uint64 from \"aa\"")
 }
 

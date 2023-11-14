@@ -47,8 +47,8 @@ type Hash struct {
 	unknownParams []string
 }
 
-// newHash creates a new Hash.
-func newHash(name string, params map[string]string) (Vindex, error) {
+// NewHash creates a new Hash.
+func NewHash(name string, params map[string]string) (Vindex, error) {
 	return &Hash{
 		name:          name,
 		unknownParams: FindUnknownParams(params, nil),
@@ -148,7 +148,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	Register("hash", newHash)
+	Register("hash", NewHash)
 }
 
 func vhash(shardKey uint64) []byte {
