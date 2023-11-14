@@ -56,7 +56,8 @@ function vttablet_start() {
     --unhealthy_threshold	$unHealthyThreshold \
     --queryserver-config-schema-reload-time 60 \
     --init_tablet_type $TABLET_TYPE \
-    --heartbeat_enable=true \
+    --heartbeat_enable \
+    --heartbeat_interval=1000ms \
     --enforce_strict_trans_tables=false \
     --track_schema_versions=true \
     --watch_replication_stream=true"
@@ -89,7 +90,8 @@ function vttablet_start() {
     --unhealthy_threshold	$unHealthyThreshold \
     --queryserver-config-schema-reload-time 60 \
     --init_tablet_type $TABLET_TYPE \
-    --heartbeat_enable=true \
+    --heartbeat_enable \
+    --heartbeat_interval=1000ms \
     --enforce_strict_trans_tables=false \
     --track_schema_versions=true \
     --watch_replication_stream=true"
