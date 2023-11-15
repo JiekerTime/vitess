@@ -233,7 +233,7 @@ func tryPushingDownProjectionForSplitTable(_ *plancontext.PlanningContext, p *Pr
 
 func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in horizonLike) (ops.Operator, *rewrite.ApplyResult, error) {
 	rb, isTableRoute := in.src().(*TableRoute)
-	if isTableRoute && rb.IsSingleSplitTable() && !isCrossShard(ctx.GetRoute()) {
+	if isTableRoute && rb.IsSingleSplitTable() {
 		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 

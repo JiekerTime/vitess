@@ -127,15 +127,19 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 		return nil, err
 	}
 
-	for _, order := range op.Ordering {
-		typ, collation, _ := ctx.SemTable.TypeForExpr(order.AST)
-		eroute.OrderBy = append(eroute.OrderBy, engine.OrderByParams{
-			Col:             order.Offset,
-			WeightStringCol: order.WOffset,
-			Desc:            order.Direction == sqlparser.DescOrder,
-			Type:            typ,
-			CollationID:     collation,
-		})
+	if op.Ordering != nil {
+		for _, order := range op.Ordering {
+			typ, collation, _ := ctx.SemTable.TypeForExpr(order.AST)
+			eroute.OrderBy = append(eroute.OrderBy, engine.OrderByParams{
+				Col:             order.Offset,
+				WeightStringCol: order.WOffset,
+				Desc:            order.Direction == sqlparser.DescOrder,
+				Type:            typ,
+				CollationID:     collation,
+			})
+		}
+	} else {
+		eroute.OrderBy = ksERoute.OrderBy
 	}
 
 	return &tableRoute{
