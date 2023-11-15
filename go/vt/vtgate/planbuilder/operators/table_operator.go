@@ -44,7 +44,7 @@ func createLogicalOperatorFromASTForSplitTable(ctx *plancontext.PlanningContext,
 	case *sqlparser.Update:
 		op, err = createOperatorFromUpdateForSplitTable(ctx, node)
 	default:
-		err = vterrors.VT12001(fmt.Sprintf("operator: %T", selStmt))
+		err = vterrors.VT12001(fmt.Sprintf("statement type %T in split table", selStmt))
 	}
 	if err != nil {
 		return nil, err
@@ -59,6 +59,11 @@ func createOperatorFromSelectForSplitTable(ctx *plancontext.PlanningContext, sel
 	if err != nil {
 		return nil, err
 	}
+
+	if err := checkForSupportSql(ctx, sel); err != nil {
+		return nil, err
+	}
+
 	if sel.Where != nil {
 		exprs := sqlparser.SplitAndExpression(nil, sel.Where.Expr)
 		for _, expr := range exprs {
@@ -257,7 +262,7 @@ func crossJoinForSplitTable(ctx *plancontext.PlanningContext, exprs sqlparser.Ta
 		if output == nil {
 			output = op
 		} else {
-			return nil, fmt.Errorf("implement me")
+			return nil, vterrors.VT12001("multiple tables in split table")
 			// output = createJoin(ctx, output, op)
 		}
 	}
@@ -269,7 +274,7 @@ func getOperatorFromTableExprForSplitTable(ctx *plancontext.PlanningContext, tab
 	case *sqlparser.AliasedTableExpr:
 		return getOperatorFromAliasedTableExprForSplitTable(ctx, tableExpr)
 	default:
-		return nil, vterrors.VT13001(fmt.Sprintf("unable to use: %T table type", tableExpr))
+		return nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T table type in split table", tableExpr))
 	}
 }
 
@@ -282,7 +287,7 @@ func getOperatorFromAliasedTableExprForSplitTable(ctx *plancontext.PlanningConte
 		qg.Tables = append(qg.Tables, qt)
 		return qg, nil
 	default:
-		return nil, vterrors.VT13001(fmt.Sprintf("unable to use: %T", tbl))
+		return nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T in split table", tbl))
 	}
 }
 
@@ -362,4 +367,27 @@ func mergeRoutesForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGraph, 
 		return nil, nil
 	}
 	return physicalOps[0], nil
+}
+
+func hasSubqueryInExprsAndWhere(sel *sqlparser.Select) bool {
+	hasSubquery := false
+	var sqlParts []sqlparser.SQLNode
+	sqlParts = append(sqlParts, sel.Where, sel.SelectExprs)
+
+	for _, sqlNode := range sqlParts {
+		sqlparser.Rewrite(sqlNode, func(cursor *sqlparser.Cursor) bool {
+			switch cursor.Node().(type) {
+			case *sqlparser.ExtractedSubquery:
+				return false
+			case *sqlparser.Subquery:
+				hasSubquery = true
+				return false
+			}
+			return true
+		}, func(cursor *sqlparser.Cursor) bool {
+			return !hasSubquery
+		})
+	}
+
+	return hasSubquery
 }

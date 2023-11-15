@@ -208,6 +208,7 @@ func (pb *primitiveBuilder) buildTablePrimitive(tableExpr *sqlparser.AliasedTabl
 		rb, st := newRoute(sel)
 		rb.eroute = engine.NewSimpleRoute(engine.DBA, ks)
 		rb.eroute.TableName = sqlparser.String(tableName)
+		rb.eroute.TableNameSlice = append(rb.eroute.TableNameSlice, rb.eroute.TableName)
 		pb.plan, pb.st = rb, st
 		// Add the table to symtab
 		return st.AddTable(&table{
@@ -291,6 +292,7 @@ func (pb *primitiveBuilder) buildTablePrimitive(tableExpr *sqlparser.AliasedTabl
 		eroute.Values = []evalengine.Expr{lit}
 	}
 	eroute.TableName = sqlparser.String(vschemaTable.Name)
+	eroute.TableNameSlice = append(eroute.TableNameSlice, eroute.TableName)
 	rb.eroute = eroute
 
 	return nil
@@ -396,6 +398,7 @@ func (pb *primitiveBuilder) join(rpb *primitiveBuilder, ajoin *sqlparser.JoinTab
 	}
 	// join table name
 	if lRoute.eroute.TableName != rRoute.eroute.TableName {
+		lRoute.eroute.TableNameSlice = append(lRoute.eroute.TableNameSlice, lRoute.eroute.TableName, rRoute.eroute.TableName)
 		lRoute.eroute.TableName = strings.Join([]string{lRoute.eroute.TableName, rRoute.eroute.TableName}, ", ")
 	}
 

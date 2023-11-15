@@ -914,5 +914,20 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "join push down using shard key",
+    "query": "select u.name from t_user u join t_user_extra ue on u.id = ue.user_id ",
+    "plan":"VT12001: unsupported: multiple tables in split table"
+  },
+  {
+    "comment": ",join push down using shard key",
+    "query": "select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
+    "plan":"VT12001: unsupported: multiple tables in split table"
+  },
+  {
+    "comment": "multiple tables",
+    "query": "select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
+    "plan":"VT12001: unsupported: multiple tables in split table"
   }
 ]

@@ -1,57 +1,5 @@
 [
   {
-    "comment": "correlated subquery on sharding key with group by a unique vindex with having clause.",
-    "query": "select count(*) from user where exists (select 1 from user_extra where user_id = user.id group by user_id having max(col) > 10)",
-    "v3-plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(*) from user where exists (select 1 from user_extra where user_id = user.id group by user_id having max(col) > 10)",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "sum_count(0) AS count",
-        "Inputs": [
-          {
-            "OperatorType": "Route",
-            "Variant": "Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select count(*) from `user` where 1 != 1",
-            "Query": "select count(*) from `user` where exists (select 1 from user_extra where user_id = `user`.id group by user_id having max(col) > 10 limit 1)",
-            "Table": "`user`"
-          }
-        ]
-      }
-    },
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(*) from user where exists (select 1 from user_extra where user_id = user.id group by user_id having max(col) > 10)",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "sum_count_star(0) AS count(*)",
-        "Inputs": [
-          {
-            "OperatorType": "Route",
-            "Variant": "Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select count(*) from `user` where 1 != 1",
-            "Query": "select count(*) from `user` where exists (select 1 from user_extra where user_id = `user`.id group by user_id having max(col) > 10 limit 1)",
-            "Table": "`user`"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
     "comment": "correlated subquery in exists clause with an ordering",
     "query": "select col, id from user where exists(select user_id from user_extra where user_id = 3 and user_id < user.id) order by id",
     "v3-plan": "VT12001: unsupported: cross-shard correlated subquery",

@@ -1352,5 +1352,389 @@
         "user.t_user_extra"
       ]
     }
+  },
+  {
+    "comment": "Distinct with cross shard query",
+    "query": "select distinct t_user.a from t_user join t_user_extra",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select distinct t_user.a from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|1)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1 group by t_user_0.a, weight_string(t_user_0.a)",
+                "OrderBy": "(0|1) ASC",
+                "Query": "select t_user.a, weight_string(t_user.a) from t_user group by t_user.a, weight_string(t_user.a) order by t_user.a asc",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select 1 from t_user_extra group by .0",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with column alias",
+    "query": "select distinct a as c, a from t_user",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select distinct a as c, a from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|2), (1|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a as c, a, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+            "OrderBy": "(0|2) ASC",
+            "Query": "select a as c, a, weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with same column",
+    "query": "select distinct a, a from t_user",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select distinct a, a from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|2), (1|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a, a, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+            "OrderBy": "(0|2) ASC",
+            "Query": "select a, a, weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "HAVING implicitly references table col",
+    "query": "select t_user.col1 from t_user having col2 = 2",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 from t_user having col2 = 2",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_0.col1 from t_user_0 where 1 != 1",
+        "Query": "select t_user.col1 from t_user where col2 = 2",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "TODO: this should be 'Column 'col1' in having clause is ambiguous'\n# non-ambiguous symbol reference",
+    "query": "select t_user.col1, t_user_extra.col1 from t_user join t_user_extra having t_user_extra.col1 = 2",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1, t_user_extra.col1 from t_user join t_user_extra having t_user_extra.col1 = 2",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col1 from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col1 from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col1 from t_user_extra where t_user_extra.col1 = 2",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "HAVING multi-route",
+    "query": "select t_user.col1 as a, t_user.col2, t_user_extra.col3 from t_user join t_user_extra having 1 = 1 and a = 1 and a = t_user.col2 and t_user_extra.col3 = 1",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1 as a, t_user.col2, t_user_extra.col3 from t_user join t_user_extra having 1 = 1 and a = 1 and a = t_user.col2 and t_user_extra.col3 = 1",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,L:1,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2 from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 as a, t_user.col2 from t_user where t_user.col1 = 1 and t_user.col1 = t_user.col2 and 1 = 1",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col3 from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col3 from t_user_extra where t_user_extra.col3 = 1 and 1 = 1",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "HAVING uses subquery",
+    "query": "select id from t_user having id in (select col from t_user)",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select id from t_user having id in (select col from t_user)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where :__sq_has_values1 = 1 and id in ::__vals",
+            "Table": "t_user",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Order by, verify outer symtab is searched according to its own context.",
+    "query": "select u.id from t_user u having u.id in (select col2 from t_user where t_user.id = u.id order by u.col)",
+    "plan":"VT12001: unsupported: subquery in split table"
+  },
+  {
+    "comment": "Equal filter with hexadecimal value",
+    "query": "select count(*) a from t_user having a = 0x01",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select count(*) a from t_user having a = 0x01",
+      "Instructions": {
+        "OperatorType": "Filter",
+        "Predicate": ":0 = 0x01",
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum_count_star(0) AS a",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select count(*) as a from t_user_0 where 1 != 1",
+                "Query": "select count(*) as a from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "having filter with %",
+    "query": "select a.tcol1 from t_user a join t_music b where a.tcol1 = b.tcol2 group by a.tcol1 having repeat(a.tcol1,min(a.id)) like \"A\\%B\" order by a.tcol1",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select a.tcol1 from t_user a join t_music b where a.tcol1 = b.tcol2 group by a.tcol1 having repeat(a.tcol1,min(a.id)) like \"A\\%B\" order by a.tcol1",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Filter",
+            "Predicate": "repeat(a.tcol1, :1) like 'A\\%B'",
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Ordered",
+                "Aggregates": "min(1) AS min(a.id)",
+                "GroupBy": "(0|2)",
+                "Inputs": [
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] as tcol1",
+                      "[COLUMN 2] as min(a.id)",
+                      "[COLUMN 1]"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Join",
+                        "Variant": "Join",
+                        "JoinColumnIndexes": "L:0,L:2,L:1",
+                        "JoinVars": {
+                          "a_tcol1": 0
+                        },
+                        "TableName": "t_user_t_music",
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select a.tcol1, min(a.id), weight_string(a.tcol1) from t_user_0 as a where 1 != 1 group by a.tcol1, weight_string(a.tcol1)",
+                            "OrderBy": "(0|2) ASC",
+                            "Query": "select a.tcol1, min(a.id), weight_string(a.tcol1) from t_user as a group by a.tcol1, weight_string(a.tcol1) order by a.tcol1 asc",
+                            "Table": "t_user"
+                          },
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select 1 from t_music_0 as b where 1 != 1 group by 1",
+                            "Query": "select 1 from t_music as b where b.tcol2 = :a_tcol1 group by 1",
+                            "Table": "t_music"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
   }
 ]

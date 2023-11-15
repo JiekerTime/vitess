@@ -1248,5 +1248,10 @@
         "user.t_user_extra"
       ]
     }
+  },
+  {
+    "comment": "one shard using distinct",
+    "query": "select distinct col from t_user where id=123",
+    "plan": "VT12001: unsupported: distinct in split table"
   }
 ]

@@ -54,6 +54,9 @@ type Route struct {
 	// TableName specifies the tables to send the query to.
 	TableName string
 
+	// TableNameSlice specifies the tables that AST.From inclusive
+	TableNameSlice []string
+
 	// FieldQuery specifies the query to be executed for a GetFieldInfo request.
 	FieldQuery string
 

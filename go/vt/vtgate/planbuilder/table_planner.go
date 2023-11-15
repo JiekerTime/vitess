@@ -10,6 +10,7 @@ import (
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableNames []string,
@@ -26,9 +27,11 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 		switch node := logicalPlan.(type) {
 		case *routeGen4:
 			ctx.KsPrimitive = node.eroute
-			if _, ok := ctx.SplitTableConfig[node.eroute.TableName]; !ok {
-				return false, logicalPlan, err
+
+			if len(node.eroute.TableNameSlice) == 1 && getSplitTableConfig(ctx, node.eroute.TableNameSlice[0]) == nil {
+				return false, logicalPlan, nil
 			}
+
 			tablePlan, err := doBuildTablePlan(ctx, node.Select)
 			if err != nil {
 				return false, nil, err
@@ -149,6 +152,13 @@ func findTableSchema(ctx *plancontext.PlanningContext, tableNames []string) (fou
 	return found
 }
 
+func getSplitTableConfig(ctx *plancontext.PlanningContext, tName string) *vindexes.LogicTableConfig {
+	if tName == "dual" {
+		return &vindexes.LogicTableConfig{}
+	}
+	return ctx.SplitTableConfig[tName]
+}
+
 func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logicalPlan, error) {
 	if ctx.OriginSelStmt == nil {
 		return plan, nil
@@ -184,7 +194,7 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 		statements := sqlparser.GetAllSelects(originStatement.(*sqlparser.Union))
 		logicalPlans := plan.Inputs()
 		for index, logicalPlanTemp := range logicalPlans {
-			ctx.OriginSelStmt = &*statements[index]
+			ctx.OriginSelStmt = statements[index]
 			_, errLeft := truncateColumns(ctx, logicalPlanTemp)
 			if errLeft != nil {
 				return nil, errLeft
