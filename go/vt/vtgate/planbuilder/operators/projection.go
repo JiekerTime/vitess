@@ -400,7 +400,24 @@ func (p *Projection) GetColumns(*plancontext.PlanningContext) ([]*sqlparser.Alia
 }
 
 func (p *Projection) GetSelectExprs(ctx *plancontext.PlanningContext) (sqlparser.SelectExprs, error) {
-	return transformColumnsToSelectExprs(ctx, p)
+	switch cols := p.Columns.(type) {
+	case StarProjections:
+		return sqlparser.SelectExprs(cols), nil
+	case AliasedProjections:
+		var output sqlparser.SelectExprs
+		for _, pe := range cols {
+			ae := &sqlparser.AliasedExpr{Expr: pe.EvalExpr}
+			if !pe.Original.As.IsEmpty() {
+				ae.As = pe.Original.As
+			} else if !sqlparser.Equals.Expr(ae.Expr, pe.Original.Expr) {
+				ae.As = sqlparser.NewIdentifierCI(pe.Original.ColumnName())
+			}
+			output = append(output, ae)
+		}
+		return output, nil
+	default:
+		panic("unknown type")
+	}
 }
 
 func (p *Projection) GetOrdering() ([]ops.OrderBy, error) {
