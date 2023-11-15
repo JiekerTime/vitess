@@ -56,7 +56,6 @@ vttablet \
  --queryserver-config-max-result-size 10000000 \
  --heartbeat_enable \
  --heartbeat_interval=250ms \
- --heartbeat_on_demand_duration=5s \
  > $VTDATAROOT/$tablet_dir/vttablet.out 2>&1 &
 
 # Block waiting for the tablet to be listening
