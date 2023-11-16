@@ -253,3 +253,15 @@ func (mcmp *MySQLCompare) ExecAndIgnore(query string) (*sqltypes.Result, error) 
 	_, _ = mcmp.MySQLConn.ExecuteFetch(query, 1000, true)
 	return mcmp.VtConn.ExecuteFetch(query, 1000, true)
 }
+
+func (mcmp *MySQLCompare) ExecWithColumnCompareAndNotEmpty(query string) {
+	result := mcmp.ExecWithColumnCompare(query)
+	assert.NotEmpty(mcmp.t, result, "query result is empty! for query : "+query)
+	assert.NotEmpty(mcmp.t, result.Rows, "query result Rows is empty! for query : "+query)
+}
+
+func (mcmp *MySQLCompare) ExecAndNotEmpty(query string) {
+	result := mcmp.Exec(query)
+	assert.NotEmpty(mcmp.t, result, "query result is empty! for query : "+query)
+	assert.NotEmpty(mcmp.t, result.Rows, "query result Rows is empty! for query : "+query)
+}
