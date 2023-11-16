@@ -1,23 +1,62 @@
 [
   {
-    "comment": "debug case",
-    "query": "select 1 from t_user",
+    "comment": "Unmergeable subquery with multiple levels of derived statements",
+    "query": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music LIMIT 10) subquery_for_limit) subquery_for_limit)",
     "plan": {
       "QueryType": "SELECT",
-      "Original": "select 1 from t_user",
+      "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music LIMIT 10) subquery_for_limit) subquery_for_limit)",
       "Instructions": {
-        "OperatorType": "TableRoute",
-        "Variant": "Scatter-Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select 1 from t_user_0 where 1 != 1",
-        "Query": "select 1 from t_user",
-        "Table": "t_user"
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "SimpleProjection",
+            "Columns": [
+              0
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Limit",
+                "Count": "INT64(10)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
+                    "Query": "select t_music.id from t_music limit :__upper_limit",
+                    "Table": "t_music"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
+            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Table": "t_music",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
       },
       "TablesUsed": [
-        "user.t_user"
+        "user.t_music"
       ]
     }
   }

@@ -243,3 +243,27 @@ func TestCompareRefInt(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSubQuery(t *testing.T) {
+	testCase := []struct {
+		sql        string
+		isSubquery bool
+	}{
+		{
+			sql:        "select count(*) from t_user where exists (select 1 from t_user_extra where user_id = t_user.id group by user_id having max(col) > 10)",
+			isSubquery: true,
+		}, {
+			sql:        "select (select id from t1 limit 1) from t2 where t2.id>1",
+			isSubquery: true,
+		},
+		{
+			sql:        "select exists (select id from t1 limit 1)",
+			isSubquery: true,
+		},
+	}
+
+	for _, v := range testCase {
+		stmt, _ := sqlparser.Parse(v.sql)
+		require.Equal(t, v.isSubquery, hasSubqueryInExprsAndWhere(stmt.(*sqlparser.Select)))
+	}
+}

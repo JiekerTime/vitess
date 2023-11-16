@@ -156,7 +156,7 @@ func (r *TableRoute) TablesUsed() []string {
 
 func (r *TableRoute) planOffsets(ctx *plancontext.PlanningContext) (err error) {
 	// if operator is returning data from a single table, we don't need to do anything more
-	if r.IsSingleSplitTable() && !isCrossShard(ctx.GetRoute()) {
+	if r.IsSingleSplitTable() {
 		return nil
 	}
 

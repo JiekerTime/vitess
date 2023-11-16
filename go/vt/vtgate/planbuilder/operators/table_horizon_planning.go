@@ -1,6 +1,8 @@
 package operators
 
 import (
+	"fmt"
+
 	"vitess.io/vitess/go/slice"
 
 	"vitess.io/vitess/go/vt/sqlparser"
@@ -232,7 +234,7 @@ func tryPushingDownProjectionForSplitTable(_ *plancontext.PlanningContext, p *Pr
 
 func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
 	rb, isTableRoute := in.src().(*TableRoute)
-	if isTableRoute && rb.IsSingleSplitTable() && !isCrossShard(ctx.GetRoute()) {
+	if isTableRoute && rb.IsSingleSplitTable() {
 		return rewrite.Swap(in, rb, "push horizon into tableRoute")
 	}
 
@@ -260,6 +262,17 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Hori
 	return expandHorizonForSplitTable(ctx, in)
 }
 
+func checkForSupportSql(ctx *plancontext.PlanningContext, sel *sqlparser.Select) error {
+	if sel.Distinct {
+		return vterrors.VT12001("distinct in split table")
+	} else if sel.Having != nil {
+		return vterrors.VT12001(fmt.Sprintf("statement(%s) in split table", sqlparser.String(sel.Having)))
+	} else if hasSubqueryInExprsAndWhere(sel) {
+		return vterrors.VT12001("subquery in split table")
+	}
+	return nil
+}
+
 func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
 	sel, _ := horizon.selectStatement().(*sqlparser.Select)
 
@@ -275,10 +288,7 @@ func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horiz
 	}
 
 	if qp.NeedsDistinct() {
-		op = &Distinct{
-			Source: op,
-			QP:     qp,
-		}
+		return nil, nil, vterrors.VT12001("distinct in split table")
 	}
 
 	if len(qp.OrderExprs) > 0 {

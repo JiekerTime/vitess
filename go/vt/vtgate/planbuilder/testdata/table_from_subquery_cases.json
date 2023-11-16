@@ -78,5 +78,10 @@
         "user.t_user_extra"
       ]
     }
+  },
+  {
+    "comment": "subquery derived table",
+    "query": "select count(*) from (select id from t_user where id=111 and col=222) t",
+    "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
   }
 ]

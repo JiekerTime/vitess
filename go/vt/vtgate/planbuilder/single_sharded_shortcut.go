@@ -47,13 +47,15 @@ func selectUnshardedShortcut(ctx *plancontext.PlanningContext, stmt sqlparser.Se
 	if err != nil {
 		return nil, nil, err
 	}
+	tableNamesSlice := escapedTableNames(tableNames)
 	plan := &route{
 		eroute: &engine.Route{
 			RoutingParameters: &engine.RoutingParameters{
 				Opcode:   engine.Unsharded,
 				Keyspace: ks,
 			},
-			TableName: strings.Join(escapedTableNames(tableNames), ", "),
+			TableName:      strings.Join(tableNamesSlice, ", "),
+			TableNameSlice: tableNamesSlice,
 		},
 		Select: stmt,
 	}

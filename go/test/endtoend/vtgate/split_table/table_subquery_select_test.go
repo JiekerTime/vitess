@@ -72,30 +72,33 @@ func TestSubQuerySelect(t *testing.T) {
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) and t_music.user_id = 3", `[[INT64(303)]]`)
 	// Subquery with `IN` condition using columns with matching lookup vindexes, but not a top level predicate
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) OR t_music.user_id = 5", `[[INT64(101)] [INT64(303)]]`)
-	// `IN` comparison on Vindex with `None` subquery, as routing predicate
-	mcmp.AssertIsEmpty("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) AND t_music.user_id = 5")
-	// `IN` comparison on Vindex with `None` subquery, as non-routing predicate
-	mcmp.AssertIsEmpty("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) OR t_music.user_id = 5")
-	// Mergeable scatter subquery
-	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.col = 'aaa')", `[[INT64(101)]]`)
-	// Mergeable scatter subquery with `GROUP BY` on unique vindex column
-	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.col = 'aaa' GROUP BY t_music.id)", `[[INT64(101)]]`)
 	// Unmergeable scatter subquery with `GROUP BY` on-non vindex column
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.col = 'aaa' GROUP BY t_music.col)", `[[INT64(101)]]`)
-	// Mergeable subquery with multiple levels of derived statements, using a single value `IN` predicate
-	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (3) LIMIT 10) subquery_for_limit) subquery_for_limit)", `[[INT64(303)]]`)
 	// Unmergeable subquery with multiple levels of derived statements, using a multi value `IN` predicate
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 3) LIMIT 10) subquery_for_limit) subquery_for_limit)", `[[INT64(101)] [INT64(303)]]`)
 	// Unmergeable subquery with multiple levels of derived statements
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music LIMIT 10) subquery_for_limit) subquery_for_limit)", `[[INT64(101)] [INT64(202)] [INT64(303)]]`)
+
+	// unsupported subquery in split table
+	// `IN` comparison on Vindex with `None` subquery, as routing predicate
+	// subquery in split table
+	// mcmp.AssertIsEmpty("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) AND t_music.user_id = 5")
+	// `IN` comparison on Vindex with `None` subquery, as non-routing predicate
+	// mcmp.AssertIsEmpty("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) OR t_music.user_id = 5")
+	// Mergeable scatter subquery
+	// mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.col = 'aaa')", `[[INT64(101)]]`)
+	// Mergeable scatter subquery with `GROUP BY` on unique vindex column
+	// mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.col = 'aaa' GROUP BY t_music.id)", `[[INT64(101)]]`)
+	// Mergeable subquery with multiple levels of derived statements, using a single value `IN` predicate
+	// mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (3) LIMIT 10) subquery_for_limit) subquery_for_limit)", `[[INT64(303)]]`)
 	// `None` subquery as top level predicate - outer query changes from `Scatter` to `None` on merge
-	mcmp.AssertIsEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL))")
+	// mcmp.AssertIsEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL))")
 	// `None` subquery as top level predicate - outer query changes from `EqualUnique` to `None` on merge
-	mcmp.AssertIsEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) AND t_music.user_id = 5")
+	// mcmp.AssertIsEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) AND t_music.user_id = 5")
 	// `None` subquery nested inside `OR` expression - outer query keeps routing information
-	mcmp.AssertIsEmpty("SELECT t_music.id FROM t_music WHERE (t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) OR t_music.user_id = 5)")
+	// mcmp.AssertIsEmpty("SELECT t_music.id FROM t_music WHERE (t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) OR t_music.user_id = 5)")
 	// subquery having join table on clause, using column reference of outer select table
-	mcmp.AssertMatches("select (select 1 from t_user u1 join t_user u2 on u1.id = u2.id and u1.id = u3.id) subquery from t_user u3 where u3.id = 1", `[[INT64(1)]]`)
+	// mcmp.AssertMatches("select (select 1 from t_user u1 join t_user u2 on u1.id = u2.id and u1.id = u3.id) subquery from t_user u3 where u3.id = 1", `[[INT64(1)]]`)
 
 	/** Test passed but field names not matched: **/
 	/** Begin **/
@@ -111,11 +114,12 @@ func TestSubQuerySelect(t *testing.T) {
 
 	// table_aggr_cases.json
 	// HAVING uses subquery
-	mcmp.AssertMatches("select id from t_user having id in (select id from t_user)", `[[INT64(1)] [INT64(3)] [INT64(2)]]`)
+	// unsupported subquery in split table
+	// mcmp.AssertMatches("select id from t_user having id in (select id from t_user)", `[[INT64(1)] [INT64(3)] [INT64(2)]]`)
+	// Order by, verify outer symtab is searched according to its own context.
+	// mcmp.AssertIsEmpty("select u.id from t_user u having u.id in (select col2 from t_user where t_user.id = u.id order by u.col)")
 	// ORDER BY after pull-out subquerydd
 	mcmp.AssertMatches("select col from t_user where col in (select col from t_user) order by col", `[[CHAR("45")] [CHAR("b")] [CHAR("c")]]`)
-	// Order by, verify outer symtab is searched according to its own context.
-	mcmp.AssertIsEmpty("select u.id from t_user u having u.id in (select col2 from t_user where t_user.id = u.id order by u.col)")
 	// scatter limit after pullout subquery
 	mcmp.AssertMatches("select col from t_user where col in (select col from t_user) limit 1", `[[CHAR("45")]]`)
 
@@ -126,7 +130,8 @@ func TestSubQuerySelect(t *testing.T) {
 	mcmp.AssertMatches("select A.a, A.b, (A.a / A.b) as d from (select sum(a) as a, sum(b) as b from t_user) A", `[[DECIMAL(6) DECIMAL(9) DECIMAL(0.6667)]]`)
 
 	// table_filter_cases.json
+	// unsupported subquery in split table
 	// cross-shard subquery in IN clause. Note the improved Underlying plan as SelectIN.
-	mcmp.AssertMatches("select id from t_user where id in (select id from t_user)", `[[INT64(1)] [INT64(3)] [INT64(2)]]`)
+	// mcmp.AssertMatches("select id from t_user where id in (select id from t_user)", `[[INT64(1)] [INT64(3)] [INT64(2)]]`)
 
 }

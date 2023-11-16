@@ -1,7 +1,10 @@
 package operators
 
 import (
+	"fmt"
+
 	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
@@ -32,6 +35,10 @@ func pushDownAggregationThroughRouteForSplitTable(
 	aggregator *Aggregator,
 	route *TableRoute,
 ) (ops.Operator, *rewrite.ApplyResult, error) {
+	if err := checkIfHasDistinct(aggregator); err != nil {
+		return nil, nil, err
+	}
+
 	// If the route is single-splitTable, or we are grouping by table index keys, we can just push down the aggregation
 	if route.IsSingleSplitTable() || overlappingUniqueTableIndex(ctx, aggregator.Grouping) {
 		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute - remove original")
@@ -87,4 +94,13 @@ func exprHasUniqueTableIndex(ctx *plancontext.PlanningContext, expr sqlparser.Ex
 	}
 	column := logicTableConfig.TableIndexColumn[0].Column
 	return col.Name.Equal(column)
+}
+
+func checkIfHasDistinct(aggregator *Aggregator) error {
+	for _, aggr := range aggregator.Aggregations {
+		if aggr.Distinct {
+			return vterrors.VT12001(fmt.Sprintf("statement(%s) in split table", sqlparser.String(aggr.Original)))
+		}
+	}
+	return nil
 }
