@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"strings"
 
+	"vitess.io/vitess/go/internal/automaxprocs"
+	"vitess.io/vitess/go/internal/automaxprocs/maxprocs"
+
 	"github.com/spf13/cobra"
 
 	"vitess.io/vitess/go/acl"
@@ -134,6 +137,10 @@ func run(cmd *cobra.Command, args []string) error {
 	defer exit.Recover()
 
 	servenv.Init()
+
+	//set GOMAXPROCS
+	automaxprocs.SetGOMAXPROCS(maxprocs.VTGate)
+	go automaxprocs.DynamicSetGOMAXPROCS(maxprocs.VTGate)
 
 	ts := topo.Open()
 	defer ts.Close()

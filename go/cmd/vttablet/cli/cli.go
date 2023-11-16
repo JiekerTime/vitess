@@ -23,6 +23,9 @@ import (
 	"os"
 	"time"
 
+	"vitess.io/vitess/go/internal/automaxprocs"
+	"vitess.io/vitess/go/internal/automaxprocs/maxprocs"
+
 	"github.com/spf13/cobra"
 
 	"vitess.io/vitess/go/acl"
@@ -104,6 +107,10 @@ vttablet \
 
 func run(cmd *cobra.Command, args []string) error {
 	servenv.Init()
+
+	//set GOMAXPROCS
+	automaxprocs.SetGOMAXPROCS(maxprocs.VTTablet)
+	go automaxprocs.DynamicSetGOMAXPROCS(maxprocs.VTTablet)
 
 	tabletAlias, err := topoproto.ParseTabletAlias(tabletPath)
 	if err != nil {
