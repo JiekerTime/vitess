@@ -50,8 +50,8 @@ type VSchemaWrapper struct {
 	TestBuilder   func(query string, vschema plancontext.VSchema, keyspace string) (*engine.Plan, error)
 }
 
-func (vw *VSchemaWrapper) FindSplitTable(keyspace, tableName string) (*vindexes.LogicTableConfig, error) {
-	return vw.V.FindSplitTable(keyspace, tableName)
+func (vw *VSchemaWrapper) FindSplitTable(_, tableName string) (*vindexes.LogicTableConfig, error) {
+	return vw.V.FindSplitTable("user", tableName)
 }
 
 func (vw *VSchemaWrapper) FindSplitAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, error) {

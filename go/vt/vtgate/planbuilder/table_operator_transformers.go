@@ -146,8 +146,8 @@ func transformTableDeletePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 		AST:             ast,
 		KsidVindex:      ctx.DMLEngine.KsidVindex,
 		KsidLength:      ctx.DMLEngine.KsidLength,
-		TableNames:      []string{del.VTable.Name.String()},
-		Vindexes:        del.VTable.Owned,
+		TableNames:      []string{del.QTable.Table.Name.String()},
+		Vindexes:        ctx.DMLEngine.Vindexes,
 		ShardRouteParam: ctx.DMLEngine.RoutingParameters,
 		TableRouteParam: rp,
 	}
@@ -169,8 +169,8 @@ func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 		AST:             ast,
 		KsidVindex:      ctx.DMLEngine.KsidVindex,
 		KsidLength:      ctx.DMLEngine.KsidLength,
-		TableNames:      []string{updateOperator.VTable.Name.String()},
-		Vindexes:        updateOperator.VTable.ColumnVindexes,
+		TableNames:      []string{updateOperator.QTable.Table.Name.String()},
+		Vindexes:        ctx.DMLEngine.Vindexes,
 		ShardRouteParam: ctx.DMLEngine.RoutingParameters,
 		TableRouteParam: rp,
 	}
