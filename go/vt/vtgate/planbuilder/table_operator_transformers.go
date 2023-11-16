@@ -52,7 +52,7 @@ func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, op *operat
 }
 
 func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *operators.Projection) (logicalPlan, error) {
-	src, err := transformToLogicalPlan(ctx, op.Source)
+	src, err := transformToTableLogicalPlan(ctx, op.Source, false)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 }
 
 func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *operators.Aggregator) (logicalPlan, error) {
-	plan, err := transformToLogicalPlan(ctx, op.Source)
+	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
 	if err != nil {
 		return nil, err
 	}

@@ -109,6 +109,17 @@ func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement
 	if oprewriters.DebugOperatorTree {
 		fmt.Println(sqlparser.String(stmt))
 	}
+
+	ksName := ""
+	if ks, _ := ctx.VSchema.DefaultKeyspace(); ks != nil {
+		ksName = ks.Name
+	}
+	semTable, err := semantics.TableAnalyze(stmt, ksName, ctx.VSchema)
+	if err != nil {
+		return nil, err
+	}
+	ctx.SemTable = semTable
+
 	tableOperator, err := operators.TablePlanQuery(ctx, stmt)
 	if err != nil {
 		return nil, err
