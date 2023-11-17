@@ -377,8 +377,6 @@ func hasSubqueryInExprsAndWhere(sel *sqlparser.Select) bool {
 	for _, sqlNode := range sqlParts {
 		sqlparser.Rewrite(sqlNode, func(cursor *sqlparser.Cursor) bool {
 			switch cursor.Node().(type) {
-			//case *sqlparser.ExtractedSubquery:
-			//	return false
 			case *sqlparser.Subquery:
 				hasSubquery = true
 				return false

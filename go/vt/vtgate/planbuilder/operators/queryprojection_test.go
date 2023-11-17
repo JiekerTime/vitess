@@ -260,6 +260,14 @@ func TestGetSubQuery(t *testing.T) {
 			sql:        "select exists (select id from t1 limit 1)",
 			isSubquery: true,
 		},
+		{
+			sql:        "select exists(select id from t_user where id = 4)",
+			isSubquery: true,
+		},
+		{
+			sql:        "select exists(select id from t_user)",
+			isSubquery: true,
+		},
 	}
 
 	for _, v := range testCase {
