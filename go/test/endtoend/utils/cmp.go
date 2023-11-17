@@ -223,6 +223,12 @@ func (mcmp *MySQLCompare) ExecWithColumnCompare(query string) *sqltypes.Result {
 	mysqlQr, err := mcmp.MySQLConn.ExecuteFetch(query, 1000, true)
 	require.NoError(mcmp.t, err, "[MySQL Error] for query: "+query)
 	compareVitessAndMySQLResults(mcmp.t, query, mcmp.VtConn, vtQr, mysqlQr, true)
+	if len(vtQr.Rows) == 0 {
+		if mcmp.VtConn != nil {
+			qr := Exec(mcmp.t, mcmp.VtConn, fmt.Sprintf("vexplain plan %s", query))
+			fmt.Printf("query plan: \n%s\n", qr.Rows[0][0].ToString())
+		}
+	}
 	return vtQr
 }
 

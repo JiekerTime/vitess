@@ -2,6 +2,8 @@ package split_table
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSelect(t *testing.T) {
@@ -42,7 +44,7 @@ func TestSelect(t *testing.T) {
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1415, 13, 'bbb', 10, 300)")
 
 	// table_select_cases.json
-	mcmp.ExecWithColumnCompare("select t_user.* from t_user  t_user")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.* from t_user  t_user")
 
 	//expected: []string{"1"}
 	//actual  : []string{":vtg1 /* INT64 */"}
@@ -50,69 +52,104 @@ func TestSelect(t *testing.T) {
 	mcmp.Exec("select 1 from dual")
 
 	// No column referenced
-	mcmp.ExecWithColumnCompare("select 1 from t_user")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select 1 from t_user")
 	// '*' expression for simple route
-	mcmp.ExecWithColumnCompare("select t_user.* from t_user")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.* from t_user")
 	// unqualified '*' expression for simple route
-	mcmp.ExecWithColumnCompare("select * from t_user")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user")
 	// qualified '*' expression for simple route
-	mcmp.ExecWithColumnCompare("select t_user.* from t_user")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.* from t_user")
 	// fully qualified '*' expression for simple route
-	mcmp.ExecWithColumnCompare("select user.t_user.* from user.t_user")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user.t_user.* from user.t_user")
 	// select * from authoritative table
-	//mcmp.ExecWithColumnCompare("select * from t_authoritative")
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_authoritative")
 	// select * from qualified authoritative table
-	//mcmp.ExecWithColumnCompare("select a.* from t_authoritative a")
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select a.* from t_authoritative a")
 	// sharded limit offset
-	mcmp.ExecWithColumnCompare("select user_id from t_music order by user_id limit 10, 20")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user_id from t_music order by user_id limit 10, 20")
 	// Sharding Key Condition in Parenthesis
-	mcmp.ExecWithColumnCompare("select * from t_user where name ='abc' AND (id = 14) and (col = 123) limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where name ='abc' AND (id = 14) and (col = 123) limit 5")
 	// Multiple parenthesized expressions
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 4) AND (name ='abc') AND (col = 'abc') limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 4) AND (name ='abc') AND (col = 'abc') limit 5")
 	// Multiple parenthesized expressions
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 4 AND name ='abc' AND col = 'abc') limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 4 AND name ='abc' AND col = 'abc') limit 5")
 	// Column Aliasing with Table.Column
-	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2")
 	// Column Aliasing with Column
-	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 11 and col = 12 order by col0_ desc limit 3")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 11 and col = 12 order by col0_ desc limit 3")
 	// Column Aliasing with Table.Column,splitTable Limit
-	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 order by user0_.col desc limit 2")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 1 order by user0_.col desc limit 2")
 	// Column Aliasing with Column,splitTable Limit
-	mcmp.ExecWithColumnCompare("select user0_.col as col0_ from t_user user0_ where id = 1 order by col0_ desc limit 3")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 1 order by col0_ desc limit 3")
 	// Booleans and parenthesis
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 11) and (col = 12) AND f_bit = true limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 11) and (col = 12) AND f_bit = true limit 5")
 	// Column as boolean-ish
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 11) and (col = 12) AND f_bit limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 11) and (col = 12) AND f_bit limit 5")
 	// PK as fake boolean, and column as boolean-ish
-	mcmp.ExecWithColumnCompare("select * from t_user where (id = 5) and (col = 12) AND f_bit = true limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 5) and (col = 12) AND f_bit = true limit 5")
 	// group by with non aggregated columns and table alias
-	mcmp.ExecWithColumnCompare("select u.id, u.intcol, u.col from t_user u group by u.id, u.col")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select u.id, u.intcol, u.col from t_user u group by u.id, u.col")
 	// Auto-resolve should work if unique vindex columns are referenced
 	mcmp.AssertContainsError("select id, user_id from t_user join t_user_extra", "Column 'id' in field list is ambiguous")
-	mcmp.ExecWithColumnCompare("select t_user.id, t_user_extra.user_id from t_user join t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.id, t_user_extra.user_id from t_user join t_user_extra")
 	// RHS TableRoute referenced
-	mcmp.ExecWithColumnCompare("select t_user_extra.id from t_user join t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user_extra.id from t_user join t_user_extra")
 	// Both TableRoutes referenced
-	mcmp.ExecWithColumnCompare("select t_user.col, t_user_extra.id from t_user join t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.col, t_user_extra.id from t_user join t_user_extra")
 	// Expression with single-TableRoute reference
 	// expected: []string{"col", "t_user_extra.id + t_user_extra.col"}
 	// actual  : []string{"col", "t_user_extra_0.id + t_user_extra_0.col"}
 	// column names do not match - the expected values are what mysql produced
-	//mcmp.ExecWithColumnCompare("select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra")
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra")
 	mcmp.Exec("select t_user.col, t_user_extra.id + t_user_extra.col from t_user join t_user_extra")
 	// Jumbled references
-	mcmp.ExecWithColumnCompare("select t_user.col, t_user_extra.id, t_user.col2 from t_user join t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.col, t_user_extra.id, t_user.col2 from t_user join t_user_extra")
 	// Comments
-	mcmp.ExecWithColumnCompare("select /* comment */ t_user.col from t_user join t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select /* comment */ t_user.col from t_user join t_user_extra")
 	// Case preservation
-	mcmp.ExecWithColumnCompare("select t_user.Col, t_user_extra.Id from t_user join t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.Col, t_user_extra.Id from t_user join t_user_extra")
 	// select expression having dependencies on both sides of a join
-	mcmp.ExecWithColumnCompare("select t_user.id * user_id as amount from t_user, t_user_extra")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.id * user_id as amount from t_user, t_user_extra")
 	// use output column containing data from both sides of the join
 	// expected: []string{"t_user_extra.col + t_user.col"}
 	// actual  : []string{"'bbb' + t_user_0.col"}
-	//mcmp.ExecWithColumnCompare("select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id")
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id")
 	mcmp.Exec("select t_user_extra.col + t_user.col from t_user join t_user_extra on t_user.id = t_user_extra.id")
+	// Single table sharded scatter
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col from t_user for update")
+	// join push down using shard key
+	_, err := mcmp.ExecAndIgnore("select u.name from t_user u join t_user_extra ue on u.id = ue.user_id ")
+	require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
+	// ,join push down using shard key
+	_, err = mcmp.ExecAndIgnore("select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
+	require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
+	// multiple tables
+	_, err = mcmp.ExecAndIgnore("select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
+	require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
+	// for update
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.col from t_user join t_user_extra for update")
+	// Hex number is not treated as a simple value
+	// 分片算法问题,0x04不能计算到正确的分片
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where id = 0x04")
+	// select t_user.id, trim(leading 'x' from t_user.name) from t_user
+	// expected: []string{"id", "trim(leading 'x' from t_user.name)"}
+	// actual  : []string{"id", "trim(leading 'x' from t_user_0.`name`)"}
+	// column names do not match - the expected values are what mysql produced
+	mcmp.ExecAndNotEmpty("select t_user.id, trim(leading 'x' from t_user.name) from t_user")
+	// json utility functions
+	// 暂不支持json
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select jcol, JSON_STORAGE_SIZE(jcol), JSON_STORAGE_FREE(jcol), JSON_PRETTY(jcol) from t_user")
+	// Json extract and json unquote shorthands
+	// 暂不支持json
+	// mcmp.ExecWithColumnCompareAndNotEmpty("SELECT a->"$[4]", a->>"$[3]" from t_user")
+	// insert function using column names as arguments
+	mcmp.ExecWithColumnCompareAndNotEmpty("select insert(intcol, id, 3, foo) from t_user")
+	// (OR 1 = 0) doesn't cause unnecessary scatter
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where id = 1 or 1 = 0")
+	// (OR 2 < 1) doesn't cause unnecessary scatter
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where id = 1 or 2 < 1")
+	// allow last_insert_id with argument
+	mcmp.ExecWithColumnCompareAndNotEmpty("select last_insert_id(id) from t_user")
 }
 
 // sql_mode not only_full_group_by

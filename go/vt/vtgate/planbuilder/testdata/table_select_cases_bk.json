@@ -415,48 +415,6 @@
     "plan": "table dual not found"
   },
   {
-    "comment": "for update",
-    "query": "select t_user.col from t_user join t_user_extra for update",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select t_user.col from t_user join t_user_extra for update",
-      "Instructions": {
-        "OperatorType": "Join",
-        "Variant": "Join",
-        "JoinColumnIndexes": "L:0",
-        "TableName": "t_user_t_user_extra",
-        "Inputs": [
-          {
-            "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
-            "Query": "select t_user.col from t_user for update",
-            "Table": "t_user"
-          },
-          {
-            "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
-            "Query": "select 1 from t_user_extra for update",
-            "Table": "t_user_extra"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_user",
-        "user.t_user_extra"
-      ]
-    }
-  },
-  {
     "comment": "Field query should work for joins select bind vars",
     "query": "select user.id, (select user.id+outm.m+unsharded.m from unsharded) from user join unsharded outm",
     "plan": {
@@ -505,32 +463,6 @@
     "comment": "syntax error",
     "query": "the quick brown fox",
     "plan": "syntax error at position 4 near 'the'"
-  },
-  {
-    "comment": "Hex number is not treated as a simple value",
-    "query": "select * from user where id = 0x04",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select * from user where id = 0x04",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "EqualUnique",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select * from `user` where 1 != 1",
-        "Query": "select * from `user` where id = 0x04",
-        "Table": "`user`",
-        "Values": [
-          "VARBINARY(\"\\x04\")"
-        ],
-        "Vindex": "user_index"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
   },
   {
     "comment": "select * from derived table expands specific columns",
@@ -1304,50 +1236,6 @@
     }
   },
   {
-    "comment": "select user.id, trim(leading 'x' from user.name) from user",
-    "query": "select user.id, trim(leading 'x' from user.name) from user",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select user.id, trim(leading 'x' from user.name) from user",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select `user`.id, trim(leading 'x' from `user`.`name`) from `user` where 1 != 1",
-        "Query": "select `user`.id, trim(leading 'x' from `user`.`name`) from `user`",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "json utility functions",
-    "query": "select jcol, JSON_STORAGE_SIZE(jcol), JSON_STORAGE_FREE(jcol), JSON_PRETTY(jcol) from user",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select jcol, JSON_STORAGE_SIZE(jcol), JSON_STORAGE_FREE(jcol), JSON_PRETTY(jcol) from user",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select jcol, json_storage_size(jcol), json_storage_free(jcol), json_pretty(jcol) from `user` where 1 != 1",
-        "Query": "select jcol, json_storage_size(jcol), json_storage_free(jcol), json_pretty(jcol) from `user`",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "dual query with exists clause",
     "query": "select 1 from dual where exists (select 1 from information_schema.TABLES where information_schema.TABLES.TABLE_NAME = 'proc' and information_schema.TABLES.TABLE_SCHEMA = 'mysql')",
     "plan": {
@@ -1465,28 +1353,6 @@
     }
   },
   {
-    "comment": "Json extract and json unquote shorthands",
-    "query": "SELECT a->\"$[4]\", a->>\"$[3]\" FROM user",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "SELECT a->\"$[4]\", a->>\"$[3]\" FROM user",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select a -> '$[4]', a ->> '$[3]' from `user` where 1 != 1",
-        "Query": "select a -> '$[4]', a ->> '$[3]' from `user`",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "Functions that return JSON value attributes",
     "query": "select JSON_DEPTH('{}'), JSON_LENGTH('{\"a\": 1, \"b\": {\"c\": 30}}', '$.b'), JSON_TYPE(JSON_EXTRACT('{\"a\": [10, true]}', '$.a')), JSON_VALID('{\"a\": 1}')",
     "plan": {
@@ -1593,28 +1459,6 @@
       },
       "TablesUsed": [
         "main.dual"
-      ]
-    }
-  },
-  {
-    "comment": "insert function using column names as arguments",
-    "query": "select insert(tcol1, id, 3, tcol2) from user",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select insert(tcol1, id, 3, tcol2) from user",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select insert(tcol1, id, 3, tcol2) from `user` where 1 != 1",
-        "Query": "select insert(tcol1, id, 3, tcol2) from `user`",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
       ]
     }
   },
@@ -2023,58 +1867,6 @@
     }
   },
   {
-    "comment": "(OR 1 = 0) doesn't cause unnecessary scatter",
-    "query": "select * from user where id = 1 or 1 = 0",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select * from user where id = 1 or 1 = 0",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "EqualUnique",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select * from `user` where 1 != 1",
-        "Query": "select * from `user` where id = 1",
-        "Table": "`user`",
-        "Values": [
-          "INT64(1)"
-        ],
-        "Vindex": "user_index"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "(OR 2 < 1) doesn't cause unnecessary scatter",
-    "query": "select * from user where id = 1 or 2 < 1",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select * from user where id = 1 or 2 < 1",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "EqualUnique",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select * from `user` where 1 != 1",
-        "Query": "select * from `user` where id = 1",
-        "Table": "`user`",
-        "Values": [
-          "INT64(1)"
-        ],
-        "Vindex": "user_index"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "query with a derived table and dual table in unsharded keyspace",
     "query": "SELECT * FROM unsharded_a AS t1  JOIN (SELECT trim((SELECT MAX(name) FROM unsharded_a)) AS name) AS t2 WHERE t1.name >= t2.name ORDER BY t1.name ASC LIMIT 1;",
     "plan": {
@@ -2094,28 +1886,6 @@
       "TablesUsed": [
         "main.dual",
         "main.unsharded_a"
-      ]
-    }
-  },
-  {
-    "comment": "allow last_insert_id with argument",
-    "query": "select last_insert_id(id) from user",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select last_insert_id(id) from user",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select last_insert_id(id) from `user` where 1 != 1",
-        "Query": "select last_insert_id(id) from `user`",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
       ]
     }
   },

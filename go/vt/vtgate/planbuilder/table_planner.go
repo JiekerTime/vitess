@@ -153,9 +153,6 @@ func findTableSchema(ctx *plancontext.PlanningContext, tableNames []string) (fou
 }
 
 func getSplitTableConfig(ctx *plancontext.PlanningContext, tName string) *vindexes.LogicTableConfig {
-	if tName == "dual" {
-		return &vindexes.LogicTableConfig{}
-	}
 	return ctx.SplitTableConfig[tName]
 }
 

@@ -919,6 +919,9 @@ func DeepCloneRefOfCheckConstraintDefinition(n *CheckConstraintDefinition) *Chec
 
 // DeepCloneOfColName creates a deep clone of the input.
 func DeepCloneOfColName(n *ColName) *ColName {
+	if n == nil {
+		return nil
+	}
 	out := *n
 	out.Name = CloneIdentifierCI(n.Name)
 	out.Qualifier = CloneTableName(n.Qualifier)
