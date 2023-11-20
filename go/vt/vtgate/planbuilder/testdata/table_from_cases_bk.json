@@ -706,50 +706,6 @@
     }
   },
   {
-    "comment": "index hints, make sure they are not stripped.",
-    "query": "select user.col from user use index(a)",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select user.col from user use index(a)",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select `user`.col from `user` use index (a) where 1 != 1",
-        "Query": "select `user`.col from `user` use index (a)",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "multiple index hints, make sure they are not stripped.",
-    "query": "select user.col from user use index(a) use index for group by (b)",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select user.col from user use index(a) use index for group by (b)",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select `user`.col from `user` use index (a) use index for group by (b) where 1 != 1",
-        "Query": "select `user`.col from `user` use index (a) use index for group by (b)",
-        "Table": "`user`"
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "mergeable sharded join on unique vindex",
     "query": "select user.col from user join user_extra on user.id = user_extra.user_id",
     "plan": {
@@ -2030,35 +1986,6 @@
     }
   },
   {
-    "comment": "alias on column from derived table. TODO: to support alias in SimpleProjection engine primitive.",
-    "query": "select a as k from (select count(*) as a from user) t",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select a as k from (select count(*) as a from user) t",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "sum_count_star(0) AS a",
-        "Inputs": [
-          {
-            "OperatorType": "Route",
-            "Variant": "Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select count(*) as a from `user` where 1 != 1",
-            "Query": "select count(*) as a from `user`",
-            "Table": "`user`"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "select star from derived table on expandable and unsharded table",
     "query": "select u.* from (select * from unsharded) u",
     "plan": {
@@ -2267,56 +2194,6 @@
       },
       "TablesUsed": [
         "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "derived table with aliased columns and a join that requires pushProjection",
-    "query": "select i+1 from (select user.id from user join user_extra) t(i)",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select i+1 from (select user.id from user join user_extra) t(i)",
-      "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          1
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "Join",
-            "Variant": "Join",
-            "JoinColumnIndexes": "L:0,L:1",
-            "TableName": "`user`_user_extra",
-            "Inputs": [
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select `user`.id, `user`.id + 1 from `user` where 1 != 1",
-                "Query": "select `user`.id, `user`.id + 1 from `user`",
-                "Table": "`user`"
-              },
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select 1 from user_extra where 1 != 1",
-                "Query": "select 1 from user_extra",
-                "Table": "user_extra"
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
       ]
     }
   },

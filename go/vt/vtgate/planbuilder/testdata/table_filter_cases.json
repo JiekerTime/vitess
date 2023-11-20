@@ -1253,5 +1253,313 @@
     "comment": "one shard using distinct",
     "query": "select distinct col from t_user where id=123",
     "plan": "VT12001: unsupported: distinct in split table"
+  },
+  {
+    "comment": "Single table multiple unique vindex match",
+    "query": "select id from t_music where id = 5 and user_id = 4",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where id = 5 and user_id = 4",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where id = 5 and user_id = 4",
+        "Table": "t_music",
+        "Values": [
+          "INT64(4)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Select with equals null",
+    "query": "select id from t_music where id = null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where id = null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where id = null",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "SELECT with IS NULL",
+    "query": "select id from t_music where id is null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where id is null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where id is null",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "SELECT with IS NOT NULL",
+    "query": "select id from t_music where id is not null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where id is not null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where id is not null",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Single table with unique vindex match and null match",
+    "query": "select id from t_music where user_id = 4 and id = null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where user_id = 4 and id = null",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where user_id = 4 and id = null",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Single table with unique vindex match and IN (null)",
+    "query": "select id from t_music where user_id = 4 and id IN (null)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where user_id = 4 and id IN (null)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where user_id = 4 and id in (null)",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Single table with unique vindex match and IN (null, 1, 2)",
+    "query": "select id from t_music where user_id = 4 and id IN (null, 1, 2)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where user_id = 4 and id IN (null, 1, 2)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where user_id = 4 and id in (null, 1, 2)",
+        "Table": "t_music",
+        "Values": [
+          "INT64(4)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Single table with unique vindex match and NOT IN (null, 1, 2)",
+    "query": "select id from t_music where user_id = 4 and id NOT IN (null, 1, 2)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where user_id = 4 and id NOT IN (null, 1, 2)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where user_id = 4 and id not in (null, 1, 2)",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Single table with unique vindex match and NOT IN (null, 1, 2) predicates inverted",
+    "query": "select id from t_music where id NOT IN (null, 1, 2) and user_id = 4",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where id NOT IN (null, 1, 2) and user_id = 4",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "None-None",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where id not in (null, 1, 2) and user_id = 4",
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Don't pick a vindex for an IS NULL predicate if it's a lookup vindex",
+    "query": "select id from t_music where id is null and user_id in (1,2)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_music where id is null and user_id in (1,2)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "IN-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_music where id is null and user_id in ::__vals",
+        "Table": "t_music",
+        "Values": [
+          "(INT64(1), INT64(2))"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Like clause evaluated on the vtgate",
+    "query": "select a.textcol1 from t_user a join t_user b where a.textcol1 = b.textcol2 group by a.textcol1 having repeat(a.textcol1,sum(a.id)) like \"And%res\"",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a.textcol1 from t_user a join t_user b where a.textcol1 = b.textcol2 group by a.textcol1 having repeat(a.textcol1,sum(a.id)) like \"And%res\"",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Filter",
+            "Predicate": "repeat(a.textcol1, :1) like 'And%res'",
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Ordered",
+                "Aggregates": "sum(1) AS sum(a.id)",
+                "GroupBy": "0 COLLATE latin1_swedish_ci",
+                "Inputs": [
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] as textcol1",
+                      "[COLUMN 1] * COALESCE([COLUMN 2], INT64(1)) as sum(a.id)"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Join",
+                        "Variant": "Join",
+                        "JoinColumnIndexes": "L:0,L:1,R:1",
+                        "JoinVars": {
+                          "a_textcol1": 0
+                        },
+                        "TableName": "t_user_t_user",
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select a.textcol1, sum(a.id) from t_user_0 as a where 1 != 1 group by a.textcol1",
+                            "OrderBy": "0 ASC COLLATE latin1_swedish_ci",
+                            "Query": "select a.textcol1, sum(a.id) from t_user as a group by a.textcol1 order by a.textcol1 asc",
+                            "Table": "t_user"
+                          },
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select 1, count(*) from t_user_0 as b where 1 != 1 group by 1",
+                            "Query": "select 1, count(*) from t_user as b where b.textcol2 = :a_textcol1 group by 1",
+                            "Table": "t_user"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

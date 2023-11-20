@@ -846,5 +846,136 @@
         "user.t_user_extra"
       ]
     }
+  },
+  {
+    "comment": "index hints, make sure they are not stripped.",
+    "query": "select t_user.col from t_user use index(a)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user use index(a)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_0.col from t_user_0 use index (a) where 1 != 1",
+        "Query": "select t_user.col from t_user use index (a)",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "multiple index hints, make sure they are not stripped.",
+    "query": "select t_user.col from t_user use index(a) use index for group by (b)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user use index(a) use index for group by (b)",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_0.col from t_user_0 use index (a) use index for group by (b) where 1 != 1",
+        "Query": "select t_user.col from t_user use index (a) use index for group by (b)",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "alias on column from derived table. TODO: to support alias in SimpleProjection engine primitive.",
+    "query": "select a as k from (select count(*) as a from t_user) t",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a as k from (select count(*) as a from t_user) t",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum_count_star(0) AS a",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select count(*) as a from t_user_0 where 1 != 1",
+                "Query": "select count(*) as a from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "derived table with aliased columns and a join that requires pushProjection",
+    "query": "select i+1 from (select t_user.id from t_user join t_user_extra) t(i)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select i+1 from (select t_user.id from t_user join t_user_extra) t(i)",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          1
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.id, t_user_0.id + 1 from t_user_0 where 1 != 1",
+                "Query": "select t_user.id, t_user.id + 1 from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                "Query": "select 1 from t_user_extra",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   }
 ]

@@ -1736,5 +1736,396 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "ORDER BY on scatter with text column",
+    "query": "select a, textcol1, b from t_user order by a, textcol1, b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, textcol1, b from t_user order by a, textcol1, b",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a, textcol1, b, weight_string(a), weight_string(b) from t_user_0 where 1 != 1",
+        "OrderBy": "(0|3) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|4) ASC",
+        "Query": "select a, textcol1, b, weight_string(a), weight_string(b) from t_user order by a asc, textcol1 asc, b asc",
+        "ResultColumns": 3,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY on scatter with text column, qualified name TODO: can plan better",
+    "query": "select a, t_user.textcol1, b from t_user order by a, textcol1, b",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, t_user.textcol1, b from t_user order by a, textcol1, b",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a, t_user_0.textcol1, b, weight_string(a), weight_string(b) from t_user_0 where 1 != 1",
+        "OrderBy": "(0|3) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|4) ASC",
+        "Query": "select a, t_user.textcol1, b, weight_string(a), weight_string(b) from t_user order by a asc, textcol1 asc, b asc",
+        "ResultColumns": 3,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY on scatter with multiple text columns",
+    "query": "select a, textcol1, b, textcol2 from t_user order by a, textcol1, b, textcol2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select a, textcol1, b, textcol2 from t_user order by a, textcol1, b, textcol2",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a, textcol1, b, textcol2, weight_string(a), weight_string(b) from t_user_0 where 1 != 1",
+        "OrderBy": "(0|4) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|5) ASC, 3 ASC COLLATE latin1_swedish_ci",
+        "Query": "select a, textcol1, b, textcol2, weight_string(a), weight_string(b) from t_user order by a asc, textcol1 asc, b asc, textcol2 asc",
+        "ResultColumns": 4,
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY column offset",
+    "query": "select id as foo from t_music order by 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id as foo from t_music order by 1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id as foo, weight_string(id) from t_music_0 where 1 != 1",
+        "OrderBy": "(0|1) ASC",
+        "Query": "select id as foo, weight_string(id) from t_music order by foo asc",
+        "ResultColumns": 1,
+        "Table": "t_music"
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY after pull-out subquery",
+    "query": "select col from t_user where col in (select col2 from t_user) order by col",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col2 from t_user) order by col",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col2 from t_user_0 where 1 != 1",
+            "Query": "select col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "OrderBy": "0 ASC",
+            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 order by col asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY NULL after pull-out subquery",
+    "query": "select col from t_user where col in (select col2 from t_user) order by null",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col2 from t_user) order by null",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col2 from t_user_0 where 1 != 1",
+            "Query": "select col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "ORDER BY RAND() after pull-out subquery",
+    "query": "select col from t_user where col in (select col2 from t_user) order by rand()",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col2 from t_user) order by rand()",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col2 from t_user_0 where 1 != 1",
+            "Query": "select col2 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 order by rand()",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "LIMIT",
+    "query": "select col1 from t_user where id = 1 limit 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col1 from t_user where id = 1 limit 1",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(1)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col1 from t_user_0 where 1 != 1",
+            "Query": "select col1 from t_user where id = 1 limit :__upper_limit",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "limit for scatter",
+    "query": "select col from t_user limit 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from t_user limit 1",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(1)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user limit :__upper_limit",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "limit for scatter with bind var",
+    "query": "select col from t_user limit :a",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select col from t_user limit :a",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": ":a",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user limit :__upper_limit",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scatter limit after pullout subquery",
+    "query": "select col from t_user where col in (select col1 from t_user) limit 1",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select col from t_user where col in (select col1 from t_user) limit 1",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(1)",
+        "Inputs": [
+          {
+            "OperatorType": "Subquery",
+            "Variant": "PulloutIn",
+            "PulloutVars": [
+              "__sq_has_values1",
+              "__sq1"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select col1 from t_user_0 where 1 != 1",
+                "Query": "select col1 from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select col from t_user_0 where 1 != 1",
+                "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 limit :__upper_limit",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "arithmetic limit",
+    "query": "select id from t_user limit 1+1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user limit 1+1",
+      "Instructions": {
+        "OperatorType": "Limit",
+        "Count": "INT64(2)",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user limit :__upper_limit",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]
