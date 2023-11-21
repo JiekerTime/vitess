@@ -333,5 +333,86 @@
         "user.user"
       ]
     }
+  },
+  {
+    "comment": "two subqueries with different Select and OpCode",
+    "query": "select id from t_user where id in (select id from t_user_extra) and col = (select user_id from t_user_extra limit 1)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id in (select id from t_user_extra) and col = (select user_id from t_user_extra limit 1)",
+      "Instructions": {
+        "OperatorType": "UncorrelatedSubquery",
+        "Variant": "PulloutValue",
+        "PulloutVars": [
+          "__sq2"
+        ],
+        "Inputs": [
+          {
+            "InputName": "SubQuery",
+            "OperatorType": "Limit",
+            "Count": "INT64(1)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select user_id from t_user_extra_0 where 1 != 1",
+                "Query": "select user_id from t_user_extra limit :__upper_limit",
+                "Table": "t_user_extra"
+              }
+            ]
+          },
+          {
+            "InputName": "Outer",
+            "OperatorType": "UncorrelatedSubquery",
+            "Variant": "PulloutIn",
+            "PulloutVars": [
+              "__sq_has_values",
+              "__sq1"
+            ],
+            "Inputs": [
+              {
+                "InputName": "SubQuery",
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select id from t_user_extra_0 where 1 != 1",
+                "Query": "select id from t_user_extra",
+                "Table": "t_user_extra"
+              },
+              {
+                "InputName": "Outer",
+                "OperatorType": "TableRoute",
+                "Variant": "IN-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select id from t_user_0 where 1 != 1",
+                "Query": "select id from t_user where :__sq_has_values and id in ::__vals and col = :__sq2",
+                "Table": "t_user",
+                "Values": [
+                  "::__sq1"
+                ],
+                "TableValues": [
+                  ":__sq2"
+                ],
+                "Vindex": "user_index"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   }
 ]

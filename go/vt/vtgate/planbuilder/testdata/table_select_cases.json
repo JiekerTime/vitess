@@ -877,8 +877,8 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select :t_user_extra_col + t_user_0.col from t_user_0 where 1 != 1",
-            "Query": "select :t_user_extra_col + t_user.col from t_user where t_user.id = :t_user_extra_id",
+            "FieldQuery": "select :t_user_extra_col + t_user_0.col as `t_user_extra.col + t_user.col` from t_user_0 where 1 != 1",
+            "Query": "select :t_user_extra_col + t_user.col as `t_user_extra.col + t_user.col` from t_user where t_user.id = :t_user_extra_id",
             "Table": "t_user",
             "Values": [
               ":t_user_extra_id"
