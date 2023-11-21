@@ -367,5 +367,118 @@
         "main.unsharded"
       ]
     }
+  },
+  {
+    "comment": "Distinct with cross shard query",
+    "query": "select distinct t_user.a from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct t_user.a from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|1)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1 group by t_user_0.a, weight_string(t_user_0.a)",
+                "OrderBy": "(0|1) ASC",
+                "Query": "select t_user.a, weight_string(t_user.a) from t_user group by t_user.a, weight_string(t_user.a) order by t_user.a asc",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select 1 from t_user_extra group by .0",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with column alias",
+    "query": "select distinct a as c, a from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct a as c, a from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|2), (1|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a as c, a, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+            "OrderBy": "(0|2) ASC",
+            "Query": "select a as c, a, weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with same column",
+    "query": "select distinct a, a from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct a, a from t_user",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|2), (1|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a, a, weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+            "OrderBy": "(0|2) ASC",
+            "Query": "select a, a, weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]
