@@ -8,14 +8,14 @@
       "Instructions": {
         "OperatorType": "Sort",
         "Variant": "Memory",
-        "OrderBy": "(1|3) ASC",
+        "OrderBy": "(1|4) ASC",
         "ResultColumns": 3,
         "Inputs": [
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS count(*), any_value(3)",
-            "GroupBy": "(0|4)",
+            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS count(*), any_value(4)",
+            "GroupBy": "(0|3)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -24,9 +24,9 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
-                "OrderBy": "(0|4) ASC",
-                "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+                "FieldQuery": "select a, b, count(*), weight_string(a), weight_string(b) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|3) ASC",
+                "Query": "select a, b, count(*), weight_string(a), weight_string(b) from t_user group by a, weight_string(a) order by a asc",
                 "Table": "t_user"
               }
             ]
@@ -78,7 +78,7 @@
     }
   },
   {
-    "comment": "select a, b, count(*) k from t_user group by a order by b, a, k",
+    "comment": "select a, b, count(*) k from user group by a order by b, a, k",
     "query": "select a, b, count(*) k from t_user group by a order by b, a, k",
     "plan": {
       "QueryType": "SELECT",
@@ -86,14 +86,14 @@
       "Instructions": {
         "OperatorType": "Sort",
         "Variant": "Memory",
-        "OrderBy": "(1|3) ASC, (0|4) ASC, 2 ASC",
+        "OrderBy": "(1|4) ASC, (0|3) ASC, 2 ASC",
         "ResultColumns": 3,
         "Inputs": [
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS k, any_value(3)",
-            "GroupBy": "(0|4)",
+            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS k, any_value(4)",
+            "GroupBy": "(0|3)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -102,9 +102,9 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select a, b, count(*) as k, weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
-                "OrderBy": "(0|4) ASC",
-                "Query": "select a, b, count(*) as k, weight_string(b), weight_string(a) from t_user group by a, weight_string(a) order by a asc",
+                "FieldQuery": "select a, b, count(*) as k, weight_string(a), weight_string(b) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|3) ASC",
+                "Query": "select a, b, count(*) as k, weight_string(a), weight_string(b) from t_user group by a, weight_string(a) order by a asc",
                 "Table": "t_user"
               }
             ]
@@ -318,14 +318,14 @@
       "Instructions": {
         "OperatorType": "Sort",
         "Variant": "Memory",
-        "OrderBy": "(1|3) ASC",
+        "OrderBy": "(1|4) ASC",
         "ResultColumns": 3,
         "Inputs": [
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS count(*), any_value(3)",
-            "GroupBy": "(0|4)",
+            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS count(*), any_value(4)",
+            "GroupBy": "(0|3)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -334,9 +334,9 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
-                "OrderBy": "(0|4) ASC",
-                "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user where id = 1024 group by a, weight_string(a) order by a asc",
+                "FieldQuery": "select a, b, count(*), weight_string(a), weight_string(b) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "OrderBy": "(0|3) ASC",
+                "Query": "select a, b, count(*), weight_string(a), weight_string(b) from t_user where id = 1024 group by a, weight_string(a) order by a asc",
                 "Table": "t_user",
                 "Values": [
                   "INT64(1024)"
@@ -361,25 +361,25 @@
       "Instructions": {
         "OperatorType": "Sort",
         "Variant": "Memory",
-        "OrderBy": "(1|3) ASC",
+        "OrderBy": "(1|4) ASC",
         "ResultColumns": 3,
         "Inputs": [
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS count(*), any_value(3)",
-            "GroupBy": "(0|4)",
+            "Aggregates": "any_value(1) AS b, sum_count_star(2) AS count(*), any_value(4)",
+            "GroupBy": "(0|3)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
-                "OrderBy": "(0|4) ASC",
+                "OrderBy": "(0|3) ASC",
                 "Variant": "Scatter-EqualUnique",
                 "Keyspace": {
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select a, b, count(*), weight_string(b), weight_string(a) from t_user_0 where 1 != 1 group by a, weight_string(a)",
-                "Query": "select a, b, count(*), weight_string(b), weight_string(a) from t_user where col = 1024 group by a, weight_string(a) order by a asc",
+                "FieldQuery": "select a, b, count(*), weight_string(a), weight_string(b) from t_user_0 where 1 != 1 group by a, weight_string(a)",
+                "Query": "select a, b, count(*), weight_string(a), weight_string(b) from t_user where col = 1024 group by a, weight_string(a) order by a asc",
                 "Table": "t_user",
                 "TableValues": [
                   "INT64(1024)"
