@@ -3129,8 +3129,8 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "count_distinct(0|4) AS count(distinct tcol2), sum_count_star(2) AS count(*), sum_distinct(3|4) AS sum(distinct tcol2)",
-        "GroupBy": "(1|5)",
+        "Aggregates": "count_distinct(0|5) AS count(distinct tcol2), sum_count_star(2) AS count(*), sum_distinct(3|5) AS sum(distinct tcol2)",
+        "GroupBy": "(1|4)",
         "ResultColumns": 4,
         "Inputs": [
           {
@@ -3140,9 +3140,9 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select tcol2, tcol1, count(*), tcol2, weight_string(tcol2), weight_string(tcol1) from t_user_0 where 1 != 1 group by tcol1, tcol2, weight_string(tcol1), weight_string(tcol2)",
-            "OrderBy": "(1|5) ASC, (0|4) ASC",
-            "Query": "select tcol2, tcol1, count(*), tcol2, weight_string(tcol2), weight_string(tcol1) from t_user group by tcol1, tcol2, weight_string(tcol1), weight_string(tcol2) order by tcol1 asc, tcol2 asc",
+            "FieldQuery": "select tcol2, tcol1, count(*), tcol2, weight_string(tcol1), weight_string(tcol2) from t_user_0 where 1 != 1 group by tcol1, tcol2, weight_string(tcol1), weight_string(tcol2)",
+            "OrderBy": "(1|4) ASC, (0|5) ASC",
+            "Query": "select tcol2, tcol1, count(*), tcol2, weight_string(tcol1), weight_string(tcol2) from t_user group by tcol1, tcol2, weight_string(tcol1), weight_string(tcol2) order by tcol1 asc, tcol2 asc",
             "Table": "t_user"
           }
         ]
@@ -3758,70 +3758,6 @@
     }
   },
   {
-    "comment": "select (select 1 from user u having count(ue.col) > 10) from user_extra ue",
-    "query": "select (select 1 from t_user u having count(ue.col) > 10) from t_user_extra ue",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select (select 1 from t_user u having count(ue.col) > 10) from t_user_extra ue",
-      "Instructions": {
-        "OperatorType": "Subquery",
-        "Variant": "PulloutValue",
-        "PulloutVars": [
-          "__sq1"
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "SimpleProjection",
-            "Columns": [
-              0
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Filter",
-                "Predicate": ":1 > 10",
-                "Inputs": [
-                  {
-                    "OperatorType": "Aggregate",
-                    "Variant": "Scalar",
-                    "Aggregates": "any_value(0) AS 1, sum_count(1) AS count(ue.col)",
-                    "Inputs": [
-                      {
-                        "OperatorType": "TableRoute",
-                        "Variant": "Scatter-Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select 1, count(ue.col) from t_user_0 as u where 1 != 1",
-                        "Query": "select 1, count(ue.col) from t_user as u",
-                        "Table": "t_user"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select :__sq1 from t_user_extra_0 as ue where 1 != 1",
-            "Query": "select :__sq1 from t_user_extra as ue",
-            "Table": "t_user_extra"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_user",
-        "user.t_user_extra"
-      ]
-    }
-  },
-  {
     "comment": "Can't inline derived table when it has HAVING with aggregation function",
     "query": "select * from (select id from t_user having count(*) = 1) s",
     "plan": {
@@ -3875,7 +3811,34 @@
   {
     "comment": "using two distinct columns - min with distinct vindex, sum with distinct without vindex",
     "query": "select col1, min(distinct id), sum(distinct col3) from t_user group by col1",
-    "plan": "VT12001: unsupported: statement(min(distinct id)) in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col1, min(distinct id), sum(distinct col3) from t_user group by col1",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "min(1|4) AS min(distinct id), sum_distinct(2|5) AS sum(distinct col3)",
+        "GroupBy": "(0|3)",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col1, min(id) as `min(distinct id)`, col3, weight_string(col1), weight_string(id), weight_string(col3) from t_user_0 where 1 != 1 group by col1, col3, weight_string(col1), weight_string(id), weight_string(col3)",
+            "OrderBy": "(0|3) ASC, (2|5) ASC",
+            "Query": "select col1, min(id) as `min(distinct id)`, col3, weight_string(col1), weight_string(id), weight_string(col3) from t_user group by col1, col3, weight_string(col1), weight_string(id), weight_string(col3) order by col1 asc, col3 asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   },
   {
     "comment": "select count(distinct user_id, name) from user",
@@ -3968,106 +3931,6 @@
             "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
             "ResultColumns": 1,
             "Table": "t_user"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_user"
-      ]
-    }
-  },
-  {
-    "comment": "select sum(col) from (select user.col as col, 32 from user join user_extra) t",
-    "query": "select sum(col) from (select t_user.col as col, 32 from t_user join t_user_extra) t",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select sum(col) from (select t_user.col as col, 32 from t_user join t_user_extra) t",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "sum(0) AS sum(col)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 2] * COALESCE([COLUMN 3], INT64(1)) as sum(col)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Join",
-                "Variant": "Join",
-                "JoinColumnIndexes": "L:0,L:1,L:2,R:1",
-                "TableName": "t_user_t_user_extra",
-                "Inputs": [
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select t_user_0.col as col, 32, sum(col) from t_user_0 where 1 != 1",
-                    "Query": "select t_user.col as col, 32, sum(col) from t_user",
-                    "Table": "t_user"
-                  },
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select 1, count(*) from t_user_extra_0 where 1 != 1 group by 1",
-                    "Query": "select 1, count(*) from t_user_extra group by 1",
-                    "Table": "t_user_extra"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_user",
-        "user.t_user_extra"
-      ]
-    }
-  },
-  {
-    "comment": "count on column from LIMIT",
-    "query": "select count(city) from (select phone, id, city from t_user where id > 12 limit 10) as x",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(city) from (select phone, id, city from t_user where id > 12 limit 10) as x",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "count(0) AS count(city)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 2] as count(city)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Limit",
-                "Count": "INT64(10)",
-                "Inputs": [
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select phone, id, city from t_user_0 where 1 != 1",
-                    "Query": "select phone, id, city from t_user where id > 12 limit :__upper_limit",
-                    "Table": "t_user"
-                  }
-                ]
-              }
-            ]
           }
         ]
       },
