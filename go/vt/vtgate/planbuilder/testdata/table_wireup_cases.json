@@ -531,12 +531,47 @@
         "Count": "INT64(10)",
         "Inputs": [
           {
-            "OperatorType": "Subquery",
-            "Variant": "PulloutValue",
-            "PulloutVars": [
-              "__sq1"
-            ],
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,R:0,L:1",
+            "JoinVars": {
+              "u_col": 2
+            },
+            "TableName": "t_user_t_user_extra",
             "Inputs": [
+              {
+                "OperatorType": "UncorrelatedSubquery",
+                "Variant": "PulloutValue",
+                "PulloutVars": [
+                  "__sq1"
+                ],
+                "Inputs": [
+                  {
+                    "InputName": "SubQuery",
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select col from t_user_0 where 1 != 1",
+                    "Query": "select col from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "InputName": "Outer",
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select u.id, :__sq1 as `(select col from t_user)`, u.col from t_user_0 as u where 1 != 1",
+                    "Query": "select u.id, :__sq1 as `(select col from t_user)`, u.col from t_user as u",
+                    "Table": "t_user"
+                  }
+                ]
+              },
               {
                 "OperatorType": "TableRoute",
                 "Variant": "Scatter-Scatter",
@@ -544,42 +579,9 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select col from t_user_0 where 1 != 1",
-                "Query": "select col from t_user",
-                "Table": "t_user"
-              },
-              {
-                "OperatorType": "Join",
-                "Variant": "Join",
-                "JoinColumnIndexes": "L:1,R:0,L:2",
-                "JoinVars": {
-                  "u_col": 0
-                },
-                "TableName": "t_user_t_user_extra",
-                "Inputs": [
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select u.col, u.id, :__sq1 from t_user_0 as u where 1 != 1",
-                    "Query": "select u.col, u.id, :__sq1 from t_user as u",
-                    "Table": "t_user"
-                  },
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select e.id from t_user_extra_0 as e where 1 != 1",
-                    "Query": "select e.id from t_user_extra as e where e.id = :u_col",
-                    "Table": "t_user_extra"
-                  }
-                ]
+                "FieldQuery": "select e.id from t_user_extra_0 as e where 1 != 1",
+                "Query": "select e.id from t_user_extra as e where e.id = :u_col",
+                "Table": "t_user_extra"
               }
             ]
           }
