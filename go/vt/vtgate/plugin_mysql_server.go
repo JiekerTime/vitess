@@ -737,6 +737,7 @@ func (vh *vtgateHandler) CheckAttachedHost(c *mysql.Conn) error {
 	}
 
 	for _, tablet := range tablets {
+		log.Infof("[%s] [%s] [%d] [%d]", tablet.MysqlHostname, c.CtMysql.MysqlIP, tablet.MysqlPort, c.CtMysql.MysqlPort)
 		if tablet.MysqlHostname == c.CtMysql.MysqlIP && tablet.MysqlPort == c.CtMysql.MysqlPort {
 			return nil
 		}
