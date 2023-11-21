@@ -16,7 +16,6 @@ import (
 
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func TestSplitTablePlan(t *testing.T) {
