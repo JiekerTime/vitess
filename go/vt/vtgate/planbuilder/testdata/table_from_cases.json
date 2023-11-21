@@ -730,50 +730,43 @@
       "QueryType": "SELECT",
       "Original": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.col between 10 and 20",
       "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          0
-        ],
+        "OperatorType": "Filter",
+        "Predicate": "t_user_extra.col between 10 and 20",
+        "ResultColumns": 1,
         "Inputs": [
           {
-            "OperatorType": "Filter",
-            "Predicate": "t_user_extra.col between 10 and 20",
+            "OperatorType": "Join",
+            "Variant": "LeftJoin",
+            "JoinColumnIndexes": "L:0,R:0",
+            "JoinVars": {
+              "t_user_col": 1
+            },
+            "TableName": "t_user_t_user_extra",
             "Inputs": [
               {
-                "OperatorType": "Join",
-                "Variant": "LeftJoin",
-                "JoinColumnIndexes": "L:0,R:0",
-                "JoinVars": {
-                  "t_user_col": 1
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
                 },
-                "TableName": "t_user_t_user_extra",
-                "Inputs": [
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
-                    "Query": "select t_user.id, t_user.col from t_user",
-                    "Table": "t_user"
-                  },
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-EqualUnique",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
-                    "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
-                    "TableValues": [
-                      ":t_user_col"
-                    ],
-                    "Table": "t_user_extra"
-                  }
-                ]
+                "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
+                "Query": "select t_user.id, t_user.col from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                "TableValues": [
+                  ":t_user_col"
+                ],
+                "Table": "t_user_extra"
               }
             ]
           }
@@ -792,50 +785,43 @@
       "QueryType": "SELECT",
       "Original": "select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where coalesce(t_user_extra.col, 4) = 5",
       "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          0
-        ],
+        "OperatorType": "Filter",
+        "Predicate": "coalesce(t_user_extra.col, 4) = 5",
+        "ResultColumns": 1,
         "Inputs": [
           {
-            "OperatorType": "Filter",
-            "Predicate": "coalesce(t_user_extra.col, 4) = 5",
+            "OperatorType": "Join",
+            "Variant": "LeftJoin",
+            "JoinColumnIndexes": "L:0,R:0",
+            "JoinVars": {
+              "t_user_col": 1
+            },
+            "TableName": "t_user_t_user_extra",
             "Inputs": [
               {
-                "OperatorType": "Join",
-                "Variant": "LeftJoin",
-                "JoinColumnIndexes": "L:0,R:0",
-                "JoinVars": {
-                  "t_user_col": 1
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
                 },
-                "TableName": "t_user_t_user_extra",
-                "Inputs": [
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
-                    "Query": "select t_user.id, t_user.col from t_user",
-                    "Table": "t_user"
-                  },
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-EqualUnique",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
-                    "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
-                    "TableValues": [
-                      ":t_user_col"
-                    ],
-                    "Table": "t_user_extra"
-                  }
-                ]
+                "FieldQuery": "select t_user_0.id, t_user_0.col from t_user_0 where 1 != 1",
+                "Query": "select t_user.id, t_user.col from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+                "Query": "select t_user_extra.col from t_user_extra where t_user_extra.col = :t_user_col",
+                "TableValues": [
+                  ":t_user_col"
+                ],
+                "Table": "t_user_extra"
               }
             ]
           }
@@ -898,83 +884,25 @@
       "QueryType": "SELECT",
       "Original": "select a as k from (select count(*) as a from t_user) t",
       "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          0
-        ],
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS a",
         "Inputs": [
           {
-            "OperatorType": "Aggregate",
-            "Variant": "Scalar",
-            "Aggregates": "sum_count_star(0) AS a",
-            "Inputs": [
-              {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select count(*) as a from t_user_0 where 1 != 1",
-                "Query": "select count(*) as a from t_user",
-                "Table": "t_user"
-              }
-            ]
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select count(*) as a from t_user_0 where 1 != 1",
+            "Query": "select count(*) as a from t_user",
+            "Table": "t_user"
           }
         ]
       },
       "TablesUsed": [
         "user.t_user"
-      ]
-    }
-  },
-  {
-    "comment": "derived table with aliased columns and a join that requires pushProjection",
-    "query": "select i+1 from (select t_user.id from t_user join t_user_extra) t(i)",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select i+1 from (select t_user.id from t_user join t_user_extra) t(i)",
-      "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          1
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "Join",
-            "Variant": "Join",
-            "JoinColumnIndexes": "L:0,L:1",
-            "TableName": "t_user_t_user_extra",
-            "Inputs": [
-              {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select t_user_0.id, t_user_0.id + 1 from t_user_0 where 1 != 1",
-                "Query": "select t_user.id, t_user.id + 1 from t_user",
-                "Table": "t_user"
-              },
-              {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
-                "Query": "select 1 from t_user_extra",
-                "Table": "t_user_extra"
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_user",
-        "user.t_user_extra"
       ]
     }
   }
