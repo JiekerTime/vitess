@@ -146,6 +146,9 @@ func Set(mtype int, opts ...Option) (func(), error) {
 	} else if cpus > MaxGoProcesses {
 		cpus = MaxGoProcesses
 	}
+	if prev == cpus {
+		return undo, nil
+	}
 	log.Infof("ALL CORES[%d] SET GOMAXPROCS CORES[%d]", maxProcs, cpus)
 
 	runtime.GOMAXPROCS(cpus)

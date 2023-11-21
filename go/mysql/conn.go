@@ -987,6 +987,7 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 
 	if c.CrossEnable || c.AttachEnable {
 		if err = handler.CheckAttachedHost(c); err != nil {
+			c.recycleReadPacket()
 			if err := c.writeErrorPacketFromError(err); err != nil {
 				log.Errorf("Error writing query error to client %v: %v", c.ConnectionID, err)
 				return false
@@ -1023,7 +1024,7 @@ func (c *Conn) handleNextCommand(handler Handler) bool {
 				return true
 			}
 		}
-		c.ResetCrossTablet()
+		//c.ResetCrossTablet()
 		//TODO
 		if err := handler.InitCrossTabletConn(c, c.listener.authServer, db); err != nil {
 			if err := c.writeErrorPacketFromError(err); err != nil {
@@ -1865,6 +1866,7 @@ func (c *Conn) ResetCrossTablet() {
 		c.crossTabletConn.Close()
 	}
 	c.CrossEnable = false
+	c.AttachEnable = false
 	c.CtMysql.MysqlIP = ""
 	c.CtMysql.MysqlPort = 0
 	c.CtMysql.UserName = ""
