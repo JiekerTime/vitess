@@ -16,6 +16,7 @@ import (
 
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func TestSplitTablePlan(t *testing.T) {
@@ -47,6 +48,7 @@ func TestSplitTablePlan(t *testing.T) {
 	testTableFile(t, "table_union_cases.json", output, vschema, false)
 	testTableFile(t, "table_vexplain_cases.json", output, vschema, false)
 	testTableFile(t, "table_explain_cases.json", output, vschema, false)
+	testTableFile(t, "table_wireup_cases.json", output, vschema, false)
 }
 
 func TestSplitTableOne(t *testing.T) {
@@ -122,7 +124,7 @@ func printTableFile(t *testing.T, filename string) {
 				continue
 			}
 			fmt.Println("// " + tcase.Comment)
-			fmt.Println("mcmp.ExecWithColumnCompare(\"" + tcase.Query + "\")")
+			fmt.Println("mcmp.ExecWithColumnCompareAndNotEmpty(\"" + tcase.Query + "\")")
 		}
 		fmt.Println()
 	})

@@ -506,8 +506,232 @@
     "plan": "VT12001: unsupported: subquery in split table"
   },
   {
-    "comment": "subquery exists",
-    "query": "select exists(select id from t_user where id = 4)",
-    "plan":"VT12001: unsupported: subquery in split table"
+    "comment": "Reference with a subquery which cannot be merged",
+    "query": "select exists(select * from t_user)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select exists(select * from t_user)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutExists",
+        "PulloutVars": [
+          "__sq_has_values1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Limit",
+            "Count": "INT64(1)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_0 where 1 != 1",
+                "Query": "select 1 from t_user limit :__upper_limit",
+                "Table": "t_user"
+              }
+            ]
+          },
+          {
+            "OperatorType": "Route",
+            "Variant": "Reference",
+            "Keyspace": {
+              "Name": "main",
+              "Sharded": false
+            },
+            "FieldQuery": "select :__sq_has_values1 from dual where 1 != 1",
+            "Query": "select :__sq_has_values1 from dual",
+            "Table": "dual"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.dual",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Unmergeable subquery with `MAX` aggregate",
+    "query": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id IN (5, 6))",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id IN (5, 6))",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "max(0) AS max(t_music.id)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "IN-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select max(t_music_0.id) from t_music_0 where 1 != 1",
+                "Query": "select max(t_music.id) from t_music where t_music.user_id in ::__vals",
+                "Table": "t_music",
+                "Values": [
+                  "(INT64(5), INT64(6))"
+                ],
+                "Vindex": "user_index"
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
+            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Table": "t_music",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Mergeable subquery with `MAX` aggregate with `EqualUnique` route operator",
+    "query": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "max(0) AS max(t_music.id)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "EqualUnique-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select max(t_music_0.id) from t_music_0 where 1 != 1",
+                "Query": "select max(t_music.id) from t_music where t_music.user_id = 5",
+                "Table": "t_music",
+                "Values": [
+                  "INT64(5)"
+                ],
+                "Vindex": "user_index"
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
+            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Table": "t_music",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "Mergeable subquery with `LIMIT` due to `EqualUnique` route",
+    "query": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5 LIMIT 10)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5 LIMIT 10)",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Limit",
+            "Count": "INT64(10)",
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Scalar",
+                "Aggregates": "max(0) AS max(t_music.id)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "EqualUnique-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select max(t_music_0.id) from t_music_0 where 1 != 1",
+                    "Query": "select max(t_music.id) from t_music where t_music.user_id = 5",
+                    "Table": "t_music",
+                    "Values": [
+                      "INT64(5)"
+                    ],
+                    "Vindex": "user_index"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
+            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Table": "t_music",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "music_user_map"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
   }
 ]

@@ -224,6 +224,12 @@ func (mcmp *MySQLCompare) ExecWithColumnCompare(query string) *sqltypes.Result {
 	mysqlQr, err := mcmp.MySQLConn.ExecuteFetch(query, 1000, true)
 	require.NoError(mcmp.t, err, "[MySQL Error] for query: "+query)
 	compareVitessAndMySQLResults(mcmp.t, query, mcmp.VtConn, vtQr, mysqlQr, true)
+	if len(vtQr.Rows) == 0 {
+		if mcmp.VtConn != nil {
+			qr := Exec(mcmp.t, mcmp.VtConn, fmt.Sprintf("vexplain plan %s", query))
+			fmt.Printf("query plan: \n%s\n", qr.Rows[0][0].ToString())
+		}
+	}
 	return vtQr
 }
 
@@ -285,4 +291,16 @@ func (mcmp *MySQLCompare) ExecAllowError(query string) (*sqltypes.Result, error)
 		vtErr = compareVitessAndMySQLResults(mcmp.t, query, mcmp.VtConn, vtQr, mysqlQr, false)
 	}
 	return vtQr, vtErr
+}
+
+func (mcmp *MySQLCompare) ExecWithColumnCompareAndNotEmpty(query string) {
+	result := mcmp.ExecWithColumnCompare(query)
+	assert.NotEmpty(mcmp.t, result, "query result is empty! for query : "+query)
+	assert.NotEmpty(mcmp.t, result.Rows, "query result Rows is empty! for query : "+query)
+}
+
+func (mcmp *MySQLCompare) ExecAndNotEmpty(query string) {
+	result := mcmp.Exec(query)
+	assert.NotEmpty(mcmp.t, result, "query result is empty! for query : "+query)
+	assert.NotEmpty(mcmp.t, result.Rows, "query result Rows is empty! for query : "+query)
 }

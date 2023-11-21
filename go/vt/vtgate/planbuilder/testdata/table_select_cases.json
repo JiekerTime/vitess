@@ -918,16 +918,246 @@
   {
     "comment": "join push down using shard key",
     "query": "select u.name from t_user u join t_user_extra ue on u.id = ue.user_id ",
-    "plan":"VT12001: unsupported: multiple tables in split table"
+    "plan": "VT12001: unsupported: multiple tables in split table"
   },
   {
     "comment": ",join push down using shard key",
     "query": "select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
-    "plan":"VT12001: unsupported: multiple tables in split table"
+    "plan": "VT12001: unsupported: multiple tables in split table"
   },
   {
     "comment": "multiple tables",
     "query": "select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
-    "plan":"VT12001: unsupported: multiple tables in split table"
+    "plan": "VT12001: unsupported: multiple tables in split table"
+  },
+  {
+    "comment": "for update",
+    "query": "select t_user.col from t_user join t_user_extra for update",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col from t_user join t_user_extra for update",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select t_user.col from t_user for update",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra for update",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Hex number is not treated as a simple value",
+    "query": "select * from t_user where id = 0x04",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 0x04",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
+        "Query": "select * from t_user where id = 0x04",
+        "Table": "t_user",
+        "Values": [
+          "VARBINARY(\"\\x04\")"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "select t_user.id, trim(leading 'x' from t_user.name) from t_user",
+    "query": "select t_user.id, trim(leading 'x' from t_user.name) from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id, trim(leading 'x' from t_user.name) from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_0.id, trim(leading 'x' from t_user_0.`name`) from t_user_0 where 1 != 1",
+        "Query": "select t_user.id, trim(leading 'x' from t_user.`name`) from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "json utility functions",
+    "query": "select jcol, JSON_STORAGE_SIZE(jcol), JSON_STORAGE_FREE(jcol), JSON_PRETTY(jcol) from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select jcol, JSON_STORAGE_SIZE(jcol), JSON_STORAGE_FREE(jcol), JSON_PRETTY(jcol) from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select jcol, json_storage_size(jcol), json_storage_free(jcol), json_pretty(jcol) from t_user_0 where 1 != 1",
+        "Query": "select jcol, json_storage_size(jcol), json_storage_free(jcol), json_pretty(jcol) from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Json extract and json unquote shorthands",
+    "query": "SELECT a->\"$[4]\", a->>\"$[3]\" from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "SELECT a->\"$[4]\", a->>\"$[3]\" from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select a -> '$[4]', a ->> '$[3]' from t_user_0 where 1 != 1",
+        "Query": "select a -> '$[4]', a ->> '$[3]' from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert function using column names as arguments",
+    "query": "select insert(tcol1, id, 3, tcol2) from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select insert(tcol1, id, 3, tcol2) from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select insert(tcol1, id, 3, tcol2) from t_user_0 where 1 != 1",
+        "Query": "select insert(tcol1, id, 3, tcol2) from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "(OR 1 = 0) doesn't cause unnecessary scatter",
+    "query": "select * from t_user where id = 1 or 1 = 0",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 1 or 1 = 0",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
+        "Query": "select * from t_user where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "(OR 2 < 1) doesn't cause unnecessary scatter",
+    "query": "select * from t_user where id = 1 or 2 < 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_user where id = 1 or 2 < 1",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from t_user_0 where 1 != 1",
+        "Query": "select * from t_user where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "allow last_insert_id with argument",
+    "query": "select last_insert_id(id) from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select last_insert_id(id) from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select last_insert_id(id) from t_user_0 where 1 != 1",
+        "Query": "select last_insert_id(id) from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

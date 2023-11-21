@@ -1,72 +1,5 @@
 [
   {
-    "comment": "scatter aggregate in a subquery",
-    "query": "select a from (select count(*) as a from user) t",
-    "v3-plan": {
-      "QueryType": "SELECT",
-      "Original": "select a from (select count(*) as a from user) t",
-      "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          0
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "Aggregate",
-            "Variant": "Scalar",
-            "Aggregates": "sum_count(0) AS count",
-            "Inputs": [
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select count(*) as a from `user` where 1 != 1",
-                "Query": "select count(*) as a from `user`",
-                "Table": "`user`"
-              }
-            ]
-          }
-        ]
-      }
-    },
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select a from (select count(*) as a from user) t",
-      "Instructions": {
-        "OperatorType": "SimpleProjection",
-        "Columns": [
-          0
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "Aggregate",
-            "Variant": "Scalar",
-            "Aggregates": "sum_count_star(0) AS a",
-            "Inputs": [
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select count(*) as a from `user` where 1 != 1",
-                "Query": "select count(*) as a from `user`",
-                "Table": "`user`"
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
     "comment": "routing rules for aggregates",
     "query": "select id, count(*) from route2 group by id",
     "v3-plan": {
@@ -329,109 +262,6 @@
     }
   },
   {
-    "comment": "order by inside and outside parenthesis select",
-    "query": "(select id from user order by 1 desc) order by 1 asc limit 2",
-    "v3-plan": {
-      "QueryType": "SELECT",
-      "Original": "(select id from user order by 1 desc) order by 1 asc limit 2",
-      "Instructions": {
-        "OperatorType": "Limit",
-        "Count": "INT64(2)",
-        "Inputs": [
-          {
-            "OperatorType": "Route",
-            "Variant": "Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select id, weight_string(id) from `user` where 1 != 1",
-            "OrderBy": "(0|1) ASC",
-            "Query": "select id, weight_string(id) from `user` order by 1 asc limit :__upper_limit",
-            "ResultColumns": 1,
-            "Table": "`user`"
-          }
-        ]
-      }
-    },
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "(select id from user order by 1 desc) order by 1 asc limit 2",
-      "Instructions": {
-        "OperatorType": "Limit",
-        "Count": "INT64(2)",
-        "Inputs": [
-          {
-            "OperatorType": "Route",
-            "Variant": "Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select id, weight_string(id) from `user` where 1 != 1",
-            "OrderBy": "(0|1) ASC",
-            "Query": "select id, weight_string(id) from `user` order by id asc limit :__upper_limit",
-            "ResultColumns": 1,
-            "Table": "`user`"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "correlated subquery in exists clause with an ordering",
-    "query": "select col, id from user where exists(select user_id from user_extra where user_id = 3 and user_id < user.id) order by id",
-    "v3-plan": "VT12001: unsupported: cross-shard correlated subquery",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select col, id from user where exists(select user_id from user_extra where user_id = 3 and user_id < user.id) order by id",
-      "Instructions": {
-        "OperatorType": "SemiJoin",
-        "JoinVars": {
-          "user_id": 0
-        },
-        "ProjectedIndexes": "-2,-1",
-        "TableName": "`user`_user_extra",
-        "Inputs": [
-          {
-            "OperatorType": "Route",
-            "Variant": "Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select `user`.id, col, weight_string(id) from `user` where 1 != 1",
-            "OrderBy": "(0|2) ASC",
-            "Query": "select `user`.id, col, weight_string(id) from `user` order by id asc",
-            "Table": "`user`"
-          },
-          {
-            "OperatorType": "Route",
-            "Variant": "EqualUnique",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select 1 from user_extra where 1 != 1",
-            "Query": "select 1 from user_extra where user_id = 3 and user_id < :user_id",
-            "Table": "user_extra",
-            "Values": [
-              "INT64(3)"
-            ],
-            "Vindex": "user_index"
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
     "comment": "aggregation spread out across three routes",
     "query": "select count(u.textcol1), count(ue.foo), us.bar from user u join user_extra ue on u.foo = ue.bar join unsharded us on ue.bar = us.baz group by us.bar",
     "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
@@ -539,160 +369,6 @@
     }
   },
   {
-    "comment": "aggregation on top of semijoin",
-    "query": "select count(*) from user where exists (select 0 from user_extra where user.apa = user_extra.bar)",
-    "v3-plan": "VT12001: unsupported: cross-shard correlated subquery",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(*) from user where exists (select 0 from user_extra where user.apa = user_extra.bar)",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "sum_count_star(0) AS count(*)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 1] as count(*)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "SemiJoin",
-                "JoinVars": {
-                  "user_apa": 0
-                },
-                "TableName": "`user`_user_extra",
-                "Inputs": [
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select `user`.apa, count(*), weight_string(`user`.apa) from `user` where 1 != 1 group by `user`.apa, weight_string(`user`.apa)",
-                    "Query": "select `user`.apa, count(*), weight_string(`user`.apa) from `user` group by `user`.apa, weight_string(`user`.apa)",
-                    "Table": "`user`"
-                  },
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select 1 from user_extra where 1 != 1",
-                    "Query": "select 1 from user_extra where user_extra.bar = :user_apa",
-                    "Table": "user_extra"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
-    "comment": "distinct aggregation will 3 table join query",
-    "query": "select u.textcol1, count(distinct u.val2) from t_user u join t_user u2 on u.val2 = u2.id join t_music m on u2.val2 = m.id group by u.textcol1",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select u.textcol1, count(distinct u.val2) from t_user u join t_user u2 on u.val2 = u2.id join t_music m on u2.val2 = m.id group by u.textcol1",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Ordered",
-        "Aggregates": "count_distinct(1|2) AS count(distinct u.val2)",
-        "GroupBy": "0 COLLATE latin1_swedish_ci",
-        "ResultColumns": 2,
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 0] as textcol1",
-              "[COLUMN 1] as val2",
-              "[COLUMN 2]"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Join",
-                "Variant": "Join",
-                "JoinColumnIndexes": "L:2,L:3,L:5",
-                "JoinVars": {
-                  "u2_val2": 0
-                },
-                "TableName": "t_user_t_user_t_music",
-                "Inputs": [
-                  {
-                    "OperatorType": "Join",
-                    "Variant": "Join",
-                    "JoinColumnIndexes": "R:0,R:0,L:2,L:0,R:1,L:1",
-                    "JoinVars": {
-                      "u_val2": 0
-                    },
-                    "TableName": "t_user_t_user",
-                    "Inputs": [
-                      {
-                        "OperatorType": "TableRoute",
-                        "Variant": "Scatter-Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select u.val2, weight_string(u.val2), u.textcol1 from t_user_0 as u where 1 != 1 group by u.val2, weight_string(u.val2), u.textcol1",
-                        "OrderBy": "2 ASC COLLATE latin1_swedish_ci, (0|1) ASC",
-                        "Query": "select u.val2, weight_string(u.val2), u.textcol1 from t_user as u group by u.val2, weight_string(u.val2), u.textcol1 order by u.textcol1 asc, u.val2 asc",
-                        "Table": "t_user"
-                      },
-                      {
-                        "OperatorType": "Route",
-                        "Variant": "EqualUnique",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select u2.val2, weight_string(u2.val2) from t_user_0 as u2 where 1 != 1 group by u2.val2, weight_string(u2.val2)",
-                        "Query": "select u2.val2, weight_string(u2.val2) from t_user as u2 where u2.id = :u_val2 group by u2.val2, weight_string(u2.val2)",
-                        "Table": "t_user",
-                        "Values": [
-                          ":u_val2"
-                        ],
-                        "Vindex": "user_index"
-                      }
-                    ]
-                  },
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "EqualUnique-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select 1 from t_music_0 as m where 1 != 1",
-                    "Query": "select 1 from t_music as m where m.id = :u2_val2",
-                    "Table": "t_music",
-                    "Values": [
-                      ":u2_val2"
-                    ],
-                    "Vindex": "music_user_map"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_music",
-        "user.t_user"
-      ]
-    }
-  },
-  {
     "comment": "select count(distinct user_id, name) from unsharded",
     "query": "select count(distinct user_id, name) from unsharded",
     "v3-plan": {
@@ -726,436 +402,6 @@
       },
       "TablesUsed": [
         "main.unsharded"
-      ]
-    }
-  },
-  {
-    "comment": "select sum(col) from (select user.col as col, 32 from user join user_extra) t",
-    "query": "select sum(col) from (select user.col as col, 32 from user join user_extra) t",
-    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select sum(col) from (select user.col as col, 32 from user join user_extra) t",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "sum(0) AS sum(col)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 2] * COALESCE([COLUMN 3], INT64(1)) as sum(col)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Join",
-                "Variant": "Join",
-                "JoinColumnIndexes": "L:0,L:1,L:2,R:1",
-                "TableName": "`user`_user_extra",
-                "Inputs": [
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select `user`.col as col, 32, sum(col) from `user` where 1 != 1",
-                    "Query": "select `user`.col as col, 32, sum(col) from `user`",
-                    "Table": "`user`"
-                  },
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select 1, count(*) from user_extra where 1 != 1 group by 1",
-                    "Query": "select 1, count(*) from user_extra group by 1",
-                    "Table": "user_extra"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
-    "comment": "group by and ',' joins",
-    "query": "select user.id from user, user_extra group by id",
-    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select user.id from user, user_extra group by id",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Ordered",
-        "GroupBy": "(0|1)",
-        "ResultColumns": 1,
-        "Inputs": [
-          {
-            "OperatorType": "Join",
-            "Variant": "Join",
-            "JoinColumnIndexes": "L:0,L:1",
-            "TableName": "`user`_user_extra",
-            "Inputs": [
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select `user`.id, weight_string(id) from `user` where 1 != 1 group by id, weight_string(id)",
-                "OrderBy": "(0|1) ASC",
-                "Query": "select `user`.id, weight_string(id) from `user` group by id, weight_string(id) order by id asc",
-                "Table": "`user`"
-              },
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select 1 from user_extra where 1 != 1 group by .0",
-                "Query": "select 1 from user_extra group by .0",
-                "Table": "user_extra"
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
-    "comment": "count on column from LIMIT",
-    "query": "select count(city) from (select phone, id, city from user where id > 12 limit 10) as x",
-    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(city) from (select phone, id, city from user where id > 12 limit 10) as x",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "count(0) AS count(city)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 2] as count(city)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Limit",
-                "Count": "INT64(10)",
-                "Inputs": [
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select phone, id, city from `user` where 1 != 1",
-                    "Query": "select phone, id, city from `user` where id > 12 limit :__upper_limit",
-                    "Table": "`user`"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "count(*) on column from LIMIT",
-    "query": "select count(*) from (select phone, id, city from user where id > 12 limit 10) as x",
-    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(*) from (select phone, id, city from user where id > 12 limit 10) as x",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "count_star(0) AS count(*)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 0] as count(*)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Limit",
-                "Count": "INT64(10)",
-                "Inputs": [
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select phone, id, city from `user` where 1 != 1",
-                    "Query": "select phone, id, city from `user` where id > 12 limit :__upper_limit",
-                    "Table": "`user`"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "count non-null columns incoming from outer joins should work well",
-    "query": "select count(col) from (select user_extra.col as col from user left join user_extra on user.id = user_extra.id limit 10) as x",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select count(col) from (select user_extra.col as col from user left join user_extra on user.id = user_extra.id limit 10) as x",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Scalar",
-        "Aggregates": "count(0) AS count(col)",
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 0] as count(col)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Limit",
-                "Count": "INT64(10)",
-                "Inputs": [
-                  {
-                    "OperatorType": "Join",
-                    "Variant": "LeftJoin",
-                    "JoinColumnIndexes": "R:0",
-                    "JoinVars": {
-                      "user_id": 0
-                    },
-                    "TableName": "`user`_user_extra",
-                    "Inputs": [
-                      {
-                        "OperatorType": "Route",
-                        "Variant": "Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select `user`.id from `user` where 1 != 1",
-                        "Query": "select `user`.id from `user`",
-                        "Table": "`user`"
-                      },
-                      {
-                        "OperatorType": "Route",
-                        "Variant": "Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select user_extra.col as col from user_extra where 1 != 1",
-                        "Query": "select user_extra.col as col from user_extra where user_extra.id = :user_id",
-                        "Table": "user_extra"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
-    "comment": "grouping on data from derived table",
-    "query": "select val1, count(*)  from (select id, val1 from user where val2 < 4 order by val1 limit 2) as x group by val1",
-    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select val1, count(*)  from (select id, val1 from user where val2 < 4 order by val1 limit 2) as x group by val1",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Ordered",
-        "Aggregates": "count_star(1) AS count(*)",
-        "GroupBy": "(0|2)",
-        "ResultColumns": 2,
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 1] as val1",
-              "[COLUMN 0] as count(*)",
-              "[COLUMN 2]"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Limit",
-                "Count": "INT64(2)",
-                "Inputs": [
-                  {
-                    "OperatorType": "Route",
-                    "Variant": "Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select id, val1, weight_string(val1) from `user` where 1 != 1",
-                    "OrderBy": "(1|2) ASC, (1|2) ASC",
-                    "Query": "select id, val1, weight_string(val1) from `user` where val2 < 4 order by val1 asc, val1 asc limit :__upper_limit",
-                    "Table": "`user`"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
-      ]
-    }
-  },
-  {
-    "comment": "AggregateRandom in non full group by query",
-    "query": "select u.id, u.name, count(m.predef1) from user.user as u join user.user_extra as m on u.id = m.order group by u.id",
-    "v3-plan": "VT12001: unsupported: cross-shard query with aggregates",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select u.id, u.name, count(m.predef1) from user.user as u join user.user_extra as m on u.id = m.order group by u.id",
-      "Instructions": {
-        "OperatorType": "Aggregate",
-        "Variant": "Ordered",
-        "Aggregates": "random(1) AS name, sum_count(2) AS count(m.predef1)",
-        "GroupBy": "(0|3)",
-        "ResultColumns": 3,
-        "Inputs": [
-          {
-            "OperatorType": "Projection",
-            "Expressions": [
-              "[COLUMN 3] as id",
-              "[COLUMN 0] as name",
-              "[COLUMN 1] * [COLUMN 2] as count(m.predef1)",
-              "[COLUMN 4] as weight_string(u.id)"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Sort",
-                "Variant": "Memory",
-                "OrderBy": "(3|4) ASC",
-                "Inputs": [
-                  {
-                    "OperatorType": "Join",
-                    "Variant": "Join",
-                    "JoinColumnIndexes": "R:0,L:0,R:1,R:2,R:3",
-                    "JoinVars": {
-                      "m_order": 1
-                    },
-                    "TableName": "user_extra_`user`",
-                    "Inputs": [
-                      {
-                        "OperatorType": "Route",
-                        "Variant": "Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select count(m.predef1), m.`order` from user_extra as m where 1 != 1 group by m.`order`",
-                        "Query": "select count(m.predef1), m.`order` from user_extra as m group by m.`order`",
-                        "Table": "user_extra"
-                      },
-                      {
-                        "OperatorType": "Route",
-                        "Variant": "EqualUnique",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select u.`name`, count(*), u.id, weight_string(u.id) from `user` as u where 1 != 1 group by u.id, weight_string(u.id)",
-                        "Query": "select u.`name`, count(*), u.id, weight_string(u.id) from `user` as u where u.id = :m_order group by u.id, weight_string(u.id)",
-                        "Table": "`user`",
-                        "Values": [
-                          ":m_order"
-                        ],
-                        "Vindex": "user_index"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user",
-        "user.user_extra"
-      ]
-    }
-  },
-  {
-    "comment": "Aggregations from derived table used in arithmetic outside derived table",
-    "query": "select A.a, A.b, (A.a / A.b) as d from (select sum(a) as a, sum(b) as b from user) A",
-    "v3-plan": "VT12001: unsupported: expression on results of a cross-shard subquery",
-    "gen4-plan": {
-      "QueryType": "SELECT",
-      "Original": "select A.a, A.b, (A.a / A.b) as d from (select sum(a) as a, sum(b) as b from user) A",
-      "Instructions": {
-        "OperatorType": "Projection",
-        "Expressions": [
-          "[COLUMN 0] as a",
-          "[COLUMN 1] as b",
-          "[COLUMN 0] / [COLUMN 1] as d"
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "Aggregate",
-            "Variant": "Scalar",
-            "Aggregates": "sum(0) AS a, sum(1) AS b",
-            "Inputs": [
-              {
-                "OperatorType": "Route",
-                "Variant": "Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select sum(a) as a, sum(b) as b from `user` where 1 != 1",
-                "Query": "select sum(a) as a, sum(b) as b from `user`",
-                "Table": "`user`"
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.user"
       ]
     }
   },
@@ -1251,6 +497,606 @@
       },
       "TablesUsed": [
         "user.user"
+      ]
+    }
+  },
+  {
+    "comment": "correlated subquery in exists clause with an ordering",
+    "query": "select col, id from t_user where exists(select user_id from t_user_extra where user_id = 3 and user_id < t_user.id) order by id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col, id from t_user where exists(select user_id from t_user_extra where user_id = 3 and user_id < t_user.id) order by id",
+      "Instructions": {
+        "OperatorType": "SemiJoin",
+        "JoinVars": {
+          "t_user_id": 0
+        },
+        "ProjectedIndexes": "-2,-1",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.id, col, weight_string(id) from t_user_0 where 1 != 1",
+            "OrderBy": "(0|2) ASC",
+            "Query": "select t_user.id, col, weight_string(id) from t_user order by id asc",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select 1 from t_user_extra where user_id = 3",
+            "Table": "t_user_extra",
+            "Values": [
+              "INT64(3)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "aggregation on top of semijoin",
+    "query": "select count(*) from t_user where exists (select 0 from t_user_extra where t_user.apa = t_user_extra.bar)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user where exists (select 0 from t_user_extra where t_user.apa = t_user_extra.bar)",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 1] as count(*)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "SemiJoin",
+                "JoinVars": {
+                  "t_user_apa": 0
+                },
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.apa, count(*), weight_string(t_user_0.apa) from t_user_0 where 1 != 1 group by t_user_0.apa, weight_string(t_user_0.apa)",
+                    "Query": "select t_user.apa, count(*), weight_string(t_user.apa) from t_user group by t_user.apa, weight_string(t_user.apa)",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                    "Query": "select 1 from t_user_extra",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "group by and ',' joins",
+    "query": "select t_user.id from t_user, t_user_extra group by id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.id from t_user, t_user_extra group by id",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "(0|1)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Ordered",
+                "GroupBy": "(0|1), (1|2)",
+                "ResultColumns": 2,
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.id, weight_string(id), weight_string(weight_string(id)) from t_user_0 where 1 != 1 group by id, weight_string(id), weight_string(weight_string(id))",
+                    "OrderBy": "(0|1) ASC, (1|2) ASC",
+                    "Query": "select t_user.id, weight_string(id), weight_string(weight_string(id)) from t_user group by id, weight_string(id), weight_string(weight_string(id)) order by id asc, weight_string(id) asc",
+                    "Table": "t_user"
+                  }
+                ]
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1 group by .0",
+                "Query": "select 1 from t_user_extra group by .0",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "grouping on data from derived table",
+    "query": "select val1, count(*)  from (select id, val1 from t_user where val2 < 4 order by val1 limit 2) as x group by val1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select val1, count(*)  from (select id, val1 from t_user where val2 < 4 order by val1 limit 2) as x group by val1",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "count_star(1) AS count(*)",
+        "GroupBy": "(0|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 1] as val1",
+              "[COLUMN 0] as count(*)",
+              "[COLUMN 2]"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Limit",
+                "Count": "INT64(2)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, val1, weight_string(val1), weight_string(val1) from t_user_0 where 1 != 1",
+                    "OrderBy": "(1|2) ASC, (1|3) ASC",
+                    "Query": "select id, val1, weight_string(val1), weight_string(val1) from t_user where val2 < 4 order by val1 asc, val1 asc limit :__upper_limit",
+                    "Table": "t_user"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "AggregateRandom in non full group by query",
+    "query": "select u.id, u.name, count(m.predef1) from user.t_user as u join user.t_user_extra as m on u.id = m.order group by u.id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.id, u.name, count(m.predef1) from user.t_user as u join user.t_user_extra as m on u.id = m.order group by u.id",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "random(1) AS name, sum_count(2) AS count(m.predef1)",
+        "GroupBy": "(0|3)",
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 3] as id",
+              "[COLUMN 0] as name",
+              "[COLUMN 1] * [COLUMN 2] as count(m.predef1)",
+              "[COLUMN 4] as weight_string(u.id)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Sort",
+                "Variant": "Memory",
+                "OrderBy": "(3|4) ASC",
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "Join",
+                    "JoinColumnIndexes": "R:0,L:0,R:1,R:2,R:3",
+                    "JoinVars": {
+                      "m_order": 1
+                    },
+                    "TableName": "t_user_extra_t_user",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(m.predef1), m.`order` from t_user_extra_0 as m where 1 != 1 group by m.`order`",
+                        "Query": "select count(m.predef1), m.`order` from t_user_extra as m group by m.`order`",
+                        "Table": "t_user_extra"
+                      },
+                      {
+                        "OperatorType": "Aggregate",
+                        "Variant": "Ordered",
+                        "Aggregates": "random(0) AS name, sum_count_star(1) AS count(*)",
+                        "GroupBy": "(2|3), (3|4)",
+                        "ResultColumns": 4,
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "EqualUnique-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select u.`name`, count(*), u.id, weight_string(u.id), weight_string(weight_string(u.id)) from t_user_0 as u where 1 != 1 group by u.id, weight_string(u.id), weight_string(weight_string(u.id))",
+                            "OrderBy": "(2|3) ASC, (3|4) ASC",
+                            "Query": "select u.`name`, count(*), u.id, weight_string(u.id), weight_string(weight_string(u.id)) from t_user as u where u.id = :m_order group by u.id, weight_string(u.id), weight_string(weight_string(u.id)) order by u.id asc, weight_string(u.id) asc",
+                            "Table": "t_user",
+                            "Values": [
+                              ":m_order"
+                            ],
+                            "Vindex": "user_index"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "select u.id from user u join user_extra ue on ue.id = u.id group by u.id having count(u.name) = 3",
+    "query": "select u.id from t_user u join t_user_extra ue on ue.id = u.id group by u.id having count(u.name) = 3",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select u.id from t_user u join t_user_extra ue on ue.id = u.id group by u.id having count(u.name) = 3",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Filter",
+            "Predicate": ":1 = 3",
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Ordered",
+                "Aggregates": "sum_count(1) AS count(u.`name`)",
+                "GroupBy": "(0|2)",
+                "Inputs": [
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] as id",
+                      "[COLUMN 2] * COALESCE([COLUMN 3], INT64(1)) as count(u.`name`)",
+                      "[COLUMN 1]"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Sort",
+                        "Variant": "Memory",
+                        "OrderBy": "(0|1) ASC",
+                        "Inputs": [
+                          {
+                            "OperatorType": "Join",
+                            "Variant": "Join",
+                            "JoinColumnIndexes": "R:1,R:2,L:1,R:0",
+                            "JoinVars": {
+                              "ue_id": 0
+                            },
+                            "TableName": "t_user_extra_t_user",
+                            "Inputs": [
+                              {
+                                "OperatorType": "TableRoute",
+                                "Variant": "Scatter-Scatter",
+                                "Keyspace": {
+                                  "Name": "user",
+                                  "Sharded": true
+                                },
+                                "FieldQuery": "select ue.id, count(*), weight_string(ue.id) from t_user_extra_0 as ue where 1 != 1 group by ue.id, weight_string(ue.id)",
+                                "Query": "select ue.id, count(*), weight_string(ue.id) from t_user_extra as ue group by ue.id, weight_string(ue.id)",
+                                "Table": "t_user_extra"
+                              },
+                              {
+                                "OperatorType": "Aggregate",
+                                "Variant": "Ordered",
+                                "Aggregates": "sum_count(0) AS count(u.`name`)",
+                                "GroupBy": "(1|2), (2|3)",
+                                "ResultColumns": 3,
+                                "Inputs": [
+                                  {
+                                    "OperatorType": "TableRoute",
+                                    "Variant": "EqualUnique-Scatter",
+                                    "Keyspace": {
+                                      "Name": "user",
+                                      "Sharded": true
+                                    },
+                                    "FieldQuery": "select count(u.`name`), u.id, weight_string(u.id), weight_string(weight_string(u.id)) from t_user_0 as u where 1 != 1 group by u.id, weight_string(u.id), weight_string(weight_string(u.id))",
+                                    "OrderBy": "(1|2) ASC, (2|3) ASC",
+                                    "Query": "select count(u.`name`), u.id, weight_string(u.id), weight_string(weight_string(u.id)) from t_user as u where u.id = :ue_id group by u.id, weight_string(u.id), weight_string(weight_string(u.id)) order by u.id asc, weight_string(u.id) asc",
+                                    "Table": "t_user",
+                                    "Values": [
+                                      ":ue_id"
+                                    ],
+                                    "Vindex": "user_index"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "only extract the aggregation once, even if used twice",
+    "query": "select u.id from t_user u join t_user_extra ue on ue.id = u.id group by u.id having count(*) < 3 and count(*) > 5",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select u.id from t_user u join t_user_extra ue on ue.id = u.id group by u.id having count(*) < 3 and count(*) > 5",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Filter",
+            "Predicate": ":1 < 3 and :1 > 5",
+            "Inputs": [
+              {
+                "OperatorType": "Aggregate",
+                "Variant": "Ordered",
+                "Aggregates": "sum_count_star(1) AS count(*)",
+                "GroupBy": "(0|2)",
+                "Inputs": [
+                  {
+                    "OperatorType": "Projection",
+                    "Expressions": [
+                      "[COLUMN 0] as id",
+                      "[COLUMN 2] * COALESCE([COLUMN 3], INT64(1)) as count(*)",
+                      "[COLUMN 1]"
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Sort",
+                        "Variant": "Memory",
+                        "OrderBy": "(0|1) ASC",
+                        "Inputs": [
+                          {
+                            "OperatorType": "Join",
+                            "Variant": "Join",
+                            "JoinColumnIndexes": "R:1,R:2,L:1,R:0",
+                            "JoinVars": {
+                              "ue_id": 0
+                            },
+                            "TableName": "t_user_extra_t_user",
+                            "Inputs": [
+                              {
+                                "OperatorType": "TableRoute",
+                                "Variant": "Scatter-Scatter",
+                                "Keyspace": {
+                                  "Name": "user",
+                                  "Sharded": true
+                                },
+                                "FieldQuery": "select ue.id, count(*), weight_string(ue.id) from t_user_extra_0 as ue where 1 != 1 group by ue.id, weight_string(ue.id)",
+                                "Query": "select ue.id, count(*), weight_string(ue.id) from t_user_extra as ue group by ue.id, weight_string(ue.id)",
+                                "Table": "t_user_extra"
+                              },
+                              {
+                                "OperatorType": "Aggregate",
+                                "Variant": "Ordered",
+                                "Aggregates": "sum_count_star(0) AS count(*)",
+                                "GroupBy": "(1|2), (2|3)",
+                                "ResultColumns": 3,
+                                "Inputs": [
+                                  {
+                                    "OperatorType": "TableRoute",
+                                    "Variant": "EqualUnique-Scatter",
+                                    "Keyspace": {
+                                      "Name": "user",
+                                      "Sharded": true
+                                    },
+                                    "FieldQuery": "select count(*), u.id, weight_string(u.id), weight_string(weight_string(u.id)) from t_user_0 as u where 1 != 1 group by u.id, weight_string(u.id), weight_string(weight_string(u.id))",
+                                    "OrderBy": "(1|2) ASC, (2|3) ASC",
+                                    "Query": "select count(*), u.id, weight_string(u.id), weight_string(weight_string(u.id)) from t_user as u where u.id = :ue_id group by u.id, weight_string(u.id), weight_string(weight_string(u.id)) order by u.id asc, weight_string(u.id) asc",
+                                    "Table": "t_user",
+                                    "Values": [
+                                      ":ue_id"
+                                    ],
+                                    "Vindex": "user_index"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "distinct aggregation will 3 table join query",
+    "query": "select u.textcol1, count(distinct u.val2) from t_user u join t_user u2 on u.val2 = u2.id join t_music m on u2.val2 = m.id group by u.textcol1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.textcol1, count(distinct u.val2) from t_user u join t_user u2 on u.val2 = u2.id join t_music m on u2.val2 = m.id group by u.textcol1",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "count_distinct(1|2) AS count(distinct u.val2)",
+        "GroupBy": "0 COLLATE latin1_swedish_ci",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Projection",
+            "Expressions": [
+              "[COLUMN 0] as textcol1",
+              "[COLUMN 1] as val2",
+              "[COLUMN 2]"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:2,L:3,L:5",
+                "JoinVars": {
+                  "u2_val2": 0
+                },
+                "TableName": "t_user_t_user_t_music",
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "Join",
+                    "JoinColumnIndexes": "R:0,R:0,L:2,L:0,R:1,L:1",
+                    "JoinVars": {
+                      "u_val2": 0
+                    },
+                    "TableName": "t_user_t_user",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select u.val2, weight_string(u.val2), u.textcol1 from t_user_0 as u where 1 != 1 group by u.val2, weight_string(u.val2), u.textcol1",
+                        "OrderBy": "2 ASC COLLATE latin1_swedish_ci, (0|1) ASC",
+                        "Query": "select u.val2, weight_string(u.val2), u.textcol1 from t_user as u group by u.val2, weight_string(u.val2), u.textcol1 order by u.textcol1 asc, u.val2 asc",
+                        "Table": "t_user"
+                      },
+                      {
+                        "OperatorType": "Aggregate",
+                        "Variant": "Ordered",
+                        "GroupBy": "(0|1), (1|2)",
+                        "ResultColumns": 2,
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "EqualUnique-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select u2.val2, weight_string(u2.val2), weight_string(weight_string(u2.val2)) from t_user_0 as u2 where 1 != 1 group by u2.val2, weight_string(u2.val2), weight_string(weight_string(u2.val2))",
+                            "OrderBy": "(0|1) ASC, (1|2) ASC",
+                            "Query": "select u2.val2, weight_string(u2.val2), weight_string(weight_string(u2.val2)) from t_user as u2 where u2.id = :u_val2 group by u2.val2, weight_string(u2.val2), weight_string(weight_string(u2.val2)) order by u2.val2 asc, weight_string(u2.val2) asc",
+                            "Table": "t_user",
+                            "Values": [
+                              ":u_val2"
+                            ],
+                            "Vindex": "user_index"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "EqualUnique-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_music_0 as m where 1 != 1",
+                    "Query": "select 1 from t_music as m where m.id = :u2_val2",
+                    "Table": "t_music",
+                    "Values": [
+                      ":u2_val2"
+                    ],
+                    "Vindex": "music_user_map"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
       ]
     }
   }
