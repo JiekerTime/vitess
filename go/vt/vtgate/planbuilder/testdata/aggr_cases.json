@@ -5955,7 +5955,7 @@
       "TablesUsed": [
         "user.user"
       ]
-    },
+    }
   },
   {
     "comment": "GROUP BY inside derived table on the RHS should not be a problem",

@@ -62,7 +62,7 @@
                   {
                     "OperatorType": "Aggregate",
                     "Variant": "Scalar",
-                    "Aggregates": "random(0) AS 1, sum_count(1) AS count(ue.col)",
+                    "Aggregates": "any_value(0) AS 1, sum_count(1) AS count(ue.col)",
                     "Inputs": [
                       {
                         "OperatorType": "TableRoute",

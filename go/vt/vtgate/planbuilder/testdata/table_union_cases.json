@@ -568,7 +568,7 @@
               {
                 "OperatorType": "Aggregate",
                 "Variant": "Ordered",
-                "Aggregates": "random(1) AS weight_string(id)",
+                "Aggregates": "any_value(1) AS weight_string(id)",
                 "GroupBy": "(0|1)",
                 "ResultColumns": 1,
                 "Inputs": [

@@ -4809,7 +4809,7 @@
         "main.unsharded",
         "user.user"
       ]
-    },
+    }
   },
   {
     "comment": "column with qualifier is correctly used",

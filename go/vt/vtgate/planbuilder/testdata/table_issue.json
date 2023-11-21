@@ -12,7 +12,7 @@
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "max(0) AS max(f_int), min(1) AS min(`name`), random(3) AS weight_string(f_tinyint)",
+            "Aggregates": "max(0) AS max(f_int), min(1) AS min(`name`), any_value(3) AS weight_string(f_tinyint)",
             "GroupBy": "(2|3), (4|5)",
             "ResultColumns": 2,
             "Inputs": [
@@ -46,7 +46,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "max(0) AS max(f_int), min(1) AS min(`name`), random(3) AS weight_string(f_tinyint)",
+        "Aggregates": "max(0) AS max(f_int), min(1) AS min(`name`), any_value(3) AS weight_string(f_tinyint)",
         "GroupBy": "(2|3), (4|5)",
         "ResultColumns": 2,
         "Inputs": [
@@ -84,7 +84,7 @@
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "max(0) AS max(f_int), min(1) AS min(`name`), random(2) AS f_tinyint, random(3)",
+            "Aggregates": "max(0) AS max(f_int), min(1) AS min(`name`), any_value(2) AS f_tinyint, any_value(3)",
             "GroupBy": "4",
             "Inputs": [
               {

@@ -291,22 +291,22 @@
   {
     "comment": "ORDER BY on select t.*",
     "query": "select t.*, t.col from t_user t order by t.col",
-    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+    "plan": "VT09015: schema tracking required"
   },
   {
     "comment": "ORDER BY on select *",
     "query": "select *, col from t_user order by col",
-    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+    "plan": "VT09015: schema tracking required"
   },
   {
     "comment": "ORDER BY on select multi t.*",
     "query": "select t.*, t.name, t.*, t.col from t_user t order by t.col",
-    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+    "plan": "VT09015: schema tracking required"
   },
   {
     "comment": "ORDER BY on select multi *",
     "query": "select *, name, *, col from t_user order by col",
-    "plan": "VT12001: unsupported: '*' expression in cross-shard query"
+    "plan": "VT09015: schema tracking required"
   },
   {
     "comment": "ORDER BY on scatter with multiple columns",
@@ -636,7 +636,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "sum_count(0) AS count(id), random(1) AS num",
+        "Aggregates": "sum_count(0) AS count(id), any_value(1) AS num",
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -671,7 +671,7 @@
           {
             "OperatorType": "Aggregate",
             "Variant": "Scalar",
-            "Aggregates": "sum_count(0) AS count(id), random(1) AS num, random(2)",
+            "Aggregates": "sum_count(0) AS count(id), any_value(1) AS num, any_value(2)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -702,7 +702,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "min(0) AS min(id), random(1) AS col",
+        "Aggregates": "min(0) AS min(id), any_value(1) AS col",
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -731,7 +731,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "max(0) AS max(id), random(1) AS col",
+        "Aggregates": "max(0) AS max(id), any_value(1) AS col",
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -760,7 +760,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "max(0) AS max(id), min(1) AS min(id), sum_count_star(2) AS count(*), random(3) AS col",
+        "Aggregates": "max(0) AS max(id), min(1) AS min(id), sum_count_star(2) AS count(*), any_value(3) AS col",
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -928,7 +928,7 @@
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "sum_count_star(1) AS count(*), random(2) AS c1, random(3)",
+            "Aggregates": "sum_count_star(1) AS count(*), any_value(2) AS c1, any_value(3)",
             "GroupBy": "0",
             "Inputs": [
               {

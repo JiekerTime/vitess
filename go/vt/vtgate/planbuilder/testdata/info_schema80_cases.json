@@ -1260,7 +1260,7 @@
         "Query": "select TABLE_NAME from information_schema.apa",
         "Table": "information_schema.apa"
       }
-    },
+    }
   },
   {
     "comment": "LIMIT 1 inside derived table on the RHS should not be a problem",

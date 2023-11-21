@@ -8,7 +8,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "random(0) AS id, sum_count_star(1) AS count(*)",
+        "Aggregates": "any_value(0) AS id, sum_count_star(1) AS count(*)",
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -72,7 +72,7 @@
           {
             "OperatorType": "Aggregate",
             "Variant": "Scalar",
-            "Aggregates": "random(0) AS id, random(1) AS id, sum_count_star(2) AS count(*), random(3)",
+            "Aggregates": "any_value(0) AS id, any_value(1) AS id, sum_count_star(2) AS count(*), any_value(3)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -269,7 +269,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(3) AS d, sum_count_star(4) AS count(*)",
+        "Aggregates": "any_value(3) AS d, sum_count_star(4) AS count(*)",
         "GroupBy": "(0|5), (1|6), (2|7)",
         "ResultColumns": 5,
         "Inputs": [
@@ -301,7 +301,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(3) AS d, sum_count_star(4) AS count(*)",
+        "Aggregates": "any_value(3) AS d, sum_count_star(4) AS count(*)",
         "GroupBy": "(0|5), (1|6), (2|7)",
         "ResultColumns": 5,
         "Inputs": [
@@ -471,7 +471,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(0) AS a",
+        "Aggregates": "any_value(0) AS a",
         "GroupBy": "(1|2)",
         "ResultColumns": 1,
         "Inputs": [
@@ -507,7 +507,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(0) AS id",
+        "Aggregates": "any_value(0) AS id",
         "GroupBy": "1",
         "ResultColumns": 1,
         "Inputs": [
@@ -737,7 +737,7 @@
           {
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
-            "Aggregates": "sum_count_star(1) AS count(*), random(2) AS col + 1, random(3)",
+            "Aggregates": "sum_count_star(1) AS count(*), any_value(2) AS col + 1, any_value(3)",
             "GroupBy": "0",
             "Inputs": [
               {
@@ -794,7 +794,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(0) AS a",
+        "Aggregates": "any_value(0) AS a",
         "GroupBy": "(1|2)",
         "ResultColumns": 1,
         "Inputs": [
@@ -901,7 +901,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(1) AS col",
+        "Aggregates": "any_value(1) AS col",
         "GroupBy": "(0|2)",
         "ResultColumns": 2,
         "Inputs": [
@@ -933,7 +933,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(1) AS col",
+        "Aggregates": "any_value(1) AS col",
         "GroupBy": "(2|3), (0|4)",
         "ResultColumns": 2,
         "Inputs": [
@@ -965,7 +965,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(1) AS col",
+        "Aggregates": "any_value(1) AS col",
         "GroupBy": "(0|2), (3|4)",
         "ResultColumns": 2,
         "Inputs": [
@@ -997,7 +997,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(0) AS id, random(1) AS col",
+        "Aggregates": "any_value(0) AS id, any_value(1) AS col",
         "GroupBy": "(2|3)",
         "ResultColumns": 2,
         "Inputs": [
@@ -1754,7 +1754,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Ordered",
-        "Aggregates": "random(0) AS col",
+        "Aggregates": "any_value(0) AS col",
         "GroupBy": "(1|2)",
         "ResultColumns": 1,
         "Inputs": [
@@ -2943,7 +2943,7 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "random(0) AS a, sum_count_star(1) AS count(*)",
+        "Aggregates": "any_value(0) AS a, sum_count_star(1) AS count(*)",
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -3715,7 +3715,7 @@
               {
                 "OperatorType": "Aggregate",
                 "Variant": "Scalar",
-                "Aggregates": "random(0) AS 1, sum_count(1) AS count(id)",
+                "Aggregates": "any_value(0) AS 1, sum_count(1) AS count(id)",
                 "Inputs": [
                   {
                     "OperatorType": "TableRoute",
@@ -3758,7 +3758,7 @@
               {
                 "OperatorType": "Aggregate",
                 "Variant": "Scalar",
-                "Aggregates": "random(0) AS 1, sum_count(1) AS count(id)",
+                "Aggregates": "any_value(0) AS 1, sum_count(1) AS count(id)",
                 "Inputs": [
                   {
                     "OperatorType": "TableRoute",
@@ -3993,7 +3993,7 @@
                   {
                     "OperatorType": "Aggregate",
                     "Variant": "Scalar",
-                    "Aggregates": "random(0) AS 1, sum_count(1) AS count(ue.col)",
+                    "Aggregates": "any_value(0) AS 1, sum_count(1) AS count(ue.col)",
                     "Inputs": [
                       {
                         "OperatorType": "TableRoute",
@@ -4050,7 +4050,7 @@
               {
                 "OperatorType": "Aggregate",
                 "Variant": "Scalar",
-                "Aggregates": "random(0) AS id, sum_count_star(1) AS count(*)",
+                "Aggregates": "any_value(0) AS id, sum_count_star(1) AS count(*)",
                 "Inputs": [
                   {
                     "OperatorType": "TableRoute",
