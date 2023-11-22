@@ -104,43 +104,49 @@
       "QueryType": "SELECT",
       "Original": "(SELECT id FROM t_user ORDER BY id DESC LIMIT 1) UNION ALL (SELECT id FROM t_music ORDER BY id DESC LIMIT 1)",
       "Instructions": {
-        "OperatorType": "Concatenate",
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
         "Inputs": [
           {
-            "OperatorType": "Limit",
-            "Count": "INT64(1)",
+            "OperatorType": "Concatenate",
             "Inputs": [
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
-                "OrderBy": "(0|1) DESC",
-                "ResultColumns": 1,
-                "Query": "select id, weight_string(id) from t_user order by id desc limit :__upper_limit",
-                "Table": "t_user"
-              }
-            ]
-          },
-          {
-            "OperatorType": "Limit",
-            "Count": "INT64(1)",
-            "Inputs": [
+                "OperatorType": "Limit",
+                "Count": "INT64(1)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
+                    "OrderBy": "(0|1) DESC",
+                    "Query": "select id, weight_string(id) from t_user order by id desc limit :__upper_limit",
+                    "Table": "t_user"
+                  }
+                ]
+              },
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
-                "OrderBy": "(0|1) DESC",
-                "ResultColumns": 1,
-                "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
-                "Table": "t_music"
+                "OperatorType": "Limit",
+                "Count": "INT64(1)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
+                    "OrderBy": "(0|1) DESC",
+                    "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
+                    "Table": "t_music"
+                  }
+                ]
               }
             ]
           }
@@ -159,43 +165,49 @@
       "QueryType": "SELECT",
       "Original": "(SELECT id FROM t_user ORDER BY col DESC LIMIT 1) UNION ALL (SELECT id FROM t_music ORDER BY a DESC LIMIT 1)",
       "Instructions": {
-        "OperatorType": "Concatenate",
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
         "Inputs": [
           {
-            "OperatorType": "Limit",
-            "Count": "INT64(1)",
+            "OperatorType": "Concatenate",
             "Inputs": [
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, col from t_user_0 where 1 != 1",
-                "OrderBy": "1 DESC",
-                "ResultColumns": 1,
-                "Query": "select id, col from t_user order by col desc limit :__upper_limit",
-                "Table": "t_user"
-              }
-            ]
-          },
-          {
-            "OperatorType": "Limit",
-            "Count": "INT64(1)",
-            "Inputs": [
+                "OperatorType": "Limit",
+                "Count": "INT64(1)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, col from t_user_0 where 1 != 1",
+                    "OrderBy": "1 DESC",
+                    "Query": "select id, col from t_user order by col desc limit :__upper_limit",
+                    "Table": "t_user"
+                  }
+                ]
+              },
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, a, weight_string(a) from t_music_0 where 1 != 1",
-                "OrderBy": "(1|2) DESC",
-                "ResultColumns": 1,
-                "Query": "select id, a, weight_string(a) from t_music order by a desc limit :__upper_limit",
-                "Table": "t_music"
+                "OperatorType": "Limit",
+                "Count": "INT64(1)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, a, weight_string(a) from t_music_0 where 1 != 1",
+                    "OrderBy": "(1|2) DESC",
+                    "Query": "select id, a, weight_string(a) from t_music order by a desc limit :__upper_limit",
+                    "Table": "t_music"
+                  }
+                ]
               }
             ]
           }
@@ -214,43 +226,49 @@
       "QueryType": "SELECT",
       "Original": "(select id from t_user order by id limit 5) union all (select id from t_music order by id desc limit 5)",
       "Instructions": {
-        "OperatorType": "Concatenate",
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
         "Inputs": [
           {
-            "OperatorType": "Limit",
-            "Count": "INT64(5)",
+            "OperatorType": "Concatenate",
             "Inputs": [
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
-                "OrderBy": "(0|1) ASC",
-                "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
-                "ResultColumns": 1,
-                "Table": "t_user"
-              }
-            ]
-          },
-          {
-            "OperatorType": "Limit",
-            "Count": "INT64(5)",
-            "Inputs": [
+                "OperatorType": "Limit",
+                "Count": "INT64(5)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
+                    "OrderBy": "(0|1) ASC",
+                    "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
+                    "Table": "t_user"
+                  }
+                ]
+              },
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
-                "OrderBy": "(0|1) DESC",
-                "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
-                "ResultColumns": 1,
-                "Table": "t_music"
+                "OperatorType": "Limit",
+                "Count": "INT64(5)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
+                    "OrderBy": "(0|1) DESC",
+                    "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
+                    "Table": "t_music"
+                  }
+                ]
               }
             ]
           }
@@ -269,43 +287,49 @@
       "QueryType": "SELECT",
       "Original": "(select id from t_user order by col limit 5) union all (select id from t_music order by a desc limit 5)",
       "Instructions": {
-        "OperatorType": "Concatenate",
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
         "Inputs": [
           {
-            "OperatorType": "Limit",
-            "Count": "INT64(5)",
+            "OperatorType": "Concatenate",
             "Inputs": [
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, col from t_user_0 where 1 != 1",
-                "OrderBy": "1 ASC",
-                "Query": "select id, col from t_user order by col asc limit :__upper_limit",
-                "ResultColumns": 1,
-                "Table": "t_user"
-              }
-            ]
-          },
-          {
-            "OperatorType": "Limit",
-            "Count": "INT64(5)",
-            "Inputs": [
+                "OperatorType": "Limit",
+                "Count": "INT64(5)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, col from t_user_0 where 1 != 1",
+                    "OrderBy": "1 ASC",
+                    "Query": "select id, col from t_user order by col asc limit :__upper_limit",
+                    "Table": "t_user"
+                  }
+                ]
+              },
               {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, a, weight_string(a) from t_music_0 where 1 != 1",
-                "OrderBy": "(1|2) DESC",
-                "Query": "select id, a, weight_string(a) from t_music order by a desc limit :__upper_limit",
-                "ResultColumns": 1,
-                "Table": "t_music"
+                "OperatorType": "Limit",
+                "Count": "INT64(5)",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select id, a, weight_string(a) from t_music_0 where 1 != 1",
+                    "OrderBy": "(1|2) DESC",
+                    "Query": "select id, a, weight_string(a) from t_music order by a desc limit :__upper_limit",
+                    "Table": "t_music"
+                  }
+                ]
               }
             ]
           }
@@ -316,7 +340,6 @@
         "user.t_user"
       ]
     }
-
   },
   {
     "comment": "unmergable because we are using aggregation",
@@ -550,7 +573,6 @@
         "user.t_user"
       ]
     }
-
   },
   {
     "comment": "derived table with union and group by",
@@ -559,18 +581,43 @@
       "QueryType": "SELECT",
       "Original": "(SELECT id FROM t_user group by id ORDER BY id DESC LIMIT 1 ) UNION ALL (SELECT id FROM t_music ORDER BY col DESC LIMIT 1)",
       "Instructions": {
-        "OperatorType": "Concatenate",
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0
+        ],
         "Inputs": [
           {
-            "OperatorType": "Limit",
-            "Count": "INT64(1)",
+            "OperatorType": "Concatenate",
             "Inputs": [
               {
-                "OperatorType": "Aggregate",
-                "Variant": "Ordered",
-                "Aggregates": "any_value(1) AS weight_string(id)",
-                "GroupBy": "(0|1)",
-                "ResultColumns": 1,
+                "OperatorType": "Limit",
+                "Count": "INT64(1)",
+                "Inputs": [
+                  {
+                    "OperatorType": "Aggregate",
+                    "Variant": "Ordered",
+                    "Aggregates": "any_value(1) AS weight_string(id)",
+                    "GroupBy": "(0|1)",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1 group by id",
+                        "OrderBy": "(0|1) DESC",
+                        "Query": "select id, weight_string(id) from t_user group by id order by id desc limit :__upper_limit",
+                        "Table": "t_user"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "OperatorType": "Limit",
+                "Count": "INT64(1)",
                 "Inputs": [
                   {
                     "OperatorType": "TableRoute",
@@ -579,31 +626,12 @@
                       "Name": "user",
                       "Sharded": true
                     },
-                    "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1 group by id",
-                    "OrderBy": "(0|1) DESC",
-                    "Query": "select id, weight_string(id) from t_user group by id order by id desc limit :__upper_limit",
-                    "Table": "t_user"
+                    "FieldQuery": "select id, col, weight_string(col) from t_music_0 where 1 != 1",
+                    "OrderBy": "(1|2) DESC",
+                    "Query": "select id, col, weight_string(col) from t_music order by col desc limit :__upper_limit",
+                    "Table": "t_music"
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "OperatorType": "Limit",
-            "Count": "INT64(1)",
-            "Inputs": [
-              {
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select id, col, weight_string(col) from t_music_0 where 1 != 1",
-                "OrderBy": "(1|2) DESC",
-                "Query": "select id, col, weight_string(col) from t_music order by col desc limit :__upper_limit",
-                "ResultColumns": 1,
-                "Table": "t_music"
               }
             ]
           }
@@ -614,31 +642,30 @@
         "user.t_user"
       ]
     }
-
   },
   {
     "comment": "union all between two scatter selects",
     "query": "select id from t_user union all select id from t_music",
-    "plan":"VT12001: unsupported: statement type *sqlparser.Union in split table"
+    "plan": "VT12001: unsupported: statement type *sqlparser.Union in split table"
   },
   {
     "comment": "union distinct between two scatter selects",
     "query": "select id from t_user union select id from t_music",
-    "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan": "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
   },
   {
     "comment": "Union all",
     "query": "select col1, col2 from t_user union all select col1, col2 from t_user_extra",
-    "plan":"VT12001: unsupported: statement type *sqlparser.Union in split table"
+    "plan": "VT12001: unsupported: statement type *sqlparser.Union in split table"
   },
   {
     "comment": "union operations in subqueries (FROM)",
     "query": "select * from (select * from t_user union all select * from t_user_extra) as t",
-    "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan": "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
   },
   {
     "comment": "union with different target shards",
     "query": "select 1 from t_music where id = 1 union select 1 from t_music where id = 2",
-    "plan":"VT12001: unsupported: distinct in split table"
+    "plan": "VT12001: unsupported: distinct in split table"
   }
 ]
