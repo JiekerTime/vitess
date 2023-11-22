@@ -366,8 +366,8 @@
       "QueryType": "SELECT",
       "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (5, 6) LIMIT 10) subquery_for_limit) subquery_for_limit)",
       "Instructions": {
-        "Variant": "PulloutIn",
         "OperatorType": "Subquery",
+        "Variant": "PulloutIn",
         "PulloutVars": [
           "__sq_has_values1",
           "__sq1"
@@ -731,6 +731,108 @@
       },
       "TablesUsed": [
         "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "subquery with aggregate and outer with outer order route",
+    "query": "select textcol1 from t_user where id> (select max(intcol) from t_user) ORDER BY intcol DESC",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select textcol1 from t_user where id> (select max(intcol) from t_user) ORDER BY intcol DESC",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutValue",
+        "PulloutVars": [
+          "__sq_has_values1",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "max(0) AS max(intcol)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select max(intcol) from t_user_0 where 1 != 1",
+                "Query": "select max(intcol) from t_user",
+                "Table": "t_user"
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select textcol1, intcol from t_user_0 where 1 != 1",
+            "OrderBy": "1 DESC",
+            "Query": "select textcol1, intcol from t_user where id > :__sq1 order by intcol desc",
+            "ResultColumns": 1,
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "scar subquery in select expressions",
+    "query": "select textcol1,(select intcol from t_user limit 1) from t_user  ORDER BY intcol DESC",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select textcol1,(select intcol from t_user limit 1) from t_user  ORDER BY intcol DESC",
+      "Instructions": {
+        "OperatorType": "Subquery",
+        "Variant": "PulloutValue",
+        "PulloutVars": [
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Limit",
+            "Count": "INT64(1)",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select intcol from t_user_0 where 1 != 1",
+                "Query": "select intcol from t_user limit :__upper_limit",
+                "Table": "t_user"
+              }
+            ]
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select textcol1, :__sq1, intcol from t_user_0 where 1 != 1",
+            "OrderBy": "2 DESC",
+            "Query": "select textcol1, :__sq1, intcol from t_user order by intcol desc",
+            "ResultColumns": 2,
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
       ]
     }
   }

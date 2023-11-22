@@ -142,6 +142,6 @@
   {
     "comment": "correlated subquery on sharding key with group by a unique vindex with having clause.",
     "query": "select count(*) from t_user where exists (select 1 from t_user_extra where user_id = t_user.id group by user_id having max(col) > 10)",
-    "plan":"VT12001: unsupported: subquery in split table"
+    "plan": "VT12001: unsupported: subquery in split table"
   }
 ]

@@ -197,6 +197,11 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 				return nil, errLeft
 			}
 		}
+	case *pulloutSubquery:
+		_, err := truncateColumns(ctx, p.underlying)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return plan, nil
