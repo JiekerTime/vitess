@@ -150,9 +150,7 @@ func TestTableAggrCases(t *testing.T) {
 	// scatter aggregate order by null
 	mcmp.ExecWithColumnCompare("select count(*) from t_user order by null")
 	// scatter aggregate symtab lookup error
-	// [MySQL Error] for query: select id, b as id, count(*) from t_user order by id
-	_, err = mcmp.ExecAndIgnore("select id, b as id, count(*) from t_user order by id")
-	require.NoError(t, err)
+	mcmp.AssertContainsError("select id, b as id, count(*) from t_user order by id", "Column 'id' in field list is ambiguous")
 	// scatter aggregate group by select col
 	mcmp.ExecWithColumnCompare("select col from t_user group by col")
 	// scatter aggregate multiple group by (columns)
