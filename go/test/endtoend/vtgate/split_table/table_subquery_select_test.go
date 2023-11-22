@@ -328,4 +328,8 @@ func TestSubQuerySelectCase(t *testing.T) {
 	// Mergeable subquery with `LIMIT` due to `EqualUnique` route
 	// This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
 	//mcmp.ExecWithColumnCompareAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5 LIMIT 10)")
+	// Unmergeable subquery with `MAX` aggregate and outer order
+	mcmp.ExecWithColumnCompareAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id  > (SELECT MAX(t_music.user_id) FROM t_music) order by user_id DESC")
+	// scar subquery in select expressions
+	mcmp.ExecWithColumnCompareAndNotEmpty("SELECT id,(select col from t_music limit 1) as col1 FROM t_music order by user_id DESC")
 }

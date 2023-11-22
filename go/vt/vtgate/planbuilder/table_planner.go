@@ -208,6 +208,11 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 				return nil, errLeft
 			}
 		}
+	case *uncorrelatedSubquery:
+		_, err := truncateColumns(ctx, p.outer)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return plan, nil
