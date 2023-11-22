@@ -702,7 +702,8 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "min(0) AS min(id), any_value(1) AS col",
+        "Aggregates": "min(0|2) AS min(id), any_value(1) AS col",
+        "ResultColumns": 2,
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -711,8 +712,8 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select min(id), col from t_user_0 where 1 != 1",
-            "Query": "select min(id), col from t_user",
+            "FieldQuery": "select min(id), col, weight_string(id) from t_user_0 where 1 != 1 group by weight_string(id)",
+            "Query": "select min(id), col, weight_string(id) from t_user group by weight_string(id)",
             "Table": "t_user"
           }
         ]
@@ -731,7 +732,8 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "max(0) AS max(id), any_value(1) AS col",
+        "Aggregates": "max(0|2) AS max(id), any_value(1) AS col",
+        "ResultColumns": 2,
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -740,8 +742,8 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select max(id), col from t_user_0 where 1 != 1",
-            "Query": "select max(id), col from t_user",
+            "FieldQuery": "select max(id), col, weight_string(id) from t_user_0 where 1 != 1 group by weight_string(id)",
+            "Query": "select max(id), col, weight_string(id) from t_user group by weight_string(id)",
             "Table": "t_user"
           }
         ]
@@ -760,7 +762,8 @@
       "Instructions": {
         "OperatorType": "Aggregate",
         "Variant": "Scalar",
-        "Aggregates": "max(0) AS max(id), min(1) AS min(id), sum_count_star(2) AS count(*), any_value(3) AS col",
+        "Aggregates": "max(0|4) AS max(id), min(1|4) AS min(id), sum_count_star(2) AS count(*), any_value(3) AS col",
+        "ResultColumns": 4,
         "Inputs": [
           {
             "OperatorType": "TableRoute",
@@ -769,8 +772,8 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select max(id), min(id), count(*), col from t_user_0 where 1 != 1",
-            "Query": "select max(id), min(id), count(*), col from t_user",
+            "FieldQuery": "select max(id), min(id), count(*), col, weight_string(id) from t_user_0 where 1 != 1 group by weight_string(id)",
+            "Query": "select max(id), min(id), count(*), col, weight_string(id) from t_user group by weight_string(id)",
             "Table": "t_user"
           }
         ]
@@ -1264,33 +1267,42 @@
       "QueryType": "SELECT",
       "Original": "select name, name from t_user, t_music order by name",
       "Instructions": {
-        "OperatorType": "Join",
-        "Variant": "Join",
-        "JoinColumnIndexes": "L:0,L:0",
-        "TableName": "t_user_t_music",
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0,
+          0
+        ],
         "Inputs": [
           {
-            "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select `name`, weight_string(`name`) from t_user_0 where 1 != 1",
-            "OrderBy": "(0|1) ASC",
-            "Query": "select `name`, weight_string(`name`) from t_user order by `name` asc",
-            "Table": "t_user"
-          },
-          {
-            "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
-            "Keyspace": {
-              "Name": "user",
-              "Sharded": true
-            },
-            "FieldQuery": "select 1 from t_music_0 where 1 != 1",
-            "Query": "select 1 from t_music",
-            "Table": "t_music"
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0",
+            "TableName": "t_user_t_music",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select `name`, weight_string(`name`) from t_user_0 where 1 != 1",
+                "OrderBy": "(0|1) ASC",
+                "Query": "select `name`, weight_string(`name`) from t_user order by `name` asc",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_music_0 where 1 != 1",
+                "Query": "select 1 from t_music",
+                "Table": "t_music"
+              }
+            ]
           }
         ]
       },
