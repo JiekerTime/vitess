@@ -1,0 +1,123 @@
+# Dockerfile for stardb plus
+#####################
+# stardbplus build  #
+#####################
+
+ARG BUILD_VITESS_IMAGE
+ARG BUILD_MYSQL_IMAGE
+ARG RUNTIME_IMAGE
+ARG MYSQL_VERSION
+ARG MYSQL_URL
+FROM ${BUILD_VITESS_IMAGE} AS vitess_builder
+ARG BUILD_IMAGE
+ARG BUILD_NUMBER
+# Create dir for source code
+RUN mkdir -p /vt/src/vitess.io/vitess
+# Set GOPATH
+ENV GOPATH /vt/
+# Re-copy sources from working tree
+COPY . /vt/src/vitess.io/vitess
+# Re-set workdir for build
+WORKDIR /vt/src/vitess.io/vitess
+# Build Vitess
+RUN make install PREFIX=/vt/install
+# Gzip
+RUN cd /vt/install && tar -czvPf stardbplus_bin.tar.gz bin/
+
+FROM ${BUILD_MYSQL_IMAGE} as mysql_builder
+
+ARG BUILD_VITESS_IMAGE
+ARG BUILD_MYSQL_IMAGE
+ARG RUNTIME_IMAGE
+ARG MYSQL_VERSION
+ARG MYSQL_URL
+ARG DEFAULT_UMASK=0022
+
+RUN if [ ! -n "${MYSQL_URL}" ]; then MYSQL_URL="https://downloads.mysql.com/archives/get/p/23/file/mysql-boost-${MYSQL_VERSION}.tar.gz" ; fi \
+ && echo "current param: ${MYSQL_URL} ${MYSQL_VERSION} ${RUNTIME_IMAGE}"
+
+# Set environment
+ENV MYSQL_HOME="/export/servers/mysql-${MYSQL_VERSION}"
+
+RUN set -x \
+&& sed -i "s|repo.openeuler.org|mirrors.aliyun.com/openeuler|g" /etc/yum.repos.d/openEuler.repo || true
+
+RUN umask ${DEFAULT_UMASK} \
+ && yum install -y rsync glibc-common nmap-ncat wget openssh-server sudo htop iftop rsyslog crontabs vim lsof net-tools openssh-clients initscripts unzip \
+ xinetd nc chrony libconfig lldpad lldpad-devel gcc-c++ cloud-utils-growpart gdisk libtool-ltdl aide jq at bridge-utils quota vconfig libcgroup man-pages \
+ lrzsz expect make bison gcc bc libaio libaio-devel zlib zlib-devel ncurses-devel sysstat dos2unix libarchive libev numactl numactl-devel libconfuse apr \
+ tmpwatch cmake readline-devel perl-Data-Dumper openssl rhash rhash-devel libuv libuv-devel cmake-filesystem jsoncpp jsoncpp-devel cmake-rpm-macros \
+ emacs-filesystem cmake-data libstdc++-devel gcc-c++ libaio-devel rpcgen openssl-devel libtirpc-devel systemd-sysv
+
+# mysql downloads
+RUN umask ${DEFAULT_UMASK} \
+    && cd /root && wget ${MYSQL_URL} \
+    && tar xzvf mysql-boost-${MYSQL_VERSION}.tar.gz && rm -rf mysql-boost-${MYSQL_VERSION}.tar.gz
+
+# make & build
+RUN umask ${DEFAULT_UMASK} \
+    && cd /root/mysql-${MYSQL_VERSION} && mkdir build && cd build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=${MYSQL_HOME} \
+    -DINSTALL_BINDIR=${MYSQL_HOME}/bin \
+    -DINSTALL_SBINDIR=${MYSQL_HOME}/bin \
+    -DMYSQL_DATADIR=/export/data/mysql/data \
+    -DSYSCONFDIR=/export/server/mysql/etc \
+    -DMYSQL_UNIX_ADDR=/export/data/mysql/tmp/mysql.sock \
+    -DMYSQLX_UNIX_ADDR=/var/run/mysqld/mysqlx.sock \
+    -DDEFAULT_CHARSET=utf8mb4 \
+    -DDEFAULT_COLLATION=utf8mb4_general_ci \
+    -DINSTALL_MYSQLTESTDIR= \
+    -DENABLED_LOCAL_INFILE=ON -DENABLED_PROFILING=ON -DWITH_DEBUG=0 -DMYSQL_TCP_PORT=3358 \
+    -DWITH_BOOST=../boost/boost_1_59_0/ \
+    && make -j8 && make install \
+    && cd /root && rm -rf mysql-${MYSQL_VERSION}
+
+RUN cd /export/servers && mv mysql-${MYSQL_VERSION} mysql  && tar -czvPf mysql.tar.gz mysql && rm -rf /export/servers/mysql
+
+FROM ${RUNTIME_IMAGE} as target
+MAINTAINER StarDB <stardb@jd.com>
+ARG MYSQL_VERSION
+
+#yum update
+RUN yum update -y
+
+# Set up Vitess user and directory tree.
+RUN groupadd -r vitess && useradd -r -g vitess vitess
+RUN groupadd -r mysql && useradd -r -g mysql mysql
+RUN mkdir -p /vt/vtdataroot && chown -R vitess:vitess /vt
+
+# Set up Vitess environment (just enough to run pre-built Go binaries)
+ENV VTROOT /vt/
+ENV VTDATAROOT /export/data/mysql
+ENV VT_MYSQL_ROOT /export/servers/mysql
+ENV PATH $VTROOT/bin:$PATH
+
+# Copy artifacts from builder layer.
+COPY --from=vitess_builder --chown=vitess:vitess /vt/install/stardbplus_bin.tar.gz /vt
+
+# for stardb services
+COPY --from=vitess_builder --chmod=644 /vt/src/vitess.io/vitess/docker/stardb/mysqlctld.service /usr/lib/systemd/system
+COPY --from=vitess_builder --chmod=644 /vt/src/vitess.io/vitess/docker/stardb/vttablet.service /usr/lib/systemd/system
+COPY --from=vitess_builder --chmod=644 /vt/src/vitess.io/vitess/docker/stardb/vtctld.service /usr/lib/systemd/system
+COPY --from=vitess_builder --chmod=644 /vt/src/vitess.io/vitess/docker/stardb/vtgate.service /usr/lib/systemd/system
+RUN ln -s /usr/lib/systemd/system/mysqlctld.service /etc/systemd/system/multi-user.target.wants/mysqlctld.service && \
+    ln -s /usr/lib/systemd/system/vttablet.service /etc/systemd/system/multi-user.target.wants/vttablet.service && \
+    ln -s /usr/lib/systemd/system/vtctld.service /etc/systemd/system/multi-user.target.wants/vtctld.service && \
+    ln -s /usr/lib/systemd/system/vtgate.service /etc/systemd/system/multi-user.target.wants/vtgate.service && \
+    systemctl enable mysqlctld.service && \
+    systemctl enable vttablet.service && \
+    systemctl enable vtctld.service && \
+    systemctl enable vtgate.service
+
+COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/mysqlctld_start_script.sh /vt/config/
+COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vttablet_start_script.sh /vt/config/
+COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vtctld_start_script.sh /vt/config/
+COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vtgate_start_script.sh /vt/config/
+
+RUN yum install -y openssh openssh-server systemd-sysv libaio libaio-devel zlib zlib-devel ncurses-devel iftop vim lsof net-tools numactl numactl-devel jemalloc
+
+COPY --from=mysql_builder /export/servers/mysql.tar.gz /servers/
+
+RUN /usr/bin/ssh-keygen -A
+
+ENTRYPOINT ["/usr/sbin/init"]

@@ -120,6 +120,5 @@ COPY --from=mysql_builder /usr/lib64/libjemalloc.so.1 /usr/lib64/
 RUN yum install -y openssh openssh-server systemd-sysv libaio libaio-devel zlib zlib-devel ncurses-devel iftop vim lsof net-tools numactl numactl-devel jemalloc
 RUN /usr/bin/ssh-keygen -A
 # set timezone
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 ENTRYPOINT ["/usr/sbin/init"]
