@@ -223,19 +223,19 @@
       "QueryType": "SELECT",
       "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.genre = 'pop' GROUP BY t_music.genre)",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "Aggregate",
             "Variant": "Ordered",
             "Aggregates": "any_value(0) AS id",
             "GroupBy": "(1|2)",
-            "ResultColumns": 1,
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -252,6 +252,7 @@
             ]
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
             "Variant": "IN-Scatter",
             "Keyspace": {
@@ -259,7 +260,7 @@
               "Sharded": true
             },
             "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
-            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Query": "select t_music.id from t_music where t_music.id in ::__vals and :__sq_has_values",
             "Table": "t_music",
             "Values": [
               "::__sq1"
