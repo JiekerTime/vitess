@@ -6,14 +6,15 @@
       "QueryType": "SELECT",
       "Original": "select id from t_user having id in (select col from t_user)",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "TableRoute",
             "Variant": "Scatter-Scatter",
             "Keyspace": {
@@ -25,6 +26,7 @@
             "Table": "t_user"
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
             "Variant": "IN-Scatter",
             "Keyspace": {
@@ -32,7 +34,7 @@
               "Sharded": true
             },
             "FieldQuery": "select id from t_user_0 where 1 != 1",
-            "Query": "select id from t_user where :__sq_has_values1 = 1 and id in ::__vals",
+            "Query": "select id from t_user where id in ::__vals and :__sq_has_values",
             "Table": "t_user",
             "Values": [
               "::__sq1"
@@ -53,14 +55,15 @@
       "QueryType": "SELECT",
       "Original": "select col from t_user where col in (select col2 from t_user) order by col",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "TableRoute",
             "Variant": "Scatter-Scatter",
             "Keyspace": {
@@ -72,15 +75,19 @@
             "Table": "t_user"
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
+            "Variant": "Scatter-IN",
             "Keyspace": {
               "Name": "user",
               "Sharded": true
             },
             "FieldQuery": "select col from t_user_0 where 1 != 1",
             "OrderBy": "0 ASC",
-            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 order by col asc",
+            "Query": "select col from t_user where col in ::__sq1 and :__sq_has_values order by col asc",
+            "TableValues": [
+              "::__sq1"
+            ],
             "Table": "t_user"
           }
         ]
@@ -97,14 +104,15 @@
       "QueryType": "SELECT",
       "Original": "select col from t_user where col in (select col2 from t_user) order by null",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "TableRoute",
             "Variant": "Scatter-Scatter",
             "Keyspace": {
@@ -116,14 +124,18 @@
             "Table": "t_user"
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
+            "Variant": "Scatter-IN",
             "Keyspace": {
               "Name": "user",
               "Sharded": true
             },
             "FieldQuery": "select col from t_user_0 where 1 != 1",
-            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1",
+            "Query": "select col from t_user where col in ::__sq1 and :__sq_has_values",
+            "TableValues": [
+              "::__sq1"
+            ],
             "Table": "t_user"
           }
         ]
@@ -140,14 +152,15 @@
       "QueryType": "SELECT",
       "Original": "select col from t_user where col in (select col2 from t_user) order by rand()",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "TableRoute",
             "Variant": "Scatter-Scatter",
             "Keyspace": {
@@ -159,14 +172,18 @@
             "Table": "t_user"
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
-            "Variant": "Scatter-Scatter",
+            "Variant": "Scatter-IN",
             "Keyspace": {
               "Name": "user",
               "Sharded": true
             },
             "FieldQuery": "select col from t_user_0 where 1 != 1",
-            "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 order by rand()",
+            "Query": "select col from t_user where col in ::__sq1 and :__sq_has_values order by rand()",
+            "TableValues": [
+              "::__sq1"
+            ],
             "Table": "t_user"
           }
         ]
@@ -197,14 +214,15 @@
         "Count": "INT64(1)",
         "Inputs": [
           {
-            "OperatorType": "Subquery",
+            "OperatorType": "UncorrelatedSubquery",
             "Variant": "PulloutIn",
             "PulloutVars": [
-              "__sq_has_values1",
+              "__sq_has_values",
               "__sq1"
             ],
             "Inputs": [
               {
+                "InputName": "SubQuery",
                 "OperatorType": "TableRoute",
                 "Variant": "Scatter-Scatter",
                 "Keyspace": {
@@ -216,14 +234,18 @@
                 "Table": "t_user"
               },
               {
+                "InputName": "Outer",
                 "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
+                "Variant": "Scatter-IN",
                 "Keyspace": {
                   "Name": "user",
                   "Sharded": true
                 },
                 "FieldQuery": "select col from t_user_0 where 1 != 1",
-                "Query": "select col from t_user where :__sq_has_values1 = 1 and col in ::__sq1 limit :__upper_limit",
+                "Query": "select col from t_user where col in ::__sq1 and :__sq_has_values",
+                "TableValues": [
+                  "::__sq1"
+                ],
                 "Table": "t_user"
               }
             ]
