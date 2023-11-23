@@ -100,4 +100,8 @@ func TestTableFromCases(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.col between 10 and 20")
 	// left join where clauses #2
 	mcmp.ExecWithColumnCompare("select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where coalesce(t_user_extra.col, 4) = 5")
+	// alias on column from derived table. TODO: to support alias in SimpleProjection engine primitive
+	mcmp.ExecAndNotEmpty("select a as k from (select count(*) as a from t_user) t")
+	// derived table with aliased columns and a join that requires pushProjection
+	mcmp.ExecAndNotEmpty("select i+1 from (select t_user.id from t_user join t_user_extra) t(i)")
 }

@@ -22,6 +22,8 @@ func TestTablePostprocessCases(t *testing.T) {
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  '2', 'ccc', 3, false, 3, 4, 5, 102,  300,  4 )")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  '2', 'aaa', 1, false, 1, 2, 3, 100,  300,  2 )")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, '2', 'aaa', 1, false, 1, 2, 3, 100,  300,  2 )")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, col2) values (11,  '2', '2', 2, false, 2, 3, 4, 100,  300,  3, 2)")
+
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (1,  1, 2, 200, '1', 200, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (2,  2, 4, 200, '3', 200, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (3,  3, 4, 200, '5', 200, 5)")
@@ -192,4 +194,13 @@ func TestTablePostprocessCases(t *testing.T) {
 	// Order by column number with coalesce with columns from both sides
 	mcmp.AssertContainsError("select id from t_user, t_user_extra order by coalesce(t_user.col, t_user_extra.col)", "Column 'id' in field list is ambiguous")
 	mcmp.ExecWithColumnCompare("select t_user.id from t_user, t_user_extra order by coalesce(t_user.col, t_user_extra.col)")
+	// ORDER BY column offset
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id as foo from t_music order by 1")
+	// ORDER BY after pull-out subquery
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col from t_user where col in (select f_key from t_user) order by col")
+	// scatter limit after pullout subquery
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col from t_user where col in (select f_key from t_user) order by col limit 1")
+	// syntax to use near '+1'
+	// arithmetic limit
+	// mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user order by id limit 1+1")
 }
