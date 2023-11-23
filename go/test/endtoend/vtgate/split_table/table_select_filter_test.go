@@ -29,6 +29,18 @@ func TestTableFilterCases(t *testing.T) {
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (8,  8, 5, 300, '4', 300, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (9,  9, 3, 300, '5', 300, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (10, 5, 3, 300, '4', 300, 5)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (1, 11, '42',  10, 1, 202)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (2, 10, '42',  10, 2, 202)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (3, 12, 'bbb', 10, 3, 202)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (4, 13, 'bbb', 10, 2, 202)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (5, 12, 'ccc', 10, 3, 202)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (6, 11, '42',  10, 2, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (7, 10, '42',  10, 1, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (8, 12, 'bbb', 10, 1, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (9, 13, 'bbb', 10, 1, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (10, 13, 'bbb', 10, 1, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (11, 13, 'bbb', 10, 1, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (12, 13, 'bbb', 10, 1, 302)")
 
 	mcmp.ExecWithColumnCompare("select t_user.* from t_user t_user where col = 5 and id = 1")
 	mcmp.ExecWithColumnCompare("SELECT t_user.id,name FROM t_user t_user WHERE t_user.id = 3 AND col = '1'")
@@ -129,4 +141,18 @@ func TestTableFilterCases(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select t_user.id from t_user left join t_user_extra on t_user.col = t_user_extra.col where t_user_extra.foo = 5")
 	// push filter under aggregation
 	mcmp.ExecWithColumnCompare("select count(*) from t_user left join t_user_extra on t_user.id = t_user_extra.bar where IFNULL(t_user_extra.col, 'NOTSET') != 'collections_lock'")
+	// Single table multiple unique vindex match
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_music where id = 2 and user_id = 10")
+	// Select with equals null
+	mcmp.ExecWithColumnCompare("select id from t_music where id = null")
+	mcmp.ExecWithColumnCompare("select id from t_music where id is null")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_music where id is not null order by id")
+	// Single table with unique vindex match and null match
+	mcmp.ExecWithColumnCompare("select id from t_music where user_id = 4 and id = null")
+	mcmp.ExecWithColumnCompare("select id from t_music where user_id = 4 and id IN (null)")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_music where user_id = 13 and id IN (null, 10, 12) order by id")
+	// not in (null) -> is always false
+	mcmp.ExecWithColumnCompare("select id from t_music where user_id = 13 and id NOT IN (null, 1, 12) order by id")
+	mcmp.ExecWithColumnCompare("select id from t_music where id NOT IN (null, 1, 2) and user_id = 13 order by id")
+	mcmp.ExecWithColumnCompare("select id from t_music where id is null and user_id in (1,2) order by user_id")
 }
