@@ -363,17 +363,18 @@
       "QueryType": "SELECT",
       "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id IN (5, 6))",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "Aggregate",
             "Variant": "Scalar",
-            "Aggregates": "max(0) AS max(t_music.id)",
+            "Aggregates": "max(0|1) AS max(t_music.id)",
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -382,8 +383,8 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select max(t_music_0.id) from t_music_0 where 1 != 1",
-                "Query": "select max(t_music.id) from t_music where t_music.user_id in ::__vals",
+                "FieldQuery": "select max(t_music_0.id), weight_string(t_music_0.id) from t_music_0 where 1 != 1 group by weight_string(t_music_0.id)",
+                "Query": "select max(t_music.id), weight_string(t_music.id) from t_music where t_music.user_id in ::__vals group by weight_string(t_music.id)",
                 "Table": "t_music",
                 "Values": [
                   "(INT64(5), INT64(6))"
@@ -393,6 +394,7 @@
             ]
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
             "Variant": "IN-Scatter",
             "Keyspace": {
@@ -400,7 +402,7 @@
               "Sharded": true
             },
             "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
-            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Query": "select t_music.id from t_music where t_music.id in ::__vals and :__sq_has_values",
             "Table": "t_music",
             "Values": [
               "::__sq1"
@@ -421,17 +423,19 @@
       "QueryType": "SELECT",
       "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5)",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "Aggregate",
             "Variant": "Scalar",
-            "Aggregates": "max(0) AS max(t_music.id)",
+            "Aggregates": "max(0|1) AS max(t_music.id)",
+            "ResultColumns": 1,
             "Inputs": [
               {
                 "OperatorType": "TableRoute",
@@ -440,8 +444,8 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select max(t_music_0.id) from t_music_0 where 1 != 1",
-                "Query": "select max(t_music.id) from t_music where t_music.user_id = 5",
+                "FieldQuery": "select max(t_music_0.id), weight_string(t_music_0.id) from t_music_0 where 1 != 1 group by weight_string(t_music_0.id)",
+                "Query": "select max(t_music.id), weight_string(t_music.id) from t_music where t_music.user_id = 5 group by weight_string(t_music.id)",
                 "Table": "t_music",
                 "Values": [
                   "INT64(5)"
@@ -451,6 +455,7 @@
             ]
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
             "Variant": "IN-Scatter",
             "Keyspace": {
@@ -458,7 +463,7 @@
               "Sharded": true
             },
             "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
-            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Query": "select t_music.id from t_music where t_music.id in ::__vals and :__sq_has_values",
             "Table": "t_music",
             "Values": [
               "::__sq1"
@@ -471,7 +476,7 @@
         "user.t_music"
       ]
     }
-  },
+    },
   {
     "comment": "Mergeable subquery with `LIMIT` due to `EqualUnique` route",
     "query": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5 LIMIT 10)",
@@ -479,21 +484,23 @@
       "QueryType": "SELECT",
       "Original": "SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT MAX(t_music.id) FROM t_music WHERE t_music.user_id = 5 LIMIT 10)",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutIn",
         "PulloutVars": [
-          "__sq_has_values1",
+          "__sq_has_values",
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "Limit",
             "Count": "INT64(10)",
             "Inputs": [
               {
                 "OperatorType": "Aggregate",
                 "Variant": "Scalar",
-                "Aggregates": "max(0) AS max(t_music.id)",
+                "Aggregates": "max(0|1) AS max(t_music.id)",
+                "ResultColumns": 1,
                 "Inputs": [
                   {
                     "OperatorType": "TableRoute",
@@ -502,8 +509,8 @@
                       "Name": "user",
                       "Sharded": true
                     },
-                    "FieldQuery": "select max(t_music_0.id) from t_music_0 where 1 != 1",
-                    "Query": "select max(t_music.id) from t_music where t_music.user_id = 5",
+                    "FieldQuery": "select max(t_music_0.id), weight_string(t_music_0.id) from t_music_0 where 1 != 1 group by weight_string(t_music_0.id)",
+                    "Query": "select max(t_music.id), weight_string(t_music.id) from t_music where t_music.user_id = 5 group by weight_string(t_music.id)",
                     "Table": "t_music",
                     "Values": [
                       "INT64(5)"
@@ -515,6 +522,7 @@
             ]
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
             "Variant": "IN-Scatter",
             "Keyspace": {
@@ -522,7 +530,7 @@
               "Sharded": true
             },
             "FieldQuery": "select t_music_0.id from t_music_0 where 1 != 1",
-            "Query": "select t_music.id from t_music where :__sq_has_values1 = 1 and t_music.id in ::__vals",
+            "Query": "select t_music.id from t_music where t_music.id in ::__vals and :__sq_has_values",
             "Table": "t_music",
             "Values": [
               "::__sq1"
@@ -596,13 +604,14 @@
       "QueryType": "SELECT",
       "Original": "select textcol1,(select intcol from t_user limit 1) from t_user  ORDER BY intcol DESC",
       "Instructions": {
-        "OperatorType": "Subquery",
+        "OperatorType": "UncorrelatedSubquery",
         "Variant": "PulloutValue",
         "PulloutVars": [
           "__sq1"
         ],
         "Inputs": [
           {
+            "InputName": "SubQuery",
             "OperatorType": "Limit",
             "Count": "INT64(1)",
             "Inputs": [
@@ -620,15 +629,16 @@
             ]
           },
           {
+            "InputName": "Outer",
             "OperatorType": "TableRoute",
             "Variant": "Scatter-Scatter",
             "Keyspace": {
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select textcol1, :__sq1, intcol from t_user_0 where 1 != 1",
+            "FieldQuery": "select textcol1, :__sq1 as `(select intcol from t_user limit 1)`, intcol from t_user_0 where 1 != 1",
             "OrderBy": "2 DESC",
-            "Query": "select textcol1, :__sq1, intcol from t_user order by intcol desc",
+            "Query": "select textcol1, :__sq1 as `(select intcol from t_user limit 1)`, intcol from t_user order by intcol desc",
             "ResultColumns": 2,
             "Table": "t_user"
           }
