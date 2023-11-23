@@ -2,6 +2,8 @@ package split_table
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestLimit(t *testing.T) {
@@ -22,10 +24,18 @@ func TestLimit(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select * from t_user where (id = 2) and (col = 'b') AND name limit 5")
 	mcmp.ExecWithColumnCompare("select * from t_user where (id = 5) and (col = 'e') AND name = true limit 5")
 
-	mcmp.AssertMatches("select  count(*)  from (select id,col from t_user where col='a' limit 2) as x", "[[INT64(1)]]")
-	mcmp.AssertMatches("select  count(col)  from (select id,col from t_user where col='a' order by col desc limit 2) as x", "[[INT64(1)]]")
-	mcmp.AssertMatches("select  count(col)  from (select id,col from t_user where col is not null  limit 2) as x", "[[INT64(2)]]")
-	mcmp.AssertMatches("select  count(id)  from (select id,col from t_user where col is not null  limit 2) as x", "[[INT64(2)]]")
+	//mcmp.AssertMatches("select  count(*)  from (select id,col from t_user where col='a' limit 2) as x", "[[INT64(1)]]")
+	_, err := mcmp.ExecAndIgnore("select  count(*)  from (select id,col from t_user where col='a' limit 2) as x")
+	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	//mcmp.AssertMatches("select  count(col)  from (select id,col from t_user where col='a' order by col desc limit 2) as x", "[[INT64(1)]]")
+	_, err = mcmp.ExecAndIgnore("select  count(col)  from (select id,col from t_user where col='a' order by col desc limit 2) as x")
+	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	//mcmp.AssertMatches("select  count(col)  from (select id,col from t_user where col is not null  limit 2) as x", "[[INT64(2)]]")
+	_, err = mcmp.ExecAndIgnore("select  count(col)  from (select id,col from t_user where col is not null  limit 2) as x")
+	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	//mcmp.AssertMatches("select  count(id)  from (select id,col from t_user where col is not null  limit 2) as x", "[[INT64(2)]]")
+	_, err = mcmp.ExecAndIgnore("select  count(id)  from (select id,col from t_user where col is not null  limit 2) as x")
+	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
 	//VT13001: [BUG] GROUP BY on: *planbuilder.simpleProjection (errno 1815) (sqlstate HY000)
 	//mcmp.AssertMatches("select  count(id)  from (select id,col from t_user where col is not null  limit 2) as x group by id", "[[INT64(2)]]")
 

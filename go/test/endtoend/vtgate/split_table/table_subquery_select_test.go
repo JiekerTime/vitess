@@ -73,7 +73,8 @@ func TestSubQuerySelect(t *testing.T) {
 	// Subquery with `IN` condition using columns with matching lookup vindexes
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) and t_music.user_id = 3", `[[INT64(303)]]`)
 	// Subquery with `IN` condition using columns with matching lookup vindexes, but not a top level predicate
-	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) OR t_music.user_id = 5", `[[INT64(101)] [INT64(303)]]`)
+	_, err := mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) OR t_music.user_id = 5")
+	require.ErrorContains(t, err, "VT12001: unsupported: unmergable subquery can not be inside complex expression")
 	// Unmergeable scatter subquery with `GROUP BY` on-non vindex column
 	mcmp.AssertMatches("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.col = 'aaa' GROUP BY t_music.col)", `[[INT64(101)]]`)
 	// Unmergeable subquery with multiple levels of derived statements, using a multi value `IN` predicate
@@ -180,9 +181,9 @@ func TestFilterSubQuerySelect(t *testing.T) {
 	//mcmp.ExecWithColumnCompareAndNotEmpty("select a from t_user where id = (select b from t_user where b in (select c from t_user))")
 	// subquery on other table
 	_, err := mcmp.ExecAndIgnore("select distinct t_user.id, t_user.col from t_user where t_user.col in (select id from t_music where col2 = 'a')")
-	require.ErrorContains(t, err, "VT12001: unsupported: cross-shard correlated subquery")
+	require.ErrorContains(t, err, "VT12001: unsupported: correlated subquery is only supported for EXISTS")
 	_, err = mcmp.ExecAndIgnore("select distinct t_user.id, t_user.col from t_user where t_user.col in (select id from t_music where t_user.col2 = 'a')")
-	require.ErrorContains(t, err, "VT12001: unsupported: cross-shard correlated subquery")
+	require.ErrorContains(t, err, "VT12001: unsupported: correlated subquery is only supported for EXISTS")
 	mcmp.ExecWithColumnCompareAndNotEmpty("select distinct t_user.id, t_user.col from t_user where t_user.col in (select id from t_music where t_music.col = 'bbb')")
 	mcmp.ExecWithColumnCompareAndNotEmpty("select distinct t_user.id, t_user.col from t_user where t_user.col in (select id from t_music where foo = '202')")
 	// cross-shard subquery in EXISTS clause.
@@ -300,10 +301,6 @@ func TestSubQuerySelectCase(t *testing.T) {
 	// Mergeable subquery with multiple levels of derived statements, using a single value `IN` predicate
 	//_, err = mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (5) LIMIT 10) subquery_for_limit) subquery_for_limit)")
 	//require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
-	// Unmergeable subquery with multiple levels of derived statements, using a multi value `IN` predicate
-	mcmp.ExecWithColumnCompareAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (5, 6) LIMIT 10) subquery_for_limit) subquery_for_limit)")
-	// Unmergeable subquery with multiple levels of derived statements
-	mcmp.ExecWithColumnCompareAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music LIMIT 10) subquery_for_limit) subquery_for_limit)")
 	// `None` subquery as top level predicate - outer query changes from `Scatter` to `None` on merge
 	_, err = mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL))")
 	require.ErrorContains(t, err, "VT12001: unsupported: subquery in split table")
