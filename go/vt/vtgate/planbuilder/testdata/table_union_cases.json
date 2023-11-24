@@ -125,6 +125,7 @@
                     },
                     "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                     "OrderBy": "(0|1) DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, weight_string(id) from t_user order by id desc limit :__upper_limit",
                     "Table": "t_user"
                   }
@@ -143,6 +144,7 @@
                     },
                     "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
                     "OrderBy": "(0|1) DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
                     "Table": "t_music"
                   }
@@ -186,6 +188,7 @@
                     },
                     "FieldQuery": "select id, col from t_user_0 where 1 != 1",
                     "OrderBy": "1 DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, col from t_user order by col desc limit :__upper_limit",
                     "Table": "t_user"
                   }
@@ -204,6 +207,7 @@
                     },
                     "FieldQuery": "select id, a, weight_string(a) from t_music_0 where 1 != 1",
                     "OrderBy": "(1|2) DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, a, weight_string(a) from t_music order by a desc limit :__upper_limit",
                     "Table": "t_music"
                   }
@@ -247,6 +251,7 @@
                     },
                     "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                     "OrderBy": "(0|1) ASC",
+                    "ResultColumns": 1,
                     "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
                     "Table": "t_user"
                   }
@@ -265,6 +270,7 @@
                     },
                     "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
                     "OrderBy": "(0|1) DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
                     "Table": "t_music"
                   }
@@ -308,6 +314,7 @@
                     },
                     "FieldQuery": "select id, col from t_user_0 where 1 != 1",
                     "OrderBy": "1 ASC",
+                    "ResultColumns": 1,
                     "Query": "select id, col from t_user order by col asc limit :__upper_limit",
                     "Table": "t_user"
                   }
@@ -326,6 +333,7 @@
                     },
                     "FieldQuery": "select id, a, weight_string(a) from t_music_0 where 1 != 1",
                     "OrderBy": "(1|2) DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, a, weight_string(a) from t_music order by a desc limit :__upper_limit",
                     "Table": "t_music"
                   }
@@ -598,6 +606,7 @@
                     "Variant": "Ordered",
                     "Aggregates": "any_value(1) AS weight_string(id)",
                     "GroupBy": "(0|1)",
+                    "ResultColumns": 1,
                     "Inputs": [
                       {
                         "OperatorType": "TableRoute",
@@ -628,6 +637,7 @@
                     },
                     "FieldQuery": "select id, col, weight_string(col) from t_music_0 where 1 != 1",
                     "OrderBy": "(1|2) DESC",
+                    "ResultColumns": 1,
                     "Query": "select id, col, weight_string(col) from t_music order by col desc limit :__upper_limit",
                     "Table": "t_music"
                   }

@@ -173,25 +173,36 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 	}
 	sel := sqlparser.GetFirstSelect(ctx.OriginSelStmt)
 
-	if _, ok := plan.(*concatenate); !ok {
+	switch p := plan.(type) {
+	case *tableRoute:
 		if len(plan.OutputColumns()) == len(sel.SelectExprs) {
 			return plan, nil
 		}
-	}
-
-	switch p := plan.(type) {
-	case *tableRoute:
 		p.eroute.SetTruncateColumnCount(len(sel.SelectExprs))
+		return plan, nil
 	case *orderedAggregate:
+		if len(plan.OutputColumns()) == len(sel.SelectExprs) {
+			return plan, nil
+		}
 		p.truncateColumnCount = len(sel.SelectExprs)
+		return plan, nil
 	case *memorySort:
+		if len(plan.OutputColumns()) == len(sel.SelectExprs) {
+			return plan, nil
+		}
 		p.eMemorySort.SetTruncateColumnCount(len(sel.SelectExprs))
+		return plan, nil
 	case *limit:
 		for _, p := range plan.Inputs() {
 			_, err := truncateColumns(ctx, p)
 			if err != nil {
 				return nil, err
 			}
+		}
+	case *simpleProjection:
+		_, err := truncateColumns(ctx, p.input)
+		if err != nil {
+			return nil, err
 		}
 	case *concatenate:
 		originStatement := ctx.OriginSelStmt
