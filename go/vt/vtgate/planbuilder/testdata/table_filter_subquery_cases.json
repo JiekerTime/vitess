@@ -83,7 +83,7 @@
               "Sharded": true
             },
             "FieldQuery": "select id from t_user_0 where 1 != 1",
-            "Query": "select id from t_user where id not in ::__sq1 and not :__sq_has_values",
+            "Query": "select id from t_user where not :__sq_has_values or id not in ::__sq1",
             "Table": "t_user"
           }
         ]
@@ -379,7 +379,7 @@
                   "Sharded": true
                 },
                 "FieldQuery": "select id from t_user_0 where 1 != 1",
-                "Query": "select id from t_user where id not in ::__sq1 and id in ::__vals and not :__sq_has_values and :__sq_has_values1",
+                "Query": "select id from t_user where (not :__sq_has_values or id not in ::__sq1) and id in ::__vals and :__sq_has_values1",
                 "Table": "t_user",
                 "Values": [
                   "::__sq2"

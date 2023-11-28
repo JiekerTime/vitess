@@ -169,8 +169,7 @@ func TestFilterSubQuerySelect(t *testing.T) {
 	// cross-shard subquery in IN clause. # Note the improved Underlying plan as SelectIN.
 	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where id in (select col from t_user where id = 10)")
 	// cross-shard subquery in NOT IN clause.
-	// 看起来是Vitess生成了错误的执行计划，not in subquery处理有问题
-	//mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where id not in (select col from t_user where id = 10)")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where id not in (select col from t_user where id = 10)")
 	// cross-shard subquery as expression
 	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where id = (select col from t_user where id = 10)")
 	// multi-level pullout
@@ -186,8 +185,7 @@ func TestFilterSubQuerySelect(t *testing.T) {
 	// cross-shard subquery in EXISTS clause.
 	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where exists (select col from t_user)")
 	// pullout sq after pullout sq
-	// 看起来是Vitess生成了错误的执行计划，not in subquery处理有问题
-	//mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where not id in (select t_user_extra.col from t_user_extra where t_user_extra.user_id = 42) and id in (select t_user_extra.col from t_user_extra where t_user_extra.user_id = 411)")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where not id in (select t_user_extra.col from t_user_extra where t_user_extra.user_id = 42) and id in (select t_user_extra.col from t_user_extra where t_user_extra.user_id = 411)")
 	// SelectScatter with NOT EXISTS uncorrelated subquery
 	mcmp.ExecWithColumnCompareAndNotEmpty("select u1.col from t_user as u1 where not exists (select u2.name from t_user u2 where u2.id = 50)")
 }
