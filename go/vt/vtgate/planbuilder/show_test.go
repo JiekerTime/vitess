@@ -32,8 +32,7 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
-func TestBuildDBPlan(t *testing.T) {
-	t.Skip()
+func testBuildDBPlan(t *testing.T) {
 	vschema := &vschemawrapper.VSchemaWrapper{
 		Keyspace: &vindexes.Keyspace{Name: "main"},
 	}

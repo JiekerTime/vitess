@@ -773,6 +773,9 @@ func (plan *Plan) analyzeInKeyRange(vschema *localVSchema, exprs sqlparser.Selec
 	}
 	switch {
 	case len(exprs) == 1:
+		if vschema.vschema.Keyspaces[vschema.keyspace].Tables[plan.Table.Name].Pinned != nil {
+			return nil
+		}
 		cv, err := vschema.FindColVindex(plan.Table.Name)
 		if err != nil {
 			return err
