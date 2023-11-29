@@ -19,7 +19,7 @@ CREATE TABLE `t_user`
     `a`          int(16)           DEFAULT NULL,
     `b`          int(16)           DEFAULT NULL,
     `c`          int(16)           DEFAULT NULL,
-    `d`          int(16)           DEFAULT NULL,
+    `d` int(16) DEFAULT NULL,
     `foo`        int(16)           DEFAULT NULL,
     primary key (id)
 ) ENGINE = InnoDB
@@ -145,9 +145,42 @@ CREATE TABLE `t_music`
     `col`     varchar(100) DEFAULT NULL,
     `a`       int(16)      DEFAULT NULL,
     `bar`     int          DEFAULT NULL,
-    `foo`     varchar(16)  DEFAULT NULL,
-    `genre`   varchar(16)  DEFAULT NULL,
+    `foo` varchar(16) DEFAULT NULL,
     PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE `zcorder1`
+(
+    order_id INT AUTO_INCREMENT,
+    customer_id INT DEFAULT 63,
+    product_id INT, default_id INT DEFAULT 63,
+    country VARCHAR(50),
+    order_date DATE,
+    total_amount DECIMAL(10, 2),
+    quantity INT,
+    unit_price DECIMAL(8, 2),
+    string VARCHAR(50) DEFAULT 50,
+    sequence_id INT(50),
+    PRIMARY KEY (order_id)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE `zcorder2`
+(
+    order_id INT AUTO_INCREMENT,
+    customer_id INT DEFAULT 63,
+    product_id INT, default_id INT DEFAULT 63,
+    country VARCHAR(50),
+    order_date DATE,
+    total_amount DECIMAL(10, 2),
+    quantity INT,
+    unit_price DECIMAL(8, 2),
+    string VARCHAR(50) DEFAULT 50,
+    sequence_id INT(50),
+    PRIMARY KEY (order_id)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8mb4;

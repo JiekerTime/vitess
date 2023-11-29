@@ -1,0 +1,385 @@
+{
+  "sharded": true,
+  "vindexes": {
+    "xxhash": {
+      "type": "xxhash"
+    },
+    "regional_vdx": {
+      "type": "region_experimental",
+      "params": {
+        "region_bytes": "1"
+      }
+    },
+    "multicol_vdx": {
+      "type": "multicol",
+      "params": {
+        "column_count": "3",
+        "column_bytes": "1,3,4",
+        "column_vindex": "hash,binary,unicode_loose_xxhash"
+      }
+    }
+  },
+  "tables": {
+    "t_user": {
+      "columnVindexes": [
+        {
+          "column": "id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_user_0": {
+      "columnVindexes": [
+        {
+          "column": "id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_user_1": {
+      "columnVindexes": [
+        {
+          "column": "id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_1": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ],
+      "autoIncrement": {
+        "column": "id",
+        "sequence": "user.t_seq"
+      }
+    },
+    "t_seq": {
+      "type": "sequence",
+      "pinned": "00"
+    },
+    "t_2": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_3": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_4": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_5": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_6": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_7": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_user_extra": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ],
+      "columns": [
+        {
+          "name": "col",
+          "type": "INT16"
+        }
+      ]
+    },
+    "t_user_extra_0": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ],
+      "columns": [
+        {
+          "name": "col",
+          "type": "INT16"
+        }
+      ]
+    },
+    "t_user_extra_1": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ],
+      "columns": [
+        {
+          "name": "col",
+          "type": "INT16"
+        }
+      ]
+    },
+    "t_music": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_music_0": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "t_music_1": {
+      "column_vindexes": [
+        {
+          "column": "user_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "zcorder1": {
+      "column_vindexes": [
+        {
+          "column": "customer_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "zcorder1_0": {
+      "column_vindexes": [
+        {
+          "column": "customer_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "zcorder1_1": {
+      "column_vindexes": [
+        {
+          "column": "customer_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "zcorder2": {
+      "column_vindexes": [
+        {
+          "column": "customer_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "zcorder2_0": {
+      "column_vindexes": [
+        {
+          "column": "customer_id",
+          "name": "xxhash"
+        }
+      ]
+    },
+    "zcorder2_1": {
+      "column_vindexes": [
+        {
+          "column": "customer_id",
+          "name": "xxhash"
+        }
+      ]
+    }
+  },
+  "splittable_vindexes": {
+    "split_table_hash": {
+      "type": "splitTableHashMod"
+    },
+    "multicol_hash": {
+      "params": {
+        "column_bytes": "4,4",
+        "column_count": "2",
+        "column_vindex": "hash,hash"
+      },
+      "type": "multicol"
+    }
+  },
+  "splittable_tables": {
+    "t_user": {
+      "logic_table_name": "t_user",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "col",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_2": {
+      "logic_table_name": "t_2",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_3": {
+      "logic_table_name": "t_3",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_4": {
+      "logic_table_name": "t_4",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_5": {
+      "logic_table_name": "t_5",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_6": {
+      "logic_table_name": "t_6",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_shard",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_7": {
+      "logic_table_name": "t_7",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_shard",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_1": {
+      "logic_table_name": "t_1",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_user_extra": {
+      "logic_table_name": "t_user_extra",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "col",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_music": {
+      "logic_table_name": "t_music",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "a",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "zcorder1": {
+      "logic_table_name": "zcorder1",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "product_id",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    },
+    "zcorder2": {
+      "logic_table_name": "zcorder2",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "product_id",
+          "column_type": "INT32"
+        }
+      ],
+      "table_count": 2
+    }
+  }
+}

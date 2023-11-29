@@ -626,6 +626,15 @@
 			"RetryMax": 2,
 			"Tags": ["split-table"]
 		},
+		"vtgate_split_table_version_test": {
+			"File": "unused.go",
+			"Args": ["vitess.io/vitess/go/test/endtoend/vtgate/split_table/version_test"],
+			"Command": [],
+			"Manual": false,
+			"Shard": "vtgate_queries",
+			"RetryMax": 2,
+			"Tags": ["split-table"]
+		},
 		"vtgate_queries_random": {
 			"File": "unused.go",
 			"Args": ["vitess.io/vitess/go/test/endtoend/vtgate/queries/random"],

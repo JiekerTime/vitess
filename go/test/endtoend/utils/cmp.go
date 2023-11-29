@@ -300,6 +300,7 @@ func (mcmp *MySQLCompare) ExecAndNotEmpty(query string) {
 	result := mcmp.Exec(query)
 	assert.NotEmpty(mcmp.t, result, "query result is empty! for query : "+query)
 	assert.NotEmpty(mcmp.t, result.Rows, "query result Rows is empty! for query : "+query)
+	fmt.Printf("PASS \n%q\n", query)
 }
 
 func (mcmp *MySQLCompare) PrintPlan(query string) {
