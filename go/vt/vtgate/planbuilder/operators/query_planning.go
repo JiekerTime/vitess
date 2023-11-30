@@ -888,7 +888,8 @@ func addTruncationOrProjectionToReturnOutput(ctx *plancontext.PlanningContext, o
 
 func stopAtRoute(operator ops.Operator) rewrite.VisitRule {
 	_, isRoute := operator.(*Route)
-	return rewrite.VisitRule(!isRoute)
+	_, isTableRoute := operator.(*TableRoute)
+	return rewrite.VisitRule(!(isRoute || isTableRoute))
 }
 
 func aeWrap(e sqlparser.Expr) *sqlparser.AliasedExpr {

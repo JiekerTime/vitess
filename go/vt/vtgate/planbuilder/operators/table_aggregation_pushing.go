@@ -15,7 +15,6 @@ func tryPushingDownAggregatorForSplitTable(ctx *plancontext.PlanningContext, agg
 	if aggregator.Pushed {
 		return aggregator, rewrite.SameTree, nil
 	}
-	aggregator.Pushed = true
 	switch src := aggregator.Source.(type) {
 	case *TableRoute:
 		output, applyResult, err = pushDownAggregationThroughRouteForSplitTable(ctx, aggregator, src)
@@ -23,10 +22,15 @@ func tryPushingDownAggregatorForSplitTable(ctx *plancontext.PlanningContext, agg
 		return aggregator, rewrite.SameTree, nil
 	}
 
-	if applyResult != rewrite.SameTree && aggregator.Original {
-		aggregator.aggregateTheAggregates()
+	if err != nil {
+		return nil, nil, err
 	}
 
+	if output == nil {
+		return aggregator, rewrite.SameTree, nil
+	}
+
+	aggregator.Pushed = true
 	return
 }
 
@@ -52,10 +56,18 @@ func pushDownAggregationThroughRouteForSplitTable(
 		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard group by - remove original")
 	}
 
+	if !reachedPhase(ctx, delegateAggregation) {
+		return nil, nil, nil
+	}
+
 	// Create a new aggregator to be placed below the route.
-	aggrBelowRoute := aggregator.Clone([]ops.Operator{route.Source}).(*Aggregator)
-	aggrBelowRoute.Pushed = false
-	aggrBelowRoute.Original = false
+	aggrBelowRoute := aggregator.SplitAggregatorBelowRoute(route.Inputs())
+	aggrBelowRoute.Aggregations = nil
+
+	err := pushAggregations(ctx, aggregator, aggrBelowRoute)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// Set the source of the route to the new aggregator placed below the route.
 	route.Source = aggrBelowRoute

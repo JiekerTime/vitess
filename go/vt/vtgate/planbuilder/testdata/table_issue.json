@@ -23,9 +23,9 @@
                   "Name": "user",
                   "Sharded": true
                 },
-                "FieldQuery": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user_0 where 1 != 1 group by id, f_tinyint, weight_string(id), weight_string(f_int), weight_string(`name`)",
+                "FieldQuery": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user_0 where 1 != 1 group by f_tinyint, id, weight_string(id), weight_string(f_int), weight_string(`name`)",
                 "OrderBy": "(2|3) DESC, (4|5) ASC",
-                "Query": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user group by id, f_tinyint, weight_string(id), weight_string(f_int), weight_string(`name`) order by f_tinyint desc, id asc limit :__upper_limit",
+                "Query": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user group by f_tinyint, id, weight_string(id), weight_string(f_int), weight_string(`name`) order by f_tinyint desc, id asc limit :__upper_limit",
                 "Table": "t_user"
               }
             ]
@@ -57,9 +57,9 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user_0 where 1 != 1 group by id, f_tinyint, weight_string(id), weight_string(f_int), weight_string(`name`)",
+            "FieldQuery": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user_0 where 1 != 1 group by f_tinyint, id, weight_string(id), weight_string(f_int), weight_string(`name`)",
             "OrderBy": "(2|3) ASC, (4|5) ASC",
-            "Query": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user group by id, f_tinyint, weight_string(id), weight_string(f_int), weight_string(`name`) order by f_tinyint asc, id asc",
+            "Query": "select max(f_int), min(`name`), f_tinyint, weight_string(f_tinyint), id, weight_string(id), weight_string(f_int), weight_string(`name`) from t_user group by f_tinyint, id, weight_string(id), weight_string(f_int), weight_string(`name`) order by f_tinyint asc, id asc",
             "Table": "t_user"
           }
         ]

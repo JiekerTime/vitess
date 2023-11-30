@@ -21,11 +21,12 @@ func TablePlanQuery(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) 
 		return nil, err
 	}
 
-	if op, err = transformToPhysicalForSplitTable(ctx, op); err != nil {
-		return nil, err
+	if rewrite.DebugOperatorTree {
+		fmt.Println("Initial tree:")
+		fmt.Println(ops.ToTree(op))
 	}
 
-	if op, err = tryHorizonPlanningForSplitTable(ctx, op); err != nil {
+	if op, err = tablePlanQuery(ctx, op); err != nil {
 		return nil, err
 	}
 
@@ -313,13 +314,17 @@ func transformToPhysicalForSplitTable(ctx *plancontext.PlanningContext, in ops.O
 }
 
 func optimizeQueryGraphForSplitTable(ctx *plancontext.PlanningContext, op *QueryGraph) (result ops.Operator, changed *rewrite.ApplyResult, err error) {
-
 	switch {
 	case ctx.PlannerVersion == querypb.ExecuteOptions_Gen4Left2Right:
 		return nil, nil, fmt.Errorf("unsuport ExecuteOptions_Gen4Left2Right")
 		// result, err = leftToRightSolve(ctx, op)
 	default:
 		result, err = greedySolveForSplitTable(ctx, op)
+	}
+
+	unresolved := op.UnsolvedPredicates(ctx.SemTable)
+	if len(unresolved) > 0 {
+		return nil, nil, vterrors.VT13001("optimizeQueryGraph UnsolvedPredicates.size > 0 in split table")
 	}
 
 	changed = rewrite.NewTree("solved query graph for split table", result)
