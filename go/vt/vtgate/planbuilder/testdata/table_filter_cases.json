@@ -1554,5 +1554,58 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "TableRoute shardKey equal tableKey",
+    "query": "select id from t_order where order_id = 10",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_order where order_id = 10",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_order_0 where 1 != 1",
+        "Query": "select id from t_order where order_id = 10",
+        "Table": "t_order",
+        "TableValues": [
+          "INT64(10)"
+        ],
+        "Values": [
+          "INT64(10)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_order"
+      ]
+    }
+  },
+  {
+    "comment": "TableRoute shardKey equal tableKey order by",
+    "query": "select id from t_order order by order_id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_order order by order_id",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "OrderBy": "(1|2) ASC",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id, order_id, weight_string(order_id) from t_order_0 where 1 != 1",
+        "Query": "select id, order_id, weight_string(order_id) from t_order order by order_id asc",
+        "ResultColumns": 1,
+        "Table": "t_order"
+      },
+      "TablesUsed": [
+        "user.t_order"
+      ]
+    }
   }
 ]

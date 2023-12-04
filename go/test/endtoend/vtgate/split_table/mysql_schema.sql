@@ -123,6 +123,19 @@ CREATE TABLE `t_7`
     primary key (id)
 ) ENGINE = InnoDB;
 
+CREATE TABLE `t_8`
+(
+    `id`        bigint AUTO_INCREMENT,
+    `f_shard_table`   varchar(64) NOT NULL COMMENT '分片分表键',
+    `f_date`    date      DEFAULT NULL,
+    `f_tinyint` tinyint   DEFAULT NULL,
+    `f_bit`     bit(1)    DEFAULT NULL,
+    `f_midint`  mediumint DEFAULT NULL,
+    `f_int`     int       DEFAULT NULL,
+    `f_bool`    BOOLEAN   DEFAULT NULL,
+    primary key (id)
+) ENGINE = InnoDB;
+
 CREATE TABLE `t_user_extra`
 (
     `id`       bigint(20) NOT NULL AUTO_INCREMENT,

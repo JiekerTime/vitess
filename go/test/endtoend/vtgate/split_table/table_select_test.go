@@ -42,6 +42,9 @@ func TestSelect(t *testing.T) {
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1213, 10, 'aaa', 10, 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1314, 12, 'bbb', 10, 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (1415, 13, 'bbb', 10, 300)")
+	mcmp.Exec("insert into t_8(id,f_shard_table,f_int) VALUES (1,'1',1)")
+	mcmp.Exec("insert into t_8(id,f_shard_table,f_int) VALUES (2,'2',1)")
+	mcmp.Exec("insert into t_8(id,f_shard_table,f_int) VALUES (3,'3',1)")
 
 	// table_select_cases.json
 	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.* from t_user  t_user")
@@ -67,6 +70,13 @@ func TestSelect(t *testing.T) {
 	//mcmp.ExecWithColumnCompareAndNotEmpty("select a.* from t_authoritative a")
 	// sharded limit offset
 	mcmp.ExecWithColumnCompareAndNotEmpty("select user_id from t_music order by user_id limit 10, 20")
+
+	//TableRoute_shardKey_equal_tableKey
+	mcmp.ExecWithColumnCompareAndNotEmpty("select f_shard_table,f_int from t_8  where f_shard_table='1'")
+
+	//TableRoute_shardKey_equal_tableKey_order_by
+	mcmp.ExecWithColumnCompareAndNotEmpty("select f_int from t_8  order by f_shard_table")
+
 	// Sharding Key Condition in Parenthesis
 	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where name ='abc' AND (id = 14) and (col = 123) limit 5")
 	// Multiple parenthesized expressions

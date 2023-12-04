@@ -109,7 +109,7 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 	deleteAll := func() {
 		_, _ = utils.ExecAllowError(t, mcmp.VtConn, "set workload = oltp")
 		mcmp.Exec("use user")
-		tables := []string{"t_user", "t_1", "t_2", "t_3", "t_4", "t_5", "t_6", "t_7", "t_user_extra", "t_music"}
+		tables := []string{"t_user", "t_1", "t_2", "t_3", "t_4", "t_5", "t_6", "t_7", "t_8", "t_user_extra", "t_music"}
 		for _, table := range tables {
 			mcmp.Exec("delete from " + table)
 		}

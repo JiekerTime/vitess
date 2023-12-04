@@ -108,6 +108,14 @@
         }
       ]
     },
+    "t_8": {
+      "columnVindexes": [
+        {
+          "column": "f_shard_table",
+          "name": "xxhash"
+        }
+      ]
+    },
     "t_user_extra": {
       "column_vindexes": [
         {
@@ -268,6 +276,18 @@
         {
           "index": 0,
           "column": "f_shard",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_8": {
+      "logic_table_name": "t_8",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_shard_table",
           "column_type": "VARCHAR"
         }
       ],

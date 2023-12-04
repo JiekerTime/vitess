@@ -32,6 +32,14 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 				return false, logicalPlan, nil
 			}
 
+			if len(node.eroute.TableNameSlice) == 1 && isSameFieldSplitKey(ctx, node.eroute.TableNameSlice[0]) {
+				tablePlan, err := doBuildSelectBestTablePlan(ctx, node)
+				if err != nil {
+					return false, nil, err
+				}
+				return false, tablePlan, nil
+			}
+
 			tablePlan, err := doBuildTablePlan(ctx, node.Select)
 			if err != nil {
 				return false, nil, err
@@ -39,6 +47,14 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 			return false, tablePlan, nil
 		case *insert:
 			ctx.KsPrimitive = node.eInsert
+			if isSameFieldSplitKey(ctx, node.eInsert.TableName) {
+				tablePlan, err := doBuildInsertBestTablePlan(ctx, node.eInsert.TableName)
+				if err != nil {
+					return false, nil, err
+				}
+				return false, tablePlan, nil
+			}
+
 			tablePlan, err := doBuildTablePlan(ctx, node.eInsert.AST)
 			if err != nil {
 				return false, nil, err
@@ -48,6 +64,14 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 			switch prim := node.Primitive().(type) {
 			case *engine.Delete:
 				ctx.DMLEngine = *prim.DML
+				if isSameFieldSplitKey(ctx, prim.GetTableName()) {
+					tablePlan, err := doBuildDeleteBestTablePlan(ctx)
+					if err != nil {
+						return false, nil, err
+					}
+					return false, tablePlan, nil
+				}
+
 				deleteTablePlan, err := doBuildTablePlan(ctx, prim.AST)
 				if err != nil {
 					return false, nil, err
@@ -55,6 +79,15 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 				return false, deleteTablePlan, nil
 			case *engine.Update:
 				ctx.DMLEngine = *prim.DML
+
+				if isSameFieldSplitKey(ctx, prim.GetTableName()) {
+					tablePlan, err := doBuildUpdateBestTablePlan(ctx)
+					if err != nil {
+						return false, nil, err
+					}
+					return false, tablePlan, nil
+				}
+
 				updateTablePlan, err := doBuildTablePlan(ctx, prim.AST)
 				if err != nil {
 					return false, nil, err

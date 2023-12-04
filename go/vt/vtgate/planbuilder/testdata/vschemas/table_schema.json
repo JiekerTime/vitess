@@ -215,6 +215,78 @@
             }
           ]
         },
+        "t_order": {
+          "column_vindexes": [
+            {
+              "column": "order_id",
+              "name": "user_index"
+            }
+          ],
+          "auto_increment": {
+            "column": "id",
+            "sequence": "seq"
+          },
+          "columns": [
+            {
+              "name": "col",
+              "type": "INT16"
+            },
+            {
+              "name": "predef1"
+            },
+            {
+              "name": "predef2"
+            },
+            {
+              "name": "textcol1",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "intcol",
+              "type": "INT16"
+            },
+            {
+              "name": "textcol2",
+              "type": "VARCHAR"
+            }
+          ]
+        },
+        "t_order_0": {
+          "column_vindexes": [
+            {
+              "column": "order_id",
+              "name": "user_index"
+            }
+          ],
+          "auto_increment": {
+            "column": "id",
+            "sequence": "seq"
+          },
+          "columns": [
+            {
+              "name": "col",
+              "type": "INT16"
+            },
+            {
+              "name": "predef1"
+            },
+            {
+              "name": "predef2"
+            },
+            {
+              "name": "textcol1",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "intcol",
+              "type": "INT16"
+            },
+            {
+              "name": "textcol2",
+              "type": "VARCHAR"
+            }
+          ]
+        },
         "t_user_0": {
           "column_vindexes": [
             {
@@ -559,6 +631,18 @@
             {
               "index": 0,
               "column": "col",
+              "column_type": "VARCHAR"
+            }
+          ],
+          "table_count": 20
+        },
+        "t_order": {
+          "logic_table_name": "t_order",
+          "table_vindex": "split_table_hash",
+          "table_vindex_column": [
+            {
+              "index": 0,
+              "column": "order_id",
               "column_type": "VARCHAR"
             }
           ],

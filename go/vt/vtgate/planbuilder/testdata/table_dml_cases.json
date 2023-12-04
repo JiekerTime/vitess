@@ -1085,5 +1085,90 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "insert with multiple rows by same splitkey",
+    "query": "insert into t_order(id,order_id) values (1,'a'), (2,'b')",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert into t_order(id,order_id) values (1,'a'), (2,'b')",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "AutoIncrement": "select next :n /* INT64 */ values from seq:Values::(INT64(1), INT64(2))",
+        "Query": "insert into t_order(id, order_id) values (:__seq0, :_order_id_0), (:__seq1, :_order_id_1)",
+        "TableName": "t_order",
+        "VindexValues": {
+          "user_index": "VARCHAR(\"a\"), VARCHAR(\"b\")"
+        },
+        "TableVindexValues": {
+          "split_table_hash": "VARCHAR(\"a\"), VARCHAR(\"b\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_order"
+      ]
+    }
+  },
+  {
+    "comment": "update by primary keyspace id",
+    "query": "update t_order set val = 1 where order_id = 2",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update t_order set val = 1 where order_id = 2",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update t_order set val = 1 where order_id = 2",
+        "Table": "t_order",
+        "TableValues": [
+          "INT64(2)"
+        ],
+        "Values": [
+          "INT64(2)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_order"
+      ]
+    }
+  },
+  {
+    "comment": "delete from where",
+    "query": "delete from t_order where order_id = 1",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete from t_order where order_id = 1",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Values": [
+          "INT64(1)"
+        ],
+        "Queries": "delete from t_order where order_id = 1",
+        "Table": "t_order",
+        "TableValues": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_order"
+      ]
+    }
   }
 ]

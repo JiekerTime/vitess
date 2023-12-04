@@ -29,6 +29,11 @@ func TestTableBasticUpdate(t *testing.T) {
 	// update MultiEqual-MultiEqual type
 	execWithColumnCompareAndCheck(mcmp, "UPDATE t_user SET f_bit = true WHERE (col,f_key) in (('b','ggg'),('c','hhh'))", "WHERE (col,f_key) in (('b','ggg'),('c','hhh'))",
 		`[[INT64(2) CHAR("b") CHAR("ggg") INT8(4) BIT("\x01")] [INT64(3) CHAR("c") CHAR("hhh") INT8(4) BIT("\x01")]]`)
+
+	mcmp.Exec("insert into t_8(id,f_shard_table,f_int) VALUES (1,'1',1)")
+	mcmp.ExecWithColumnCompare("update t_8 set f_int=2 where f_shard_table='1'")
+	mcmp.ExecWithColumnCompare("select f_shard_table,f_int from t_8 where f_shard_table='1'")
+
 }
 
 func TestTableDifficultUpdate(t *testing.T) {

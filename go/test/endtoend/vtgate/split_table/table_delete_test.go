@@ -63,4 +63,7 @@ func TestTableDelete(t *testing.T) {
 	mcmp.Exec("insert into t_6(f_shard,f_table) values (1, 1),(2, 2),(3,3)")
 	mcmp.ExecWithColumnCompare("delete from t_6 where f_shard in (1, 2, 3)")
 
+	mcmp.Exec("insert into t_8(id,f_shard_table,f_int) VALUES (1,'1',1)")
+	mcmp.ExecWithColumnCompare("delete from t_8  where f_shard_table='1'")
+
 }
