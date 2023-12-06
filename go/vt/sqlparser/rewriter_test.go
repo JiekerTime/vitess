@@ -17,7 +17,9 @@ limitations under the License.
 package sqlparser
 
 import (
+	"encoding/json"
 	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -260,4 +262,82 @@ func TestDMLScenarioRewriteSplitTableName(t *testing.T) {
 
 	}
 
+}
+
+type (
+	jsonTestCase struct {
+		OriginSQL string            `json:"originSql"`
+		Expect    string            `json:"expect"`
+		TableMap  map[string]string `json:"tableMap"`
+	}
+)
+
+func readJSONTests(filename string) []jsonTestCase {
+	var output []jsonTestCase
+	file, err := os.Open(locateFile(filename))
+	if err != nil {
+		panic(err)
+	}
+	dec := json.NewDecoder(file)
+	err = dec.Decode(&output)
+	if err != nil {
+		panic(err)
+	}
+	return output
+}
+
+func TestCopyOnRewriteTableName(t *testing.T) {
+	testCases := readJSONTests("rewrite_table_name.json")
+	for _, tcase := range testCases {
+		t.Run(tcase.OriginSQL, func(t *testing.T) {
+			sqlNode, err := Parse(tcase.OriginSQL)
+			if err != nil {
+				t.Errorf("SQL parse error")
+			}
+			newNode := CopyOnRewriteTableName(sqlNode, tcase.TableMap)
+			assert.Equal(t, tcase.Expect, String(newNode))
+		})
+	}
+}
+
+func BenchmarkCopyOnRewriteTableName(b *testing.B) {
+	testCases := readJSONTests("rewrite_table_name.json")
+
+	for _, tcase := range testCases {
+		b.Run(tcase.OriginSQL, func(t *testing.B) {
+			sqlNode, err := Parse(tcase.OriginSQL)
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				for i := 0; i < 10000; i++ {
+					newNode := CopyOnRewriteTableName(sqlNode, tcase.TableMap)
+					String(newNode)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkRewriteSplitTableName(b *testing.B) {
+	testCases := readJSONTests("rewrite_table_name.json")
+	for _, tcase := range testCases {
+		b.Run(tcase.OriginSQL, func(t *testing.B) {
+			sqlNode, err := Parse(tcase.OriginSQL)
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				for i := 0; i < 10000; i++ {
+					newNode := DeepCloneStatement(sqlNode)
+					RewriteSplitTableName(newNode, tcase.TableMap)
+					String(sqlNode)
+				}
+			}
+		})
+	}
 }

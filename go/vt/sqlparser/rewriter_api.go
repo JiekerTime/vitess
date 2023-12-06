@@ -204,3 +204,79 @@ func checkIgnoredTables(tableMap map[string]string, ignoreTables map[string]bool
 		}
 	}
 }
+
+func buildIgnoredTables(tableMap map[string]string, ignoreTables map[string]bool, tableExprs []TableExpr) map[string]bool {
+	for _, expr := range tableExprs {
+		switch node := expr.(type) {
+		case *AliasedTableExpr:
+			if _, ok := tableMap[node.As.String()]; ok {
+				if ignoreTables == nil {
+					ignoreTables = make(map[string]bool, len(tableMap))
+				}
+				ignoreTables[node.As.String()] = true
+			}
+		case *JoinTableExpr:
+			ignoreTables = buildIgnoredTables(tableMap, ignoreTables, []TableExpr{node.LeftExpr})
+			ignoreTables = buildIgnoredTables(tableMap, ignoreTables, []TableExpr{node.RightExpr})
+		}
+	}
+	return ignoreTables
+}
+
+func CopyOnRewriteTableName(in SQLNode, tableMap map[string]string) SQLNode {
+	var ignoreTables map[string]bool
+	switch stmt := in.(type) {
+	case *Select:
+		ignoreTables = buildIgnoredTables(tableMap, ignoreTables, stmt.From)
+	case *Delete:
+		ignoreTables = buildIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
+	case *Update:
+		ignoreTables = buildIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
+	default:
+
+	}
+
+	return CopyOnRewrite(in, func(node SQLNode, parent SQLNode) bool {
+		if _, ok := node.(TableName); ok {
+			return false
+		}
+		return true
+	}, func(cursor *CopyOnWriteCursor) {
+		switch node := cursor.Node().(type) {
+		case TableName:
+			nodeName := node.Name.String()
+			if _, ignore := ignoreTables[nodeName]; ignore {
+				return
+			}
+			if actName, ok := tableMap[nodeName]; ok {
+				cursor.Replace(TableName{
+					Name:      NewIdentifierCS(actName),
+					Qualifier: node.Qualifier,
+				})
+			}
+			return
+		case *AliasedTableExpr:
+			alias := node.As.String()
+			if _, ignore := ignoreTables[alias]; !ignore {
+				return
+			}
+			if tableNameExpr, ok := node.Expr.(TableName); ok {
+				if actName, ok := tableMap[tableNameExpr.Name.String()]; ok {
+					cursor.Replace(&AliasedTableExpr{
+						Expr: TableName{
+							Name:      NewIdentifierCS(actName),
+							Qualifier: tableNameExpr.Qualifier,
+						},
+						Partitions: node.Partitions,
+						As:         node.As,
+						Hints:      node.Hints,
+						Columns:    node.Columns,
+					})
+				}
+			}
+			return
+		default:
+			return
+		}
+	}, nil)
+}
