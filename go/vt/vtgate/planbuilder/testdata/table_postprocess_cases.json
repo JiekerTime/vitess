@@ -1563,58 +1563,51 @@
   {
     "comment": "having filter with %",
     "query": "select a.tcol1 from t_user a join t_music b where a.tcol1 = b.tcol2 group by a.tcol1 having repeat(a.tcol1,min(a.id)) like \"A\\%B\" order by a.tcol1",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select a.tcol1 from t_user a join t_music b where a.tcol1 = b.tcol2 group by a.tcol1 having repeat(a.tcol1,min(a.id)) like \"A\\%B\" order by a.tcol1",
       "Instructions": {
-        "OperatorType": "Sort",
-        "Variant": "Memory",
-        "OrderBy": "(0|2) ASC",
+        "OperatorType": "Filter",
+        "Predicate": "repeat(a.tcol1, min(a.id)) like 'A\\%B'",
         "ResultColumns": 1,
         "Inputs": [
           {
-            "OperatorType": "Filter",
-            "Predicate": "repeat(a.tcol1, min(a.id)) like 'A\\%B'",
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "min(1|3) AS min(a.id)",
+            "GroupBy": "(0|2)",
             "Inputs": [
               {
-                "OperatorType": "Aggregate",
-                "Variant": "Ordered",
-                "Aggregates": "min(1|3) AS min(a.id)",
-                "GroupBy": "(0|2)",
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:1,L:0,L:2,L:3",
+                "JoinVars": {
+                  "a_tcol1": 1
+                },
+                "TableName": "t_user_t_music",
                 "Inputs": [
                   {
-                    "OperatorType": "Join",
-                    "Variant": "Join",
-                    "JoinColumnIndexes": "L:1,L:0,L:2,L:3",
-                    "JoinVars": {
-                      "a_tcol1": 1
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
                     },
-                    "TableName": "t_user_t_music",
-                    "Inputs": [
-                      {
-                        "OperatorType": "TableRoute",
-                        "Variant": "Scatter-Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select min(a.id), a.tcol1, weight_string(a.tcol1), weight_string(a.id) from t_user_0 as a where 1 != 1 group by a.tcol1, weight_string(a.tcol1), weight_string(a.id)",
-                        "OrderBy": "(1|2) ASC",
-                        "Query": "select min(a.id), a.tcol1, weight_string(a.tcol1), weight_string(a.id) from t_user as a group by a.tcol1, weight_string(a.tcol1), weight_string(a.id) order by a.tcol1 asc",
-                        "Table": "t_user"
-                      },
-                      {
-                        "OperatorType": "TableRoute",
-                        "Variant": "Scatter-Scatter",
-                        "Keyspace": {
-                          "Name": "user",
-                          "Sharded": true
-                        },
-                        "FieldQuery": "select 1 from t_music_0 as b where 1 != 1 group by .0",
-                        "Query": "select 1 from t_music as b where b.tcol2 = :a_tcol1 group by .0",
-                        "Table": "t_music"
-                      }
-                    ]
+                    "FieldQuery": "select min(a.id), a.tcol1, weight_string(a.tcol1), weight_string(a.id) from t_user_0 as a where 1 != 1 group by a.tcol1, weight_string(a.tcol1), weight_string(a.id)",
+                    "OrderBy": "(1|2) ASC",
+                    "Query": "select min(a.id), a.tcol1, weight_string(a.tcol1), weight_string(a.id) from t_user as a group by a.tcol1, weight_string(a.tcol1), weight_string(a.id) order by a.tcol1 asc",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_music_0 as b where 1 != 1 group by .0",
+                    "Query": "select 1 from t_music as b where b.tcol2 = :a_tcol1 group by .0",
+                    "Table": "t_music"
                   }
                 ]
               }
