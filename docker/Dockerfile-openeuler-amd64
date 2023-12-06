@@ -78,9 +78,6 @@ FROM ${RUNTIME_IMAGE} as target
 MAINTAINER StarDB <stardb@jd.com>
 ARG MYSQL_VERSION
 
-#yum update
-RUN yum update -y
-
 # Set up Vitess user and directory tree.
 RUN groupadd -r vitess && useradd -r -g vitess vitess
 RUN groupadd -r mysql && useradd -r -g mysql mysql
@@ -113,6 +110,9 @@ COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/mysqlctld_star
 COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vttablet_start_script.sh /vt/config/
 COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vtctld_start_script.sh /vt/config/
 COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vtgate_start_script.sh /vt/config/
+
+RUN set -x \
+&& sed -i "s|repo.openeuler.org|mirrors.aliyun.com/openeuler|g" /etc/yum.repos.d/openEuler.repo || true
 
 RUN yum install -y openssh openssh-server systemd-sysv libaio libaio-devel zlib zlib-devel ncurses-devel iftop vim lsof net-tools numactl numactl-devel jemalloc
 
