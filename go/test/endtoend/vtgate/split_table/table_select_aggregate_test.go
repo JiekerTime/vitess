@@ -29,6 +29,19 @@ func TestTableAggregate(t *testing.T) {
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (9,  9, 3, 300, '5', 300, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (10, 5, 3, 300, '4', 300, 5)")
 
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (1, 123, '42',  10, 1, '202')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (2, 123, '42',  11, 2, '202')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (3, 123, 'bbb', 8, 3, '202')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (4, 123, 'bbb', 11, 2, '202')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (5, 123, 'ccc', 10, 3, '202')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (6, 123, '42',  8, 2, '302')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (7, 123, '42',  10, 1, '302')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (8, 4, 'bbb', 10, 1, '302')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (9, 4, 'bbb', 10, 1, '302')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (10, 4, 'bbb', 10, 1, '302')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (11, 5, 'bbb', 10, 1, '302')")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (12, 5, 'bbb', 10, 1, '302')")
+
 	mcmp.ExecWithColumnCompare("select count(*) as user_count  from t_user")
 	mcmp.ExecWithColumnCompare("select count(*) as user_count  from t_user where id > 1-1")
 	mcmp.ExecWithColumnCompare("select count(*) as user_count  from t_user where id > 1 - 1")
@@ -56,4 +69,21 @@ func TestTableAggregate(t *testing.T) {
 	_, err := mcmp.ExecAndIgnore("select count(f_key) from (select id, f_key, col from t_user where id > 12 limit 3) as x")
 	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
 	mcmp.ExecWithColumnCompareAndNotEmpty("select count(col) from (select t_user_extra.col as col from t_user left join t_user_extra on t_user.id = t_user_extra.id limit 3) as x")
+
+	// having max()
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 group by col having max(a)>9 order by c")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col,count(*) c from t_music where user_id=123 group by col having max(bar)>2 order by c")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music group by user_id having max(a)>9 order by c")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user_id from t_music group by user_id having count(user_id)=3 order by user_id")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 group by col having max(a)>9 order by c")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 having c > 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 having c != 5 ")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 having c = '7' ")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 having count(*) = 7 ")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) c from t_music where user_id=123 having c != '8' ")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select foo from t_music where user_id=123 having foo = '202'")
+	// find aggregation expression and use column offset in filter times two
+	mcmp.ExecWithColumnCompareAndNotEmpty("select sum(a),sum(bar) from t_music where user_id=123 group by col having sum(a)+sum(bar)=24")
+	// find aggregation expression and use column offset in filter times three
+	mcmp.ExecWithColumnCompareAndNotEmpty("select sum(a) as asum,sum(bar) from t_music where user_id=123 group by col having asum+sum(bar)=24")
 }

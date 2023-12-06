@@ -2031,5 +2031,160 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "having multi cols",
+    "query": "select col1 from t_user where id=123 having col2 = 2 and col = 1 and col1 = 3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col1 from t_user where id=123 having col2 = 2 and col = 1 and col1 = 3",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col1 from t_user_0 where 1 != 1",
+        "Query": "select col1 from t_user where id = 123 and col2 = 2 and col = 1 and col1 = 3",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(1)"
+        ],
+        "Values": [
+          "INT64(123)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "join and having",
+    "query": "select t_user.col1, t_user_extra.col1 from t_user join t_user_extra having t_user_extra.col1 = 2",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.col1, t_user_extra.col1 from t_user join t_user_extra having t_user_extra.col1 = 2",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col1 from t_user_0 where 1 != 1",
+            "Query": "select t_user.col1 from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col1 from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col1 from t_user_extra where t_user_extra.col1 = 2",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "HAVING uses subquery",
+    "query": "select id from t_user having id in (select col from t_user)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user having id in (select col from t_user)",
+      "Instructions": {
+        "OperatorType": "UncorrelatedSubquery",
+        "Variant": "PulloutIn",
+        "PulloutVars": [
+          "__sq_has_values",
+          "__sq1"
+        ],
+        "Inputs": [
+          {
+            "InputName": "SubQuery",
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1",
+            "Query": "select col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "InputName": "Outer",
+            "OperatorType": "TableRoute",
+            "Variant": "IN-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where id in ::__vals and :__sq_has_values",
+            "Table": "t_user",
+            "Values": [
+              "::__sq1"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Equal filter with hexadecimal value",
+    "query": "select count(*) a from t_user having a = 0x01",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) a from t_user having a = 0x01",
+      "Instructions": {
+        "OperatorType": "Filter",
+        "Predicate": "count(*) = 0x01",
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum_count_star(0) AS a",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select count(*) as a from t_user_0 where 1 != 1",
+                "Query": "select count(*) as a from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

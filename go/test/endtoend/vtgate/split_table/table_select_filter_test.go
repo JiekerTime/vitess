@@ -155,4 +155,6 @@ func TestTableFilterCases(t *testing.T) {
 	mcmp.ExecWithColumnCompare("select id from t_music where user_id = 13 and id NOT IN (null, 1, 12) order by id")
 	mcmp.ExecWithColumnCompare("select id from t_music where id NOT IN (null, 1, 2) and user_id = 13 order by id")
 	mcmp.ExecWithColumnCompare("select id from t_music where id is null and user_id in (1,2) order by user_id")
+	// HAVING predicates that use table columns are safe to rewrite if we can move them to the WHERE clause
+	mcmp.ExecWithColumnCompare("select bar+2 as a from t_music where user_id=10 having a=4")
 }

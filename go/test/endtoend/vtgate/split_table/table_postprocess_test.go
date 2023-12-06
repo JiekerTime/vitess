@@ -34,15 +34,15 @@ func TestTablePostprocessCases(t *testing.T) {
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (8,  8, 5, 300, '4', 300, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (9,  9, 3, 300, '5', 300, 5)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz, foo) VALUES (10, 5, 3, 300, '4', 300, 5)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (1, 11, '42',  10, 1, 202)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (2, 10, '42',  10, 2, 202)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (3, 12, 'bbb', 10, 3, 202)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (4, 13, 'bbb', 10, 2, 202)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (5, 12, 'ccc', 10, 3, 202)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (6, 11, '42',  10, 2, 302)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (7, 10, '42',  10, 1, 302)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (8, 12, 'bbb', 10, 1, 302)")
-	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (9, 13, 'bbb', 10, 1, 302)")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (1, 11, '42',  10, 1, 202);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (2, 10, '42',  10, 2, 202);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (3, 12, 'bbb', 10, 3, 202);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (4, 13, 'bbb', 10, 2, 202);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (5, 12, 'ccc', 10, 3, 202);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (6, 11, '42',  10, 2, 302);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (7, 10, '42',  10, 1, 302);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (8, 12, 'bbb', 10, 1, 302);")
+	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (9, 13, 'bbb', 10, 1, 302);")
 
 	// ORDER BY, reference col from local table with shard key
 	mcmp.ExecWithColumnCompare("select predef1 from t_user where id = 5 order by predef2")
@@ -203,4 +203,11 @@ func TestTablePostprocessCases(t *testing.T) {
 	// syntax to use near '+1'
 	// arithmetic limit
 	// mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user order by id limit 1+1")
+
+	// having multi cols
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col,foo from t_music where user_id=11 having col='42' and foo=302")
+	// join and having
+	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.col2 from t_user join t_user_extra having t_user.col2 = 2")
+	// HAVING uses subquery
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user having id in (select col from t_user) order by id")
 }

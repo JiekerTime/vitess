@@ -174,8 +174,6 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Hori
 func checkForSupportSql(ctx *plancontext.PlanningContext, sel *sqlparser.Select) error {
 	if sel.Distinct {
 		return vterrors.VT12001("distinct in split table")
-	} else if sel.Having != nil {
-		return vterrors.VT12001(fmt.Sprintf("statement(%s) in split table", sqlparser.String(sel.Having)))
 	} else if hasSubqueryInExprsAndWhere(sel) {
 		return vterrors.VT12001("subquery in split table")
 	}
@@ -204,6 +202,14 @@ func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horiz
 
 	if qp.NeedsDistinct() {
 		return nil, nil, vterrors.VT12001("distinct in split table")
+	}
+
+	if sel.Having != nil {
+		op, err = addWherePredicatesForSplitTable(ctx, sel.Having.Expr, op)
+		if err != nil {
+			return nil, nil, err
+		}
+		extracted = append(extracted, "Filter")
 	}
 
 	if len(qp.OrderExprs) > 0 {

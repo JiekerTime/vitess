@@ -28,6 +28,8 @@ func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operat
 		return transformLimitForSplitTable(ctx, op)
 	case *operators.Aggregator:
 		return transformAggregatorForSplitTable(ctx, op)
+	case *operators.Filter:
+		return transformFilterForSplitTable(ctx, op)
 	}
 
 	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToLogicalPlan)", op))
@@ -223,6 +225,26 @@ func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *oper
 	}
 	oa.truncateColumnCount = op.ResultColumns
 	return oa, nil
+}
+
+func transformFilterForSplitTable(ctx *plancontext.PlanningContext, op *operators.Filter) (logicalPlan, error) {
+	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	if err != nil {
+		return nil, err
+	}
+	predicate := op.PredicateWithOffsets
+	ast := ctx.SemTable.AndExpressions(op.Predicates...)
+	if predicate == nil {
+		return nil, fmt.Errorf("this should have already been done")
+	}
+	return &filter{
+		logicalPlanCommon: newBuilderCommon(plan),
+		efilter: &engine.Filter{
+			Predicate:    predicate,
+			ASTPredicate: ast,
+			Truncate:     op.Truncate,
+		},
+	}, nil
 }
 
 func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *engine.RoutingParameters, op *operators.TableRoute) (*engine.TableRoute, error) {
