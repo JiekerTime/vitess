@@ -117,7 +117,7 @@ COPY --from=vitess_builder /vt/src/vitess.io/vitess/docker/stardb/vtgate_start_s
 COPY --from=mysql_builder /export/servers/mysql.tar.gz /servers/
 COPY --from=mysql_builder /usr/lib64/libjemalloc.so.1 /usr/lib64/
 
-RUN yum install -y openssh openssh-server systemd-sysv libaio libaio-devel zlib zlib-devel ncurses-devel iftop vim lsof net-tools numactl numactl-devel jemalloc
+RUN yum install -y openssh openssh-server systemd-sysv libaio libaio-devel zlib zlib-devel ncurses-devel iftop vim lsof net-tools numactl numactl-devel jemalloc hostname
 RUN /usr/bin/ssh-keygen -A
 # set timezone
 
