@@ -135,6 +135,10 @@ func pushLockAndComment(l *LockAndComment) (ops.Operator, *rewrite.ApplyResult, 
 		src.Comments = l.Comments
 		src.Lock = l.Lock
 		return src, rewrite.NewTree("put lock and comment into route", l), nil
+	case *TableRoute:
+		src.Comments = l.Comments
+		src.Lock = l.Lock
+		return src, rewrite.NewTree("put lock and comment into tableRoute", l), nil
 	default:
 		inputs := src.Inputs()
 		for i, op := range inputs {

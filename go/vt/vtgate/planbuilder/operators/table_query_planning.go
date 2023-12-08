@@ -55,6 +55,8 @@ func runRewritersForSplitTable(ctx *plancontext.PlanningContext, root ops.Operat
 			return tryPushingDownAggregatorForSplitTable(ctx, in)
 		case *QueryGraph:
 			return optimizeQueryGraphForSplitTable(ctx, in)
+		case *LockAndComment:
+			return pushLockAndComment(in)
 		default:
 			return in, rewrite.SameTree, nil
 		}

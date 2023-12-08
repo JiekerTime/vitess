@@ -24,6 +24,9 @@ type (
 
 		Ordering []RouteOrdering
 
+		Comments *sqlparser.ParsedComments
+		Lock     sqlparser.Lock
+
 		ResultColumns int
 	}
 
@@ -207,6 +210,13 @@ func (r *TableRoute) ShortDescription() string {
 		first = fmt.Sprintf("%s on %s", r.Routing.OpCode().String(), ks.Name)
 	}
 
+	type extraInfo interface {
+		extraInfo() string
+	}
+	if info, ok := r.Routing.(extraInfo); ok {
+		first += " " + info.extraInfo()
+	}
+
 	orderBy, err := r.Source.GetOrdering()
 	if err != nil {
 		return first
@@ -220,8 +230,15 @@ func (r *TableRoute) ShortDescription() string {
 		}
 		ordering = " order by " + strings.Join(oo, ",")
 	}
-
-	return first + ordering
+	comments := ""
+	if r.Comments != nil {
+		comments = " comments: " + sqlparser.String(r.Comments)
+	}
+	lock := ""
+	if r.Lock != sqlparser.NoLock {
+		lock = " lock: " + r.Lock.ToString()
+	}
+	return first + ordering + comments + lock
 }
 
 func (r *TableRoute) setTruncateColumnCount(offset int) {

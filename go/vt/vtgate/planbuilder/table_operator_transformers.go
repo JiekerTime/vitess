@@ -110,10 +110,16 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 	if err != nil {
 		return nil, err
 	}
+
 	selStmt, ok := sel.(sqlparser.SelectStatement)
 	if !ok {
 		return nil, vterrors.VT13001(fmt.Sprintf("dont know how to %T", selStmt))
 	}
+
+	if op.Lock != sqlparser.NoLock {
+		selStmt.SetLock(op.Lock)
+	}
+
 	ksERoute := ctx.GetRoute()
 	eroute, err := routeToEngineTableRoute(ctx, ksERoute.RoutingParameters, op)
 	if err != nil {

@@ -74,6 +74,15 @@ func createOperatorFromSelectForSplitTable(ctx *plancontext.PlanningContext, sel
 			}
 		}
 	}
+
+	if sel.Comments != nil || sel.Lock != sqlparser.NoLock {
+		op = &LockAndComment{
+			Source:   op,
+			Comments: sel.Comments,
+			Lock:     sel.Lock,
+		}
+	}
+
 	return &Horizon{
 		Source: op,
 		Query:  sel,
