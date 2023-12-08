@@ -323,13 +323,36 @@ func transformInsertPlanForSplitTable(ctx *plancontext.PlanningContext, op *oper
 	eins.TableVindexValueOffset = ins.TableVindexValueOffset
 	i = &insert{eInsert: &eins}
 	if eins.Opcode != engine.InsertUnsharded || ins.Input != nil {
-		eins.Prefix, eins.Mid, eins.Suffix = generateInsertShardedQuery(eins.AST)
+		eins.Prefix, eins.Columns, eins.Mid = GenerateInsertShardedQueryForSplitTable(eins.AST)
 	}
 	if ins.Input == nil {
 		eins.Query = generateQuery(eins.AST)
 	} else {
 		return nil, vterrors.VT12001("Unsupport split table insert into select")
 	}
+	return
+}
+
+func GenerateInsertShardedQueryForSplitTable(ins *sqlparser.Insert) (prefix string, columns string, mids sqlparser.Values) {
+	mids, isValues := ins.Rows.(sqlparser.Values)
+	prefixFormat := "insert %v%sinto "
+
+	prefixBuf := sqlparser.NewTrackedBuffer(dmlFormatter)
+	prefixBuf.Myprintf(prefixFormat,
+		ins.Comments, ins.Ignore.ToString(),
+	)
+	prefix = prefixBuf.String()
+	columns = "%v "
+	if isValues {
+		// the mid values are filled differently
+		// with select uses sqlparser.String for sqlparser.Values
+		// with rows uses string.
+		columns += "values "
+	}
+	columnsBuf := sqlparser.NewTrackedBuffer(dmlFormatter)
+	columnsBuf.Myprintf(columns, ins.Columns)
+	columns = columnsBuf.String()
+
 	return
 }
 

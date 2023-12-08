@@ -81,6 +81,8 @@ type (
 		Prefix string
 		Mid    sqlparser.Values
 		Suffix string
+		//方便分表拼接表名，把之前的sql前缀又做了拆分
+		Columns string
 
 		// Option to override the standard behavior and allow a multi-shard insert
 		// to use single round trip autocommit.
@@ -252,7 +254,7 @@ func (ins *Insert) GetTableName() string {
 }
 
 // TryExecute performs a non-streaming exec.
-func (ins *Insert) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
+func (ins *Insert) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, _ bool) (*sqltypes.Result, error) {
 	ctx, cancelFunc := addQueryTimeout(ctx, vcursor, ins.QueryTimeout)
 	defer cancelFunc()
 	switch ins.Opcode {
@@ -1044,7 +1046,12 @@ func (ins *Insert) description() PrimitiveDescription {
 		mids := slice.Map(ins.Mid, func(from sqlparser.ValTuple) string {
 			return sqlparser.String(from)
 		})
-		shardQuery := fmt.Sprintf("%s%s%s", ins.Prefix, strings.Join(mids, ", "), ins.Suffix)
+		var shardQuery string
+		if ins.Columns != "" {
+			shardQuery = fmt.Sprintf("%s%s%s%s%s", ins.Prefix, ins.TableColVindexes.LogicTableName, ins.Columns, strings.Join(mids, ", "), ins.Suffix)
+		} else {
+			shardQuery = fmt.Sprintf("%s%s%s", ins.Prefix, strings.Join(mids, ", "), ins.Suffix)
+		}
 		if shardQuery != ins.Query {
 			other["ShardedQuery"] = shardQuery
 		}

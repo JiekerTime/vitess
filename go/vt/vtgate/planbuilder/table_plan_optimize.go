@@ -165,6 +165,8 @@ func doBuildInsertBestTablePlan(ctx *plancontext.PlanningContext, tableName stri
 		return nil, vterrors.VT12001("Unsupport split table insert into select")
 	}
 
+	eins.Prefix, eins.Columns, eins.Mid = GenerateInsertShardedQueryForSplitTable(eins.AST)
+
 	return
 }
 

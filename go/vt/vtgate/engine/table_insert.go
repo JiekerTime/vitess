@@ -169,6 +169,7 @@ func (ins *Insert) getInsertTableShardedRoute(
 	}
 	queries := make([][]*querypb.BoundQuery, len(rss))
 	for i := range rss {
+		shardBindVars := map[string]*querypb.BindVariable{}
 		mids := make(map[string][]string)
 		sortedKeys := make([]string, 0) // 用于存储排序后的表名
 		for _, indexValue := range indexesPerRss[i] {
@@ -179,13 +180,28 @@ func (ins *Insert) getInsertTableShardedRoute(
 					sortedKeys = append(sortedKeys, tableName)
 				}
 				mids[actualTables[index].ActualTableName] = append(mids[actualTables[index].ActualTableName], sqlparser.String(ins.Mid[index]))
+				for _, expr := range ins.Mid[index] {
+					err = sqlparser.Walk(func(node sqlparser.SQLNode) (kontinue bool, err error) {
+						if arg, ok := node.(*sqlparser.Argument); ok {
+							bv, exists := bindVars[arg.Name]
+							if !exists {
+								return false, vterrors.VT03026(arg.Name)
+							}
+							shardBindVars[arg.Name] = bv
+						}
+						return true, nil
+					}, expr, nil)
+					if err != nil {
+						return nil, nil, err
+					}
+				}
 			}
 		}
 		sort.Strings(sortedKeys) // 对表名进行排序
 		for _, tableName := range sortedKeys {
 			queries[i] = append(queries[i], &querypb.BoundQuery{
-				Sql:           strings.Replace(ins.Prefix, ins.TableColVindexes.LogicTableName, tableName, 1) + strings.Join(mids[tableName], ",") + ins.Suffix,
-				BindVariables: bindVars,
+				Sql:           ins.Prefix + tableName + ins.Columns + strings.Join(mids[tableName], ",") + ins.Suffix,
+				BindVariables: shardBindVars,
 			})
 		}
 	}

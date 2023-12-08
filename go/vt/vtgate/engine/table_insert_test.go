@@ -58,9 +58,9 @@ func TestInsertTableShardedSimple(t *testing.T) {
 				evalengine.NewLiteralInt(1),
 			},
 		}},
-		Prefix: "prefix t1",
+		Prefix: "prefix ",
 		Mid: sqlparser.Values{
-			{&sqlparser.Argument{Name: " mid1", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_0", Type: sqltypes.Int64}},
 		},
 		Suffix:           " suffix",
 		TableColVindexes: ks.SplitTableTables["t1"],
@@ -84,9 +84,7 @@ func TestInsertTableShardedSimple(t *testing.T) {
 		// Based on shardForKsid, values returned will be 20-.
 		`ResolveDestinations sharded [value:"0"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6)`,
 		// Row 2 will go to -20, rows 1 & 3 will go to 20-
-		`ExecuteBatchMultiShard ` +
-			`sharded.20-: prefix t1_7(: mid1 /* INT64 */) suffix {_col_0: type:INT64 value:"2" _id_0: type:INT64 value:"1"} ` +
-			`true true`,
+		`ExecuteBatchMultiShard sharded.20-: prefix t1_7(:_id_0 /* INT64 */) suffix {_id_0: type:INT64 value:"1"} true true`,
 	})
 
 	// Multiple rows are not autocommitted by default
@@ -103,11 +101,11 @@ func TestInsertTableShardedSimple(t *testing.T) {
 				evalengine.NewLiteralInt(3),
 			},
 		}},
-		Prefix: "prefix t1",
+		Prefix: "prefix ",
 		Mid: sqlparser.Values{
-			{&sqlparser.Argument{Name: " mid1", Type: sqltypes.Int64}},
-			{&sqlparser.Argument{Name: " mid2", Type: sqltypes.Int64}},
-			{&sqlparser.Argument{Name: " mid3", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_0", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_1", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_2", Type: sqltypes.Int64}},
 		},
 		Suffix:           " suffix",
 		TableColVindexes: ks.SplitTableTables["t1"],
@@ -127,10 +125,11 @@ func TestInsertTableShardedSimple(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	vc.ExpectLog(t, []string{
 		`ResolveDestinations sharded [value:"0" value:"1" value:"2"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6),DestinationKeyspaceID(06e7ea22ce92708f),DestinationKeyspaceID(4eb190c9a2fa169c)`,
-		`ExecuteBatchMultiShard sharded.20-: prefix t1_0(: mid3 /* INT64 */) suffix {_col_0: type:INT64 value:"1" _col_1: type:INT64 value:"2" _col_2: type:INT64 value:"3" _id_0: type:INT64 value:"1" _id_1: type:INT64 value:"2" _id_2: type:INT64 value:"3"} sharded.-20: prefix t1_7(: mid2 /* INT64 */) suffix {_col_0: type:INT64 value:"1" _col_1: type:INT64 value:"2" _col_2: type:INT64 value:"3" _id_0: type:INT64 value:"1" _id_1: type:INT64 value:"2" _id_2: type:INT64 value:"3"} true false`,
-		`ExecuteBatchMultiShard sharded.20-: prefix t1_2(: mid1 /* INT64 */) suffix {_col_0: type:INT64 value:"1" _col_1: type:INT64 value:"2" _col_2: type:INT64 value:"3" _id_0: type:INT64 value:"1" _id_1: type:INT64 value:"2" _id_2: type:INT64 value:"3"} true false`,
+		`ExecuteBatchMultiShard sharded.20-: prefix t1_0(:_id_2 /* INT64 */) suffix {_id_0: type:INT64 value:"1" _id_2: type:INT64 value:"3"} sharded.-20: prefix t1_7(:_id_1 /* INT64 */) suffix {_id_1: type:INT64 value:"2"} true false`,
+		`ExecuteBatchMultiShard sharded.20-: prefix t1_2(:_id_0 /* INT64 */) suffix {_id_0: type:INT64 value:"1" _id_2: type:INT64 value:"3"} true false`,
 	})
 
 }
@@ -183,11 +182,11 @@ func TestInsertTableShardedGenerate(t *testing.T) {
 				evalengine.NewLiteralInt(3),
 			},
 		}},
-		Prefix: "prefix t1",
+		Prefix: "prefix ",
 		Mid: sqlparser.Values{
-			{&sqlparser.Argument{Name: " mid1", Type: sqltypes.Int64}},
-			{&sqlparser.Argument{Name: " mid2", Type: sqltypes.Int64}},
-			{&sqlparser.Argument{Name: " mid3", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_0", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_1", Type: sqltypes.Int64}},
+			{&sqlparser.Argument{Name: "_id_2", Type: sqltypes.Int64}},
 		},
 		Suffix:           " suffix",
 		TableColVindexes: ks.SplitTableTables["t1"],
@@ -235,8 +234,8 @@ func TestInsertTableShardedGenerate(t *testing.T) {
 		`ResolveDestinations ks2 [] Destinations:DestinationAnyShard()`,
 		`ExecuteStandalone dummy_generate n: type:INT64 value:"1" ks2 -20`,
 		`ResolveDestinations sharded [value:"0" value:"1" value:"2"] Destinations:DestinationKeyspaceID(166b40b44aba4bd6),DestinationKeyspaceID(06e7ea22ce92708f),DestinationKeyspaceID(4eb190c9a2fa169c)`,
-		`ExecuteBatchMultiShard sharded.20-: prefix t1_0(: mid3 /* INT64 */) suffix {__seq0: type:INT64 value:"1" __seq1: type:INT64 value:"2" __seq2: type:INT64 value:"2" _col_0: type:INT64 value:"1" _col_1: type:INT64 value:"2" _col_2: type:INT64 value:"3" _id_0: type:INT64 value:"1" _id_1: type:INT64 value:"2" _id_2: type:INT64 value:"3"} sharded.-20: prefix t1_7(: mid2 /* INT64 */) suffix {__seq0: type:INT64 value:"1" __seq1: type:INT64 value:"2" __seq2: type:INT64 value:"2" _col_0: type:INT64 value:"1" _col_1: type:INT64 value:"2" _col_2: type:INT64 value:"3" _id_0: type:INT64 value:"1" _id_1: type:INT64 value:"2" _id_2: type:INT64 value:"3"} true false`,
-		`ExecuteBatchMultiShard sharded.20-: prefix t1_2(: mid1 /* INT64 */) suffix {__seq0: type:INT64 value:"1" __seq1: type:INT64 value:"2" __seq2: type:INT64 value:"2" _col_0: type:INT64 value:"1" _col_1: type:INT64 value:"2" _col_2: type:INT64 value:"3" _id_0: type:INT64 value:"1" _id_1: type:INT64 value:"2" _id_2: type:INT64 value:"3"} true false`,
+		`ExecuteBatchMultiShard sharded.20-: prefix t1_0(:_id_2 /* INT64 */) suffix {_id_0: type:INT64 value:"1" _id_2: type:INT64 value:"3"} sharded.-20: prefix t1_7(:_id_1 /* INT64 */) suffix {_id_1: type:INT64 value:"2"} true false`,
+		`ExecuteBatchMultiShard sharded.20-: prefix t1_2(:_id_0 /* INT64 */) suffix {_id_0: type:INT64 value:"1" _id_2: type:INT64 value:"3"} true false`,
 	})
 
 	// The insert id returned by ExecuteMultiShard should be overwritten by processGenerateFromValues.

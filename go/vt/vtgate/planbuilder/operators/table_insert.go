@@ -34,16 +34,17 @@ func (t *TableInsert) Inputs() []ops.Operator {
 	return []ops.Operator{t.Input}
 }
 
-func (t *TableInsert) SetInputs(operators []ops.Operator) {
-	//TODO implement me
-	panic("implement me")
+func (t *TableInsert) SetInputs(inputs []ops.Operator) {
+	if len(inputs) > 0 {
+		t.Input = inputs[0]
+	}
 }
 
 func (t *TableInsert) ShortDescription() string {
 	//TODO implement me
-	panic("implement me")
+	return t.TableColVindexes.LogicTableName
 }
 
 func (t *TableInsert) GetOrdering() ([]ops.OrderBy, error) {
-	panic("does not expect insert operator to receive get ordering call")
+	return nil, nil
 }
