@@ -1283,8 +1283,8 @@ func (vc *vcursorImpl) FindSplitTable(keyspace, tableName string) (*vindexes.Log
 	return vc.vschema.FindSplitTable(keyspace, tableName)
 }
 
-func (vc *vcursorImpl) FindSplitAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, error) {
-	return vc.vschema.FindSplitAllTables(keyspace)
+func (vc *vcursorImpl) FindAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, map[string]*vindexes.Table, error) {
+	return vc.vschema.FindAllTables(keyspace)
 }
 
 // ExecuteBatchMultiShard executing a batch of SQL statements on each shard

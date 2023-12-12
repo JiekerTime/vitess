@@ -1289,19 +1289,7 @@ func (cached *TableShow) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(64)
-	}
-	// field rows [][]vitess.io/vitess/go/sqltypes.Value
-	{
-		size += hack.RuntimeAllocSize(int64(cap(cached.rows)) * int64(24))
-		for _, elem := range cached.rows {
-			{
-				size += hack.RuntimeAllocSize(int64(cap(elem)) * int64(32))
-				for _, elem := range elem {
-					size += elem.CachedSize(false)
-				}
-			}
-		}
+		size += int64(48)
 	}
 	// field Input vitess.io/vitess/go/vt/vtgate/engine.Primitive
 	if cc, ok := cached.Input.(cachedObject); ok {
@@ -1309,17 +1297,32 @@ func (cached *TableShow) CachedSize(alloc bool) int64 {
 	}
 	// field Like string
 	size += hack.RuntimeAllocSize(int64(len(cached.Like)))
-	// field Tables map[string]*vitess.io/vitess/go/vt/vtgate/vindexes.LogicTableConfig
-	if cached.Tables != nil {
+	// field SplitTables map[string]*vitess.io/vitess/go/vt/vtgate/vindexes.LogicTableConfig
+	if cached.SplitTables != nil {
 		size += int64(48)
-		hmap := reflect.ValueOf(cached.Tables)
+		hmap := reflect.ValueOf(cached.SplitTables)
 		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
 		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
 		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
-		if len(cached.Tables) > 0 || numBuckets > 1 {
+		if len(cached.SplitTables) > 0 || numBuckets > 1 {
 			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
 		}
-		for k, v := range cached.Tables {
+		for k, v := range cached.SplitTables {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += v.CachedSize(true)
+		}
+	}
+	// field ShardTables map[string]*vitess.io/vitess/go/vt/vtgate/vindexes.Table
+	if cached.ShardTables != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.ShardTables)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
+		if len(cached.ShardTables) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
+		}
+		for k, v := range cached.ShardTables {
 			size += hack.RuntimeAllocSize(int64(len(k)))
 			size += v.CachedSize(true)
 		}

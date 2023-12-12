@@ -194,31 +194,16 @@ func (ks *KeyspaceSchema) findSplitAllTables() (tables map[string]*LogicTableCon
 	return ks.SplitTableTables
 }
 
-func (vschema *VSchema) FindSplitAllTables(
-	keyspace string,
-) (map[string]*LogicTableConfig, error) {
-	ks, ok := vschema.Keyspaces[keyspace]
-	if !ok {
-		return nil, vterrors.VT05003(keyspace)
-	}
-	tables := ks.findSplitAllTables()
-
-	return tables, nil
+func (ks *KeyspaceSchema) findAllTables() (tables map[string]*Table) {
+	return ks.Tables
 }
 
-func (vschema *VSchema) FindActualTable(
-	keyspace,
-	logicTableName string,
-) (*LogicTableConfig, error) {
+func (vschema *VSchema) FindAllTables(keyspace string) (map[string]*LogicTableConfig, map[string]*Table, error) {
 	ks, ok := vschema.Keyspaces[keyspace]
 	if !ok {
-		return nil, vterrors.VT05003(keyspace)
+		return nil, nil, vterrors.VT05003(keyspace)
 	}
-	table := ks.findSplitTable(logicTableName)
-	if table == nil {
-		return nil, vterrors.VT05004(logicTableName)
-	}
-	//table.
-	//return table, nil
-	return nil, nil
+	splitTables := ks.findSplitAllTables()
+	tables := ks.findAllTables()
+	return splitTables, tables, nil
 }

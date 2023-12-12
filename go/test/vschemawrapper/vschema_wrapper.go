@@ -54,8 +54,8 @@ func (vw *VSchemaWrapper) FindSplitTable(_, tableName string) (*vindexes.LogicTa
 	return vw.V.FindSplitTable("user", tableName)
 }
 
-func (vw *VSchemaWrapper) FindSplitAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, error) {
-	return vw.V.FindSplitAllTables(keyspace)
+func (vw *VSchemaWrapper) FindAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, map[string]*vindexes.Table, error) {
+	return vw.V.FindAllTables(keyspace)
 }
 
 func (vw *VSchemaWrapper) GetPrepareData(stmtName string) *vtgatepb.PrepareData {

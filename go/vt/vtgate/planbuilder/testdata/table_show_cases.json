@@ -7,26 +7,6 @@
       "Original": "show tables from user",
       "Instructions": {
         "OperatorType": "TableShow",
-        "rows": [
-          [
-            "t_authoritative"
-          ],
-          [
-            "t_music"
-          ],
-          [
-            "t_order"
-          ],
-          [
-            "t_user"
-          ],
-          [
-            "t_user_extra"
-          ],
-          [
-            "table_engine_test"
-          ]
-        ],
         "Inputs": [
           {
             "OperatorType": "RenameFields",
@@ -62,14 +42,6 @@
       "Instructions": {
         "OperatorType": "TableShow",
         "like": "t_user%",
-        "rows": [
-          [
-            "t_user"
-          ],
-          [
-            "t_user_extra"
-          ]
-        ],
         "Inputs": [
           {
             "OperatorType": "RenameFields",
@@ -105,14 +77,6 @@
       "Instructions": {
         "OperatorType": "TableShow",
         "like": "%user%",
-        "rows": [
-          [
-            "t_user"
-          ],
-          [
-            "t_user_extra"
-          ]
-        ],
         "Inputs": [
           {
             "OperatorType": "RenameFields",
@@ -148,11 +112,6 @@
       "Instructions": {
         "OperatorType": "TableShow",
         "like": "%user",
-        "rows": [
-          [
-            "t_user"
-          ]
-        ],
         "Inputs": [
           {
             "OperatorType": "RenameFields",

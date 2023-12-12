@@ -322,31 +322,27 @@ func buildPlanWithDB(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (en
 }
 
 func buildTableForSplitTable(input engine.Primitive, vschema plancontext.VSchema, dbName string, show *sqlparser.ShowBasic) engine.Primitive {
-	tables, err := vschema.FindSplitAllTables(dbName)
-	if err != nil || tables == nil {
+	splitTables, shardTables, err := vschema.FindAllTables(dbName)
+	if err != nil || (splitTables == nil && shardTables == nil) {
 		return input
 	}
 	if show.Filter != nil {
-		return processFilterTableForSplitTable(input, tables, show)
+		if show.Filter.Filter != nil {
+			//todo
+			//目前没支持show tables where Tables_in_dbname='xxx';show tables where Tables_in_dbname in ('xxx'); show tables where Tables_in_dbname like 'xxx'
+			//在tablet会改写 所以where后面写错dbname也能查的到go/vt/vttablet/tabletserver/planbuilder/builder.go#showTableRewrite
+			return input
+		}
+		if show.Filter.Like != "" {
+			return engine.NewTableShow(input, splitTables, shardTables, show.Filter.Like, vschema.ConnCollation())
+		}
+		return input
 	}
 
-	plan := engine.NewTableShow(input, tables, "")
+	plan := engine.NewTableShow(input, splitTables, shardTables, "", vschema.ConnCollation())
 
 	return plan
 
-}
-
-func processFilterTableForSplitTable(input engine.Primitive, tables map[string]*vindexes.LogicTableConfig, show *sqlparser.ShowBasic) engine.Primitive {
-	if show.Filter.Filter != nil {
-		//todo
-		//目前没支持show tables where Tables_in_dbname='xxx';show tables where Tables_in_dbname in ('xxx'); show tables where Tables_in_dbname like 'xxx'
-		//在tablet会改写 所以where后面写错dbname也能查的到go/vt/vttablet/tabletserver/planbuilder/builder.go#showTableRewrite
-		return input
-	}
-	if show.Filter.Like != "" {
-		return engine.NewTableShow(input, tables, show.Filter.Like)
-	}
-	return input
 }
 
 func buildVarCharFields(names ...string) []*querypb.Field {
