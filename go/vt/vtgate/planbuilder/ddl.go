@@ -59,24 +59,60 @@ func buildGeneralDDLPlan(ctx context.Context, sql string, ddlStatement sqlparser
 		onlineDDLPlan = nil // emptying this so it does not accidentally gets used somewhere
 	}
 
-	eddl := &engine.DDL{
-		Keyspace:  normalDDLPlan.Keyspace,
-		SQL:       normalDDLPlan.Query,
-		DDL:       ddlStatement,
-		NormalDDL: normalDDLPlan,
-		OnlineDDL: onlineDDLPlan,
-
-		DirectDDLEnabled: enableDirectDDL,
-		OnlineDDLEnabled: enableOnlineDDL,
-
-		CreateTempTable: ddlStatement.IsTemporary(),
-	}
 	tc := &tableCollector{}
 	for _, tbl := range ddlStatement.AffectedTables() {
 		tc.addASTTable(normalDDLPlan.Keyspace.Name, tbl)
 	}
 
-	return newPlanResult(eddl, tc.getTables()...), nil
+	haveSplitTable := false
+	splitTableConfig := make(map[string]*vindexes.LogicTableConfig)
+	tables := ddlStatement.AffectedTables()
+	for _, table := range tables {
+		splitTable, err := vschema.FindSplitTable(normalDDLPlan.Keyspace.Name, table.Name.String())
+		if err != nil {
+			continue
+		}
+		splitTableConfig[table.Name.String()] = splitTable
+		haveSplitTable = true
+	}
+
+	if haveSplitTable {
+		normalSplitTableDDLPlan, onlineSplitTableDDLPlan, err := buildSplitTableDDLPlans(ctx, sql, ddlStatement, reservedVars, vschema, normalDDLPlan.Keyspace, normalDDLPlan.TargetDestination, splitTableConfig, normalDDLPlan.Query)
+		if err != nil {
+			return nil, err
+		}
+		if ddlStatement.IsTemporary() {
+			onlineSplitTableDDLPlan = nil
+		}
+		eddl := &engine.SplitTableDDL{
+			Keyspace:  normalDDLPlan.Keyspace,
+			SQL:       normalDDLPlan.Query,
+			DDL:       ddlStatement,
+			NormalDDL: normalSplitTableDDLPlan,
+			OnlineDDL: onlineSplitTableDDLPlan,
+
+			DirectDDLEnabled: enableDirectDDL,
+			OnlineDDLEnabled: enableOnlineDDL,
+
+			CreateTempTable: ddlStatement.IsTemporary(),
+		}
+		return newPlanResult(eddl, tc.getTables()...), nil
+
+	} else {
+		eddl := &engine.DDL{
+			Keyspace:  normalDDLPlan.Keyspace,
+			SQL:       normalDDLPlan.Query,
+			DDL:       ddlStatement,
+			NormalDDL: normalDDLPlan,
+			OnlineDDL: onlineDDLPlan,
+
+			DirectDDLEnabled: enableDirectDDL,
+			OnlineDDLEnabled: enableOnlineDDL,
+
+			CreateTempTable: ddlStatement.IsTemporary(),
+		}
+		return newPlanResult(eddl, tc.getTables()...), nil
+	}
 }
 
 func buildByPassPlan(sql string, vschema plancontext.VSchema) (*planResult, error) {
@@ -137,7 +173,6 @@ func buildDDLPlans(ctx context.Context, sql string, ddlStatement sqlparser.DDLSt
 	if ddlStatement.IsFullyParsed() {
 		query = sqlparser.String(ddlStatement)
 	}
-
 	return &engine.Send{
 			Keyspace:          keyspace,
 			TargetDestination: destination,
@@ -147,6 +182,22 @@ func buildDDLPlans(ctx context.Context, sql string, ddlStatement sqlparser.DDLSt
 			TargetDestination: destination,
 			DDL:               ddlStatement,
 			SQL:               query,
+		}, nil
+
+}
+
+func buildSplitTableDDLPlans(ctx context.Context, sql string, ddlStatement sqlparser.DDLStatement, reservedVars *sqlparser.ReservedVars, vschema plancontext.VSchema, keyspace *vindexes.Keyspace, destination key.Destination, splitTableConfig map[string]*vindexes.LogicTableConfig, query string) (*engine.SplitTableSend, *engine.SplitTableOnlineDDL, error) {
+	return &engine.SplitTableSend{
+			Keyspace:          keyspace,
+			TargetDestination: destination,
+			Query:             query,
+			SplitTableConfig:  splitTableConfig,
+		}, &engine.SplitTableOnlineDDL{
+			Keyspace:          keyspace,
+			TargetDestination: destination,
+			DDL:               ddlStatement,
+			SQL:               query,
+			SplitTableConfig:  splitTableConfig,
 		}, nil
 }
 

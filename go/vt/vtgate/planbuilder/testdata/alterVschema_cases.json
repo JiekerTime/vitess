@@ -19,6 +19,25 @@
     }
   },
   {
+    "comment": "Create tindex",
+    "query": "alter vschema create tindex hash_vdx using hash",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter vschema create tindex hash_vdx using hash",
+      "Instructions": {
+        "OperatorType": "AlterVSchema",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "query": "alter vschema create tindex hash_vdx using `hash`"
+      },
+      "TablesUsed": [
+        "main.hash_vdx"
+      ]
+    }
+  },
+  {
     "comment": "Create vindex with qualifier",
     "query": "alter vschema create vindex user.hash_vdx using hash",
     "plan": {
@@ -50,6 +69,25 @@
           "Sharded": false
         },
         "query": "alter vschema drop vindex hash_vdx"
+      },
+      "TablesUsed": [
+        "main.hash_vdx"
+      ]
+    }
+  },
+  {
+    "comment": "Drop tindex",
+    "query": "alter vschema drop tindex hash_vdx",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter vschema drop tindex hash_vdx",
+      "Instructions": {
+        "OperatorType": "AlterVSchema",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "query": "alter vschema drop tindex hash_vdx"
       },
       "TablesUsed": [
         "main.hash_vdx"
@@ -152,6 +190,25 @@
     }
   },
   {
+    "comment": "Add Tindex",
+    "query": "alter vschema on a add tindex hash (id) tablecount 12",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter vschema on a add tindex hash (id) tablecount 12",
+      "Instructions": {
+        "OperatorType": "AlterVSchema",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "query": "alter vschema on a add tindex `hash` (id) tablecount 12"
+      },
+      "TablesUsed": [
+        "main.a"
+      ]
+    }
+  },
+  {
     "comment": "Drop Vindex",
     "query": "alter vschema on a drop vindex hash",
     "plan": {
@@ -164,6 +221,25 @@
           "Sharded": false
         },
         "query": "alter vschema on a drop vindex `hash`"
+      },
+      "TablesUsed": [
+        "main.a"
+      ]
+    }
+  },
+  {
+    "comment": "Drop Tindex",
+    "query": "alter vschema on a drop tindex hash",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter vschema on a drop tindex hash",
+      "Instructions": {
+        "OperatorType": "AlterVSchema",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "query": "alter vschema on a drop tindex `hash`"
       },
       "TablesUsed": [
         "main.a"

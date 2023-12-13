@@ -300,10 +300,10 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %token <str> ACTION CASCADE CONSTRAINT FOREIGN NO REFERENCES RESTRICT
 %token <str> SHOW DESCRIBE EXPLAIN DATE ESCAPE REPAIR OPTIMIZE TRUNCATE COALESCE EXCHANGE REBUILD PARTITIONING REMOVE PREPARE EXECUTE
 %token <str> MAXVALUE PARTITION REORGANIZE LESS THAN PROCEDURE TRIGGER
-%token <str> VINDEX VINDEXES DIRECTORY NAME UPGRADE
+%token <str> VINDEX VINDEXES DIRECTORY NAME UPGRADE TINDEX
 %token <str> STATUS VARIABLES WARNINGS CASCADED DEFINER OPTION SQL UNDEFINED
 %token <str> SEQUENCE MERGE TEMPORARY TEMPTABLE INVOKER SECURITY FIRST AFTER LAST
-
+%token <str> TableCount
 // Migration tokens
 %token <str> VITESS_MIGRATION CANCEL RETRY LAUNCH COMPLETE CLEANUP THROTTLE UNTHROTTLE EXPIRE RATIO
 // Throttler tokens
@@ -3214,10 +3214,32 @@ alter_statement:
         },
       }
   }
+| ALTER comment_opt VSCHEMA CREATE TINDEX table_name vindex_type_opt vindex_params_opt
+  {
+    $$ = &AlterVschema{
+        Action: CreateTindexDDLAction,
+        Table: $6,
+        VindexSpec: &VindexSpec{
+          Name: NewIdentifierCI($6.Name.String()),
+          Type: $7,
+          Params: $8,
+        },
+      }
+  }
 | ALTER comment_opt VSCHEMA DROP VINDEX table_name
   {
     $$ = &AlterVschema{
         Action: DropVindexDDLAction,
+        Table: $6,
+        VindexSpec: &VindexSpec{
+          Name: NewIdentifierCI($6.Name.String()),
+        },
+      }
+  }
+| ALTER comment_opt VSCHEMA DROP TINDEX table_name
+  {
+    $$ = &AlterVschema{
+        Action: DropTindexDDLAction,
         Table: $6,
         VindexSpec: &VindexSpec{
           Name: NewIdentifierCI($6.Name.String()),
@@ -3245,10 +3267,34 @@ alter_statement:
         VindexCols: $10,
       }
   }
+| ALTER comment_opt VSCHEMA ON table_name ADD TINDEX sql_id '(' column_list ')' vindex_type_opt vindex_params_opt TableCount INTEGRAL
+    {
+      $$ = &AlterVschema{
+          Action: AddColTindexDDLAction,
+          Table: $5,
+          VindexSpec: &VindexSpec{
+              Name: $8,
+              Type: $12,
+              Params: $13,
+          },
+          VindexCols: $10,
+          TableCount: convertStringToInt($15),
+        }
+    }
 | ALTER comment_opt VSCHEMA ON table_name DROP VINDEX sql_id
   {
     $$ = &AlterVschema{
         Action: DropColVindexDDLAction,
+        Table: $5,
+        VindexSpec: &VindexSpec{
+            Name: $8,
+        },
+      }
+  }
+| ALTER comment_opt VSCHEMA ON table_name DROP TINDEX sql_id
+  {
+    $$ = &AlterVschema{
+        Action: DropColTindexDDLAction,
         Table: $5,
         VindexSpec: &VindexSpec{
             Name: $8,
@@ -8587,6 +8633,7 @@ non_reserved_keyword:
 | SUBPARTITION
 | SUBPARTITIONS
 | SUM %prec FUNCTION_CALL_NON_KEYWORD
+| TableCount
 | TABLES
 | TABLESPACE
 | TEMPORARY
@@ -8601,6 +8648,7 @@ non_reserved_keyword:
 | TIMESTAMP %prec STRING_TYPE_PREFIX_NON_KEYWORD
 | TIMESTAMPADD %prec FUNCTION_CALL_NON_KEYWORD
 | TIMESTAMPDIFF %prec FUNCTION_CALL_NON_KEYWORD
+| TINDEX
 | TINYBLOB
 | TINYINT
 | TINYTEXT

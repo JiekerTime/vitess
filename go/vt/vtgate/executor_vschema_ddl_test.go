@@ -73,6 +73,40 @@ func waitForVindex(t *testing.T, ks, name string, watch chan *vschemapb.SrvVSche
 	return nil, nil
 }
 
+func waitForTindex(t *testing.T, ks, name string, watch chan *vschemapb.SrvVSchema, executor *Executor) (*vschemapb.SrvVSchema, *vschemapb.Vindex) {
+	t.Helper()
+
+	// Wait up to 10ms until the watch gets notified of the update
+	ok := false
+	for i := 0; i < 10; i++ {
+		select {
+		case vschema := <-watch:
+			_, ok = vschema.Keyspaces[ks].SplittableVindexes[name]
+			if !ok {
+				t.Errorf("updated vschema did not contain %s", name)
+			}
+		default:
+			time.Sleep(time.Millisecond)
+		}
+	}
+	if !ok {
+		t.Errorf("vschema was not updated as expected")
+	}
+
+	// Wait up to 100ms until the vindex manager gets notified of the update
+	for i := 0; i < 10; i++ {
+		vschema := executor.vm.GetCurrentSrvVschema()
+		tindex, ok := vschema.Keyspaces[ks].SplittableVindexes[name]
+		if ok {
+			return vschema, tindex
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatalf("updated vschema did not contain %s", name)
+	return nil, nil
+}
+
 func waitForVschemaTables(t *testing.T, ks string, tables []string, executor *Executor) *vschemapb.SrvVSchema {
 	t.Helper()
 
@@ -520,9 +554,9 @@ func TestExecutorAddDropVindexDDL(t *testing.T) {
 	qr, err := executor.Execute(ctx, nil, nil, "TestExecute", session, "show vschema vindexes on TestExecutor.test", nil)
 	require.NoError(t, err)
 	wantqr := &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 		Rows: [][]sqltypes.Value{
-			buildVarCharRow("id", "test_hash", "hash", "", ""),
+			buildVarCharRow("test", "SHARD_TABLE", "id", "test_hash", "", "", "", ""),
 		},
 	}
 	utils.MustMatch(t, wantqr, qr)
@@ -550,13 +584,21 @@ func TestExecutorAddDropVindexDDL(t *testing.T) {
 	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, "show vschema vindexes on TestExecutor.test", nil)
 	require.NoError(t, err)
 	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 		Rows: [][]sqltypes.Value{
-			buildVarCharRow("id", "test_hash", "hash", "", ""),
+			buildVarCharRow("test", "SHARD_TABLE", "id", "test_hash", "", "", "", ""),
 		},
 		RowsAffected: 0,
 	}
 	utils.MustMatch(t, wantqr, qr)
+
+	// Create a new tindex implicitly with the statement
+	stmt = "alter vschema on test add tindex test_hash (id) using hash tablecount 8"
+	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, stmt, nil)
+	require.NoError(t, err)
+
+	_, tindex := waitForTindex(t, ks, "test_hash", vschemaUpdates, executor)
+	require.Equal(t, "hash", tindex.Type)
 
 	// add another
 	stmt = "alter vschema on test add vindex test_lookup (c1,c2) using lookup with owner=`test`, from=`c1,c2`, table=test_lookup, to=keyspace_id"
@@ -580,10 +622,10 @@ func TestExecutorAddDropVindexDDL(t *testing.T) {
 	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, "show vschema vindexes on TestExecutor.test", nil)
 	require.NoError(t, err)
 	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 		Rows: [][]sqltypes.Value{
-			buildVarCharRow("id", "test_hash", "hash", "", ""),
-			buildVarCharRow("c1, c2", "test_lookup", "lookup", "from=c1,c2; table=test_lookup; to=keyspace_id", "test"),
+			buildVarCharRow("test", "SPLIT_TABLE", "id", "test_hash", "id", "test_hash", "8", ""),
+			buildVarCharRow("test", "SPLIT_TABLE", "c1, c2", "test_lookup", "id", "test_hash", "8", ""),
 		},
 	}
 	utils.MustMatch(t, wantqr, qr)
@@ -609,11 +651,11 @@ func TestExecutorAddDropVindexDDL(t *testing.T) {
 	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, "show vschema vindexes on TestExecutor.test", nil)
 	require.NoError(t, err)
 	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 		Rows: [][]sqltypes.Value{
-			buildVarCharRow("id", "test_hash", "hash", "", ""),
-			buildVarCharRow("c1, c2", "test_lookup", "lookup", "from=c1,c2; table=test_lookup; to=keyspace_id", "test"),
-			buildVarCharRow("id2", "test_hash_id2", "hash", "", ""),
+			buildVarCharRow("test", "SPLIT_TABLE", "id", "test_hash", "id", "test_hash", "8", ""),
+			buildVarCharRow("test", "SPLIT_TABLE", "c1, c2", "test_lookup", "id", "test_hash", "8", ""),
+			buildVarCharRow("test", "SPLIT_TABLE", "id2", "test_hash_id2", "id", "test_hash", "8", ""),
 		},
 	}
 	utils.MustMatch(t, wantqr, qr)
@@ -629,10 +671,10 @@ func TestExecutorAddDropVindexDDL(t *testing.T) {
 		qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, "show vschema vindexes on TestExecutor.test", nil)
 		require.NoError(t, err)
 		wantqr = &sqltypes.Result{
-			Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+			Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 			Rows: [][]sqltypes.Value{
-				buildVarCharRow("id", "test_hash", "hash", "", ""),
-				buildVarCharRow("id2", "test_hash_id2", "hash", "", ""),
+				buildVarCharRow("test", "SPLIT_TABLE", "id", "test_hash", "id", "test_hash", "8", ""),
+				buildVarCharRow("test", "SPLIT_TABLE", "id2", "test_hash_id2", "id", "test_hash", "8", ""),
 			},
 		}
 		if reflect.DeepEqual(qr, wantqr) {
@@ -674,10 +716,10 @@ func TestExecutorAddDropVindexDDL(t *testing.T) {
 	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, "show vschema vindexes on TestExecutor.test2", nil)
 	require.NoError(t, err)
 	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 		Rows: [][]sqltypes.Value{
-			buildVarCharRow("id", "test_hash", "hash", "", ""),
-			buildVarCharRow("c1, c2", "test_lookup", "lookup", "from=c1,c2; table=test_lookup; to=keyspace_id", "test"),
+			buildVarCharRow("test2", "SHARD_TABLE", "id", "test_hash", "", "", "", ""),
+			buildVarCharRow("test2", "SHARD_TABLE", "c1, c2", "test_lookup", "", "", "", ""),
 		},
 	}
 	utils.MustMatch(t, wantqr, qr)

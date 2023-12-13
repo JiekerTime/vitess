@@ -19,6 +19,7 @@ package sqlparser
 
 import (
 	"fmt"
+	"strconv"
 
 	"vitess.io/vitess/go/sqltypes"
 )
@@ -323,8 +324,16 @@ func (node *AlterVschema) formatFast(buf *TrackedBuffer) {
 		node.Table.formatFast(buf)
 		buf.WriteByte(' ')
 		node.VindexSpec.formatFast(buf)
+	case CreateTindexDDLAction:
+		buf.WriteString("alter vschema create tindex ")
+		node.Table.formatFast(buf)
+		buf.WriteByte(' ')
+		node.VindexSpec.formatFast(buf)
 	case DropVindexDDLAction:
 		buf.WriteString("alter vschema drop vindex ")
+		node.Table.formatFast(buf)
+	case DropTindexDDLAction:
+		buf.WriteString("alter vschema drop tindex ")
 		node.Table.formatFast(buf)
 	case AddVschemaTableDDLAction:
 		buf.WriteString("alter vschema add table ")
@@ -351,10 +360,39 @@ func (node *AlterVschema) formatFast(buf *TrackedBuffer) {
 			buf.WriteByte(' ')
 			node.VindexSpec.formatFast(buf)
 		}
+	case AddColTindexDDLAction:
+		buf.WriteString("alter vschema on ")
+		node.Table.formatFast(buf)
+		buf.WriteString(" add tindex ")
+		node.VindexSpec.Name.formatFast(buf)
+		buf.WriteString(" (")
+		for i, col := range node.VindexCols {
+			if i != 0 {
+				buf.WriteString(", ")
+				col.formatFast(buf)
+			} else {
+				col.formatFast(buf)
+			}
+		}
+		buf.WriteByte(')')
+		if node.VindexSpec.Type.String() != "" {
+			buf.WriteByte(' ')
+			node.VindexSpec.formatFast(buf)
+		}
+		if node.TableCount != 0 {
+			buf.WriteString(" tablecount ")
+			buf.WriteString(strconv.Itoa(node.TableCount))
+		}
+
 	case DropColVindexDDLAction:
 		buf.WriteString("alter vschema on ")
 		node.Table.formatFast(buf)
 		buf.WriteString(" drop vindex ")
+		node.VindexSpec.Name.formatFast(buf)
+	case DropColTindexDDLAction:
+		buf.WriteString("alter vschema on ")
+		node.Table.formatFast(buf)
+		buf.WriteString(" drop tindex ")
 		node.VindexSpec.Name.formatFast(buf)
 	case AddSequenceDDLAction:
 		buf.WriteString("alter vschema add sequence ")

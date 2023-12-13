@@ -30,6 +30,7 @@ func TestSplitTablePlan(t *testing.T) {
 		},
 	}
 	output := makeTestOutput(t)
+	testTableFile(t, "table_ddl_cases.json", output, vschema, false)
 	testTableFile(t, "table_aggr_cases.json", output, vschema, false)
 	testTableFile(t, "table_dml_cases.json", output, vschema, false)
 	testTableFile(t, "table_from_cases.json", output, vschema, false)

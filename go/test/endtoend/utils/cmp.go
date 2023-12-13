@@ -19,11 +19,10 @@ package utils
 import (
 	"context"
 	"fmt"
-	"testing"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/sqltypes"
@@ -51,6 +50,10 @@ func NewMySQLCompare(t *testing.T, vtParams, mysqlParams mysql.ConnParams) (MySQ
 		MySQLConn: mysqlConn,
 		VtConn:    vtConn,
 	}, nil
+}
+
+func (mcmp *MySQLCompare) GetTest() *testing.T {
+	return mcmp.t
 }
 
 func (mcmp *MySQLCompare) Close() {
@@ -198,6 +201,24 @@ func (mcmp *MySQLCompare) Exec(query string) *sqltypes.Result {
 	require.NoError(mcmp.t, err, "[MySQL Error] for query: "+query)
 	compareVitessAndMySQLResults(mcmp.t, query, mcmp.VtConn, vtQr, mysqlQr, false)
 	return vtQr
+}
+
+func (mcmp *MySQLCompare) ExecSplitTableDDL(query string) *sqltypes.Result {
+	mcmp.t.Helper()
+	vtQr, err := mcmp.VtConn.ExecuteFetch(query, 10000, true)
+	require.NoError(mcmp.t, err, "[Vitess Error] for query: "+query)
+	return vtQr
+}
+
+func (mcmp *MySQLCompare) ExecVExplainForNotExistTable(query string) *sqltypes.Result {
+	mcmp.t.Helper()
+	_, err := mcmp.VtConn.ExecuteFetch(query, 100000, true)
+	assert.Error(mcmp.t, err, query+" : table does not exist")
+	return nil
+}
+
+func (mcmp *MySQLCompare) DropTableResultCheck(result *sqltypes.Result) {
+	require.Equal(mcmp.t, uint64(0), result.RowsAffected)
 }
 
 // ExecNoCompare executes the query on vitess and mysql but does not compare the result with each other.

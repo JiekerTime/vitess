@@ -451,6 +451,8 @@ type (
 
 		// AutoIncSpec is set for AddAutoIncDDLAction.
 		AutoIncSpec *AutoIncSpec
+		// split table count
+		TableCount int
 	}
 
 	// ShowMigrationLogs represents a SHOW VITESS_MIGRATION '<uuid>' LOGS statement

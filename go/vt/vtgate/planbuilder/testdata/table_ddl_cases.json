@@ -1,0 +1,116 @@
+[
+  {
+    "comment": "simple create table",
+    "query": "create table t_user(id bigint, primary key(id))",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "create table t_user(id bigint, primary key(id))",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "create table t_user (\n\tid bigint,\n\tprimary key (id)\n)"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "simple create table with keyspace",
+    "query": "create table user.t_user(id bigint, primary key(id))",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "create table user.t_user(id bigint, primary key(id))",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "create table t_user (\n\tid bigint,\n\tprimary key (id)\n)"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "drop table without qualifier",
+    "query": "drop table t_user",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "drop table t_user",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "drop table t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "truncate table without qualifier",
+    "query": "truncate table t_user",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "truncate table t_user",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "truncate table t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "alter table add column",
+    "query": "alter table t_user add column memo varchar(256) default null comment '备注'",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter table t_user add column memo varchar(256) default null comment '备注'",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "alter table t_user add column memo varchar(256) default null comment '备注'"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "alter table modify column",
+    "query": "alter table t_user modify column memo varchar(255) not null comment '备注'",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter table t_user modify column memo varchar(255) not null comment '备注'",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "alter table t_user modify column memo varchar(255) not null comment '备注'"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  }
+]

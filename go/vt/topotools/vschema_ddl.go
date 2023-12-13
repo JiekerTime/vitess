@@ -69,7 +69,25 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 		}
 
 		return ks, nil
+	case sqlparser.CreateTindexDDLAction:
+		name := alterVschema.VindexSpec.Name.String()
+		if _, ok := ks.SplittableVindexes[name]; ok {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s already exists in keyspace %s", name, ksName)
+		}
 
+		// Make sure the keyspace have vindex
+		if len(ks.Vindexes) == 0 {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vindex should exists in keyspace %s", ksName)
+		}
+
+		owner, params := alterVschema.VindexSpec.ParseParams()
+		ks.SplittableVindexes[name] = &vschemapb.Vindex{
+			Type:   alterVschema.VindexSpec.Type.String(),
+			Params: params,
+			Owner:  owner,
+		}
+
+		return ks, nil
 	case sqlparser.DropVindexDDLAction:
 		name := alterVschema.VindexSpec.Name.String()
 		if _, ok := ks.Vindexes[name]; !ok {
@@ -88,7 +106,20 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 		delete(ks.Vindexes, name)
 
 		return ks, nil
+	case sqlparser.DropTindexDDLAction:
+		name := alterVschema.VindexSpec.Name.String()
+		if _, ok := ks.SplittableVindexes[name]; !ok {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s does not exists in keyspace %s", name, ksName)
+		}
+		for tableName, splitTable := range ks.SplittableTables {
+			// Make sure there isn't  a tindex with the same name left on the table.
+			if splitTable.TableVindex == name {
+				return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "can not drop tindex cause %s still defined on table %s", name, tableName)
+			}
 
+		}
+		delete(ks.SplittableVindexes, name)
+		return ks, nil
 	case sqlparser.AddVschemaTableDDLAction:
 		if ks.Sharded {
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "add vschema table: unsupported on sharded keyspace %s", ksName)
@@ -110,6 +141,10 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 		}
 
 		delete(ks.Tables, name)
+		// delete if exists in SplittableTables
+		if _, ok := ks.SplittableTables[name]; ok {
+			delete(ks.SplittableTables, name)
+		}
 
 		return ks, nil
 
@@ -181,7 +216,73 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 		ks.Tables[tableName] = table
 
 		return ks, nil
+	case sqlparser.AddColTindexDDLAction:
+		// Support two cases:
+		//
+		// 1. The tindex type / params / owner are specified. If the
+		//    named tindex doesn't exist, create it. If it does exist,
+		//    require the parameters to match.
+		//
+		// 2. The tindex type is not specified. Make sure the tindex
+		//    already exists.
+		spec := alterVschema.VindexSpec
+		name := spec.Name.String()
+		tableCount := alterVschema.TableCount
+		if !spec.Type.IsEmpty() {
+			owner, params := spec.ParseParams()
+			if vindex, ok := ks.SplittableVindexes[name]; ok {
+				if vindex.Type != spec.Type.String() {
+					return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s defined with type %s not %s", name, vindex.Type, spec.Type.String())
+				}
+				if vindex.Owner != owner {
+					return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s defined with owner %s not %s", name, vindex.Owner, owner)
+				}
+				if (len(vindex.Params) != 0 || len(params) != 0) && !reflect.DeepEqual(vindex.Params, params) {
+					return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s defined with different parameters", name)
+				}
+			} else {
+				ks.SplittableVindexes[name] = &vschemapb.Vindex{
+					Type:   spec.Type.String(),
+					Params: params,
+					Owner:  owner,
+				}
+			}
+		} else {
+			if _, ok := ks.SplittableVindexes[name]; !ok {
+				return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s does not exist in keyspace %s", name, ksName)
+			}
+		}
 
+		var splitTable *vschemapb.SplitTable
+		splitTable = ks.SplittableTables[tableName]
+
+		if table == nil {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex must have table %s exists first", tableName)
+		}
+
+		// Make sure there isn't already a tindex
+		if splitTable != nil {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s already defined on table %s", splitTable.TableVindex, tableName)
+		} else {
+			tableCountInt := int32(tableCount)
+			if tableCountInt < 0 {
+				return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex must have TableCount>=0")
+			}
+			splitTable = &vschemapb.SplitTable{
+				LogicTableName: tableName,
+				TableCount:     tableCountInt,
+				TableVindex:    name,
+			}
+		}
+
+		for i, col := range alterVschema.VindexCols {
+			splitTable.TableVindexColumn = append(splitTable.TableVindexColumn, &vschemapb.TableVindexColumn{
+				Index:  int32(i),
+				Column: col.String(),
+			})
+		}
+		ks.SplittableTables[tableName] = splitTable
+		return ks, nil
 	case sqlparser.DropColVindexDDLAction:
 		spec := alterVschema.VindexSpec
 		name := spec.Name.String()
@@ -199,7 +300,22 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 			}
 		}
 		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vindex %s not defined in table %s.%s", name, ksName, tableName)
-
+	case sqlparser.DropColTindexDDLAction:
+		spec := alterVschema.VindexSpec
+		name := spec.Name.String()
+		if table == nil {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "table %s.%s not defined in vschema", ksName, tableName)
+		}
+		var splitTable *vschemapb.SplitTable
+		splitTable = ks.SplittableTables[tableName]
+		if splitTable == nil {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "split table %s.%s not defined in vschema", ksName, tableName)
+		}
+		if splitTable.TableVindex != name {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "tindex %s not defined in table %s.%s", name, ksName, tableName)
+		}
+		delete(ks.SplittableTables, tableName)
+		return ks, nil
 	case sqlparser.AddSequenceDDLAction:
 		if ks.Sharded {
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "add sequence table: unsupported on sharded keyspace %s", ksName)

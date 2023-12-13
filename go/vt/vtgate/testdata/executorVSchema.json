@@ -347,5 +347,33 @@
 			"type": "reference",
 			"source": "TestUnsharded.zip_detail"
 		}
+	},
+	"splittableVindexes": {
+		"hash_index": {
+			"type": "hash"
+		},
+		"music_user_map": {
+			"type": "lookup_hash_unique",
+			"owner": "music",
+			"params": {
+				"table": "music_user_map",
+				"from": "music_id",
+				"to": "user_id"
+			}
+		}
+	},
+	"splittableTables": {
+		"user": {
+			"table_vindex_column": [
+				{
+					"column": "Id",
+					"name": "hash_index"
+				}
+			],
+			"logic_table_name": "user",
+			"table_vindex": "hash_index",
+			"table_count": 8
+		}
 	}
+
 }

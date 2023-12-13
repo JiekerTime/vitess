@@ -19,6 +19,7 @@ package planbuilder
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -704,52 +705,76 @@ func buildVschemaTablesPlan(vschema plancontext.VSchema) (engine.Primitive, erro
 	return engine.NewRowsPrimitive(rows, buildVarCharFields("Tables")), nil
 }
 
+func buildVschemaRow(keySpaceName string, tableName string, vs *vschemapb.SrvVSchema, vschema plancontext.VSchema) ([][]sqltypes.Value, error) {
+	rows := make([][]sqltypes.Value, 0, 16)
+	_, ks, _, err := vschema.TargetDestination(keySpaceName)
+	if err != nil {
+		return nil, err
+	}
+
+	var schemaKs *vschemapb.Keyspace
+	var tbl *vschemapb.Table
+	var splitTable *vschemapb.SplitTable
+	var tableType = "PINNED"
+	if !ks.Sharded {
+		tbl = &vschemapb.Table{}
+	} else {
+		schemaKs = vs.Keyspaces[ks.Name]
+		schemaTbl, ok := schemaKs.Tables[tableName]
+		if !ok {
+			return nil, vterrors.VT05005(tableName, ks.Name)
+		}
+		tbl = schemaTbl
+		splitTable = schemaKs.SplittableTables[tableName]
+		if splitTable != nil {
+			tableType = "SPLIT_TABLE"
+		} else {
+			tableType = "SHARD_TABLE"
+		}
+	}
+
+	for _, colVindex := range tbl.ColumnVindexes {
+		_, ok := schemaKs.Vindexes[colVindex.GetName()]
+		columns := colVindex.GetColumns()
+		if len(columns) == 0 {
+			columns = []string{colVindex.GetColumn()}
+		}
+
+		if ok {
+			var autoIncrement string
+			if tbl.AutoIncrement != nil {
+				autoIncrement = tbl.AutoIncrement.Column
+			}
+			if splitTable != nil {
+				var tableVindexColumns []string
+				for _, tableVindexColumn := range splitTable.TableVindexColumn {
+					tableVindexColumns = append(tableVindexColumns, tableVindexColumn.Column)
+				}
+				rows = append(rows, buildVarCharRow(tableName, tableType, strings.Join(columns, ", "), colVindex.GetName(), strings.Join(tableVindexColumns, ", "), splitTable.TableVindex, strconv.Itoa(int(splitTable.TableCount)), autoIncrement))
+			} else {
+				rows = append(rows, buildVarCharRow(tableName, tableType, strings.Join(columns, ", "), colVindex.GetName(), "", "", "", autoIncrement))
+			}
+		} else {
+			rows = append(rows, buildVarCharRow(tableName, tableType, strings.Join(columns, ", "), colVindex.GetName(), "", "", "", ""))
+		}
+	}
+	return rows, nil
+}
+
 func buildVschemaVindexesPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (engine.Primitive, error) {
 	vs := vschema.GetSrvVschema()
-	rows := make([][]sqltypes.Value, 0, 16)
 
 	if !show.Tbl.IsEmpty() {
-		_, ks, _, err := vschema.TargetDestination(show.Tbl.Qualifier.String())
+		rows, err := buildVschemaRow(show.Tbl.Qualifier.String(), show.Tbl.Name.String(), vs, vschema)
 		if err != nil {
 			return nil, err
 		}
-		var schemaKs *vschemapb.Keyspace
-		var tbl *vschemapb.Table
-		if !ks.Sharded {
-			tbl = &vschemapb.Table{}
-		} else {
-			schemaKs = vs.Keyspaces[ks.Name]
-			tableName := show.Tbl.Name.String()
-			schemaTbl, ok := schemaKs.Tables[tableName]
-			if !ok {
-				return nil, vterrors.VT05005(tableName, ks.Name)
-			}
-			tbl = schemaTbl
-		}
-
-		for _, colVindex := range tbl.ColumnVindexes {
-			vindex, ok := schemaKs.Vindexes[colVindex.GetName()]
-			columns := colVindex.GetColumns()
-			if len(columns) == 0 {
-				columns = []string{colVindex.GetColumn()}
-			}
-			if ok {
-				params := make([]string, 0, 4)
-				for k, v := range vindex.GetParams() {
-					params = append(params, fmt.Sprintf("%s=%s", k, v))
-				}
-				sort.Strings(params)
-				rows = append(rows, buildVarCharRow(strings.Join(columns, ", "), colVindex.GetName(), vindex.GetType(), strings.Join(params, "; "), vindex.GetOwner()))
-			} else {
-				rows = append(rows, buildVarCharRow(strings.Join(columns, ", "), colVindex.GetName(), "", "", ""))
-			}
-		}
-
 		return engine.NewRowsPrimitive(rows,
-			buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
+			buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 		), nil
 	}
 
+	rowsAll := make([][]sqltypes.Value, 0, 16)
 	// For the query interface to be stable we need to sort
 	// for each of the map iterations
 	ksNames := make([]string, 0, len(vs.Keyspaces))
@@ -760,24 +785,22 @@ func buildVschemaVindexesPlan(show *sqlparser.ShowBasic, vschema plancontext.VSc
 	for _, ksName := range ksNames {
 		ks := vs.Keyspaces[ksName]
 
-		vindexNames := make([]string, 0, len(ks.Vindexes))
-		for name := range ks.Vindexes {
-			vindexNames = append(vindexNames, name)
+		tableNames := make([]string, 0, len(ks.Tables))
+		for name := range ks.Tables {
+			tableNames = append(tableNames, name)
 		}
-		sort.Strings(vindexNames)
-		for _, vindexName := range vindexNames {
-			vindex := ks.Vindexes[vindexName]
+		sort.Strings(tableNames)
 
-			params := make([]string, 0, 4)
-			for k, v := range vindex.GetParams() {
-				params = append(params, fmt.Sprintf("%s=%s", k, v))
+		for _, tableName := range tableNames {
+			rows, err := buildVschemaRow(ksName, tableName, vs, vschema)
+			if err != nil {
+				return nil, err
 			}
-			sort.Strings(params)
-			rows = append(rows, buildVarCharRow(ksName, vindexName, vindex.GetType(), strings.Join(params, "; "), vindex.GetOwner()))
+			rowsAll = append(rowsAll, rows...)
 		}
 	}
-	return engine.NewRowsPrimitive(rows,
-		buildVarCharFields("Keyspace", "Name", "Type", "Params", "Owner"),
+	return engine.NewRowsPrimitive(rowsAll,
+		buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
 	), nil
 
 }

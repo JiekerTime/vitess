@@ -719,11 +719,14 @@
       "Instructions": {
         "OperatorType": "Rows",
         "Fields": {
-          "Keyspace": "VARCHAR",
-          "Name": "VARCHAR",
-          "Owner": "VARCHAR",
-          "Params": "VARCHAR",
-          "Type": "VARCHAR"
+          "AutoIncrement": "VARCHAR",
+          "SHARD_KEY": "VARCHAR",
+          "SHARD_POLICY": "VARCHAR",
+          "SPLIT_TABLE_COUNT": "VARCHAR",
+          "SPLIT_TABLE_KEY": "VARCHAR",
+          "SPLIT_TABLE_POLICY": "VARCHAR",
+          "TABLE_NAME": "VARCHAR",
+          "TABLE_TYPE": "VARCHAR"
         }
       }
     }
@@ -737,11 +740,14 @@
       "Instructions": {
         "OperatorType": "Rows",
         "Fields": {
-          "Columns": "VARCHAR",
-          "Name": "VARCHAR",
-          "Owner": "VARCHAR",
-          "Params": "VARCHAR",
-          "Type": "VARCHAR"
+          "AutoIncrement": "VARCHAR",
+          "SHARD_KEY": "VARCHAR",
+          "SHARD_POLICY": "VARCHAR",
+          "SPLIT_TABLE_COUNT": "VARCHAR",
+          "SPLIT_TABLE_KEY": "VARCHAR",
+          "SPLIT_TABLE_POLICY": "VARCHAR",
+          "TABLE_NAME": "VARCHAR",
+          "TABLE_TYPE": "VARCHAR"
         }
       }
     }

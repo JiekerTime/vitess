@@ -220,8 +220,12 @@ func (node *AlterVschema) Format(buf *TrackedBuffer) {
 	switch node.Action {
 	case CreateVindexDDLAction:
 		buf.astPrintf(node, "alter vschema create vindex %v %v", node.Table, node.VindexSpec)
+	case CreateTindexDDLAction:
+		buf.astPrintf(node, "alter vschema create tindex %v %v", node.Table, node.VindexSpec)
 	case DropVindexDDLAction:
 		buf.astPrintf(node, "alter vschema drop vindex %v", node.Table)
+	case DropTindexDDLAction:
+		buf.astPrintf(node, "alter vschema drop tindex %v", node.Table)
 	case AddVschemaTableDDLAction:
 		buf.astPrintf(node, "alter vschema add table %v", node.Table)
 	case DropVschemaTableDDLAction:
@@ -239,8 +243,26 @@ func (node *AlterVschema) Format(buf *TrackedBuffer) {
 		if node.VindexSpec.Type.String() != "" {
 			buf.astPrintf(node, " %v", node.VindexSpec)
 		}
+	case AddColTindexDDLAction:
+		buf.astPrintf(node, "alter vschema on %v add tindex %v (", node.Table, node.VindexSpec.Name)
+		for i, col := range node.VindexCols {
+			if i != 0 {
+				buf.astPrintf(node, ", %v", col)
+			} else {
+				buf.astPrintf(node, "%v", col)
+			}
+		}
+		buf.astPrintf(node, ")")
+		if node.VindexSpec.Type.String() != "" {
+			buf.astPrintf(node, " %v", node.VindexSpec)
+		}
+		if node.TableCount != 0 {
+			buf.astPrintf(node, " tablecount %d", node.TableCount)
+		}
 	case DropColVindexDDLAction:
 		buf.astPrintf(node, "alter vschema on %v drop vindex %v", node.Table, node.VindexSpec.Name)
+	case DropColTindexDDLAction:
+		buf.astPrintf(node, "alter vschema on %v drop tindex %v", node.Table, node.VindexSpec.Name)
 	case AddSequenceDDLAction:
 		buf.astPrintf(node, "alter vschema add sequence %v", node.Table)
 	case DropSequenceDDLAction:

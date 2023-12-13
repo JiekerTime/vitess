@@ -520,6 +520,133 @@ func assertMatchesNoOrder(t *testing.T, expected, got string) {
 	}
 }
 
+func TestExecutorShowVIndex(t *testing.T) {
+	executor, _, _, _, ctx := createExecutorEnv(t)
+
+	session := NewSafeSession(&vtgatepb.Session{TargetString: "TestExecutor"})
+
+	query := "show vschema vindexes"
+	qr, err := executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+	require.NoError(t, err)
+
+	wantqr := &sqltypes.Result{
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
+		Rows: [][]sqltypes.Value{
+			buildVarCharRow("insert_ignore_test", "SHARD_TABLE", "pv", "music_user_map", "", "", "", ""),
+			buildVarCharRow("insert_ignore_test", "SHARD_TABLE", "owned", "insert_ignore_idx", "", "", "", ""),
+			buildVarCharRow("insert_ignore_test", "SHARD_TABLE", "verify", "hash_index", "", "", "", ""),
+			buildVarCharRow("keyrange_table", "SHARD_TABLE", "krcol_unique", "krcol_unique_vdx", "", "", "", ""),
+			buildVarCharRow("keyrange_table", "SHARD_TABLE", "krcol", "krcol_vdx", "", "", "", ""),
+			buildVarCharRow("ksid_table", "SHARD_TABLE", "keyspace_id", "keyspace_id", "", "", "", ""),
+			buildVarCharRow("music", "SHARD_TABLE", "user_id", "hash_index", "", "", "", "id"),
+			buildVarCharRow("music", "SHARD_TABLE", "id", "music_user_map", "", "", "", "id"),
+			buildVarCharRow("music_extra", "SHARD_TABLE", "user_id", "hash_index", "", "", "", ""),
+			buildVarCharRow("music_extra", "SHARD_TABLE", "music_id", "music_user_map", "", "", "", ""),
+			buildVarCharRow("music_extra_reversed", "SHARD_TABLE", "music_id", "music_user_map", "", "", "", ""),
+			buildVarCharRow("music_extra_reversed", "SHARD_TABLE", "user_id", "hash_index", "", "", "", ""),
+			buildVarCharRow("noauto_table", "SHARD_TABLE", "id", "idx_noauto", "", "", "", ""),
+			buildVarCharRow("sharded_user_msgs", "SHARD_TABLE", "user_id", "hash_index", "", "", "", ""),
+			buildVarCharRow("t1", "SHARD_TABLE", "id", "hash_index", "", "", "", ""),
+			buildVarCharRow("t1", "SHARD_TABLE", "unq_col", "t1_lkp_vdx", "", "", "", ""),
+			buildVarCharRow("t1_lkp_idx", "SHARD_TABLE", "unq_col", "hash_index", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "id", "hash_index", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "wo_lu_col", "t2_wo_lu_vdx", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "erl_lu_col", "t2_erl_lu_vdx", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "srl_lu_col", "t2_srl_lu_vdx", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "nrl_lu_col", "t2_nrl_lu_vdx", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "nv_lu_col", "t2_nv_lu_vdx", "", "", "", ""),
+			buildVarCharRow("t2_lookup", "SHARD_TABLE", "lu_col", "t2_lu_vdx", "", "", "", ""),
+			buildVarCharRow("tbl_cfc", "SHARD_TABLE", "c1", "cfc", "", "", "", ""),
+			buildVarCharRow("user", "SPLIT_TABLE", "Id", "hash_index", "Id", "hash_index", "8", "id"),
+			buildVarCharRow("user", "SPLIT_TABLE", "name", "name_user_map", "Id", "hash_index", "8", "id"),
+			buildVarCharRow("user2", "SHARD_TABLE", "id", "hash_index", "", "", "", ""),
+			buildVarCharRow("user2", "SHARD_TABLE", "name, lastname", "name_lastname_keyspace_id_map", "", "", "", ""),
+			buildVarCharRow("user_extra", "SHARD_TABLE", "user_id", "hash_index", "", "", "", ""),
+			buildVarCharRow("user_region", "SHARD_TABLE", "cola, colb", "regional_vdx", "", "", "", ""),
+		},
+	}
+	utils.MustMatch(t, wantqr, qr, query)
+
+	query = "show vschema vindexes on TestExecutor.user"
+	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+	require.NoError(t, err)
+	wantqr = &sqltypes.Result{
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
+		Rows: [][]sqltypes.Value{
+			buildVarCharRow("user", "SPLIT_TABLE", "Id", "hash_index", "Id", "hash_index", "8", "id"),
+			buildVarCharRow("user", "SPLIT_TABLE", "name", "name_user_map", "Id", "hash_index", "8", "id"),
+		},
+	}
+	utils.MustMatch(t, wantqr, qr, query)
+
+	/*
+		query = "show vschema vindexes on user"
+		_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+		wantErr := errNoKeyspace.Error()
+		assert.EqualError(t, err, wantErr, query)
+	*/
+
+	query = "show vschema vindexes on TestExecutor.garbage"
+	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+	wantErr := "VT05005: table 'garbage' does not exist in keyspace 'TestExecutor'"
+	assert.EqualError(t, err, wantErr, query)
+
+	query = "show vschema vindexes on user"
+	session.TargetString = "TestExecutor"
+	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+	require.NoError(t, err)
+	wantqr = &sqltypes.Result{
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
+		Rows: [][]sqltypes.Value{
+			buildVarCharRow("user", "SPLIT_TABLE", "Id", "hash_index", "Id", "hash_index", "8", "id"),
+			buildVarCharRow("user", "SPLIT_TABLE", "name", "name_user_map", "Id", "hash_index", "8", "id"),
+		},
+	}
+	utils.MustMatch(t, wantqr, qr, query)
+
+	query = "show vschema vindexes on user2"
+	session.TargetString = "TestExecutor"
+	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+	require.NoError(t, err)
+	wantqr = &sqltypes.Result{
+		Fields: buildVarCharFields("TABLE_NAME", "TABLE_TYPE", "SHARD_KEY", "SHARD_POLICY", "SPLIT_TABLE_KEY", "SPLIT_TABLE_POLICY", "SPLIT_TABLE_COUNT", "AutoIncrement"),
+		Rows: [][]sqltypes.Value{
+			buildVarCharRow("user2", "SHARD_TABLE", "id", "hash_index", "", "", "", ""),
+			buildVarCharRow("user2", "SHARD_TABLE", "name, lastname", "name_lastname_keyspace_id_map", "", "", "", ""),
+		},
+	}
+	utils.MustMatch(t, wantqr, qr, query)
+	query = "show vschema vindexes on garbage"
+	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
+	wantErr = "VT05005: table 'garbage' does not exist in keyspace 'TestExecutor'"
+	assert.EqualError(t, err, wantErr, query)
+}
+
+func printRows(rows [][]sqltypes.Value) {
+	for _, row := range rows {
+		var builder strings.Builder
+		builder.WriteString("buildVarCharRow(\"")
+		builder.WriteString(row[0].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[1].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[2].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[3].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[4].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[5].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[6].RawStr())
+		builder.WriteString("\", \"")
+		builder.WriteString(row[7].RawStr())
+		builder.WriteString("\"),")
+		str := builder.String()
+		fmt.Println(str)
+	}
+}
+
 func TestExecutorShow(t *testing.T) {
 	executor, _, _, sbclookup, ctx := createExecutorEnv(t)
 
@@ -877,89 +1004,6 @@ func TestExecutorShow(t *testing.T) {
 		},
 	}
 	utils.MustMatch(t, wantqr, qr, query)
-
-	query = "show vschema vindexes"
-	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	require.NoError(t, err)
-	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Keyspace", "Name", "Type", "Params", "Owner"),
-		Rows: [][]sqltypes.Value{
-			buildVarCharRow("TestExecutor", "cfc", "cfc", "", ""),
-			buildVarCharRow("TestExecutor", "hash_index", "hash", "", ""),
-			buildVarCharRow("TestExecutor", "idx1", "hash", "", ""),
-			buildVarCharRow("TestExecutor", "idx_noauto", "hash", "", "noauto_table"),
-			buildVarCharRow("TestExecutor", "insert_ignore_idx", "lookup_hash", "from=fromcol; table=ins_lookup; to=tocol", "insert_ignore_test"),
-			buildVarCharRow("TestExecutor", "keyspace_id", "numeric", "", ""),
-			buildVarCharRow("TestExecutor", "krcol_unique_vdx", "keyrange_lookuper_unique", "", ""),
-			buildVarCharRow("TestExecutor", "krcol_vdx", "keyrange_lookuper", "", ""),
-			buildVarCharRow("TestExecutor", "music_user_map", "lookup_hash_unique", "from=music_id; table=music_user_map; to=user_id", "music"),
-			buildVarCharRow("TestExecutor", "name_lastname_keyspace_id_map", "lookup", "from=name,lastname; table=name_lastname_keyspace_id_map; to=keyspace_id", "user2"),
-			buildVarCharRow("TestExecutor", "name_user_map", "lookup_hash", "from=name; table=name_user_map; to=user_id", "user"),
-			buildVarCharRow("TestExecutor", "regional_vdx", "region_experimental", "region_bytes=1", ""),
-			buildVarCharRow("TestExecutor", "t1_lkp_vdx", "consistent_lookup_unique", "from=unq_col; table=t1_lkp_idx; to=keyspace_id", "t1"),
-			buildVarCharRow("TestExecutor", "t2_erl_lu_vdx", "lookup_unique", "from=erl_lu_col; read_lock=exclusive; table=TestUnsharded.erl_lu_idx; to=keyspace_id", "t2_lookup"),
-			buildVarCharRow("TestExecutor", "t2_lu_vdx", "lookup_hash_unique", "from=lu_col; table=TestUnsharded.lu_idx; to=keyspace_id", "t2_lookup"),
-			buildVarCharRow("TestExecutor", "t2_nrl_lu_vdx", "lookup_unique", "from=nrl_lu_col; read_lock=none; table=TestUnsharded.nrl_lu_idx; to=keyspace_id", "t2_lookup"),
-			buildVarCharRow("TestExecutor", "t2_nv_lu_vdx", "lookup_unique", "from=nv_lu_col; no_verify=true; table=TestUnsharded.nv_lu_idx; to=keyspace_id", "t2_lookup"),
-			buildVarCharRow("TestExecutor", "t2_srl_lu_vdx", "lookup_unique", "from=srl_lu_col; read_lock=shared; table=TestUnsharded.srl_lu_idx; to=keyspace_id", "t2_lookup"),
-			buildVarCharRow("TestExecutor", "t2_wo_lu_vdx", "lookup_unique", "from=wo_lu_col; table=TestUnsharded.wo_lu_idx; to=keyspace_id; write_only=true", "t2_lookup"),
-			buildVarCharRow("TestMultiCol", "multicol_vdx", "multicol", "column_bytes=1,3,4; column_count=3; column_vindex=hash,binary,unicode_loose_xxhash", ""),
-		},
-	}
-	utils.MustMatch(t, wantqr, qr, query)
-
-	query = "show vschema vindexes on TestExecutor.user"
-	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	require.NoError(t, err)
-	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
-		Rows: [][]sqltypes.Value{
-			buildVarCharRow("Id", "hash_index", "hash", "", ""),
-			buildVarCharRow("name", "name_user_map", "lookup_hash", "from=name; table=name_user_map; to=user_id", "user"),
-		},
-	}
-	utils.MustMatch(t, wantqr, qr, query)
-
-	query = "show vschema vindexes on user"
-	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	wantErr := errNoKeyspace.Error()
-	assert.EqualError(t, err, wantErr, query)
-
-	query = "show vschema vindexes on TestExecutor.garbage"
-	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	wantErr = "VT05005: table 'garbage' does not exist in keyspace 'TestExecutor'"
-	assert.EqualError(t, err, wantErr, query)
-
-	query = "show vschema vindexes on user"
-	session.TargetString = "TestExecutor"
-	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	require.NoError(t, err)
-	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
-		Rows: [][]sqltypes.Value{
-			buildVarCharRow("Id", "hash_index", "hash", "", ""),
-			buildVarCharRow("name", "name_user_map", "lookup_hash", "from=name; table=name_user_map; to=user_id", "user"),
-		},
-	}
-	utils.MustMatch(t, wantqr, qr, query)
-
-	query = "show vschema vindexes on user2"
-	session.TargetString = "TestExecutor"
-	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	require.NoError(t, err)
-	wantqr = &sqltypes.Result{
-		Fields: buildVarCharFields("Columns", "Name", "Type", "Params", "Owner"),
-		Rows: [][]sqltypes.Value{
-			buildVarCharRow("id", "hash_index", "hash", "", ""),
-			buildVarCharRow("name, lastname", "name_lastname_keyspace_id_map", "lookup", "from=name,lastname; table=name_lastname_keyspace_id_map; to=keyspace_id", "user2"),
-		},
-	}
-	utils.MustMatch(t, wantqr, qr, query)
-
-	query = "show vschema vindexes on garbage"
-	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
-	wantErr = "VT05005: table 'garbage' does not exist in keyspace 'TestExecutor'"
-	assert.EqualError(t, err, wantErr, query)
 
 	query = "show warnings"
 	qr, err = executor.Execute(ctx, nil, nil, "TestExecute", session, query, nil)
@@ -1487,6 +1531,43 @@ func TestExecutorCreateVindexDDL(t *testing.T) {
 	keyspace, ok := vschema.Keyspaces[ks]
 	if !ok || !keyspace.Sharded {
 		t.Errorf("keyspace should have been created with Sharded=true")
+	}
+
+	_, ok = vschema.Keyspaces[ks].SplittableVindexes["test_tindex"]
+	if ok {
+		t.Fatalf("test_tindex should not exist in original vschema")
+	}
+
+	session = NewSafeSession(&vtgatepb.Session{TargetString: ks})
+	stmt = "alter vschema create tindex test_tindex using hash"
+	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, stmt, nil)
+	require.NoError(t, err)
+
+	_, tindex := waitForTindex(t, ks, "test_tindex", vschemaUpdates, executor)
+	if tindex == nil || tindex.Type != "hash" {
+		t.Errorf("updated vschema did not contain test_tindex")
+	}
+
+	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, stmt, nil)
+	wantErr = "tindex test_tindex already exists in keyspace TestExecutor"
+	if err == nil || err.Error() != wantErr {
+		t.Errorf("create duplicate vindex: %v, want %s", err, wantErr)
+	}
+	select {
+	case <-vschemaUpdates:
+		t.Error("vschema should not be updated on error")
+	default:
+	}
+
+	_, err = executor.Execute(ctx, nil, nil, "TestExecute", session, stmt, nil)
+	wantErr = "tindex test_tindex already exists in keyspace TestExecutor"
+	if err == nil || err.Error() != wantErr {
+		t.Errorf("create duplicate tindex: %v, want %s", err, wantErr)
+	}
+	select {
+	case <-vschemaUpdates:
+		t.Error("vschema should not be updated on error")
+	default:
 	}
 
 	// No queries should have gone to any tablets

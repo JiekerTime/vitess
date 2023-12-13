@@ -1259,6 +1259,8 @@ func (action DDLAction) ToString() string {
 		return TruncateStr
 	case CreateVindexDDLAction:
 		return CreateVindexStr
+	case CreateTindexDDLAction:
+		return CreateTindexStr
 	case DropVindexDDLAction:
 		return DropVindexStr
 	case AddVschemaTableDDLAction:
@@ -1277,6 +1279,12 @@ func (action DDLAction) ToString() string {
 		return AddAutoIncStr
 	case DropAutoIncDDLAction:
 		return DropAutoIncStr
+	case AddColTindexDDLAction:
+		return AddColTindexStr
+	case DropTindexDDLAction:
+		return DropTindexStr
+	case DropColTindexDDLAction:
+		return DropColTindexStr
 	default:
 		return "Unknown DDL Action"
 	}

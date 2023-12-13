@@ -829,3 +829,70 @@ func TestCloneComments(t *testing.T) {
 		assert.Equal(t, "b", val)
 	}
 }
+
+func TestAppendAlterVschema(t *testing.T) {
+	query := "alter vschema on test add tindex test_hash (id) using `hash` tablecount 8"
+	tree, err := Parse(query)
+	require.NoError(t, err)
+	var b strings.Builder
+	Append(&b, tree)
+	got := b.String()
+	want := query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+
+	query = "alter vschema drop tindex hash_vdx"
+	tree, err = Parse(query)
+	require.NoError(t, err)
+	var d strings.Builder
+	Append(&d, tree)
+	got = d.String()
+	want = query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+
+	query = "alter vschema on a drop tindex hash_vdx"
+	tree, err = Parse(query)
+	require.NoError(t, err)
+	var c strings.Builder
+	Append(&c, tree)
+	got = c.String()
+	want = query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+}
+
+func TestAppendAstFormat(t *testing.T) {
+	query := "alter vschema on test add tindex test_hash (id) using `hash` tablecount 8"
+	src, _ := Parse(query)
+	buf := NewTrackedBuffer(nil)
+	src.Format(buf)
+	got := buf.String()
+	want := query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+
+	query = "alter vschema drop tindex hash_vdx"
+	src, _ = Parse(query)
+	buf2 := NewTrackedBuffer(nil)
+	src.Format(buf2)
+	got = buf2.String()
+	want = query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+
+	query = "alter vschema on a drop tindex hash_vdx"
+	src, _ = Parse(query)
+	buf3 := NewTrackedBuffer(nil)
+	src.Format(buf3)
+	got = buf3.String()
+	want = query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+}

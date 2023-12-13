@@ -18,6 +18,8 @@ package engine
 
 import (
 	"context"
+	"vitess.io/vitess/go/vt/sqlparser"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
@@ -28,10 +30,11 @@ import (
 	querypb "vitess.io/vitess/go/vt/proto/query"
 )
 
-var _ Primitive = (*Send)(nil)
+var _ Primitive = (*SplitTableSend)(nil)
 
-// Send is an operator to send query to the specific keyspace, tabletType and destination
-type Send struct {
+// SplitTableSend is an operator to send query to the specific keyspace, tabletType and destination
+type SplitTableSend struct {
+
 	// Keyspace specifies the keyspace to send the query to.
 	Keyspace *vindexes.Keyspace
 
@@ -54,18 +57,18 @@ type Send struct {
 	MultishardAutocommit bool
 
 	noInputs
+
+	// config of splitTable
+	SplitTableConfig vindexes.SplitTableMap
 }
 
-// ShardName as key for setting shard name in bind variables map
-const ShardName = "__vt_shard"
-
 // NeedsTransaction implements the Primitive interface
-func (s *Send) NeedsTransaction() bool {
+func (s *SplitTableSend) NeedsTransaction() bool {
 	return s.IsDML
 }
 
 // RouteType implements Primitive interface
-func (s *Send) RouteType() string {
+func (s *SplitTableSend) RouteType() string {
 	if s.IsDML {
 		return "SendDML"
 	}
@@ -74,17 +77,17 @@ func (s *Send) RouteType() string {
 }
 
 // GetKeyspaceName implements Primitive interface
-func (s *Send) GetKeyspaceName() string {
+func (s *SplitTableSend) GetKeyspaceName() string {
 	return s.Keyspace.Name
 }
 
 // GetTableName implements Primitive interface
-func (s *Send) GetTableName() string {
+func (s *SplitTableSend) GetTableName() string {
 	return ""
 }
 
 // TryExecute implements Primitive interface
-func (s *Send) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
+func (s *SplitTableSend) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool) (*sqltypes.Result, error) {
 	ctx, cancelFunc := addQueryTimeout(ctx, vcursor, 0)
 	defer cancelFunc()
 	rss, _, err := vcursor.ResolveDestinations(ctx, s.Keyspace.Name, nil, []key.Destination{s.TargetDestination})
@@ -99,44 +102,79 @@ func (s *Send) TryExecute(ctx context.Context, vcursor VCursor, bindVars map[str
 	if s.SingleShardOnly && len(rss) != 1 {
 		return nil, vterrors.Errorf(vtrpcpb.Code_INVALID_ARGUMENT, "Unexpected error, DestinationKeyspaceID mapping to multiple shards: %s, got: %v", s.Query, s.TargetDestination)
 	}
-	queries := make([]*querypb.BoundQuery, len(rss))
-	for i, rs := range rss {
-		bv := bindVars
-		if s.ShardNameNeeded {
-			bv = copyBindVars(bindVars)
-			bv[ShardName] = sqltypes.StringBindVariable(rs.Target.Shard)
-		}
-		queries[i] = &querypb.BoundQuery{
-			Sql:           s.Query,
-			BindVariables: bv,
-		}
+
+	querieses, errBuildQueries := buildSplitTableQueries(rss, s, bindVars)
+	if errBuildQueries != nil {
+		return nil, errBuildQueries
 	}
+
+	qrs := new(sqltypes.Result)
 	rollbackOnError := s.IsDML // for non-dml queries, there's no need to do a rollback
-	result, errs := vcursor.ExecuteMultiShard(ctx, s, rss, queries, rollbackOnError, s.canAutoCommit(vcursor, rss))
-	err = vterrors.Aggregate(errs)
+
+	for indexForTable, _ := range querieses[0] {
+		executeQuery := make([]*querypb.BoundQuery, 0, len(rss))
+		for i, _ := range rss {
+			executeQuery = append(executeQuery, querieses[i][indexForTable])
+		}
+		qr, errQr := vcursor.ExecuteMultiShard(ctx, s, rss, executeQuery, rollbackOnError, s.canAutoCommit(vcursor, rss))
+		if errQr != nil {
+			return nil, vterrors.Aggregate(errQr)
+		}
+		qrs.AppendResult(qr)
+	}
+	return qrs, nil
+}
+
+func buildSplitTableQueries(rss []*srvtopo.ResolvedShard, s *SplitTableSend, bindVars map[string]*querypb.BindVariable) ([][]*querypb.BoundQuery, error) {
+	querieses := make([][]*querypb.BoundQuery, len(rss))
+	logicalTableNames := make([]string, 0, len(s.SplitTableConfig))
+	for logicTableName := range s.SplitTableConfig {
+		logicalTableNames = append(logicalTableNames, logicTableName)
+	}
+	actualTableFirst := s.SplitTableConfig[logicalTableNames[0]]
+	stmt, _, err := sqlparser.Parse2(s.Query)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	for i, _ := range rss {
+		var queries []*querypb.BoundQuery
+		for indexForTable := range actualTableFirst.ActualTableList {
+			actualTableNames := make(map[string]string, len(actualTableFirst.ActualTableList))
+			for _, logicalTableName := range logicalTableNames {
+				actualTableNames[logicalTableName] = s.SplitTableConfig[logicalTableName].ActualTableList[indexForTable].ActualTableName
+			}
+			cloneStmt := sqlparser.DeepCloneStatement(stmt)
+			sqlparser.SafeRewrite(cloneStmt, nil, func(cursor *sqlparser.Cursor) bool {
+				switch node := cursor.Node().(type) {
+				case sqlparser.TableName:
+					if value, ok := actualTableNames[node.Name.String()]; ok {
+						cursor.Replace(sqlparser.TableName{
+							Name: sqlparser.NewIdentifierCS(value),
+						})
+					}
+				}
+				return true
+			})
+
+			queries = append(queries, &querypb.BoundQuery{
+				Sql:           sqlparser.String(cloneStmt),
+				BindVariables: bindVars,
+			})
+		}
+		querieses[i] = queries
+	}
+	return querieses, nil
 }
 
-func (s *Send) canAutoCommit(vcursor VCursor, rss []*srvtopo.ResolvedShard) bool {
+func (s *SplitTableSend) canAutoCommit(vcursor VCursor, rss []*srvtopo.ResolvedShard) bool {
 	if s.IsDML {
 		return (len(rss) == 1 || s.MultishardAutocommit) && vcursor.AutocommitApproval()
 	}
 	return false
 }
 
-func copyBindVars(in map[string]*querypb.BindVariable) map[string]*querypb.BindVariable {
-	out := make(map[string]*querypb.BindVariable, len(in)+1)
-	for k, v := range in {
-		out[k] = v
-	}
-	return out
-}
-
 // TryStreamExecute implements Primitive interface
-func (s *Send) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
+func (s *SplitTableSend) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
 	rss, _, err := vcursor.ResolveDestinations(ctx, s.Keyspace.Name, nil, []key.Destination{s.TargetDestination})
 	if err != nil {
 		return err
@@ -164,7 +202,7 @@ func (s *Send) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars m
 }
 
 // GetFields implements Primitive interface
-func (s *Send) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
+func (s *SplitTableSend) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
 	qr, err := vcursor.ExecutePrimitive(ctx, s, bindVars, false)
 	if err != nil {
 		return nil, err
@@ -173,7 +211,7 @@ func (s *Send) GetFields(ctx context.Context, vcursor VCursor, bindVars map[stri
 	return qr, nil
 }
 
-func (s *Send) description() PrimitiveDescription {
+func (s *SplitTableSend) description() PrimitiveDescription {
 	other := map[string]any{
 		"Query": s.Query,
 		"Table": s.GetTableName(),

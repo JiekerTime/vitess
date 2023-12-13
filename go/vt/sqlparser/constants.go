@@ -68,6 +68,10 @@ const (
 	DropSequenceStr     = "drop sequence"
 	AddAutoIncStr       = "add auto_increment"
 	DropAutoIncStr      = "drop auto_increment"
+	CreateTindexStr     = "create tindex"
+	AddColTindexStr     = "on table add tindex"
+	DropTindexStr       = "drop tindex"
+	DropColTindexStr    = "on table drop tindex"
 
 	// ALTER TABLE ALGORITHM string.
 	DefaultStr = "default"
@@ -495,6 +499,10 @@ const (
 	AddAutoIncDDLAction
 	DropAutoIncDDLAction
 	RevertDDLAction
+	CreateTindexDDLAction
+	AddColTindexDDLAction
+	DropTindexDDLAction
+	DropColTindexDDLAction
 )
 
 // Constants for scope of variables
