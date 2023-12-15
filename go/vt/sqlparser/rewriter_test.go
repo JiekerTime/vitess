@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -198,7 +199,7 @@ func TestSelectScenarioRewriteSplitTableName(t *testing.T) {
 			if err != nil {
 				t.Errorf("SQL parse error")
 			}
-			RewriteSplitTableName(sqlNode, tc.tableMap)
+			ReplaceTbName(sqlNode, tc.tableMap, false)
 			assert.Equal(t, tc.expect, String(sqlNode))
 
 		})
@@ -255,7 +256,7 @@ func TestDMLScenarioRewriteSplitTableName(t *testing.T) {
 			if err != nil {
 				t.Errorf("SQL parse error")
 			}
-			RewriteSplitTableName(sqlNode, tc.tableMap)
+			ReplaceTbName(sqlNode, tc.tableMap, false)
 			assert.Equal(t, tc.expect, String(sqlNode))
 
 		})
@@ -294,7 +295,7 @@ func TestCopyOnRewriteTableName(t *testing.T) {
 			if err != nil {
 				t.Errorf("SQL parse error")
 			}
-			newNode := CopyOnRewriteTableName(sqlNode, tcase.TableMap)
+			newNode := ReplaceTbName(sqlNode, tcase.TableMap, true)
 			assert.Equal(t, tcase.Expect, String(newNode))
 		})
 	}
@@ -313,7 +314,7 @@ func BenchmarkCopyOnRewriteTableName(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
 				for i := 0; i < 10000; i++ {
-					newNode := CopyOnRewriteTableName(sqlNode, tcase.TableMap)
+					newNode := ReplaceTbName(sqlNode, tcase.TableMap, true)
 					String(newNode)
 				}
 			}
@@ -334,9 +335,279 @@ func BenchmarkRewriteSplitTableName(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				for i := 0; i < 10000; i++ {
 					newNode := DeepCloneStatement(sqlNode)
-					RewriteSplitTableName(newNode, tcase.TableMap)
+					ReplaceTbName(newNode, tcase.TableMap, true)
 					String(sqlNode)
 				}
+			}
+		})
+	}
+}
+
+func TestReplaceDQLTbName2Token(t *testing.T) {
+
+	type testCase struct {
+		originSql    string
+		expect       string
+		tableMap     map[string]string
+		replacements map[string]string
+	}
+	ts := []testCase{
+		{
+			originSql: "select * from t_user",
+			expect:    "select * from `:tb_vtg0`",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user",
+			expect:    "select * from `user`.`:tb_vtg0`",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user join t_order",
+			expect:    "select * from `user`.`:tb_vtg0` join t_order",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user join t_order",
+			expect:    "select * from `user`.`:tb_vtg0` join `:tb_vtg1`",
+			tableMap: map[string]string{
+				"t_user":  "t_user_1",
+				"t_order": "t_order_1",
+			},
+			replacements: map[string]string{
+				"t_user":  ":tb_vtg0",
+				"t_order": ":tb_vtg1",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user as t_user join t_order",
+			expect:    "select * from `user`.`:tb_vtg0` as t_user join t_order",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user as t_user join t_order",
+			expect:    "select * from `user`.`:tb_vtg0` as t_user join `:tb_vtg1`",
+			tableMap: map[string]string{
+				"t_user":  "t_user_1",
+				"t_order": "t_order_1",
+			},
+			replacements: map[string]string{
+				"t_user":  ":tb_vtg0",
+				"t_order": ":tb_vtg1",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user as t_user join t_order as t_order",
+			expect:    "select * from `user`.`:tb_vtg0` as t_user join t_order as t_order",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select * from `user`.t_user as t_user join t_order as t_order",
+			expect:    "select * from `user`.`:tb_vtg0` as t_user join `:tb_vtg1` as t_order",
+			tableMap: map[string]string{
+				"t_user":  "t_user_1",
+				"t_order": "t_order_1",
+			},
+			replacements: map[string]string{
+				"t_user":  ":tb_vtg0",
+				"t_order": ":tb_vtg1",
+			},
+		},
+		{
+			originSql: "select t_user.* from t_user where t_user.col = 5 and t_user.id = 1",
+			expect:    "select `:tb_vtg0`.* from `:tb_vtg0` where `:tb_vtg0`.col = 5 and `:tb_vtg0`.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select t_user.* from t_user as t_user where t_user.col = 5 and t_user.id = 1",
+			expect:    "select t_user.* from `:tb_vtg0` as t_user where t_user.col = 5 and t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select t_order.* from t_user.t_user as t_order left join t_order as t_user on t_order.id = t_user.id where t_user.col = 5",
+			expect:    "select t_order.* from t_user.`:tb_vtg0` as t_order left join t_order as t_user on t_order.id = t_user.id where t_user.col = 5",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "select t_order.* from t_user.t_user as t_order left join t_order as t_user on t_order.id = t_user.id where t_user.col = 5",
+			expect:    "select t_order.* from t_user.`:tb_vtg0` as t_order left join `:tb_vtg1` as t_user on t_order.id = t_user.id where t_user.col = 5",
+			tableMap: map[string]string{
+				"t_user":  "t_user_1",
+				"t_order": "t_order_1",
+			},
+			replacements: map[string]string{
+				"t_user":  ":tb_vtg0",
+				"t_order": ":tb_vtg1",
+			},
+		},
+	}
+
+	for _, tc := range ts {
+		t.Run(tc.originSql, func(t *testing.T) {
+			sqlNode, err := Parse(tc.originSql)
+			if err != nil {
+				t.Errorf("SQL parse error")
+			}
+			assert.Equal(t, tc.expect, String(ReplaceTbName(sqlNode, tc.replacements, true)))
+			assert.Equal(t, tc.originSql, String(sqlNode))
+		})
+	}
+}
+
+func TestReplaceDMLTbName2Token(t *testing.T) {
+
+	type testCase struct {
+		originSql    string
+		expect       string
+		tableMap     map[string]string
+		replacements map[string]string
+	}
+	ts := []testCase{
+		{
+			originSql: "delete from t_user",
+			expect:    "delete from `:tb_vtg0`",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "delete from t_user as t_user where t_user.id = 1",
+			expect:    "delete from `:tb_vtg0` as t_user where t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "delete t_user from t_user as t_user where t_user.id = 1",
+			expect:    "delete t_user from `:tb_vtg0` as t_user where t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "update t_user set val = 1 where id = 1",
+			expect:    "update `:tb_vtg0` set val = 1 where id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+		{
+			originSql: "update t_user as t_user set t_user.val = 1 where t_user.id = 1",
+			expect:    "update `:tb_vtg0` as t_user set t_user.val = 1 where t_user.id = 1",
+			tableMap: map[string]string{
+				"t_user": "t_user_1",
+			},
+			replacements: map[string]string{
+				"t_user": ":tb_vtg0",
+			},
+		},
+	}
+
+	for _, tc := range ts {
+		t.Run(tc.originSql, func(t *testing.T) {
+			sqlNode, err := Parse(tc.originSql)
+			if err != nil {
+				t.Errorf("SQL parse error")
+			}
+			assert.Equal(t, tc.expect, String(ReplaceTbName(sqlNode, tc.replacements, true)))
+			assert.Equal(t, tc.originSql, String(sqlNode))
+		})
+	}
+}
+
+func BenchmarkReplaceMethod(b *testing.B) {
+	tests := []struct {
+		query  string
+		token  string
+		tbName string
+	}{
+		{
+			query:  "select id from `:tb_vtg0`",
+			token:  ":tb_vtg0",
+			tbName: "t_user_1",
+		},
+		{
+			query:  "select id from `:tb_vtg0` join `:tb_vtg1`",
+			token:  ":tb_vtg0",
+			tbName: "t_user_1",
+		},
+		{
+			query:  "select * from `user`.`:tb_vtg0` as t_user join `:tb_vtg1`",
+			token:  ":tb_vtg0",
+			tbName: "t_user_1",
+		},
+		{
+			query:  "select `:tb_vtg1`.* from t_user.`:tb_vtg0` as `:tb_vtg1` left join `:tb_vtg1` as `:tb_vtg0` on `:tb_vtg1`.id = `:tb_vtg0`.id where `:tb_vtg0`.col = 5",
+			token:  ":tb_vtg0",
+			tbName: "t_user_1",
+		},
+	}
+	for _, t := range tests {
+		b.Run("systemMethod-"+t.query, func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < 100000; i++ {
+				strings.Replace(t.query, FormateToken(t.token), t.tbName, -1)
+			}
+		})
+		b.Run("-"+t.query, func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < 100000; i++ {
+				ReplaceToken(t.query, t.token, t.tbName)
 			}
 		})
 	}

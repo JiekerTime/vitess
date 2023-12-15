@@ -45,9 +45,7 @@ func buildOtherReadAndAdmin(sql string, vschema plancontext.VSchema) (*planResul
 
 // explain support split table
 func buildOtherReadAndAdminForSplitTable(stmt sqlparser.ExplainStmt, mapForSplitTable map[string]string, destination key.Destination, keyspace *vindexes.Keyspace) (*planResult, error) {
-	cloneStmt := sqlparser.DeepCloneStatement(stmt.Statement)
-	sqlparser.RewriteSplitTableName(cloneStmt, mapForSplitTable)
-	stmt.Statement = cloneStmt
+	sqlparser.ReplaceTbName(stmt.Statement, mapForSplitTable, false)
 	sql := sqlparser.String(&stmt)
 	return newPlanResult(&engine.Send{
 		Keyspace:          keyspace,

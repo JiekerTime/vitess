@@ -16,6 +16,10 @@ limitations under the License.
 
 package sqlparser
 
+import (
+	"strings"
+)
+
 // The rewriter was heavily inspired by https://github.com/golang/tools/blob/master/go/ast/astutil/rewrite.go
 
 // Rewrite traverses a syntax tree recursively, starting with root,
@@ -146,43 +150,65 @@ type application struct {
 	cur       Cursor
 }
 
-func RewriteSplitTableName(in SQLNode, tableMap map[string]string) {
-	ignoreTables := make(map[string]bool, len(tableMap))
+// ReplaceTbName is used to replace the name of a table by a token given by a map.
+// @param in SQLNode to be replaced stmt tree.
+// @param replacements map[string]string the replaced tokens.
+// @param isCopy bool whether copy the replaced tree nodes.
+func ReplaceTbName(in SQLNode, replacements map[string]string, isCopy bool) (result SQLNode) {
+	aliasedTableNames := make(map[string]bool)
 	switch stmt := in.(type) {
 	case *Select:
-		checkIgnoredTables(tableMap, ignoreTables, stmt.From)
+		getAliasedTableNames(replacements, aliasedTableNames, stmt.From)
 	case *Delete:
-		checkIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
+		getAliasedTableNames(replacements, aliasedTableNames, stmt.TableExprs)
 	case *Update:
-		checkIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
-	default:
-
+		getAliasedTableNames(replacements, aliasedTableNames, stmt.TableExprs)
 	}
-
-	SafeRewrite(in, func(node SQLNode, parent SQLNode) bool {
-		switch pNode := parent.(type) {
-		case *AliasedTableExpr:
-			if ignore := ignoreTables[pNode.As.String()]; ignore {
-				switch cNode := node.(type) {
-				case TableName:
-					if actName, ok := tableMap[cNode.Name.String()]; ok {
-						pNode.Expr = TableName{
-							Name:      NewIdentifierCS(actName),
+	preFunc := func(node SQLNode, parent SQLNode) bool {
+		_, ok := node.(TableName)
+		return !ok
+	}
+	if isCopy {
+		return CopyOnRewrite(in, preFunc, func(cursor *CopyOnWriteCursor) {
+			switch cNode := cursor.Node().(type) {
+			case TableName:
+				switch cursor.parent.(type) {
+				case *AliasedTableExpr:
+					if replacement, ok := replacements[cNode.Name.String()]; ok {
+						cursor.Replace(TableName{
+							Name:      NewIdentifierCS(replacement),
 							Qualifier: cNode.Qualifier,
-						}
+						})
+					}
+				}
+				if _, isAsName := aliasedTableNames[cNode.Name.String()]; !isAsName {
+					if replacement, ok := replacements[cNode.Name.String()]; ok {
+						cursor.Replace(TableName{
+							Name:      NewIdentifierCS(replacement),
+							Qualifier: cNode.Qualifier,
+						})
 					}
 				}
 			}
-		}
-		return true
-	}, func(cursor *Cursor) bool {
-		switch node := cursor.Node().(type) {
+		}, nil)
+	}
+	return SafeRewrite(in, preFunc, func(cursor *Cursor) bool {
+		switch cNode := cursor.Node().(type) {
 		case TableName:
-			if _, ignore := ignoreTables[node.Name.String()]; !ignore {
-				if actName, ok := tableMap[node.Name.String()]; ok {
+			switch cursor.parent.(type) {
+			case *AliasedTableExpr:
+				if replacement, ok := replacements[cNode.Name.String()]; ok {
 					cursor.Replace(TableName{
-						Name:      NewIdentifierCS(actName),
-						Qualifier: node.Qualifier,
+						Name:      NewIdentifierCS(replacement),
+						Qualifier: cNode.Qualifier,
+					})
+				}
+			}
+			if _, isAsName := aliasedTableNames[cNode.Name.String()]; !isAsName {
+				if replacement, ok := replacements[cNode.Name.String()]; ok {
+					cursor.Replace(TableName{
+						Name:      NewIdentifierCS(replacement),
+						Qualifier: cNode.Qualifier,
 					})
 				}
 			}
@@ -191,92 +217,93 @@ func RewriteSplitTableName(in SQLNode, tableMap map[string]string) {
 	})
 }
 
-func checkIgnoredTables(tableMap map[string]string, ignoreTables map[string]bool, tableExprs []TableExpr) {
+func getAliasedTableNames(tableMap map[string]string, asNameList map[string]bool, tableExprs []TableExpr) {
 	for _, expr := range tableExprs {
 		switch node := expr.(type) {
 		case *AliasedTableExpr:
-			if _, ok := tableMap[node.As.String()]; ok {
-				ignoreTables[node.As.String()] = true
-			}
+			asNameList[node.As.String()] = true
 		case *JoinTableExpr:
-			checkIgnoredTables(tableMap, ignoreTables, []TableExpr{node.LeftExpr})
-			checkIgnoredTables(tableMap, ignoreTables, []TableExpr{node.RightExpr})
+			getAliasedTableNames(tableMap, asNameList, []TableExpr{node.LeftExpr})
+			getAliasedTableNames(tableMap, asNameList, []TableExpr{node.RightExpr})
 		}
 	}
 }
 
-func buildIgnoredTables(tableMap map[string]string, ignoreTables map[string]bool, tableExprs []TableExpr) map[string]bool {
-	for _, expr := range tableExprs {
-		switch node := expr.(type) {
-		case *AliasedTableExpr:
-			if _, ok := tableMap[node.As.String()]; ok {
-				if ignoreTables == nil {
-					ignoreTables = make(map[string]bool, len(tableMap))
-				}
-				ignoreTables[node.As.String()] = true
+func ReplaceToken(query string, token string, value string) string {
+	token = FormateToken(token)
+	var buf strings.Builder
+	buf.Grow(len(query))
+
+	n, l, r, t := len(query), 0, -1, 0
+
+	for c, s := range query {
+		if r == -1 {
+			if n-c+1 < len(token) {
+				break
 			}
-		case *JoinTableExpr:
-			ignoreTables = buildIgnoredTables(tableMap, ignoreTables, []TableExpr{node.LeftExpr})
-			ignoreTables = buildIgnoredTables(tableMap, ignoreTables, []TableExpr{node.RightExpr})
+			if byte(s) == token[0] {
+				r = c
+				t++
+			}
+		} else {
+			if byte(s) != token[t] {
+				t = 0
+				buf.WriteString(query[l:r])
+				l = r
+				if byte(s) == token[t] {
+					r = c
+					t++
+				} else {
+					r = -1
+				}
+			} else {
+				if c-r+1 == len(token) {
+					t = 0
+					buf.WriteString(query[l:r] + value)
+					r = -1
+					l = c + 1
+				} else {
+					t++
+				}
+			}
 		}
 	}
-	return ignoreTables
+	if l < n {
+		buf.WriteString(query[l:])
+	}
+	return buf.String()
 }
 
-func CopyOnRewriteTableName(in SQLNode, tableMap map[string]string) SQLNode {
-	var ignoreTables map[string]bool
-	switch stmt := in.(type) {
-	case *Select:
-		ignoreTables = buildIgnoredTables(tableMap, ignoreTables, stmt.From)
-	case *Delete:
-		ignoreTables = buildIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
-	case *Update:
-		ignoreTables = buildIgnoredTables(tableMap, ignoreTables, stmt.TableExprs)
-	default:
+func AcqTokenIndex(query string, token string) []int {
+	token = FormateToken(token)
+	result := make([]int, 0)
 
+	l, r, t := -1, -1, 0
+
+	for c, s := range query {
+		if byte(s) == token[t] {
+			if l == -1 {
+				l = c
+			} else {
+				r = c
+			}
+			if r-l+1 == len(token) {
+				result = append(result, l, r)
+				t, l, r = 0, -1, -1
+			}
+			t++
+		} else {
+			l, r, t = -1, -1, 0
+		}
 	}
+	return result
+}
 
-	return CopyOnRewrite(in, func(node SQLNode, parent SQLNode) bool {
-		if _, ok := node.(TableName); ok {
-			return false
-		}
-		return true
-	}, func(cursor *CopyOnWriteCursor) {
-		switch node := cursor.Node().(type) {
-		case TableName:
-			nodeName := node.Name.String()
-			if _, ignore := ignoreTables[nodeName]; ignore {
-				return
-			}
-			if actName, ok := tableMap[nodeName]; ok {
-				cursor.Replace(TableName{
-					Name:      NewIdentifierCS(actName),
-					Qualifier: node.Qualifier,
-				})
-			}
-			return
-		case *AliasedTableExpr:
-			alias := node.As.String()
-			if _, ignore := ignoreTables[alias]; !ignore {
-				return
-			}
-			if tableNameExpr, ok := node.Expr.(TableName); ok {
-				if actName, ok := tableMap[tableNameExpr.Name.String()]; ok {
-					cursor.Replace(&AliasedTableExpr{
-						Expr: TableName{
-							Name:      NewIdentifierCS(actName),
-							Qualifier: tableNameExpr.Qualifier,
-						},
-						Partitions: node.Partitions,
-						As:         node.As,
-						Hints:      node.Hints,
-						Columns:    node.Columns,
-					})
-				}
-			}
-			return
-		default:
-			return
-		}
-	}, nil)
+// FormateToken is used to format tokens when the token has key word or letter.
+func FormateToken(token string) string {
+	if containEscapableChars(token, 0) {
+		return "`" + token + "`"
+	} else {
+		return token
+	}
 }

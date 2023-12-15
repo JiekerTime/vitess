@@ -20,6 +20,7 @@ var _ Primitive = (*TableRoute)(nil)
 
 type TableRoute struct {
 	// TableName specifies the tables to send the query to.
+	// FIXME! This should be a list.
 	TableName string
 
 	ShardRouteParam *RoutingParameters
@@ -162,7 +163,8 @@ func (tableRoute *TableRoute) executeShards(
 	querieses := make([][]*querypb.BoundQuery, len(rss))
 	for j := range rss {
 		// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
-		boundQueries, err := getTableQueries(tableRoute.Query, bvs[j], actualTableNameMap)
+
+		boundQueries, err := tableRoute.TableRouteParam.getTableQueries(tableRoute.Query, bvs[j], actualTableNameMap)
 		if err != nil {
 			return nil, err
 		}
@@ -231,33 +233,6 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 	})
 
 	return out.Truncate(tableRoute.TruncateColumnCount), err
-}
-
-func getTableQueries(stmt sqlparser.Statement, bvs map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) ([]*querypb.BoundQuery, error) {
-	var queries []*querypb.BoundQuery
-
-	for logicTableName, actualTables := range actualTableNameMap {
-		for _, actualTable := range actualTables {
-			sql, err := rewriteQuery(stmt, actualTable.ActualTableName, logicTableName)
-			if err != nil {
-				return nil, err
-			}
-			queries = append(queries, &querypb.BoundQuery{
-				Sql:           sql,
-				BindVariables: bvs,
-			})
-		}
-	}
-
-	return queries, nil
-}
-
-func rewriteQuery(stmt sqlparser.Statement, act string, logicTbName string) (string, error) {
-	cloneStmt := sqlparser.DeepCloneStatement(stmt)
-	tableMap := make(map[string]string)
-	tableMap[logicTbName] = act
-	sqlparser.RewriteSplitTableName(cloneStmt, tableMap)
-	return sqlparser.String(cloneStmt), nil
 }
 
 func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {

@@ -6,7 +6,6 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 var _ logicalPlan = (*tableRoute)(nil)
@@ -22,13 +21,21 @@ type tableRoute struct {
 
 func (t *tableRoute) Wireup(context *plancontext.PlanningContext) error {
 	t.eroute.Query = t.Select
-	nodeClone, _ := sqlparser.DeepCloneStatement(t.Select).(*sqlparser.Select)
-	logicTable := t.eroute.TableRouteParam.LogicTable
-	tableMap := vindexes.GetFirstActualTableMap(logicTable)
-	sqlparser.RewriteSplitTableName(nodeClone, tableMap)
+
+	err := t.eroute.TableRouteParam.LoadRewriteCache(t.Select, "")
+	if err != nil {
+		return err
+	}
+
 	buffer := sqlparser.NewTrackedBuffer(sqlparser.FormatImpossibleQuery)
-	node := buffer.WriteNode(nodeClone)
+	node := buffer.WriteNode(t.eroute.TableRouteParam.CachedNode)
 	parsedQuery := node.ParsedQuery()
+	// Get one query for field query.
+	for logTb, tbConfig := range t.eroute.TableRouteParam.LogicTable {
+		if token, ok := t.eroute.TableRouteParam.LogicalNameTokens[logTb]; ok {
+			parsedQuery.Query = sqlparser.ReplaceToken(parsedQuery.Query, token, tbConfig.ActualTableList[0].ActualTableName)
+		}
+	}
 	t.eroute.FieldQuery = parsedQuery.Query
 	return nil
 }

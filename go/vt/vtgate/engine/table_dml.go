@@ -60,13 +60,13 @@ func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primiti
 		return &sqltypes.Result{}, nil
 	}
 
-	if err := dml.getSplitQueries(bindVars, actualTableNameMap); err != nil {
+	var err error
+	if dml.Queries, err = dml.TableRouteParam.getTableQueries(dml.AST, bindVars, actualTableNameMap); err != nil {
 		return nil, err
-
 	}
 
 	if dmlSpecialFunc != nil {
-		if err := dmlSpecialFunc(ctx, vcursor, bindVars, rss); err != nil {
+		if err = dmlSpecialFunc(ctx, vcursor, bindVars, rss); err != nil {
 			return nil, err
 		}
 	}
@@ -113,13 +113,4 @@ func (dml *TableDML) GetTableName() string {
 		}
 	}
 	return strings.Join(tableNames, ", ")
-}
-
-func (dml *TableDML) getSplitQueries(bindVars map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) error {
-	queries, err := getTableQueries(dml.AST, bindVars, actualTableNameMap)
-	if err != nil {
-		return err
-	}
-	dml.Queries = queries
-	return nil
 }

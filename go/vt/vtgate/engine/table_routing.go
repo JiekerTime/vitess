@@ -2,10 +2,14 @@ package engine
 
 import (
 	"context"
+	"strconv"
+	"strings"
+	"sync"
 
 	"vitess.io/vitess/go/sqltypes"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
@@ -19,6 +23,60 @@ type TableRoutingParameters struct {
 	TableValues []evalengine.Expr
 
 	LogicTable vindexes.SplitTableMap
+
+	*RewriteCache
+
+	cacheLock sync.RWMutex
+}
+
+type RewriteCache struct {
+	// CachedStmtWithToken is a token tree
+	CachedNode sqlparser.SQLNode
+
+	// CachedStmtWithToken is a statement which replace table names by tokens
+	CachedStmtWithToken string
+
+	// LogicalNameTokens is a map of logical names to tokens
+	LogicalNameTokens map[string]string
+}
+
+func (trp *TableRoutingParameters) getTableQueries(stmt sqlparser.SQLNode, bvs map[string]*querypb.BindVariable,
+	logicalActTbMap map[string][]vindexes.ActualTable) (result []*querypb.BoundQuery, err error) {
+
+	err = trp.LoadRewriteCache(stmt, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// mapping of actual tables
+	tokenValues := trp.getActTbsTokenMap(logicalActTbMap)
+
+	// Handling the Cartesian product.
+	queries := []string{
+		trp.CachedStmtWithToken,
+	}
+	for token, actualTables := range tokenValues {
+		queries = doGetQueries(token, actualTables, queries)
+	}
+
+	result = make([]*querypb.BoundQuery, len(queries))
+	for index, query := range queries {
+		result[index] = &querypb.BoundQuery{
+			Sql:           query,
+			BindVariables: bvs,
+		}
+	}
+
+	return result, nil
+}
+
+// getActTbsTokenMap is used to get the map of actual table names to tokens.
+func (trp *TableRoutingParameters) getActTbsTokenMap(tableMap map[string][]vindexes.ActualTable) (result map[string][]vindexes.ActualTable) {
+	result = make(map[string][]vindexes.ActualTable, len(trp.RewriteCache.LogicalNameTokens))
+	for logicalTbName, token := range trp.RewriteCache.LogicalNameTokens {
+		result[token] = tableMap[logicalTbName]
+	}
+	return result
 }
 
 func (rp *TableRoutingParameters) findTableRoute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (logicTableMap map[string][]vindexes.ActualTable, err error) {
@@ -159,4 +217,55 @@ func (rp *TableRoutingParameters) IsSingleTable() bool {
 		return true
 	}
 	return false
+}
+
+func (trp *TableRoutingParameters) LoadRewriteCache(stmt sqlparser.SQLNode, replaceToken string) error {
+	if trp.RewriteCache == nil {
+		trp.cacheLock.Lock()
+		if trp.RewriteCache == nil {
+			replacements := trp.generatorTokenReplacements(replaceToken)
+			replacedNode := sqlparser.ReplaceTbName(stmt, replacements, true)
+			trp.RewriteCache = &RewriteCache{
+				CachedNode:          replacedNode,
+				CachedStmtWithToken: sqlparser.String(replacedNode),
+				LogicalNameTokens:   replacements,
+			}
+		}
+		trp.cacheLock.Unlock()
+	}
+	return nil
+}
+
+func (trp *TableRoutingParameters) generatorTokenReplacements(replaceToken string) (replacements map[string]string) {
+	index := 0
+	if replaceToken == "" {
+		replaceToken = ":tb_vtg"
+	}
+	replacements = make(map[string]string, len(trp.LogicTable))
+	for tbName := range trp.LogicTable {
+		tbNameToken := replaceToken + strconv.Itoa(index)
+		index++
+		replacements[tbName] = tbNameToken
+	}
+	return replacements
+}
+
+// doGetQueries is a method that handles Cartesian product.
+func doGetQueries(token string, actualTables []vindexes.ActualTable, queries []string) (result []string) {
+	result = make([]string, len(actualTables)*len(queries))
+	for qi, query := range queries {
+		indexes := sqlparser.AcqTokenIndex(query, token)
+		for ti, actualTable := range actualTables {
+			var buf strings.Builder
+			buf.Grow(len(query) + len(indexes)/2*(len(token)-len(actualTable.ActualTableName)))
+			l := 0
+			for i := 1; i < len(indexes); i += 2 {
+				buf.WriteString(query[l:indexes[i-1]] + actualTable.ActualTableName)
+				l = indexes[i] + 1
+			}
+			buf.WriteString(query[l:])
+			result[qi*len(actualTables)+ti] = buf.String()
+		}
+	}
+	return result
 }

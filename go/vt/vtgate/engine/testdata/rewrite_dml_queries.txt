@@ -1,0 +1,5 @@
+delete from t_user
+delete from t_user as t_user where t_user.id = 1
+delete t_user from t_user as t_user where t_user.id = 1
+update t_user set val = 1 where id = 1
+update t_user as t_user set t_user.val = 1 where t_user.id = 1

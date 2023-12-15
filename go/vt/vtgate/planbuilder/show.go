@@ -807,5 +807,5 @@ func buildVschemaVindexesPlan(show *sqlparser.ShowBasic, vschema plancontext.VSc
 
 func RewriteSplitTableNameToFirstTable(in sqlparser.SQLNode, splitTable *vindexes.LogicTableConfig) {
 	tableMap := vindexes.GetSingleFirstActualTableMap(splitTable)
-	sqlparser.RewriteSplitTableName(in, tableMap)
+	sqlparser.ReplaceTbName(in, tableMap, false)
 }
