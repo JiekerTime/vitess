@@ -16,7 +16,7 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
-func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator, isRoot bool) (logicalPlan, error) {
+func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator) (logicalPlan, error) {
 	switch op := op.(type) {
 	case *operators.TableRoute:
 		return transformTableRoutePlan(ctx, op)
@@ -30,13 +30,23 @@ func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operat
 		return transformAggregatorForSplitTable(ctx, op)
 	case *operators.Filter:
 		return transformFilterForSplitTable(ctx, op)
+	case *operators.Distinct:
+		return transformDistinctForSplitTable(ctx, op)
 	}
 
 	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToLogicalPlan)", op))
 }
 
+func transformDistinctForSplitTable(ctx *plancontext.PlanningContext, op *operators.Distinct) (logicalPlan, error) {
+	src, err := transformToTableLogicalPlan(ctx, op.Source)
+	if err != nil {
+		return nil, err
+	}
+	return newDistinct(src, op.Columns, op.Truncate), nil
+}
+
 func transformLimitForSplitTable(ctx *plancontext.PlanningContext, op *operators.Limit) (logicalPlan, error) {
-	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	plan, err := transformToTableLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +55,7 @@ func transformLimitForSplitTable(ctx *plancontext.PlanningContext, op *operators
 }
 
 func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, op *operators.Ordering) (logicalPlan, error) {
-	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	plan, err := transformToTableLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +64,7 @@ func transformOrderingForSplitTable(ctx *plancontext.PlanningContext, op *operat
 }
 
 func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *operators.Projection) (logicalPlan, error) {
-	src, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	src, err := transformToTableLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +243,7 @@ func buildTableInsertLogicalPlan(ctx *plancontext.PlanningContext, rb *operators
 }
 
 func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *operators.Aggregator) (logicalPlan, error) {
-	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	plan, err := transformToTableLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +283,7 @@ func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *oper
 }
 
 func transformFilterForSplitTable(ctx *plancontext.PlanningContext, op *operators.Filter) (logicalPlan, error) {
-	plan, err := transformToTableLogicalPlan(ctx, op.Source, false)
+	plan, err := transformToTableLogicalPlan(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}

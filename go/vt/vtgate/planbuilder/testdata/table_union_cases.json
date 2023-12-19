@@ -676,6 +676,206 @@
   {
     "comment": "union with different target shards",
     "query": "select 1 from t_music where id = 1 union select 1 from t_music where id = 2",
-    "plan": "VT12001: unsupported: distinct in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select 1 from t_music where id = 1 union select 1 from t_music where id = 2",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "0"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Concatenate",
+            "Inputs": [
+              {
+                "OperatorType": "Distinct",
+                "Collations": [
+                  "0"
+                ],
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "EqualUnique-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_music_0 where 1 != 1",
+                    "Query": "select distinct 1 from t_music where id = 1",
+                    "Table": "t_music",
+                    "Values": [
+                      "INT64(1)"
+                    ],
+                    "Vindex": "music_user_map"
+                  }
+                ]
+              },
+              {
+                "OperatorType": "Distinct",
+                "Collations": [
+                  "0"
+                ],
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "EqualUnique-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_music_0 where 1 != 1",
+                    "Query": "select distinct 1 from t_music where id = 2",
+                    "Table": "t_music",
+                    "Values": [
+                      "INT64(2)"
+                    ],
+                    "Vindex": "music_user_map"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
+  },
+  {
+    "comment": "union distinct between a scatter query and a join (other side)",
+    "query": "(select t_user.id, t_user.name from t_user join t_user_extra where t_user_extra.extra = 'asdf') union select 'b','c' from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "(select t_user.id, t_user.name from t_user join t_user_extra where t_user_extra.extra = 'asdf') union select 'b','c' from t_user",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:2)",
+          "(1:3)"
+        ],
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "Concatenate",
+            "Inputs": [
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,L:1,L:2,L:3",
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.id, t_user_0.`name`, weight_string(t_user_0.id), weight_string(t_user_0.`name`) from t_user_0 where 1 != 1",
+                    "Query": "select distinct t_user.id, t_user.`name`, weight_string(t_user.id), weight_string(t_user.`name`) from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                    "Query": "select distinct 1 from t_user_extra where t_user_extra.extra = 'asdf'",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 'b', 'c', weight_string('b'), weight_string('c') from t_user_0 where 1 != 1",
+                "Query": "select distinct 'b', 'c', weight_string('b'), weight_string('c') from t_user",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "union distinct between a scatter query and a join (other side)",
+    "query": "select 'b','c' from t_user union (select t_user.id, t_user.name from t_user join t_user_extra where t_user_extra.extra = 'asdf')",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select 'b','c' from t_user union (select t_user.id, t_user.name from t_user join t_user_extra where t_user_extra.extra = 'asdf')",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "0: utf8mb4_0900_ai_ci",
+          "1: utf8mb4_0900_ai_ci"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Concatenate",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 'b', 'c' from t_user_0 where 1 != 1",
+                "Query": "select distinct 'b', 'c' from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "Join",
+                "Variant": "Join",
+                "JoinColumnIndexes": "L:0,L:1",
+                "TableName": "t_user_t_user_extra",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select t_user_0.id, t_user_0.`name` from t_user_0 where 1 != 1",
+                    "Query": "select distinct t_user.id, t_user.`name` from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                    "Query": "select distinct 1 from t_user_extra where t_user_extra.extra = 'asdf'",
+                    "Table": "t_user_extra"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   }
 ]

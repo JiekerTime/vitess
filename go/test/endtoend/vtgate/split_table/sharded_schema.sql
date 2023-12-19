@@ -14,13 +14,15 @@ CREATE TABLE `t_user_0`
     `intcol`     int(16)           DEFAULT NULL,
     `textcol2`   varchar(128)      DEFAULT NULL,
     `someColumn` varchar(128)      DEFAULT NULL,
-    `col1`       int(16)           DEFAULT NULL,
-    `col2`       int(16)           DEFAULT NULL,
+    `col1`       varchar(128)      DEFAULT NULL,
+    `col2`       varchar(128)      DEFAULT NULL,
     `a`          int(16)           DEFAULT NULL,
     `b`          int(16)           DEFAULT NULL,
     `c`          int(16)           DEFAULT NULL,
     `d`          int(16)           DEFAULT NULL,
     `foo`        int(16)           DEFAULT NULL,
+    `val1`       varchar(128)      DEFAULT NULL,
+    `val2`       varchar(128)      DEFAULT NULL,
     primary key (id)
 ) ENGINE = InnoDB
   CHARSET = utf8mb4;
@@ -41,13 +43,15 @@ CREATE TABLE `t_user_1`
     `intcol`     int(16)           DEFAULT NULL,
     `textcol2`   varchar(128)      DEFAULT NULL,
     `someColumn` varchar(128)      DEFAULT NULL,
-    `col1`       int(16)           DEFAULT NULL,
-    `col2`       int(16)           DEFAULT NULL,
+    `col1`       varchar(128)      DEFAULT NULL,
+    `col2`       varchar(128)      DEFAULT NULL,
     `a`          int(16)           DEFAULT NULL,
     `b`          int(16)           DEFAULT NULL,
     `c`          int(16)           DEFAULT NULL,
     `d`          int(16)           DEFAULT NULL,
     `foo`        int(16)           DEFAULT NULL,
+    `val1`       varchar(128)      DEFAULT NULL,
+    `val2`       varchar(128)      DEFAULT NULL,
     primary key (id)
 ) ENGINE = InnoDB
   CHARSET = utf8mb4;
@@ -294,6 +298,7 @@ CREATE TABLE `t_user_extra_0`
     `baz`      int                 DEFAULT NULL,
     `col`      char(32)   NOT NULL DEFAULT '',
     `foo`      int(16)             DEFAULT NULL,
+    `col1`     int(16)             DEFAULT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
@@ -309,6 +314,7 @@ CREATE TABLE `t_user_extra_1`
     `baz`      int                 DEFAULT NULL,
     `col`      char(32)   NOT NULL DEFAULT '',
     `foo`      int(16)             DEFAULT NULL,
+    `col1`     int(16)             DEFAULT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1

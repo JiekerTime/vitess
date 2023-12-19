@@ -171,10 +171,8 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Hori
 	return expandHorizonForSplitTable(ctx, in)
 }
 
-func checkForSupportSql(ctx *plancontext.PlanningContext, sel *sqlparser.Select) error {
-	if sel.Distinct {
-		return vterrors.VT12001("distinct in split table")
-	} else if hasSubqueryInExprsAndWhere(sel) {
+func checkForSupportSql(_ *plancontext.PlanningContext, sel *sqlparser.Select) error {
+	if hasSubqueryInExprsAndWhere(sel) {
 		return vterrors.VT12001("subquery in split table")
 	}
 	return nil
@@ -201,7 +199,12 @@ func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horiz
 	}
 
 	if qp.NeedsDistinct() {
-		return nil, nil, vterrors.VT12001("distinct in split table")
+		op = &Distinct{
+			Required: true,
+			Source:   op,
+			QP:       qp,
+		}
+		extracted = append(extracted, "Distinct")
 	}
 
 	if sel.Having != nil {
@@ -297,4 +300,44 @@ func createProjectionFromSelectForSplitTable(ctx *plancontext.PlanningContext, h
 		return createProjectionForComplexAggregation(a, qp)
 	}
 	return createProjectionForSimpleAggregation(ctx, a, qp)
+}
+
+func tryPushDistinctForSplitTable(ctx *plancontext.PlanningContext, in *Distinct) (ops.Operator, *rewrite.ApplyResult, error) {
+	if in.Required && in.PushedPerformance {
+		return in, rewrite.SameTree, nil
+	}
+	switch src := in.Source.(type) {
+	case *TableRoute:
+		if isDistinct(src.Source) && src.IsSingleSplitTable() {
+			return src, rewrite.NewTree("distinct not needed", in), nil
+		}
+		if src.IsSingleSplitTable() || !in.Required {
+			return rewrite.Swap(in, src, "push distinct under tableRoute")
+		}
+		if isCrossShard(ctx.GetRoute()) {
+			return rewrite.Swap(in, src, "push distinct under tableRoute, Cross-shard Distinct")
+		}
+
+		if isDistinct(src.Source) {
+			return in, rewrite.SameTree, nil
+		}
+
+		src.Source = &Distinct{Source: src.Source}
+		in.PushedPerformance = true
+
+		return in, rewrite.NewTree("added distinct under tableRoute - kept original", src), nil
+	case *Distinct:
+		src.Required = false
+		src.PushedPerformance = false
+		return src, rewrite.NewTree("remove double distinct", src), nil
+	case *Union:
+		return nil, nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T table type in split table", src))
+	case *ApplyJoin:
+		return nil, nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T table type in split table", src))
+	case *Ordering:
+		in.Source = src.Source
+		return in, rewrite.NewTree("remove ordering under distinct", in), nil
+	}
+
+	return in, rewrite.SameTree, nil
 }

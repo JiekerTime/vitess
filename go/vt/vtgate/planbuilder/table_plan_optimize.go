@@ -14,7 +14,7 @@ func isSameFieldSplitKey(ctx *plancontext.PlanningContext, tableName string) boo
 	//后期可以在这加个缓存
 
 	for _, vtable := range ctx.SemTable.Tables {
-		if vtable.GetVindexTable() == nil {
+		if vtable == nil || vtable.GetVindexTable() == nil {
 			continue
 		}
 		if tableName != vtable.GetVindexTable().Name.String() {

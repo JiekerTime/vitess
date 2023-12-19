@@ -65,7 +65,7 @@ func TestSplitTableOne(t *testing.T) {
 
 // TestPrintSplitTable 用于生成集成测试用例
 func TestPrintSplitTable(t *testing.T) {
-	printTableFile(t, "table_aggr_cases.json")
+	printTableFile(t, "table_union_cases.json")
 }
 
 func testTableFile(t *testing.T, filename, tempDir string, vschema *vschemawrapper.VSchemaWrapper, render bool) {

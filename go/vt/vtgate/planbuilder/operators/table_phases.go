@@ -11,6 +11,8 @@ func (p Phase) actForSplitTable(ctx *plancontext.PlanningContext, op ops.Operato
 		return enableDelegateAggregation(ctx, op)
 	case addAggrOrdering:
 		return addOrderBysForAggregations(ctx, op)
+	case cleanOutPerfDistinct:
+		return removePerformanceDistinctAboveRoute(ctx, op)
 	}
 
 	return op, nil

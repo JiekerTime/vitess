@@ -127,7 +127,7 @@ func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement
 	if err != nil {
 		return nil, err
 	}
-	tablePlan, err = transformToTableLogicalPlan(ctx, tableOperator, true)
+	tablePlan, err = transformToTableLogicalPlan(ctx, tableOperator)
 	if err != nil {
 		return nil, err
 	}

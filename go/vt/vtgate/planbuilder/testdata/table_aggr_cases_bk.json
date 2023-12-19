@@ -40,26 +40,6 @@
     "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
   },
   {
-    "comment":"scatter aggregate using distinct",
-    "query":"select distinct col from t_user",
-    "plan":"VT12001: unsupported: distinct in split table"
-  },
-  {
-    "comment":"optimize group by when using distinct with no aggregation",
-    "query":"select distinct col1, col2 from t_user group by col1, col2",
-    "plan":"VT12001: unsupported: distinct in split table"
-  },
-  {
-    "comment":"scatter aggregate with ambiguous aliases",
-    "query":"select distinct a, b as a from t_user",
-    "plan":"VT12001: unsupported: distinct in split table"
-  },
-  {
-    "comment":"scatter aggregate with complex select list (can't build order by)",
-    "query":"select distinct a+1 from t_user",
-    "plan":"VT12001: unsupported: distinct in split table"
-  },
-  {
     "comment":"select (select 1 from user u having count(ue.col) > 10) from user_extra ue",
     "query":"select (select 1 from t_user u having count(ue.col) > 10) from t_user_extra ue",
     "plan":"VT12001: unsupported: correlated subquery is only supported for EXISTS"

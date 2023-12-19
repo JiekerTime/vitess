@@ -1368,7 +1368,7 @@
   {
     "comment": "HAVING implicitly references table col",
     "query": "select t_user.col1 from t_user having col2 = 2",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select t_user.col1 from t_user having col2 = 2",
       "Instructions": {
@@ -1390,7 +1390,7 @@
   {
     "comment": "TODO: this should be 'Column 'col1' in having clause is ambiguous'\n# non-ambiguous symbol reference",
     "query": "select t_user.col1, t_user_extra.col1 from t_user join t_user_extra having t_user_extra.col1 = 2",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select t_user.col1, t_user_extra.col1 from t_user join t_user_extra having t_user_extra.col1 = 2",
       "Instructions": {
@@ -1432,7 +1432,7 @@
   {
     "comment": "HAVING multi-route",
     "query": "select t_user.col1 as a, t_user.col2, t_user_extra.col3 from t_user join t_user_extra having 1 = 1 and a = 1 and a = t_user.col2 and t_user_extra.col3 = 1",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select t_user.col1 as a, t_user.col2, t_user_extra.col3 from t_user join t_user_extra having 1 = 1 and a = 1 and a = t_user.col2 and t_user_extra.col3 = 1",
       "Instructions": {
@@ -1474,7 +1474,7 @@
   {
     "comment": "HAVING uses subquery",
     "query": "select id from t_user having id in (select col from t_user)",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select id from t_user having id in (select col from t_user)",
       "Instructions": {
@@ -1523,12 +1523,12 @@
   {
     "comment": "Order by, verify outer symtab is searched according to its own context.",
     "query": "select u.id from t_user u having u.id in (select col2 from t_user where t_user.id = u.id order by u.col)",
-    "plan":"VT12001: unsupported: subquery in split table"
+    "plan": "VT12001: unsupported: subquery in split table"
   },
   {
     "comment": "Equal filter with hexadecimal value",
     "query": "select count(*) a from t_user having a = 0x01",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select count(*) a from t_user having a = 0x01",
       "Instructions": {
@@ -1925,7 +1925,7 @@
   {
     "comment": "limit for scatter with bind var",
     "query": "select col from t_user limit :a",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select col from t_user limit :a",
       "Instructions": {
@@ -1953,7 +1953,7 @@
   {
     "comment": "scatter limit after pullout subquery",
     "query": "select col from t_user where col in (select col1 from t_user) limit 1",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select col from t_user where col in (select col1 from t_user) limit 1",
       "Instructions": {
@@ -2179,6 +2179,121 @@
                 "Table": "t_user"
               }
             ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with cross shard query",
+    "query": "select distinct t_user.a from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct t_user.a from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:1)"
+        ],
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1",
+                "Query": "select distinct t_user.a, weight_string(t_user.a) from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                "Query": "select distinct 1 from t_user_extra",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with column alias",
+    "query": "select distinct a as c, a from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct a as c, a from t_user",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:2)",
+          "(1:2)"
+        ],
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a as c, a, weight_string(a) from t_user_0 where 1 != 1",
+            "Query": "select distinct a as c, a, weight_string(a) from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with same column",
+    "query": "select distinct a, a from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct a, a from t_user",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:2)",
+          "(1:2)"
+        ],
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a, a, weight_string(a) from t_user_0 where 1 != 1",
+            "Query": "select distinct a, a, weight_string(a) from t_user",
+            "Table": "t_user"
           }
         ]
       },
