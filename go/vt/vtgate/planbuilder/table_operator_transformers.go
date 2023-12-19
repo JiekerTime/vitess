@@ -97,29 +97,33 @@ func transformProjectionForSplitTable(ctx *plancontext.PlanningContext, op *oper
 }
 
 func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute) (logicalPlan, error) {
-	switch src := op.Source.(type) {
-	case *operators.Delete:
-		return transformTableDeletePlan(ctx, op, src)
-	case *operators.Update:
-		return transformTableUpdatePlan(ctx, op, src)
-	case *operators.TableInsert:
-		return transformInsertPlanForSplitTable(ctx, op, src)
-	}
-
-	sel, _, err := operators.ToSQL(ctx, op.Source)
+	stmt, dmlOp, err := operators.ToSQL(ctx, op.Source)
 	if err != nil {
 		return nil, err
 	}
 
-	selStmt, ok := sel.(sqlparser.SelectStatement)
-	if !ok {
-		return nil, vterrors.VT13001(fmt.Sprintf("dont know how to %T", selStmt))
+	if stmtWithComments, ok := stmt.(sqlparser.Commented); ok && op.Comments != nil {
+		stmtWithComments.SetComments(op.Comments.GetComments())
 	}
 
-	if op.Lock != sqlparser.NoLock {
-		selStmt.SetLock(op.Lock)
+	switch stmt := stmt.(type) {
+	case sqlparser.SelectStatement:
+		if op.Lock != sqlparser.NoLock {
+			stmt.SetLock(op.Lock)
+		}
+		return buildTableRouteLogicalPlan(ctx, op, stmt)
+	case *sqlparser.Delete:
+		return buildTableDeleteLogicalPlan(ctx, op, dmlOp, stmt)
+	case *sqlparser.Update:
+		return buildTableUpdateLogicalPlan(ctx, op, dmlOp, stmt)
+	case *sqlparser.Insert:
+		return buildTableInsertLogicalPlan(ctx, op, dmlOp, stmt)
+	default:
+		return nil, vterrors.VT13001(fmt.Sprintf("dont know how to %T", stmt))
 	}
+}
 
+func buildTableRouteLogicalPlan(ctx *plancontext.PlanningContext, op *operators.TableRoute, stmt sqlparser.SelectStatement) (logicalPlan, error) {
 	ksERoute := ctx.GetRoute()
 	eroute, err := routeToEngineTableRoute(ctx, ksERoute.RoutingParameters, op)
 	if err != nil {
@@ -142,20 +146,25 @@ func transformTableRoutePlan(ctx *plancontext.PlanningContext, op *operators.Tab
 	}
 
 	return &tableRoute{
-		Select: selStmt,
+		Select: stmt,
 		eroute: eroute,
 	}, nil
 }
 
-func transformTableDeletePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute, del *operators.Delete) (logicalPlan, error) {
-	ast := del.AST
-	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
-	if err := op.Routing.UpdateTableRoutingParams(ctx, rp); err != nil {
+func buildTableDeleteLogicalPlan(
+	ctx *plancontext.PlanningContext,
+	rb *operators.TableRoute,
+	dmlOp ops.Operator,
+	stmt *sqlparser.Delete,
+) (logicalPlan, error) {
+	del := dmlOp.(*operators.Delete)
+	rp := newTableRoutingParams(ctx, rb.Routing.OpCode())
+	err := rb.Routing.UpdateTableRoutingParams(ctx, rp)
+	if err != nil {
 		return nil, err
 	}
-
 	edml := &engine.TableDML{
-		AST:             ast,
+		AST:             stmt,
 		KsidVindex:      ctx.DMLEngine.KsidVindex,
 		KsidLength:      ctx.DMLEngine.KsidLength,
 		TableNames:      []string{del.QTable.Table.Name.String()},
@@ -170,15 +179,20 @@ func transformTableDeletePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 	return &primitiveWrapper{prim: e}, nil
 }
 
-func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.TableRoute, updateOperator *operators.Update) (logicalPlan, error) {
-	ast := updateOperator.AST
-	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
-	if err := op.Routing.UpdateTableRoutingParams(ctx, rp); err != nil {
+func buildTableUpdateLogicalPlan(
+	ctx *plancontext.PlanningContext,
+	rb *operators.TableRoute,
+	dmlOp ops.Operator,
+	stmt *sqlparser.Update,
+) (logicalPlan, error) {
+	updateOperator := dmlOp.(*operators.Update)
+	rp := newTableRoutingParams(ctx, rb.Routing.OpCode())
+	if err := rb.Routing.UpdateTableRoutingParams(ctx, rp); err != nil {
 		return nil, err
 	}
 
 	edml := &engine.TableDML{
-		AST:             ast,
+		AST:             stmt,
 		KsidVindex:      ctx.DMLEngine.KsidVindex,
 		KsidLength:      ctx.DMLEngine.KsidLength,
 		TableNames:      []string{updateOperator.QTable.Table.Name.String()},
@@ -191,6 +205,31 @@ func transformTableUpdatePlan(ctx *plancontext.PlanningContext, op *operators.Ta
 		TableDML: edml,
 	}
 	return &primitiveWrapper{prim: e}, nil
+}
+
+func buildTableInsertLogicalPlan(ctx *plancontext.PlanningContext, rb *operators.TableRoute, op ops.Operator, stmt *sqlparser.Insert) (logicalPlan, error) {
+	ins := op.(*operators.TableInsert)
+
+	eins := ctx.GetInsert()
+	eins.Opcode = mapToInsertOpCodeForSplitTable(rb.Routing.OpCode(), ins.Input != nil)
+	eins.AST = ins.AST
+	eins.TableColVindexes = ins.TableColVindexes
+	eins.TableVindexValues = ins.TableVindexValues
+	eins.TableVindexValueOffset = ins.TableVindexValueOffset
+	insLogicPlan := &insert{eInsert: &eins}
+
+	// we would need to generate the query on the fly. The only exception here is
+	// when unsharded query with autoincrement for that there is no input operator.
+	if eins.Opcode != engine.InsertUnsharded || ins.Input != nil {
+		eins.Prefix, eins.Columns, eins.Mid = GenerateInsertShardedQueryForSplitTable(ins.AST)
+	}
+
+	if ins.Input == nil {
+		eins.Query = generateQuery(stmt)
+	} else {
+		return nil, vterrors.VT12001("Unsupport split table insert into select")
+	}
+	return insLogicPlan, nil
 }
 
 func transformAggregatorForSplitTable(ctx *plancontext.PlanningContext, op *operators.Aggregator) (logicalPlan, error) {
@@ -313,24 +352,6 @@ func getAllTableNamesForSplitTable(op *operators.TableRoute) ([]string, error) {
 	}
 	sort.Strings(tableNames)
 	return tableNames, nil
-}
-
-func transformInsertPlanForSplitTable(ctx *plancontext.PlanningContext, op *operators.TableRoute, ins *operators.TableInsert) (i *insert, err error) {
-	eins := ctx.GetInsert()
-	eins.Opcode = mapToInsertOpCodeForSplitTable(op.Routing.OpCode(), ins.Input != nil)
-	eins.TableColVindexes = ins.TableColVindexes
-	eins.TableVindexValues = ins.TableVindexValues
-	eins.TableVindexValueOffset = ins.TableVindexValueOffset
-	i = &insert{eInsert: &eins}
-	if eins.Opcode != engine.InsertUnsharded || ins.Input != nil {
-		eins.Prefix, eins.Columns, eins.Mid = GenerateInsertShardedQueryForSplitTable(eins.AST)
-	}
-	if ins.Input == nil {
-		eins.Query = generateQuery(eins.AST)
-	} else {
-		return nil, vterrors.VT12001("Unsupport split table insert into select")
-	}
-	return
 }
 
 func GenerateInsertShardedQueryForSplitTable(ins *sqlparser.Insert) (prefix string, columns string, mids sqlparser.Values) {

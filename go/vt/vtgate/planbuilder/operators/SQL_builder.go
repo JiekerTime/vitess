@@ -391,6 +391,8 @@ func buildQuery(op ops.Operator, qb *queryBuilder) error {
 		buildDML(op, qb)
 	case *Insert:
 		buildDML(op, qb)
+	case *TableInsert:
+		buildDML(op, qb)
 	default:
 		return vterrors.VT13001(fmt.Sprintf("unknown operator to convert to SQL: %T", op))
 	}

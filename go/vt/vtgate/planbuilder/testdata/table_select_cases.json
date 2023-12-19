@@ -1159,5 +1159,101 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "Comments",
+    "query": "select /* comment */ t_user.col from t_user",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select /* comment */ t_user.col from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+        "Query": "select /* comment */ t_user.col from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "Comments",
+    "query": "select /* comment */ t_user.col from t_user join t_user_extra",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select /* comment */ t_user.col from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col from t_user_0 where 1 != 1",
+            "Query": "select /* comment */ t_user.col from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+            "Query": "select /* comment */ 1 from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Comments",
+    "query": "select /* comment */ t_user.col from t_user group by id",
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select /* comment */ t_user.col from t_user group by id",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "any_value(0) AS col",
+        "GroupBy": "(1|2)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.col, id, weight_string(id) from t_user_0 where 1 != 1 group by id, weight_string(id)",
+            "OrderBy": "(1|2) ASC",
+            "Query": "select /* comment */ t_user.col, id, weight_string(id) from t_user group by id, weight_string(id) order by id asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

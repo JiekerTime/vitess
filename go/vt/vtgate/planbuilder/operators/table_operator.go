@@ -12,6 +12,7 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 // TablePlanQuery creates a query plan for a given SQL statement
@@ -117,7 +118,7 @@ func createOperatorFromDeleteForSplitTable(ctx *plancontext.PlanningContext, del
 
 	tableDelete := &Delete{
 		QTable: qt,
-		VTable: nil,
+		VTable: &vindexes.Table{Name: tableName.Name},
 		AST:    deleteStmt,
 	}
 	tableRoute := &TableRoute{
@@ -147,6 +148,17 @@ func createOperatorFromUpdateForSplitTable(ctx *plancontext.PlanningContext, upd
 		}
 	}
 
+	assignments := make([]SetExpr, len(updateStmt.Exprs))
+	for idx, updExpr := range updateStmt.Exprs {
+		expr := updExpr.Expr
+		proj := newProjExpr(aeWrap(expr))
+
+		assignments[idx] = SetExpr{
+			Name: updExpr.Name,
+			Expr: proj,
+		}
+	}
+
 	solves := ctx.SemTable.TableSetFor(qt.Alias)
 	routing := newTableShardedRouting(logicTableConfig, solves)
 
@@ -163,11 +175,16 @@ func createOperatorFromUpdateForSplitTable(ctx *plancontext.PlanningContext, upd
 
 	tableRoute := &TableRoute{
 		Source: &Update{
-			QTable: qt,
-			VTable: nil,
-			AST:    updateStmt,
+			QTable:      qt,
+			VTable:      nil,
+			AST:         updateStmt,
+			Assignments: assignments,
+			Ignore:      updateStmt.Ignore,
+			Limit:       updateStmt.Limit,
+			OrderBy:     updateStmt.OrderBy,
 		},
-		Routing: routing,
+		Routing:  routing,
+		Comments: updateStmt.Comments,
 	}
 
 	return tableRoute, nil
@@ -185,6 +202,7 @@ func createOperatorFromInsertForSplitTable(ctx *plancontext.PlanningContext, ins
 	}
 	insOp := &TableInsert{
 		TableColVindexes: splitTableConfig,
+		AST:              ins,
 	}
 	route := &TableRoute{
 		Source:  insOp,

@@ -67,6 +67,10 @@ func (d *Delete) GetOrdering() ([]ops.OrderBy, error) {
 }
 
 func (d *Delete) ShortDescription() string {
+	if d.VTable.Keyspace == nil {
+		return fmt.Sprintf("%s %s", d.VTable.Name.String(), sqlparser.String(d.AST.Where))
+	}
+
 	return fmt.Sprintf("%s.%s %s", d.VTable.Keyspace.Name, d.VTable.Name.String(), sqlparser.String(d.AST.Where))
 }
 

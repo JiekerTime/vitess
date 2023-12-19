@@ -1,6 +1,7 @@
 package operators
 
 import (
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
@@ -9,6 +10,9 @@ import (
 var _ ops.Operator = (*TableInsert)(nil)
 
 type TableInsert struct {
+	// AST represents the insert statement from the SQL syntax.
+	AST *sqlparser.Insert
+
 	TableColVindexes *vindexes.LogicTableConfig
 
 	//这里分片是个三维数组，因为分片的元数据一个表可以有多个ColVindexes，分表的元数据没有兼容这个所以定义为二维数组
@@ -47,4 +51,8 @@ func (t *TableInsert) ShortDescription() string {
 
 func (t *TableInsert) GetOrdering() ([]ops.OrderBy, error) {
 	return nil, nil
+}
+
+func (t *TableInsert) Statement() sqlparser.Statement {
+	return t.AST
 }

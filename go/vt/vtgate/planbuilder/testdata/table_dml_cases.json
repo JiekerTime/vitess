@@ -1170,5 +1170,81 @@
         "user.t_order"
       ]
     }
+  },
+  {
+    "comment": "delete comment",
+    "query": "delete /* comment123 */ from t_user",
+    "plan": {
+      "QueryType": "DELETE",
+      "Original": "delete /* comment123 */ from t_user",
+      "Instructions": {
+        "OperatorType": "TableDelete",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Queries": "delete /* comment123 */ from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "update comment",
+    "query": "update /* comment123 */ t_user set val = 1 where id = 1",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update /* comment123 */ t_user set val = 1 where id = 1",
+      "Instructions": {
+        "OperatorType": "TableUpdate",
+        "Variant": "EqualUnique-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Queries": "update /* comment123 */ t_user set val = 1 where id = 1",
+        "Table": "t_user",
+        "Values": [
+          "INT64(1)"
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "insert comment",
+    "query": "insert /* comment123 */into t_music(user_id, id, a) values(1, 2, 'a') on duplicate key update user_id = values(user_id)",
+    "plan": {
+      "QueryType": "INSERT",
+      "Original": "insert /* comment123 */into t_music(user_id, id, a) values(1, 2, 'a') on duplicate key update user_id = values(user_id)",
+      "Instructions": {
+        "OperatorType": "Insert",
+        "Variant": "TableSharded",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "InsertIgnore": true,
+        "Query": "insert /* comment123 */ into t_music(user_id, id, a) values (:_user_id_0, :_id_0, :_a_0) on duplicate key update user_id = values(user_id)",
+        "TableName": "t_music",
+        "VindexValues": {
+          "music_user_map": "INT64(2)",
+          "user_index": "INT64(1)"
+        },
+        "TableVindexValues": {
+          "split_table_hash": "VARCHAR(\"a\")"
+        }
+      },
+      "TablesUsed": [
+        "user.t_music"
+      ]
+    }
   }
 ]
