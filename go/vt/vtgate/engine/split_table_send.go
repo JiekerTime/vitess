@@ -18,16 +18,15 @@ package engine
 
 import (
 	"context"
-	"vitess.io/vitess/go/vt/sqlparser"
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
+	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
-
-	querypb "vitess.io/vitess/go/vt/proto/query"
 )
 
 var _ Primitive = (*SplitTableSend)(nil)
@@ -110,10 +109,10 @@ func (s *SplitTableSend) TryExecute(ctx context.Context, vcursor VCursor, bindVa
 
 	qrs := new(sqltypes.Result)
 	rollbackOnError := s.IsDML // for non-dml queries, there's no need to do a rollback
-
-	for indexForTable, _ := range querieses[0] {
+	query0 := querieses[0]
+	for indexForTable := range query0 {
 		executeQuery := make([]*querypb.BoundQuery, 0, len(rss))
-		for i, _ := range rss {
+		for i := range rss {
 			executeQuery = append(executeQuery, querieses[i][indexForTable])
 		}
 		qr, errQr := vcursor.ExecuteMultiShard(ctx, s, rss, executeQuery, rollbackOnError, s.canAutoCommit(vcursor, rss))
@@ -136,7 +135,7 @@ func buildSplitTableQueries(rss []*srvtopo.ResolvedShard, s *SplitTableSend, bin
 	if err != nil {
 		return nil, err
 	}
-	for i, _ := range rss {
+	for i := range rss {
 		var queries []*querypb.BoundQuery
 		for indexForTable := range actualTableFirst.ActualTableList {
 			actualTableNames := make(map[string]string, len(actualTableFirst.ActualTableList))

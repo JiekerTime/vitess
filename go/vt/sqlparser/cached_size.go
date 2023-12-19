@@ -284,7 +284,7 @@ func (cached *AlterVschema) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(80)
+		size += int64(96)
 	}
 	// field Table vitess.io/vitess/go/vt/sqlparser.TableName
 	size += cached.Table.CachedSize(false)
@@ -1435,6 +1435,16 @@ func (cached *FramePoint) CachedSize(alloc bool) int64 {
 	// field Expr vitess.io/vitess/go/vt/sqlparser.Expr
 	if cc, ok := cached.Expr.(cachedObject); ok {
 		size += cc.CachedSize(true)
+	}
+	return size
+}
+func (cached *FromFirstLastClause) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(8)
 	}
 	return size
 }
@@ -2994,6 +3004,16 @@ func (cached *NtileExpr) CachedSize(alloc bool) int64 {
 	size += cached.OverClause.CachedSize(true)
 	return size
 }
+func (cached *NullTreatmentClause) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(8)
+	}
+	return size
+}
 func (cached *Offset) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -3626,6 +3646,20 @@ func (cached *RevertMigration) CachedSize(alloc bool) int64 {
 	size += hack.RuntimeAllocSize(int64(len(cached.UUID)))
 	// field Comments *vitess.io/vitess/go/vt/sqlparser.ParsedComments
 	size += cached.Comments.CachedSize(true)
+	return size
+}
+func (cached *RootNode) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(16)
+	}
+	// field SQLNode vitess.io/vitess/go/vt/sqlparser.SQLNode
+	if cc, ok := cached.SQLNode.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
 	return size
 }
 func (cached *SRollback) CachedSize(alloc bool) int64 {

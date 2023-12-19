@@ -51,6 +51,7 @@ func TestSplitTablePlan(t *testing.T) {
 	testTableFile(t, "table_wireup_cases.json", output, vschema, false)
 }
 
+// TestSplitTableOne is debug case
 func TestSplitTableOne(t *testing.T) {
 	oprewriters.DebugOperatorTree = true
 	vschema := &vschemawrapper.VSchemaWrapper{

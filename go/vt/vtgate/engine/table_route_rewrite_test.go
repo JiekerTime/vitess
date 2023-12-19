@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
@@ -377,7 +378,7 @@ func loadQueries(t testing.TB, filename string) (queries []string) {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-
+			panic(err)
 		}
 	}(file)
 

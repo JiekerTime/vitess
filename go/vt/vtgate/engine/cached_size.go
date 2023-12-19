@@ -387,7 +387,7 @@ func (cached *Insert) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(320)
+		size += int64(352)
 	}
 	// field Keyspace *vitess.io/vitess/go/vt/vtgate/vindexes.Keyspace
 	size += cached.Keyspace.CachedSize(true)
@@ -445,6 +445,8 @@ func (cached *Insert) CachedSize(alloc bool) int64 {
 	}
 	// field Suffix string
 	size += hack.RuntimeAllocSize(int64(len(cached.Suffix)))
+	// field Columns string
+	size += hack.RuntimeAllocSize(int64(len(cached.Columns)))
 	// field VindexValueOffset [][]int
 	{
 		size += hack.RuntimeAllocSize(int64(cap(cached.VindexValueOffset)) * int64(24))
@@ -819,6 +821,39 @@ func (cached *RevertMigration) CachedSize(alloc bool) int64 {
 	}
 	return size
 }
+
+//go:nocheckptr
+func (cached *RewriteCache) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(48)
+	}
+	// field CachedNode vitess.io/vitess/go/vt/sqlparser.SQLNode
+	if cc, ok := cached.CachedNode.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field CachedStmtWithToken string
+	size += hack.RuntimeAllocSize(int64(len(cached.CachedStmtWithToken)))
+	// field LogicalNameTokens map[string]string
+	if cached.LogicalNameTokens != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.LogicalNameTokens)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 272))
+		if len(cached.LogicalNameTokens) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 272))
+		}
+		for k, v := range cached.LogicalNameTokens {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += hack.RuntimeAllocSize(int64(len(v)))
+		}
+	}
+	return size
+}
 func (cached *Route) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -1094,6 +1129,104 @@ func (cached *SimpleProjection) CachedSize(alloc bool) int64 {
 	}
 	return size
 }
+func (cached *SplitTableDDL) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field Keyspace *vitess.io/vitess/go/vt/vtgate/vindexes.Keyspace
+	size += cached.Keyspace.CachedSize(true)
+	// field SQL string
+	size += hack.RuntimeAllocSize(int64(len(cached.SQL)))
+	// field DDL vitess.io/vitess/go/vt/sqlparser.DDLStatement
+	if cc, ok := cached.DDL.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field NormalDDL *vitess.io/vitess/go/vt/vtgate/engine.SplitTableSend
+	size += cached.NormalDDL.CachedSize(true)
+	// field OnlineDDL *vitess.io/vitess/go/vt/vtgate/engine.SplitTableOnlineDDL
+	size += cached.OnlineDDL.CachedSize(true)
+	return size
+}
+
+//go:nocheckptr
+func (cached *SplitTableOnlineDDL) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(80)
+	}
+	// field Keyspace *vitess.io/vitess/go/vt/vtgate/vindexes.Keyspace
+	size += cached.Keyspace.CachedSize(true)
+	// field DDL vitess.io/vitess/go/vt/sqlparser.DDLStatement
+	if cc, ok := cached.DDL.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field SQL string
+	size += hack.RuntimeAllocSize(int64(len(cached.SQL)))
+	// field DDLStrategySetting *vitess.io/vitess/go/vt/schema.DDLStrategySetting
+	size += cached.DDLStrategySetting.CachedSize(true)
+	// field TargetDestination vitess.io/vitess/go/vt/key.Destination
+	if cc, ok := cached.TargetDestination.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field SplitTableConfig vitess.io/vitess/go/vt/vtgate/vindexes.SplitTableMap
+	if cached.SplitTableConfig != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.SplitTableConfig)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
+		if len(cached.SplitTableConfig) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
+		}
+		for k, v := range cached.SplitTableConfig {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += v.CachedSize(true)
+		}
+	}
+	return size
+}
+
+//go:nocheckptr
+func (cached *SplitTableSend) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field Keyspace *vitess.io/vitess/go/vt/vtgate/vindexes.Keyspace
+	size += cached.Keyspace.CachedSize(true)
+	// field TargetDestination vitess.io/vitess/go/vt/key.Destination
+	if cc, ok := cached.TargetDestination.(cachedObject); ok {
+		size += cc.CachedSize(true)
+	}
+	// field Query string
+	size += hack.RuntimeAllocSize(int64(len(cached.Query)))
+	// field SplitTableConfig vitess.io/vitess/go/vt/vtgate/vindexes.SplitTableMap
+	if cached.SplitTableConfig != nil {
+		size += int64(48)
+		hmap := reflect.ValueOf(cached.SplitTableConfig)
+		numBuckets := int(math.Pow(2, float64((*(*uint8)(unsafe.Pointer(hmap.Pointer() + uintptr(9)))))))
+		numOldBuckets := (*(*uint16)(unsafe.Pointer(hmap.Pointer() + uintptr(10))))
+		size += hack.RuntimeAllocSize(int64(numOldBuckets * 208))
+		if len(cached.SplitTableConfig) > 0 || numBuckets > 1 {
+			size += hack.RuntimeAllocSize(int64(numBuckets * 208))
+		}
+		for k, v := range cached.SplitTableConfig {
+			size += hack.RuntimeAllocSize(int64(len(k)))
+			size += v.CachedSize(true)
+		}
+	}
+	return size
+}
 func (cached *SysVarCheckAndIgnore) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -1253,7 +1386,7 @@ func (cached *TableRoutingParameters) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(48)
+		size += int64(80)
 	}
 	// field TableValues []vitess.io/vitess/go/vt/vtgate/evalengine.Expr
 	{
@@ -1279,6 +1412,8 @@ func (cached *TableRoutingParameters) CachedSize(alloc bool) int64 {
 			size += v.CachedSize(true)
 		}
 	}
+	// field RewriteCache *vitess.io/vitess/go/vt/vtgate/engine.RewriteCache
+	size += cached.RewriteCache.CachedSize(true)
 	return size
 }
 
@@ -1289,7 +1424,7 @@ func (cached *TableShow) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(48)
+		size += int64(64)
 	}
 	// field Input vitess.io/vitess/go/vt/vtgate/engine.Primitive
 	if cc, ok := cached.Input.(cachedObject); ok {

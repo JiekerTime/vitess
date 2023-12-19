@@ -1830,7 +1830,8 @@ func (cmp *Comparator) RefOfAlterVschema(a, b *AlterVschema) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Action == b.Action &&
+	return a.TableCount == b.TableCount &&
+		a.Action == b.Action &&
 		cmp.TableName(a.Table, b.Table) &&
 		cmp.RefOfVindexSpec(a.VindexSpec, b.VindexSpec) &&
 		cmp.SliceOfIdentifierCI(a.VindexCols, b.VindexCols) &&

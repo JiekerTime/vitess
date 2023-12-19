@@ -19,7 +19,6 @@ package sqlparser
 
 import (
 	"fmt"
-	"strconv"
 
 	"vitess.io/vitess/go/sqltypes"
 )
@@ -381,9 +380,8 @@ func (node *AlterVschema) formatFast(buf *TrackedBuffer) {
 		}
 		if node.TableCount != 0 {
 			buf.WriteString(" tablecount ")
-			buf.WriteString(strconv.Itoa(node.TableCount))
+			buf.WriteString(fmt.Sprintf("%d", node.TableCount))
 		}
-
 	case DropColVindexDDLAction:
 		buf.WriteString("alter vschema on ")
 		node.Table.formatFast(buf)

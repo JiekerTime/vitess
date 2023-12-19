@@ -7816,7 +7816,7 @@ var yyPgo = [...]int{
 	2762, 2756, 2743, 3841, 0, 128, 2736, 223, 2650,
 }
 
-//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8757
+//line sql.y:8757
 type yySymType struct {
 	union             any
 	empty             struct{}
@@ -10299,7 +10299,7 @@ yydefault:
 
 	case 1:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:605
+//line sql.y:605
 		{
 			stmt := yyDollar[2].statementUnion()
 			// If the statement is empty and we have comments
@@ -10313,58 +10313,58 @@ yydefault:
 		}
 	case 2:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:618
+//line sql.y:618
 		{
 		}
 	case 3:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:619
+//line sql.y:619
 		{
 		}
 	case 4:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:623
+//line sql.y:623
 		{
 			yyLOCAL = yyDollar[1].selStmtUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 41:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:663
+//line sql.y:663
 		{
 			setParseTree(yylex, nil)
 		}
 	case 42:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:669
+//line sql.y:669
 		{
 			yyLOCAL = NewVariableExpression(yyDollar[1].str, SingleAt)
 		}
 		yyVAL.union = yyLOCAL
 	case 43:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:675
+//line sql.y:675
 		{
 			yyVAL.identifierCI = NewIdentifierCI(string(yyDollar[1].str))
 		}
 	case 44:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:680
+//line sql.y:680
 		{
 			yyVAL.identifierCI = NewIdentifierCI("")
 		}
 	case 45:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:684
+//line sql.y:684
 		{
 			yyVAL.identifierCI = yyDollar[1].identifierCI
 		}
 	case 46:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:690
+//line sql.y:690
 		{
 			yyLOCAL = NewVariableExpression(string(yyDollar[1].str), SingleAt)
 		}
@@ -10372,7 +10372,7 @@ yydefault:
 	case 47:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:694
+//line sql.y:694
 		{
 			yyLOCAL = NewVariableExpression(string(yyDollar[1].str), DoubleAt)
 		}
@@ -10380,7 +10380,7 @@ yydefault:
 	case 48:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:700
+//line sql.y:700
 		{
 			yyLOCAL = &OtherAdmin{}
 		}
@@ -10388,7 +10388,7 @@ yydefault:
 	case 49:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:706
+//line sql.y:706
 		{
 			yyLOCAL = &Load{}
 		}
@@ -10396,7 +10396,7 @@ yydefault:
 	case 50:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *With
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:712
+//line sql.y:712
 		{
 			yyLOCAL = &With{ctes: yyDollar[2].ctesUnion(), Recursive: false}
 		}
@@ -10404,7 +10404,7 @@ yydefault:
 	case 51:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *With
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:716
+//line sql.y:716
 		{
 			yyLOCAL = &With{ctes: yyDollar[3].ctesUnion(), Recursive: true}
 		}
@@ -10412,7 +10412,7 @@ yydefault:
 	case 52:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *With
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:721
+//line sql.y:721
 		{
 			yyLOCAL = nil
 		}
@@ -10420,14 +10420,14 @@ yydefault:
 	case 53:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *With
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:725
+//line sql.y:725
 		{
 			yyLOCAL = yyDollar[1].withUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 54:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:731
+//line sql.y:731
 		{
 			yySLICE := (*[]*CommonTableExpr)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].cteUnion())
@@ -10435,7 +10435,7 @@ yydefault:
 	case 55:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*CommonTableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:735
+//line sql.y:735
 		{
 			yyLOCAL = []*CommonTableExpr{yyDollar[1].cteUnion()}
 		}
@@ -10443,7 +10443,7 @@ yydefault:
 	case 56:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *CommonTableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:741
+//line sql.y:741
 		{
 			yyLOCAL = &CommonTableExpr{ID: yyDollar[1].identifierCS, Columns: yyDollar[2].columnsUnion(), Subquery: yyDollar[4].subqueryUnion()}
 		}
@@ -10451,7 +10451,7 @@ yydefault:
 	case 57:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:747
+//line sql.y:747
 		{
 			yyLOCAL = yyDollar[2].selStmtUnion()
 		}
@@ -10459,7 +10459,7 @@ yydefault:
 	case 58:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:751
+//line sql.y:751
 		{
 			yyLOCAL = yyDollar[2].selStmtUnion()
 		}
@@ -10467,7 +10467,7 @@ yydefault:
 	case 59:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:755
+//line sql.y:755
 		{
 			setLockInSelect(yyDollar[2].selStmtUnion(), yyDollar[3].lockUnion())
 			yyLOCAL = yyDollar[2].selStmtUnion()
@@ -10476,7 +10476,7 @@ yydefault:
 	case 60:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:778
+//line sql.y:778
 		{
 			yyDollar[1].selStmtUnion().SetOrderBy(yyDollar[2].orderByUnion())
 			yyDollar[1].selStmtUnion().SetLimit(yyDollar[3].limitUnion())
@@ -10486,7 +10486,7 @@ yydefault:
 	case 61:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:784
+//line sql.y:784
 		{
 			yyDollar[1].selStmtUnion().SetLimit(yyDollar[2].limitUnion())
 			yyLOCAL = yyDollar[1].selStmtUnion()
@@ -10495,7 +10495,7 @@ yydefault:
 	case 62:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:789
+//line sql.y:789
 		{
 			yyDollar[1].selStmtUnion().SetOrderBy(yyDollar[2].orderByUnion())
 			yyDollar[1].selStmtUnion().SetLimit(yyDollar[3].limitUnion())
@@ -10505,7 +10505,7 @@ yydefault:
 	case 63:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:795
+//line sql.y:795
 		{
 			yyDollar[2].selStmtUnion().SetWith(yyDollar[1].withUnion())
 			yyDollar[2].selStmtUnion().SetOrderBy(yyDollar[3].orderByUnion())
@@ -10516,7 +10516,7 @@ yydefault:
 	case 64:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:802
+//line sql.y:802
 		{
 			yyDollar[2].selStmtUnion().SetWith(yyDollar[1].withUnion())
 			yyDollar[2].selStmtUnion().SetLimit(yyDollar[3].limitUnion())
@@ -10526,7 +10526,7 @@ yydefault:
 	case 65:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:808
+//line sql.y:808
 		{
 			yyDollar[2].selStmtUnion().SetWith(yyDollar[1].withUnion())
 			yyDollar[2].selStmtUnion().SetOrderBy(yyDollar[3].orderByUnion())
@@ -10536,14 +10536,14 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 66:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:815
+//line sql.y:815
 		{
 			yyDollar[2].selStmtUnion().SetWith(yyDollar[1].withUnion())
 		}
 	case 67:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:819
+//line sql.y:819
 		{
 			yyLOCAL = NewSelect(Comments(yyDollar[2].strs), SelectExprs{&Nextval{Expr: yyDollar[5].exprUnion()}}, []string{yyDollar[3].str} /*options*/, nil, TableExprs{&AliasedTableExpr{Expr: yyDollar[7].tableName}}, nil /*where*/, nil /*groupBy*/, nil /*having*/, nil)
 		}
@@ -10551,7 +10551,7 @@ yydefault:
 	case 68:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:825
+//line sql.y:825
 		{
 			yyLOCAL = yyDollar[1].selStmtUnion()
 		}
@@ -10559,7 +10559,7 @@ yydefault:
 	case 69:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:829
+//line sql.y:829
 		{
 			yyLOCAL = &Union{Left: yyDollar[1].selStmtUnion(), Distinct: yyDollar[2].booleanUnion(), Right: yyDollar[3].selStmtUnion()}
 		}
@@ -10567,7 +10567,7 @@ yydefault:
 	case 70:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:833
+//line sql.y:833
 		{
 			yyLOCAL = &Union{Left: yyDollar[1].selStmtUnion(), Distinct: yyDollar[2].booleanUnion(), Right: yyDollar[3].selStmtUnion()}
 		}
@@ -10575,7 +10575,7 @@ yydefault:
 	case 71:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:837
+//line sql.y:837
 		{
 			yyLOCAL = &Union{Left: yyDollar[1].selStmtUnion(), Distinct: yyDollar[2].booleanUnion(), Right: yyDollar[3].selStmtUnion()}
 		}
@@ -10583,7 +10583,7 @@ yydefault:
 	case 72:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:841
+//line sql.y:841
 		{
 			yyLOCAL = &Union{Left: yyDollar[1].selStmtUnion(), Distinct: yyDollar[2].booleanUnion(), Right: yyDollar[3].selStmtUnion()}
 		}
@@ -10591,7 +10591,7 @@ yydefault:
 	case 73:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:847
+//line sql.y:847
 		{
 			yyLOCAL = yyDollar[1].selStmtUnion()
 		}
@@ -10599,7 +10599,7 @@ yydefault:
 	case 74:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:851
+//line sql.y:851
 		{
 			setLockInSelect(yyDollar[1].selStmtUnion(), yyDollar[2].lockUnion())
 			yyLOCAL = yyDollar[1].selStmtUnion()
@@ -10608,7 +10608,7 @@ yydefault:
 	case 75:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:856
+//line sql.y:856
 		{
 			yyLOCAL = yyDollar[1].selStmtUnion()
 		}
@@ -10616,7 +10616,7 @@ yydefault:
 	case 76:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:860
+//line sql.y:860
 		{
 			yyLOCAL = yyDollar[1].selStmtUnion()
 		}
@@ -10624,7 +10624,7 @@ yydefault:
 	case 77:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:866
+//line sql.y:866
 		{
 			yyLOCAL = yyDollar[2].selStmtUnion()
 		}
@@ -10632,7 +10632,7 @@ yydefault:
 	case 78:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:870
+//line sql.y:870
 		{
 			yyDollar[1].selStmtUnion().SetInto(yyDollar[2].selectIntoUnion())
 			yyLOCAL = yyDollar[1].selStmtUnion()
@@ -10641,7 +10641,7 @@ yydefault:
 	case 79:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:875
+//line sql.y:875
 		{
 			yyDollar[1].selStmtUnion().SetInto(yyDollar[2].selectIntoUnion())
 			yyDollar[1].selStmtUnion().SetLock(yyDollar[3].lockUnion())
@@ -10651,7 +10651,7 @@ yydefault:
 	case 80:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:881
+//line sql.y:881
 		{
 			yyDollar[1].selStmtUnion().SetInto(yyDollar[3].selectIntoUnion())
 			yyDollar[1].selStmtUnion().SetLock(yyDollar[2].lockUnion())
@@ -10661,7 +10661,7 @@ yydefault:
 	case 81:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:887
+//line sql.y:887
 		{
 			yyDollar[1].selStmtUnion().SetInto(yyDollar[2].selectIntoUnion())
 			yyLOCAL = yyDollar[1].selStmtUnion()
@@ -10670,7 +10670,7 @@ yydefault:
 	case 82:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:894
+//line sql.y:894
 		{
 			yyLOCAL = &Stream{Comments: Comments(yyDollar[2].strs).Parsed(), SelectExpr: yyDollar[3].selectExprUnion(), Table: yyDollar[5].tableName}
 		}
@@ -10678,7 +10678,7 @@ yydefault:
 	case 83:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:900
+//line sql.y:900
 		{
 			yyLOCAL = &VStream{Comments: Comments(yyDollar[2].strs).Parsed(), SelectExpr: yyDollar[3].selectExprUnion(), Table: yyDollar[5].tableName, Where: NewWhere(WhereClause, yyDollar[6].exprUnion()), Limit: yyDollar[7].limitUnion()}
 		}
@@ -10686,7 +10686,7 @@ yydefault:
 	case 84:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:908
+//line sql.y:908
 		{
 			yyLOCAL = NewSelect(Comments(yyDollar[2].strs), yyDollar[4].selectExprsUnion() /*SelectExprs*/, yyDollar[3].strs /*options*/, yyDollar[5].selectIntoUnion() /*into*/, yyDollar[6].tableExprsUnion() /*from*/, NewWhere(WhereClause, yyDollar[7].exprUnion()), GroupBy(yyDollar[8].exprsUnion()), NewWhere(HavingClause, yyDollar[9].exprUnion()), yyDollar[10].namedWindowsUnion())
 		}
@@ -10694,7 +10694,7 @@ yydefault:
 	case 85:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL SelectStatement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:912
+//line sql.y:912
 		{
 			yyLOCAL = NewSelect(Comments(yyDollar[2].strs), yyDollar[4].selectExprsUnion() /*SelectExprs*/, yyDollar[3].strs /*options*/, nil, yyDollar[5].tableExprsUnion() /*from*/, NewWhere(WhereClause, yyDollar[6].exprUnion()), GroupBy(yyDollar[7].exprsUnion()), NewWhere(HavingClause, yyDollar[8].exprUnion()), yyDollar[9].namedWindowsUnion())
 		}
@@ -10702,7 +10702,7 @@ yydefault:
 	case 86:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:918
+//line sql.y:918
 		{
 			// insert_data returns a *Insert pre-filled with Columns & Values
 			ins := yyDollar[6].insUnion()
@@ -10718,7 +10718,7 @@ yydefault:
 	case 87:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:930
+//line sql.y:930
 		{
 			cols := make(Columns, 0, len(yyDollar[7].updateExprsUnion()))
 			vals := make(ValTuple, 0, len(yyDollar[8].updateExprsUnion()))
@@ -10732,7 +10732,7 @@ yydefault:
 	case 88:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL InsertAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:942
+//line sql.y:942
 		{
 			yyLOCAL = InsertAct
 		}
@@ -10740,7 +10740,7 @@ yydefault:
 	case 89:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL InsertAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:946
+//line sql.y:946
 		{
 			yyLOCAL = ReplaceAct
 		}
@@ -10748,7 +10748,7 @@ yydefault:
 	case 90:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:952
+//line sql.y:952
 		{
 			yyLOCAL = &Update{With: yyDollar[1].withUnion(), Comments: Comments(yyDollar[3].strs).Parsed(), Ignore: yyDollar[4].ignoreUnion(), TableExprs: yyDollar[5].tableExprsUnion(), Exprs: yyDollar[7].updateExprsUnion(), Where: NewWhere(WhereClause, yyDollar[8].exprUnion()), OrderBy: yyDollar[9].orderByUnion(), Limit: yyDollar[10].limitUnion()}
 		}
@@ -10756,7 +10756,7 @@ yydefault:
 	case 91:
 		yyDollar = yyS[yypt-11 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:958
+//line sql.y:958
 		{
 			yyLOCAL = &Delete{With: yyDollar[1].withUnion(), Comments: Comments(yyDollar[3].strs).Parsed(), Ignore: yyDollar[4].ignoreUnion(), TableExprs: TableExprs{&AliasedTableExpr{Expr: yyDollar[6].tableName, As: yyDollar[7].identifierCS}}, Partitions: yyDollar[8].partitionsUnion(), Where: NewWhere(WhereClause, yyDollar[9].exprUnion()), OrderBy: yyDollar[10].orderByUnion(), Limit: yyDollar[11].limitUnion()}
 		}
@@ -10764,7 +10764,7 @@ yydefault:
 	case 92:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:962
+//line sql.y:962
 		{
 			yyLOCAL = &Delete{With: yyDollar[1].withUnion(), Comments: Comments(yyDollar[3].strs).Parsed(), Ignore: yyDollar[4].ignoreUnion(), Targets: yyDollar[6].tableNamesUnion(), TableExprs: yyDollar[8].tableExprsUnion(), Where: NewWhere(WhereClause, yyDollar[9].exprUnion())}
 		}
@@ -10772,7 +10772,7 @@ yydefault:
 	case 93:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:966
+//line sql.y:966
 		{
 			yyLOCAL = &Delete{With: yyDollar[1].withUnion(), Comments: Comments(yyDollar[3].strs).Parsed(), Ignore: yyDollar[4].ignoreUnion(), Targets: yyDollar[5].tableNamesUnion(), TableExprs: yyDollar[7].tableExprsUnion(), Where: NewWhere(WhereClause, yyDollar[8].exprUnion())}
 		}
@@ -10780,32 +10780,32 @@ yydefault:
 	case 94:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:970
+//line sql.y:970
 		{
 			yyLOCAL = &Delete{With: yyDollar[1].withUnion(), Comments: Comments(yyDollar[3].strs).Parsed(), Ignore: yyDollar[4].ignoreUnion(), Targets: yyDollar[5].tableNamesUnion(), TableExprs: yyDollar[7].tableExprsUnion(), Where: NewWhere(WhereClause, yyDollar[8].exprUnion())}
 		}
 		yyVAL.union = yyLOCAL
 	case 95:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:975
+//line sql.y:975
 		{
 		}
 	case 96:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:976
+//line sql.y:976
 		{
 		}
 	case 97:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableNames
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:980
+//line sql.y:980
 		{
 			yyLOCAL = TableNames{yyDollar[1].tableName}
 		}
 		yyVAL.union = yyLOCAL
 	case 98:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:984
+//line sql.y:984
 		{
 			yySLICE := (*TableNames)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].tableName)
@@ -10813,14 +10813,14 @@ yydefault:
 	case 99:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableNames
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:990
+//line sql.y:990
 		{
 			yyLOCAL = TableNames{yyDollar[1].tableName}
 		}
 		yyVAL.union = yyLOCAL
 	case 100:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:994
+//line sql.y:994
 		{
 			yySLICE := (*TableNames)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].tableName)
@@ -10828,14 +10828,14 @@ yydefault:
 	case 101:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableNames
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1000
+//line sql.y:1000
 		{
 			yyLOCAL = TableNames{yyDollar[1].tableName}
 		}
 		yyVAL.union = yyLOCAL
 	case 102:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1004
+//line sql.y:1004
 		{
 			yySLICE := (*TableNames)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].tableName)
@@ -10843,7 +10843,7 @@ yydefault:
 	case 103:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Partitions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1009
+//line sql.y:1009
 		{
 			yyLOCAL = nil
 		}
@@ -10851,7 +10851,7 @@ yydefault:
 	case 104:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Partitions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1013
+//line sql.y:1013
 		{
 			yyLOCAL = yyDollar[3].partitionsUnion()
 		}
@@ -10859,7 +10859,7 @@ yydefault:
 	case 105:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1019
+//line sql.y:1019
 		{
 			yyLOCAL = NewSetStatement(Comments(yyDollar[2].strs).Parsed(), yyDollar[3].setExprsUnion())
 		}
@@ -10867,14 +10867,14 @@ yydefault:
 	case 106:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SetExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1025
+//line sql.y:1025
 		{
 			yyLOCAL = SetExprs{yyDollar[1].setExprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 107:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1029
+//line sql.y:1029
 		{
 			yySLICE := (*SetExprs)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].setExprUnion())
@@ -10882,7 +10882,7 @@ yydefault:
 	case 108:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1035
+//line sql.y:1035
 		{
 			yyLOCAL = &SetExpr{Var: yyDollar[1].variableUnion(), Expr: NewStrLiteral("on")}
 		}
@@ -10890,7 +10890,7 @@ yydefault:
 	case 109:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1039
+//line sql.y:1039
 		{
 			yyLOCAL = &SetExpr{Var: yyDollar[1].variableUnion(), Expr: NewStrLiteral("off")}
 		}
@@ -10898,7 +10898,7 @@ yydefault:
 	case 110:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1043
+//line sql.y:1043
 		{
 			yyLOCAL = &SetExpr{Var: yyDollar[1].variableUnion(), Expr: yyDollar[3].exprUnion()}
 		}
@@ -10906,7 +10906,7 @@ yydefault:
 	case 111:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1047
+//line sql.y:1047
 		{
 			yyLOCAL = &SetExpr{Var: NewSetVariable(string(yyDollar[1].str), SessionScope), Expr: yyDollar[2].exprUnion()}
 		}
@@ -10914,7 +10914,7 @@ yydefault:
 	case 112:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1053
+//line sql.y:1053
 		{
 			yyLOCAL = NewSetVariable(string(yyDollar[1].str), SessionScope)
 		}
@@ -10922,7 +10922,7 @@ yydefault:
 	case 113:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1057
+//line sql.y:1057
 		{
 			yyLOCAL = yyDollar[1].variableUnion()
 		}
@@ -10930,7 +10930,7 @@ yydefault:
 	case 114:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1061
+//line sql.y:1061
 		{
 			yyLOCAL = NewSetVariable(string(yyDollar[2].str), yyDollar[1].scopeUnion())
 		}
@@ -10938,7 +10938,7 @@ yydefault:
 	case 115:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1067
+//line sql.y:1067
 		{
 			yyLOCAL = NewSetStatement(Comments(yyDollar[2].strs).Parsed(), UpdateSetExprsScope(yyDollar[5].setExprsUnion(), yyDollar[3].scopeUnion()))
 		}
@@ -10946,7 +10946,7 @@ yydefault:
 	case 116:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1071
+//line sql.y:1071
 		{
 			yyLOCAL = NewSetStatement(Comments(yyDollar[2].strs).Parsed(), yyDollar[4].setExprsUnion())
 		}
@@ -10954,14 +10954,14 @@ yydefault:
 	case 117:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SetExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1077
+//line sql.y:1077
 		{
 			yyLOCAL = SetExprs{yyDollar[1].setExprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 118:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1081
+//line sql.y:1081
 		{
 			yySLICE := (*SetExprs)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].setExprUnion())
@@ -10969,7 +10969,7 @@ yydefault:
 	case 119:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1087
+//line sql.y:1087
 		{
 			yyLOCAL = &SetExpr{Var: NewSetVariable(TransactionIsolationStr, NextTxScope), Expr: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -10977,7 +10977,7 @@ yydefault:
 	case 120:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1091
+//line sql.y:1091
 		{
 			yyLOCAL = &SetExpr{Var: NewSetVariable(TransactionReadOnlyStr, NextTxScope), Expr: NewStrLiteral("off")}
 		}
@@ -10985,39 +10985,39 @@ yydefault:
 	case 121:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SetExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1095
+//line sql.y:1095
 		{
 			yyLOCAL = &SetExpr{Var: NewSetVariable(TransactionReadOnlyStr, NextTxScope), Expr: NewStrLiteral("on")}
 		}
 		yyVAL.union = yyLOCAL
 	case 122:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1101
+//line sql.y:1101
 		{
 			yyVAL.str = RepeatableReadStr
 		}
 	case 123:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1105
+//line sql.y:1105
 		{
 			yyVAL.str = ReadCommittedStr
 		}
 	case 124:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1109
+//line sql.y:1109
 		{
 			yyVAL.str = ReadUncommittedStr
 		}
 	case 125:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1113
+//line sql.y:1113
 		{
 			yyVAL.str = SerializableStr
 		}
 	case 126:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Scope
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1119
+//line sql.y:1119
 		{
 			yyLOCAL = SessionScope
 		}
@@ -11025,7 +11025,7 @@ yydefault:
 	case 127:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Scope
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1123
+//line sql.y:1123
 		{
 			yyLOCAL = SessionScope
 		}
@@ -11033,7 +11033,7 @@ yydefault:
 	case 128:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Scope
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1127
+//line sql.y:1127
 		{
 			yyLOCAL = GlobalScope
 		}
@@ -11041,7 +11041,7 @@ yydefault:
 	case 129:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1133
+//line sql.y:1133
 		{
 			yyDollar[1].createTableUnion().TableSpec = yyDollar[2].tableSpecUnion()
 			yyDollar[1].createTableUnion().FullyParsed = true
@@ -11051,7 +11051,7 @@ yydefault:
 	case 130:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1139
+//line sql.y:1139
 		{
 			// Create table [name] like [name]
 			yyDollar[1].createTableUnion().OptLike = yyDollar[2].optLikeUnion()
@@ -11062,7 +11062,7 @@ yydefault:
 	case 131:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1146
+//line sql.y:1146
 		{
 			indexDef := yyDollar[1].alterTableUnion().AlterOptions[0].(*AddIndexDefinition).IndexDefinition
 			indexDef.Columns = yyDollar[3].indexColumnsUnion()
@@ -11075,7 +11075,7 @@ yydefault:
 	case 132:
 		yyDollar = yyS[yypt-12 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1155
+//line sql.y:1155
 		{
 			yyLOCAL = &CreateView{ViewName: yyDollar[8].tableName, Comments: Comments(yyDollar[2].strs).Parsed(), IsReplace: yyDollar[3].booleanUnion(), Algorithm: yyDollar[4].str, Definer: yyDollar[5].definerUnion(), Security: yyDollar[6].str, Columns: yyDollar[9].columnsUnion(), Select: yyDollar[11].selStmtUnion(), CheckOption: yyDollar[12].str}
 		}
@@ -11083,7 +11083,7 @@ yydefault:
 	case 133:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1159
+//line sql.y:1159
 		{
 			yyDollar[1].createDatabaseUnion().FullyParsed = true
 			yyDollar[1].createDatabaseUnion().CreateOptions = yyDollar[2].databaseOptionsUnion()
@@ -11093,7 +11093,7 @@ yydefault:
 	case 134:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1166
+//line sql.y:1166
 		{
 			yyLOCAL = false
 		}
@@ -11101,33 +11101,33 @@ yydefault:
 	case 135:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1170
+//line sql.y:1170
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 136:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1175
+//line sql.y:1175
 		{
 			yyVAL.identifierCI = NewIdentifierCI("")
 		}
 	case 137:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1179
+//line sql.y:1179
 		{
 			yyVAL.identifierCI = yyDollar[2].identifierCI
 		}
 	case 138:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1185
+//line sql.y:1185
 		{
 			yyVAL.identifierCI = yyDollar[1].identifierCI
 		}
 	case 139:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []VindexParam
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1190
+//line sql.y:1190
 		{
 			var v []VindexParam
 			yyLOCAL = v
@@ -11136,7 +11136,7 @@ yydefault:
 	case 140:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL []VindexParam
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1195
+//line sql.y:1195
 		{
 			yyLOCAL = yyDollar[2].vindexParamsUnion()
 		}
@@ -11144,7 +11144,7 @@ yydefault:
 	case 141:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []VindexParam
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1201
+//line sql.y:1201
 		{
 			yyLOCAL = make([]VindexParam, 0, 4)
 			yyLOCAL = append(yyLOCAL, yyDollar[1].vindexParam)
@@ -11152,21 +11152,21 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 142:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1206
+//line sql.y:1206
 		{
 			yySLICE := (*[]VindexParam)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].vindexParam)
 		}
 	case 143:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1212
+//line sql.y:1212
 		{
 			yyVAL.vindexParam = VindexParam{Key: yyDollar[1].identifierCI, Val: yyDollar[3].str}
 		}
 	case 144:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []*JSONObjectParam
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1217
+//line sql.y:1217
 		{
 			yyLOCAL = nil
 		}
@@ -11174,7 +11174,7 @@ yydefault:
 	case 145:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*JSONObjectParam
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1221
+//line sql.y:1221
 		{
 			yyLOCAL = yyDollar[1].jsonObjectParamsUnion()
 		}
@@ -11182,28 +11182,28 @@ yydefault:
 	case 146:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*JSONObjectParam
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1227
+//line sql.y:1227
 		{
 			yyLOCAL = []*JSONObjectParam{yyDollar[1].jsonObjectParam}
 		}
 		yyVAL.union = yyLOCAL
 	case 147:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1231
+//line sql.y:1231
 		{
 			yySLICE := (*[]*JSONObjectParam)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].jsonObjectParam)
 		}
 	case 148:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1237
+//line sql.y:1237
 		{
 			yyVAL.jsonObjectParam = &JSONObjectParam{Key: yyDollar[1].exprUnion(), Value: yyDollar[3].exprUnion()}
 		}
 	case 149:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *CreateTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1243
+//line sql.y:1243
 		{
 			yyLOCAL = &CreateTable{Comments: Comments(yyDollar[2].strs).Parsed(), Table: yyDollar[6].tableName, IfNotExists: yyDollar[5].booleanUnion(), Temp: yyDollar[3].booleanUnion()}
 			setDDL(yylex, yyLOCAL)
@@ -11212,7 +11212,7 @@ yydefault:
 	case 150:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *AlterTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1250
+//line sql.y:1250
 		{
 			yyLOCAL = &AlterTable{Comments: Comments(yyDollar[2].strs).Parsed(), Table: yyDollar[4].tableName}
 			setDDL(yylex, yyLOCAL)
@@ -11221,7 +11221,7 @@ yydefault:
 	case 151:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *AlterTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1257
+//line sql.y:1257
 		{
 			yyLOCAL = &AlterTable{Table: yyDollar[7].tableName, AlterOptions: []AlterOption{&AddIndexDefinition{IndexDefinition: &IndexDefinition{Info: &IndexInfo{Name: yyDollar[4].identifierCI, Type: string(yyDollar[3].str)}, Options: yyDollar[5].indexOptionsUnion()}}}}
 			setDDL(yylex, yyLOCAL)
@@ -11230,7 +11230,7 @@ yydefault:
 	case 152:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *AlterTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1262
+//line sql.y:1262
 		{
 			yyLOCAL = &AlterTable{Table: yyDollar[8].tableName, AlterOptions: []AlterOption{&AddIndexDefinition{IndexDefinition: &IndexDefinition{Info: &IndexInfo{Name: yyDollar[5].identifierCI, Type: string(yyDollar[3].str) + " " + string(yyDollar[4].str), Fulltext: true}, Options: yyDollar[6].indexOptionsUnion()}}}}
 			setDDL(yylex, yyLOCAL)
@@ -11239,7 +11239,7 @@ yydefault:
 	case 153:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *AlterTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1267
+//line sql.y:1267
 		{
 			yyLOCAL = &AlterTable{Table: yyDollar[8].tableName, AlterOptions: []AlterOption{&AddIndexDefinition{IndexDefinition: &IndexDefinition{Info: &IndexInfo{Name: yyDollar[5].identifierCI, Type: string(yyDollar[3].str) + " " + string(yyDollar[4].str), Spatial: true}, Options: yyDollar[6].indexOptionsUnion()}}}}
 			setDDL(yylex, yyLOCAL)
@@ -11248,7 +11248,7 @@ yydefault:
 	case 154:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *AlterTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1272
+//line sql.y:1272
 		{
 			yyLOCAL = &AlterTable{Table: yyDollar[8].tableName, AlterOptions: []AlterOption{&AddIndexDefinition{IndexDefinition: &IndexDefinition{Info: &IndexInfo{Name: yyDollar[5].identifierCI, Type: string(yyDollar[3].str) + " " + string(yyDollar[4].str), Unique: true}, Options: yyDollar[6].indexOptionsUnion()}}}}
 			setDDL(yylex, yyLOCAL)
@@ -11257,7 +11257,7 @@ yydefault:
 	case 155:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *CreateDatabase
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1279
+//line sql.y:1279
 		{
 			yyLOCAL = &CreateDatabase{Comments: Comments(yyDollar[4].strs).Parsed(), DBName: yyDollar[6].identifierCS, IfNotExists: yyDollar[5].booleanUnion()}
 			setDDL(yylex, yyLOCAL)
@@ -11266,7 +11266,7 @@ yydefault:
 	case 156:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *AlterDatabase
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1286
+//line sql.y:1286
 		{
 			yyLOCAL = &AlterDatabase{}
 			setDDL(yylex, yyLOCAL)
@@ -11275,7 +11275,7 @@ yydefault:
 	case 159:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *TableSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1297
+//line sql.y:1297
 		{
 			yyLOCAL = yyDollar[2].tableSpecUnion()
 			yyLOCAL.Options = yyDollar[4].tableOptionsUnion()
@@ -11285,7 +11285,7 @@ yydefault:
 	case 160:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []DatabaseOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1304
+//line sql.y:1304
 		{
 			yyLOCAL = nil
 		}
@@ -11293,7 +11293,7 @@ yydefault:
 	case 161:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []DatabaseOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1308
+//line sql.y:1308
 		{
 			yyLOCAL = yyDollar[1].databaseOptionsUnion()
 		}
@@ -11301,7 +11301,7 @@ yydefault:
 	case 162:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []DatabaseOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1314
+//line sql.y:1314
 		{
 			yyLOCAL = []DatabaseOption{yyDollar[1].databaseOption}
 		}
@@ -11309,7 +11309,7 @@ yydefault:
 	case 163:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []DatabaseOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1318
+//line sql.y:1318
 		{
 			yyLOCAL = []DatabaseOption{yyDollar[1].databaseOption}
 		}
@@ -11317,28 +11317,28 @@ yydefault:
 	case 164:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []DatabaseOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1322
+//line sql.y:1322
 		{
 			yyLOCAL = []DatabaseOption{yyDollar[1].databaseOption}
 		}
 		yyVAL.union = yyLOCAL
 	case 165:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1326
+//line sql.y:1326
 		{
 			yySLICE := (*[]DatabaseOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].databaseOption)
 		}
 	case 166:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1330
+//line sql.y:1330
 		{
 			yySLICE := (*[]DatabaseOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].databaseOption)
 		}
 	case 167:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1334
+//line sql.y:1334
 		{
 			yySLICE := (*[]DatabaseOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].databaseOption)
@@ -11346,7 +11346,7 @@ yydefault:
 	case 168:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1340
+//line sql.y:1340
 		{
 			yyLOCAL = false
 		}
@@ -11354,51 +11354,51 @@ yydefault:
 	case 169:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1344
+//line sql.y:1344
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 170:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1350
+//line sql.y:1350
 		{
 			yyVAL.databaseOption = DatabaseOption{Type: CharacterSetType, Value: string(yyDollar[4].str), IsDefault: yyDollar[1].booleanUnion()}
 		}
 	case 171:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1354
+//line sql.y:1354
 		{
 			yyVAL.databaseOption = DatabaseOption{Type: CharacterSetType, Value: encodeSQLString(yyDollar[4].str), IsDefault: yyDollar[1].booleanUnion()}
 		}
 	case 172:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1360
+//line sql.y:1360
 		{
 			yyVAL.databaseOption = DatabaseOption{Type: CollateType, Value: string(yyDollar[4].str), IsDefault: yyDollar[1].booleanUnion()}
 		}
 	case 173:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1364
+//line sql.y:1364
 		{
 			yyVAL.databaseOption = DatabaseOption{Type: CollateType, Value: encodeSQLString(yyDollar[4].str), IsDefault: yyDollar[1].booleanUnion()}
 		}
 	case 174:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1370
+//line sql.y:1370
 		{
 			yyVAL.databaseOption = DatabaseOption{Type: EncryptionType, Value: string(yyDollar[4].str), IsDefault: yyDollar[1].booleanUnion()}
 		}
 	case 175:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1374
+//line sql.y:1374
 		{
 			yyVAL.databaseOption = DatabaseOption{Type: EncryptionType, Value: encodeSQLString(yyDollar[4].str), IsDefault: yyDollar[1].booleanUnion()}
 		}
 	case 176:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *OptLike
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1380
+//line sql.y:1380
 		{
 			yyLOCAL = &OptLike{LikeTable: yyDollar[2].tableName}
 		}
@@ -11406,7 +11406,7 @@ yydefault:
 	case 177:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *OptLike
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1384
+//line sql.y:1384
 		{
 			yyLOCAL = &OptLike{LikeTable: yyDollar[3].tableName}
 		}
@@ -11414,14 +11414,14 @@ yydefault:
 	case 178:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*ColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1390
+//line sql.y:1390
 		{
 			yyLOCAL = []*ColumnDefinition{yyDollar[1].columnDefinitionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 179:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1394
+//line sql.y:1394
 		{
 			yySLICE := (*[]*ColumnDefinition)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].columnDefinitionUnion())
@@ -11429,7 +11429,7 @@ yydefault:
 	case 180:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *TableSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1400
+//line sql.y:1400
 		{
 			yyLOCAL = &TableSpec{}
 			yyLOCAL.AddColumn(yyDollar[1].columnDefinitionUnion())
@@ -11438,7 +11438,7 @@ yydefault:
 	case 181:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *TableSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1405
+//line sql.y:1405
 		{
 			yyLOCAL = &TableSpec{}
 			yyLOCAL.AddConstraint(yyDollar[1].constraintDefinitionUnion())
@@ -11446,39 +11446,39 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 182:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1410
+//line sql.y:1410
 		{
 			yyVAL.tableSpecUnion().AddColumn(yyDollar[3].columnDefinitionUnion())
 		}
 	case 183:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1414
+//line sql.y:1414
 		{
 			yyVAL.tableSpecUnion().AddColumn(yyDollar[3].columnDefinitionUnion())
 			yyVAL.tableSpecUnion().AddConstraint(yyDollar[4].constraintDefinitionUnion())
 		}
 	case 184:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1419
+//line sql.y:1419
 		{
 			yyVAL.tableSpecUnion().AddIndex(yyDollar[3].indexDefinitionUnion())
 		}
 	case 185:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1423
+//line sql.y:1423
 		{
 			yyVAL.tableSpecUnion().AddConstraint(yyDollar[3].constraintDefinitionUnion())
 		}
 	case 186:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1427
+//line sql.y:1427
 		{
 			yyVAL.tableSpecUnion().AddConstraint(yyDollar[3].constraintDefinitionUnion())
 		}
 	case 187:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *ColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1438
+//line sql.y:1438
 		{
 			yyDollar[2].columnType.Options = yyDollar[4].columnTypeOptionsUnion()
 			if yyDollar[2].columnType.Options.Collate == "" {
@@ -11491,7 +11491,7 @@ yydefault:
 	case 188:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL *ColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1447
+//line sql.y:1447
 		{
 			yyDollar[2].columnType.Options = yyDollar[9].columnTypeOptionsUnion()
 			yyDollar[2].columnType.Options.As = yyDollar[7].exprUnion()
@@ -11502,20 +11502,20 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 189:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1456
+//line sql.y:1456
 		{
 			yyVAL.str = ""
 		}
 	case 190:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1460
+//line sql.y:1460
 		{
 			yyVAL.str = ""
 		}
 	case 191:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1469
+//line sql.y:1469
 		{
 			yyLOCAL = &ColumnTypeOptions{Null: nil, Default: nil, OnUpdate: nil, Autoincrement: false, KeyOpt: ColKeyNone, Comment: nil, As: nil, Invisible: nil, Format: UnspecifiedFormat, EngineAttribute: nil, SecondaryEngineAttribute: nil}
 		}
@@ -11523,7 +11523,7 @@ yydefault:
 	case 192:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1473
+//line sql.y:1473
 		{
 			val := true
 			yyDollar[1].columnTypeOptionsUnion().Null = &val
@@ -11533,7 +11533,7 @@ yydefault:
 	case 193:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1479
+//line sql.y:1479
 		{
 			val := false
 			yyDollar[1].columnTypeOptionsUnion().Null = &val
@@ -11543,7 +11543,7 @@ yydefault:
 	case 194:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1485
+//line sql.y:1485
 		{
 			yyDollar[1].columnTypeOptionsUnion().Default = yyDollar[4].exprUnion()
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11552,7 +11552,7 @@ yydefault:
 	case 195:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1490
+//line sql.y:1490
 		{
 			yyDollar[1].columnTypeOptionsUnion().Default = yyDollar[3].exprUnion()
 			yyDollar[1].columnTypeOptionsUnion().DefaultLiteral = true
@@ -11562,7 +11562,7 @@ yydefault:
 	case 196:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1496
+//line sql.y:1496
 		{
 			yyDollar[1].columnTypeOptionsUnion().OnUpdate = yyDollar[4].exprUnion()
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11571,7 +11571,7 @@ yydefault:
 	case 197:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1501
+//line sql.y:1501
 		{
 			yyDollar[1].columnTypeOptionsUnion().Autoincrement = true
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11580,7 +11580,7 @@ yydefault:
 	case 198:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1506
+//line sql.y:1506
 		{
 			yyDollar[1].columnTypeOptionsUnion().Comment = NewStrLiteral(yyDollar[3].str)
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11589,7 +11589,7 @@ yydefault:
 	case 199:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1511
+//line sql.y:1511
 		{
 			yyDollar[1].columnTypeOptionsUnion().KeyOpt = yyDollar[2].colKeyOptUnion()
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11597,14 +11597,14 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 200:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1516
+//line sql.y:1516
 		{
 			yyDollar[1].columnTypeOptionsUnion().Collate = encodeSQLString(yyDollar[3].str)
 		}
 	case 201:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1520
+//line sql.y:1520
 		{
 			yyDollar[1].columnTypeOptionsUnion().Collate = string(yyDollar[3].identifierCI.String())
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11612,14 +11612,14 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 202:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1525
+//line sql.y:1525
 		{
 			yyDollar[1].columnTypeOptionsUnion().Format = yyDollar[3].columnFormatUnion()
 		}
 	case 203:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1529
+//line sql.y:1529
 		{
 			yyDollar[1].columnTypeOptionsUnion().SRID = NewIntLiteral(yyDollar[3].str)
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11628,7 +11628,7 @@ yydefault:
 	case 204:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1534
+//line sql.y:1534
 		{
 			val := false
 			yyDollar[1].columnTypeOptionsUnion().Invisible = &val
@@ -11638,7 +11638,7 @@ yydefault:
 	case 205:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1540
+//line sql.y:1540
 		{
 			val := true
 			yyDollar[1].columnTypeOptionsUnion().Invisible = &val
@@ -11647,20 +11647,20 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 206:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1546
+//line sql.y:1546
 		{
 			yyDollar[1].columnTypeOptionsUnion().EngineAttribute = NewStrLiteral(yyDollar[4].str)
 		}
 	case 207:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1550
+//line sql.y:1550
 		{
 			yyDollar[1].columnTypeOptionsUnion().SecondaryEngineAttribute = NewStrLiteral(yyDollar[4].str)
 		}
 	case 208:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnFormat
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1556
+//line sql.y:1556
 		{
 			yyLOCAL = FixedFormat
 		}
@@ -11668,7 +11668,7 @@ yydefault:
 	case 209:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnFormat
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1560
+//line sql.y:1560
 		{
 			yyLOCAL = DynamicFormat
 		}
@@ -11676,7 +11676,7 @@ yydefault:
 	case 210:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnFormat
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1564
+//line sql.y:1564
 		{
 			yyLOCAL = DefaultFormat
 		}
@@ -11684,7 +11684,7 @@ yydefault:
 	case 211:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnStorage
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1570
+//line sql.y:1570
 		{
 			yyLOCAL = VirtualStorage
 		}
@@ -11692,7 +11692,7 @@ yydefault:
 	case 212:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnStorage
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1574
+//line sql.y:1574
 		{
 			yyLOCAL = StoredStorage
 		}
@@ -11700,7 +11700,7 @@ yydefault:
 	case 213:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1579
+//line sql.y:1579
 		{
 			yyLOCAL = &ColumnTypeOptions{}
 		}
@@ -11708,7 +11708,7 @@ yydefault:
 	case 214:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1583
+//line sql.y:1583
 		{
 			yyDollar[1].columnTypeOptionsUnion().Storage = yyDollar[2].columnStorageUnion()
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11717,7 +11717,7 @@ yydefault:
 	case 215:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1588
+//line sql.y:1588
 		{
 			val := true
 			yyDollar[1].columnTypeOptionsUnion().Null = &val
@@ -11727,7 +11727,7 @@ yydefault:
 	case 216:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1594
+//line sql.y:1594
 		{
 			val := false
 			yyDollar[1].columnTypeOptionsUnion().Null = &val
@@ -11737,7 +11737,7 @@ yydefault:
 	case 217:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1600
+//line sql.y:1600
 		{
 			yyDollar[1].columnTypeOptionsUnion().Comment = NewStrLiteral(yyDollar[3].str)
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11746,7 +11746,7 @@ yydefault:
 	case 218:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1605
+//line sql.y:1605
 		{
 			yyDollar[1].columnTypeOptionsUnion().KeyOpt = yyDollar[2].colKeyOptUnion()
 			yyLOCAL = yyDollar[1].columnTypeOptionsUnion()
@@ -11755,7 +11755,7 @@ yydefault:
 	case 219:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1610
+//line sql.y:1610
 		{
 			val := false
 			yyDollar[1].columnTypeOptionsUnion().Invisible = &val
@@ -11765,7 +11765,7 @@ yydefault:
 	case 220:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColumnTypeOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1616
+//line sql.y:1616
 		{
 			val := true
 			yyDollar[1].columnTypeOptionsUnion().Invisible = &val
@@ -11775,7 +11775,7 @@ yydefault:
 	case 221:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1624
+//line sql.y:1624
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -11783,7 +11783,7 @@ yydefault:
 	case 223:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1631
+//line sql.y:1631
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("current_timestamp"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -11791,7 +11791,7 @@ yydefault:
 	case 224:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1635
+//line sql.y:1635
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("localtime"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -11799,7 +11799,7 @@ yydefault:
 	case 225:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1639
+//line sql.y:1639
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("localtimestamp"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -11807,7 +11807,7 @@ yydefault:
 	case 226:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1643
+//line sql.y:1643
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("utc_timestamp"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -11815,7 +11815,7 @@ yydefault:
 	case 227:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1647
+//line sql.y:1647
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("now"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -11823,7 +11823,7 @@ yydefault:
 	case 228:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1651
+//line sql.y:1651
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("sysdate"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -11831,7 +11831,7 @@ yydefault:
 	case 231:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1661
+//line sql.y:1661
 		{
 			yyLOCAL = &NullVal{}
 		}
@@ -11839,7 +11839,7 @@ yydefault:
 	case 233:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1668
+//line sql.y:1668
 		{
 			yyLOCAL = yyDollar[2].exprUnion()
 		}
@@ -11847,7 +11847,7 @@ yydefault:
 	case 234:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1672
+//line sql.y:1672
 		{
 			yyLOCAL = &UnaryExpr{Operator: UMinusOp, Expr: yyDollar[2].exprUnion()}
 		}
@@ -11855,7 +11855,7 @@ yydefault:
 	case 235:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1678
+//line sql.y:1678
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -11863,7 +11863,7 @@ yydefault:
 	case 236:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1682
+//line sql.y:1682
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -11871,7 +11871,7 @@ yydefault:
 	case 237:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1686
+//line sql.y:1686
 		{
 			yyLOCAL = yyDollar[1].boolValUnion()
 		}
@@ -11879,7 +11879,7 @@ yydefault:
 	case 238:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1690
+//line sql.y:1690
 		{
 			yyLOCAL = NewHexLiteral(yyDollar[1].str)
 		}
@@ -11887,7 +11887,7 @@ yydefault:
 	case 239:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1694
+//line sql.y:1694
 		{
 			yyLOCAL = NewHexNumLiteral(yyDollar[1].str)
 		}
@@ -11895,7 +11895,7 @@ yydefault:
 	case 240:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1698
+//line sql.y:1698
 		{
 			yyLOCAL = NewBitLiteral(yyDollar[1].str[2:])
 		}
@@ -11903,7 +11903,7 @@ yydefault:
 	case 241:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1702
+//line sql.y:1702
 		{
 			yyLOCAL = NewBitLiteral(yyDollar[1].str)
 		}
@@ -11911,7 +11911,7 @@ yydefault:
 	case 242:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1706
+//line sql.y:1706
 		{
 			yyLOCAL = parseBindVariable(yylex, yyDollar[1].str[1:])
 		}
@@ -11919,7 +11919,7 @@ yydefault:
 	case 243:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1710
+//line sql.y:1710
 		{
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: NewBitLiteral(yyDollar[2].str)}
 		}
@@ -11927,7 +11927,7 @@ yydefault:
 	case 244:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1714
+//line sql.y:1714
 		{
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: NewHexNumLiteral(yyDollar[2].str)}
 		}
@@ -11935,7 +11935,7 @@ yydefault:
 	case 245:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1718
+//line sql.y:1718
 		{
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: NewBitLiteral(yyDollar[2].str[2:])}
 		}
@@ -11943,7 +11943,7 @@ yydefault:
 	case 246:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1722
+//line sql.y:1722
 		{
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: NewHexLiteral(yyDollar[2].str)}
 		}
@@ -11951,7 +11951,7 @@ yydefault:
 	case 247:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1726
+//line sql.y:1726
 		{
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: yyDollar[2].exprUnion()}
 		}
@@ -11959,7 +11959,7 @@ yydefault:
 	case 248:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1730
+//line sql.y:1730
 		{
 			arg := parseBindVariable(yylex, yyDollar[2].str[1:])
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: arg}
@@ -11968,7 +11968,7 @@ yydefault:
 	case 249:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1735
+//line sql.y:1735
 		{
 			yyLOCAL = NewDateLiteral(yyDollar[2].str)
 		}
@@ -11976,7 +11976,7 @@ yydefault:
 	case 250:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1739
+//line sql.y:1739
 		{
 			yyLOCAL = NewTimeLiteral(yyDollar[2].str)
 		}
@@ -11984,267 +11984,267 @@ yydefault:
 	case 251:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1743
+//line sql.y:1743
 		{
 			yyLOCAL = NewTimestampLiteral(yyDollar[2].str)
 		}
 		yyVAL.union = yyLOCAL
 	case 252:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1749
+//line sql.y:1749
 		{
 			yyVAL.str = Armscii8Str
 		}
 	case 253:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1753
+//line sql.y:1753
 		{
 			yyVAL.str = ASCIIStr
 		}
 	case 254:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1757
+//line sql.y:1757
 		{
 			yyVAL.str = Big5Str
 		}
 	case 255:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1761
+//line sql.y:1761
 		{
 			yyVAL.str = UBinaryStr
 		}
 	case 256:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1765
+//line sql.y:1765
 		{
 			yyVAL.str = Cp1250Str
 		}
 	case 257:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1769
+//line sql.y:1769
 		{
 			yyVAL.str = Cp1251Str
 		}
 	case 258:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1773
+//line sql.y:1773
 		{
 			yyVAL.str = Cp1256Str
 		}
 	case 259:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1777
+//line sql.y:1777
 		{
 			yyVAL.str = Cp1257Str
 		}
 	case 260:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1781
+//line sql.y:1781
 		{
 			yyVAL.str = Cp850Str
 		}
 	case 261:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1785
+//line sql.y:1785
 		{
 			yyVAL.str = Cp852Str
 		}
 	case 262:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1789
+//line sql.y:1789
 		{
 			yyVAL.str = Cp866Str
 		}
 	case 263:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1793
+//line sql.y:1793
 		{
 			yyVAL.str = Cp932Str
 		}
 	case 264:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1797
+//line sql.y:1797
 		{
 			yyVAL.str = Dec8Str
 		}
 	case 265:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1801
+//line sql.y:1801
 		{
 			yyVAL.str = EucjpmsStr
 		}
 	case 266:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1805
+//line sql.y:1805
 		{
 			yyVAL.str = EuckrStr
 		}
 	case 267:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1809
+//line sql.y:1809
 		{
 			yyVAL.str = Gb18030Str
 		}
 	case 268:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1813
+//line sql.y:1813
 		{
 			yyVAL.str = Gb2312Str
 		}
 	case 269:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1817
+//line sql.y:1817
 		{
 			yyVAL.str = GbkStr
 		}
 	case 270:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1821
+//line sql.y:1821
 		{
 			yyVAL.str = Geostd8Str
 		}
 	case 271:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1825
+//line sql.y:1825
 		{
 			yyVAL.str = GreekStr
 		}
 	case 272:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1829
+//line sql.y:1829
 		{
 			yyVAL.str = HebrewStr
 		}
 	case 273:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1833
+//line sql.y:1833
 		{
 			yyVAL.str = Hp8Str
 		}
 	case 274:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1837
+//line sql.y:1837
 		{
 			yyVAL.str = Keybcs2Str
 		}
 	case 275:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1841
+//line sql.y:1841
 		{
 			yyVAL.str = Koi8rStr
 		}
 	case 276:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1845
+//line sql.y:1845
 		{
 			yyVAL.str = Koi8uStr
 		}
 	case 277:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1849
+//line sql.y:1849
 		{
 			yyVAL.str = Latin1Str
 		}
 	case 278:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1853
+//line sql.y:1853
 		{
 			yyVAL.str = Latin2Str
 		}
 	case 279:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1857
+//line sql.y:1857
 		{
 			yyVAL.str = Latin5Str
 		}
 	case 280:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1861
+//line sql.y:1861
 		{
 			yyVAL.str = Latin7Str
 		}
 	case 281:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1865
+//line sql.y:1865
 		{
 			yyVAL.str = MacceStr
 		}
 	case 282:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1869
+//line sql.y:1869
 		{
 			yyVAL.str = MacromanStr
 		}
 	case 283:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1873
+//line sql.y:1873
 		{
 			yyVAL.str = SjisStr
 		}
 	case 284:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1877
+//line sql.y:1877
 		{
 			yyVAL.str = Swe7Str
 		}
 	case 285:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1881
+//line sql.y:1881
 		{
 			yyVAL.str = Tis620Str
 		}
 	case 286:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1885
+//line sql.y:1885
 		{
 			yyVAL.str = Ucs2Str
 		}
 	case 287:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1889
+//line sql.y:1889
 		{
 			yyVAL.str = UjisStr
 		}
 	case 288:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1893
+//line sql.y:1893
 		{
 			yyVAL.str = Utf16Str
 		}
 	case 289:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1897
+//line sql.y:1897
 		{
 			yyVAL.str = Utf16leStr
 		}
 	case 290:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1901
+//line sql.y:1901
 		{
 			yyVAL.str = Utf32Str
 		}
 	case 291:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1905
+//line sql.y:1905
 		{
 			yyVAL.str = Utf8mb3Str
 		}
 	case 292:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1909
+//line sql.y:1909
 		{
 			yyVAL.str = Utf8mb4Str
 		}
 	case 293:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1913
+//line sql.y:1913
 		{
 			yyVAL.str = Utf8mb3Str
 		}
 	case 296:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1923
+//line sql.y:1923
 		{
 			yyLOCAL = NewIntLiteral(yyDollar[1].str)
 		}
@@ -12252,7 +12252,7 @@ yydefault:
 	case 297:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1927
+//line sql.y:1927
 		{
 			yyLOCAL = NewFloatLiteral(yyDollar[1].str)
 		}
@@ -12260,7 +12260,7 @@ yydefault:
 	case 298:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1931
+//line sql.y:1931
 		{
 			yyLOCAL = NewDecimalLiteral(yyDollar[1].str)
 		}
@@ -12268,7 +12268,7 @@ yydefault:
 	case 299:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1937
+//line sql.y:1937
 		{
 			yyLOCAL = NewStrLiteral(yyDollar[1].str)
 		}
@@ -12276,7 +12276,7 @@ yydefault:
 	case 300:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1941
+//line sql.y:1941
 		{
 			yyLOCAL = &UnaryExpr{Operator: NStringOp, Expr: NewStrLiteral(yyDollar[1].str)}
 		}
@@ -12284,7 +12284,7 @@ yydefault:
 	case 301:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1945
+//line sql.y:1945
 		{
 			yyLOCAL = &IntroducerExpr{CharacterSet: yyDollar[1].str, Expr: NewStrLiteral(yyDollar[2].str)}
 		}
@@ -12292,7 +12292,7 @@ yydefault:
 	case 302:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1951
+//line sql.y:1951
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -12300,7 +12300,7 @@ yydefault:
 	case 303:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1955
+//line sql.y:1955
 		{
 			yyLOCAL = parseBindVariable(yylex, yyDollar[1].str[1:])
 		}
@@ -12308,7 +12308,7 @@ yydefault:
 	case 304:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL ColumnKeyOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1961
+//line sql.y:1961
 		{
 			yyLOCAL = ColKeyPrimary
 		}
@@ -12316,7 +12316,7 @@ yydefault:
 	case 305:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnKeyOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1965
+//line sql.y:1965
 		{
 			yyLOCAL = ColKeyUnique
 		}
@@ -12324,7 +12324,7 @@ yydefault:
 	case 306:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL ColumnKeyOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1969
+//line sql.y:1969
 		{
 			yyLOCAL = ColKeyUniqueKey
 		}
@@ -12332,14 +12332,14 @@ yydefault:
 	case 307:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColumnKeyOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1973
+//line sql.y:1973
 		{
 			yyLOCAL = ColKey
 		}
 		yyVAL.union = yyLOCAL
 	case 308:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1979
+//line sql.y:1979
 		{
 			yyVAL.columnType = yyDollar[1].columnType
 			yyVAL.columnType.Unsigned = yyDollar[2].booleanUnion()
@@ -12347,74 +12347,74 @@ yydefault:
 		}
 	case 312:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1990
+//line sql.y:1990
 		{
 			yyVAL.columnType = yyDollar[1].columnType
 			yyVAL.columnType.Length = yyDollar[2].literalUnion()
 		}
 	case 313:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:1995
+//line sql.y:1995
 		{
 			yyVAL.columnType = yyDollar[1].columnType
 		}
 	case 314:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2001
+//line sql.y:2001
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 315:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2005
+//line sql.y:2005
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 316:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2009
+//line sql.y:2009
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 317:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2013
+//line sql.y:2013
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 318:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2017
+//line sql.y:2017
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 319:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2021
+//line sql.y:2021
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 320:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2025
+//line sql.y:2025
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 321:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2029
+//line sql.y:2029
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 322:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2033
+//line sql.y:2033
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 323:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2039
+//line sql.y:2039
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12422,7 +12422,7 @@ yydefault:
 		}
 	case 324:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2045
+//line sql.y:2045
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12430,7 +12430,7 @@ yydefault:
 		}
 	case 325:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2051
+//line sql.y:2051
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12438,7 +12438,7 @@ yydefault:
 		}
 	case 326:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2057
+//line sql.y:2057
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12446,7 +12446,7 @@ yydefault:
 		}
 	case 327:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2063
+//line sql.y:2063
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12454,7 +12454,7 @@ yydefault:
 		}
 	case 328:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2069
+//line sql.y:2069
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12462,7 +12462,7 @@ yydefault:
 		}
 	case 329:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2075
+//line sql.y:2075
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 			yyVAL.columnType.Length = yyDollar[2].LengthScaleOption.Length
@@ -12470,43 +12470,43 @@ yydefault:
 		}
 	case 330:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2083
+//line sql.y:2083
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 331:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2087
+//line sql.y:2087
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
 	case 332:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2091
+//line sql.y:2091
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
 	case 333:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2095
+//line sql.y:2095
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
 	case 334:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2099
+//line sql.y:2099
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
 	case 335:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2105
+//line sql.y:2105
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion(), Charset: yyDollar[3].columnCharset}
 		}
 	case 336:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2109
+//line sql.y:2109
 		{
 			// CHAR BYTE is an alias for binary. See also:
 			// https://dev.mysql.com/doc/refman/8.0/en/string-type-syntax.html
@@ -12514,153 +12514,153 @@ yydefault:
 		}
 	case 337:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2115
+//line sql.y:2115
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion(), Charset: yyDollar[3].columnCharset}
 		}
 	case 338:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2119
+//line sql.y:2119
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
 	case 339:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2123
+//line sql.y:2123
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
 	case 340:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2127
+//line sql.y:2127
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Charset: yyDollar[2].columnCharset}
 		}
 	case 341:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2131
+//line sql.y:2131
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Charset: yyDollar[2].columnCharset}
 		}
 	case 342:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2135
+//line sql.y:2135
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Charset: yyDollar[2].columnCharset}
 		}
 	case 343:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2139
+//line sql.y:2139
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), Charset: yyDollar[2].columnCharset}
 		}
 	case 344:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2143
+//line sql.y:2143
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 345:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2147
+//line sql.y:2147
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 346:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2151
+//line sql.y:2151
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 347:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2155
+//line sql.y:2155
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 348:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2159
+//line sql.y:2159
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 349:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2163
+//line sql.y:2163
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), EnumValues: yyDollar[3].strs, Charset: yyDollar[5].columnCharset}
 		}
 	case 350:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2168
+//line sql.y:2168
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str), EnumValues: yyDollar[3].strs, Charset: yyDollar[5].columnCharset}
 		}
 	case 351:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2174
+//line sql.y:2174
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 352:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2178
+//line sql.y:2178
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 353:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2182
+//line sql.y:2182
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 354:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2186
+//line sql.y:2186
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 355:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2190
+//line sql.y:2190
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 356:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2194
+//line sql.y:2194
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 357:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2198
+//line sql.y:2198
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 358:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2202
+//line sql.y:2202
 		{
 			yyVAL.columnType = &ColumnType{Type: string(yyDollar[1].str)}
 		}
 	case 359:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2208
+//line sql.y:2208
 		{
 			yyVAL.strs = make([]string, 0, 4)
 			yyVAL.strs = append(yyVAL.strs, encodeSQLString(yyDollar[1].str))
 		}
 	case 360:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2213
+//line sql.y:2213
 		{
 			yyVAL.strs = append(yyDollar[1].strs, encodeSQLString(yyDollar[3].str))
 		}
 	case 361:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2218
+//line sql.y:2218
 		{
 			yyLOCAL = nil
 		}
@@ -12668,20 +12668,20 @@ yydefault:
 	case 362:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2222
+//line sql.y:2222
 		{
 			yyLOCAL = NewIntLiteral(yyDollar[2].str)
 		}
 		yyVAL.union = yyLOCAL
 	case 363:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2227
+//line sql.y:2227
 		{
 			yyVAL.LengthScaleOption = LengthScaleOption{}
 		}
 	case 364:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2231
+//line sql.y:2231
 		{
 			yyVAL.LengthScaleOption = LengthScaleOption{
 				Length: NewIntLiteral(yyDollar[2].str),
@@ -12690,13 +12690,13 @@ yydefault:
 		}
 	case 365:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2240
+//line sql.y:2240
 		{
 			yyVAL.LengthScaleOption = yyDollar[1].LengthScaleOption
 		}
 	case 366:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2244
+//line sql.y:2244
 		{
 			yyVAL.LengthScaleOption = LengthScaleOption{
 				Length: NewIntLiteral(yyDollar[2].str),
@@ -12704,13 +12704,13 @@ yydefault:
 		}
 	case 367:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2251
+//line sql.y:2251
 		{
 			yyVAL.LengthScaleOption = LengthScaleOption{}
 		}
 	case 368:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2255
+//line sql.y:2255
 		{
 			yyVAL.LengthScaleOption = LengthScaleOption{
 				Length: NewIntLiteral(yyDollar[2].str),
@@ -12718,7 +12718,7 @@ yydefault:
 		}
 	case 369:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2261
+//line sql.y:2261
 		{
 			yyVAL.LengthScaleOption = LengthScaleOption{
 				Length: NewIntLiteral(yyDollar[2].str),
@@ -12728,7 +12728,7 @@ yydefault:
 	case 370:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2269
+//line sql.y:2269
 		{
 			yyLOCAL = false
 		}
@@ -12736,7 +12736,7 @@ yydefault:
 	case 371:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2273
+//line sql.y:2273
 		{
 			yyLOCAL = true
 		}
@@ -12744,7 +12744,7 @@ yydefault:
 	case 372:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2277
+//line sql.y:2277
 		{
 			yyLOCAL = false
 		}
@@ -12752,7 +12752,7 @@ yydefault:
 	case 373:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2282
+//line sql.y:2282
 		{
 			yyLOCAL = false
 		}
@@ -12760,66 +12760,66 @@ yydefault:
 	case 374:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2286
+//line sql.y:2286
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 375:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2291
+//line sql.y:2291
 		{
 			yyVAL.columnCharset = ColumnCharset{}
 		}
 	case 376:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2295
+//line sql.y:2295
 		{
 			yyVAL.columnCharset = ColumnCharset{Name: string(yyDollar[2].identifierCI.String()), Binary: yyDollar[3].booleanUnion()}
 		}
 	case 377:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2299
+//line sql.y:2299
 		{
 			yyVAL.columnCharset = ColumnCharset{Name: encodeSQLString(yyDollar[2].str), Binary: yyDollar[3].booleanUnion()}
 		}
 	case 378:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2303
+//line sql.y:2303
 		{
 			yyVAL.columnCharset = ColumnCharset{Name: string(yyDollar[2].str)}
 		}
 	case 379:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2307
+//line sql.y:2307
 		{
 			// ASCII: Shorthand for CHARACTER SET latin1.
 			yyVAL.columnCharset = ColumnCharset{Name: "latin1", Binary: yyDollar[2].booleanUnion()}
 		}
 	case 380:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2312
+//line sql.y:2312
 		{
 			// UNICODE: Shorthand for CHARACTER SET ucs2.
 			yyVAL.columnCharset = ColumnCharset{Name: "ucs2", Binary: yyDollar[2].booleanUnion()}
 		}
 	case 381:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2317
+//line sql.y:2317
 		{
 			// BINARY: Shorthand for default CHARACTER SET but with binary collation
 			yyVAL.columnCharset = ColumnCharset{Name: "", Binary: true}
 		}
 	case 382:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2322
+//line sql.y:2322
 		{
 			// BINARY ASCII: Shorthand for CHARACTER SET latin1 with binary collation
 			yyVAL.columnCharset = ColumnCharset{Name: "latin1", Binary: true}
 		}
 	case 383:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2327
+//line sql.y:2327
 		{
 			// BINARY UNICODE: Shorthand for CHARACTER SET ucs2 with binary collation
 			yyVAL.columnCharset = ColumnCharset{Name: "ucs2", Binary: true}
@@ -12827,7 +12827,7 @@ yydefault:
 	case 384:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2333
+//line sql.y:2333
 		{
 			yyLOCAL = false
 		}
@@ -12835,33 +12835,33 @@ yydefault:
 	case 385:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2337
+//line sql.y:2337
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 386:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2342
+//line sql.y:2342
 		{
 			yyVAL.str = ""
 		}
 	case 387:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2346
+//line sql.y:2346
 		{
 			yyVAL.str = string(yyDollar[2].identifierCI.String())
 		}
 	case 388:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2350
+//line sql.y:2350
 		{
 			yyVAL.str = encodeSQLString(yyDollar[2].str)
 		}
 	case 389:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *IndexDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2356
+//line sql.y:2356
 		{
 			yyLOCAL = &IndexDefinition{Info: yyDollar[1].indexInfoUnion(), Columns: yyDollar[3].indexColumnsUnion(), Options: yyDollar[5].indexOptionsUnion()}
 		}
@@ -12869,7 +12869,7 @@ yydefault:
 	case 390:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []*IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2361
+//line sql.y:2361
 		{
 			yyLOCAL = nil
 		}
@@ -12877,7 +12877,7 @@ yydefault:
 	case 391:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2365
+//line sql.y:2365
 		{
 			yyLOCAL = yyDollar[1].indexOptionsUnion()
 		}
@@ -12885,14 +12885,14 @@ yydefault:
 	case 392:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2371
+//line sql.y:2371
 		{
 			yyLOCAL = []*IndexOption{yyDollar[1].indexOptionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 393:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2375
+//line sql.y:2375
 		{
 			yySLICE := (*[]*IndexOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].indexOptionUnion())
@@ -12900,7 +12900,7 @@ yydefault:
 	case 394:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2381
+//line sql.y:2381
 		{
 			yyLOCAL = yyDollar[1].indexOptionUnion()
 		}
@@ -12908,7 +12908,7 @@ yydefault:
 	case 395:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2385
+//line sql.y:2385
 		{
 			// should not be string
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
@@ -12917,7 +12917,7 @@ yydefault:
 	case 396:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2390
+//line sql.y:2390
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[2].str)}
 		}
@@ -12925,7 +12925,7 @@ yydefault:
 	case 397:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2394
+//line sql.y:2394
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str)}
 		}
@@ -12933,7 +12933,7 @@ yydefault:
 	case 398:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2398
+//line sql.y:2398
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str)}
 		}
@@ -12941,7 +12941,7 @@ yydefault:
 	case 399:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2402
+//line sql.y:2402
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str) + " " + string(yyDollar[2].str), String: yyDollar[3].identifierCI.String()}
 		}
@@ -12949,7 +12949,7 @@ yydefault:
 	case 400:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2406
+//line sql.y:2406
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -12957,27 +12957,27 @@ yydefault:
 	case 401:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2410
+//line sql.y:2410
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
 		yyVAL.union = yyLOCAL
 	case 402:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2416
+//line sql.y:2416
 		{
 			yyVAL.str = ""
 		}
 	case 403:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2420
+//line sql.y:2420
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 404:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *IndexInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2426
+//line sql.y:2426
 		{
 			yyLOCAL = &IndexInfo{Type: string(yyDollar[2].str) + " " + string(yyDollar[3].str), ConstraintName: NewIdentifierCI(yyDollar[1].str), Name: NewIdentifierCI("PRIMARY"), Primary: true, Unique: true}
 		}
@@ -12985,7 +12985,7 @@ yydefault:
 	case 405:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2430
+//line sql.y:2430
 		{
 			yyLOCAL = &IndexInfo{Type: string(yyDollar[1].str) + " " + string(yyDollar[2].str), Name: NewIdentifierCI(yyDollar[3].str), Spatial: true, Unique: false}
 		}
@@ -12993,7 +12993,7 @@ yydefault:
 	case 406:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2434
+//line sql.y:2434
 		{
 			yyLOCAL = &IndexInfo{Type: string(yyDollar[1].str) + " " + string(yyDollar[2].str), Name: NewIdentifierCI(yyDollar[3].str), Fulltext: true, Unique: false}
 		}
@@ -13001,7 +13001,7 @@ yydefault:
 	case 407:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *IndexInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2438
+//line sql.y:2438
 		{
 			yyLOCAL = &IndexInfo{Type: string(yyDollar[2].str) + " " + string(yyDollar[3].str), ConstraintName: NewIdentifierCI(yyDollar[1].str), Name: NewIdentifierCI(yyDollar[4].str), Unique: true}
 		}
@@ -13009,100 +13009,100 @@ yydefault:
 	case 408:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *IndexInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2442
+//line sql.y:2442
 		{
 			yyLOCAL = &IndexInfo{Type: string(yyDollar[1].str), Name: NewIdentifierCI(yyDollar[2].str), Unique: false}
 		}
 		yyVAL.union = yyLOCAL
 	case 409:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2447
+//line sql.y:2447
 		{
 			yyVAL.str = ""
 		}
 	case 410:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2451
+//line sql.y:2451
 		{
 			yyVAL.str = yyDollar[2].str
 		}
 	case 411:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2457
+//line sql.y:2457
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 412:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2461
+//line sql.y:2461
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 413:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2465
+//line sql.y:2465
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 414:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2471
+//line sql.y:2471
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 415:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2475
+//line sql.y:2475
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 416:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2480
+//line sql.y:2480
 		{
 			yyVAL.str = "key"
 		}
 	case 417:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2484
+//line sql.y:2484
 		{
 			yyVAL.str = yyDollar[1].str
 		}
 	case 418:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2490
+//line sql.y:2490
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 419:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2494
+//line sql.y:2494
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 420:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2499
+//line sql.y:2499
 		{
 			yyVAL.str = ""
 		}
 	case 421:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2503
+//line sql.y:2503
 		{
 			yyVAL.str = string(yyDollar[1].identifierCI.String())
 		}
 	case 422:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*IndexColumn
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2509
+//line sql.y:2509
 		{
 			yyLOCAL = []*IndexColumn{yyDollar[1].indexColumnUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 423:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2513
+//line sql.y:2513
 		{
 			yySLICE := (*[]*IndexColumn)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].indexColumnUnion())
@@ -13110,7 +13110,7 @@ yydefault:
 	case 424:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *IndexColumn
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2519
+//line sql.y:2519
 		{
 			yyLOCAL = &IndexColumn{Column: yyDollar[1].identifierCI, Length: yyDollar[2].literalUnion(), Direction: yyDollar[3].orderDirectionUnion()}
 		}
@@ -13118,7 +13118,7 @@ yydefault:
 	case 425:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *IndexColumn
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2523
+//line sql.y:2523
 		{
 			yyLOCAL = &IndexColumn{Expression: yyDollar[2].exprUnion(), Direction: yyDollar[4].orderDirectionUnion()}
 		}
@@ -13126,7 +13126,7 @@ yydefault:
 	case 426:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ConstraintDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2529
+//line sql.y:2529
 		{
 			yyLOCAL = &ConstraintDefinition{Name: yyDollar[2].identifierCI, Details: yyDollar[3].constraintInfoUnion()}
 		}
@@ -13134,7 +13134,7 @@ yydefault:
 	case 427:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConstraintDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2533
+//line sql.y:2533
 		{
 			yyLOCAL = &ConstraintDefinition{Details: yyDollar[1].constraintInfoUnion()}
 		}
@@ -13142,7 +13142,7 @@ yydefault:
 	case 428:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ConstraintDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2539
+//line sql.y:2539
 		{
 			yyLOCAL = &ConstraintDefinition{Name: yyDollar[2].identifierCI, Details: yyDollar[3].constraintInfoUnion()}
 		}
@@ -13150,7 +13150,7 @@ yydefault:
 	case 429:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConstraintDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2543
+//line sql.y:2543
 		{
 			yyLOCAL = &ConstraintDefinition{Details: yyDollar[1].constraintInfoUnion()}
 		}
@@ -13158,7 +13158,7 @@ yydefault:
 	case 430:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL ConstraintInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2549
+//line sql.y:2549
 		{
 			yyLOCAL = &ForeignKeyDefinition{IndexName: NewIdentifierCI(yyDollar[3].str), Source: yyDollar[5].columnsUnion(), ReferenceDefinition: yyDollar[7].referenceDefinitionUnion()}
 		}
@@ -13166,7 +13166,7 @@ yydefault:
 	case 431:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2555
+//line sql.y:2555
 		{
 			yyLOCAL = &ReferenceDefinition{ReferencedTable: yyDollar[2].tableName, ReferencedColumns: yyDollar[4].columnsUnion(), Match: yyDollar[6].matchActionUnion()}
 		}
@@ -13174,7 +13174,7 @@ yydefault:
 	case 432:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2559
+//line sql.y:2559
 		{
 			yyLOCAL = &ReferenceDefinition{ReferencedTable: yyDollar[2].tableName, ReferencedColumns: yyDollar[4].columnsUnion(), Match: yyDollar[6].matchActionUnion(), OnDelete: yyDollar[7].referenceActionUnion()}
 		}
@@ -13182,7 +13182,7 @@ yydefault:
 	case 433:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2563
+//line sql.y:2563
 		{
 			yyLOCAL = &ReferenceDefinition{ReferencedTable: yyDollar[2].tableName, ReferencedColumns: yyDollar[4].columnsUnion(), Match: yyDollar[6].matchActionUnion(), OnUpdate: yyDollar[7].referenceActionUnion()}
 		}
@@ -13190,7 +13190,7 @@ yydefault:
 	case 434:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2567
+//line sql.y:2567
 		{
 			yyLOCAL = &ReferenceDefinition{ReferencedTable: yyDollar[2].tableName, ReferencedColumns: yyDollar[4].columnsUnion(), Match: yyDollar[6].matchActionUnion(), OnDelete: yyDollar[7].referenceActionUnion(), OnUpdate: yyDollar[8].referenceActionUnion()}
 		}
@@ -13198,7 +13198,7 @@ yydefault:
 	case 435:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2571
+//line sql.y:2571
 		{
 			yyLOCAL = &ReferenceDefinition{ReferencedTable: yyDollar[2].tableName, ReferencedColumns: yyDollar[4].columnsUnion(), Match: yyDollar[6].matchActionUnion(), OnUpdate: yyDollar[7].referenceActionUnion(), OnDelete: yyDollar[8].referenceActionUnion()}
 		}
@@ -13206,7 +13206,7 @@ yydefault:
 	case 436:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2576
+//line sql.y:2576
 		{
 			yyLOCAL = nil
 		}
@@ -13214,7 +13214,7 @@ yydefault:
 	case 437:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ReferenceDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2580
+//line sql.y:2580
 		{
 			yyLOCAL = yyDollar[1].referenceDefinitionUnion()
 		}
@@ -13222,7 +13222,7 @@ yydefault:
 	case 438:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL ConstraintInfo
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2586
+//line sql.y:2586
 		{
 			yyLOCAL = &CheckConstraintDefinition{Expr: yyDollar[3].exprUnion(), Enforced: yyDollar[5].booleanUnion()}
 		}
@@ -13230,7 +13230,7 @@ yydefault:
 	case 439:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL MatchAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2592
+//line sql.y:2592
 		{
 			yyLOCAL = yyDollar[2].matchActionUnion()
 		}
@@ -13238,7 +13238,7 @@ yydefault:
 	case 440:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL MatchAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2598
+//line sql.y:2598
 		{
 			yyLOCAL = Full
 		}
@@ -13246,7 +13246,7 @@ yydefault:
 	case 441:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL MatchAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2602
+//line sql.y:2602
 		{
 			yyLOCAL = Partial
 		}
@@ -13254,7 +13254,7 @@ yydefault:
 	case 442:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL MatchAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2606
+//line sql.y:2606
 		{
 			yyLOCAL = Simple
 		}
@@ -13262,7 +13262,7 @@ yydefault:
 	case 443:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL MatchAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2611
+//line sql.y:2611
 		{
 			yyLOCAL = DefaultMatch
 		}
@@ -13270,7 +13270,7 @@ yydefault:
 	case 444:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL MatchAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2615
+//line sql.y:2615
 		{
 			yyLOCAL = yyDollar[1].matchActionUnion()
 		}
@@ -13278,7 +13278,7 @@ yydefault:
 	case 445:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2621
+//line sql.y:2621
 		{
 			yyLOCAL = yyDollar[3].referenceActionUnion()
 		}
@@ -13286,7 +13286,7 @@ yydefault:
 	case 446:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2627
+//line sql.y:2627
 		{
 			yyLOCAL = yyDollar[3].referenceActionUnion()
 		}
@@ -13294,7 +13294,7 @@ yydefault:
 	case 447:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2633
+//line sql.y:2633
 		{
 			yyLOCAL = Restrict
 		}
@@ -13302,7 +13302,7 @@ yydefault:
 	case 448:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2637
+//line sql.y:2637
 		{
 			yyLOCAL = Cascade
 		}
@@ -13310,7 +13310,7 @@ yydefault:
 	case 449:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2641
+//line sql.y:2641
 		{
 			yyLOCAL = NoAction
 		}
@@ -13318,7 +13318,7 @@ yydefault:
 	case 450:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2645
+//line sql.y:2645
 		{
 			yyLOCAL = SetDefault
 		}
@@ -13326,33 +13326,33 @@ yydefault:
 	case 451:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL ReferenceAction
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2649
+//line sql.y:2649
 		{
 			yyLOCAL = SetNull
 		}
 		yyVAL.union = yyLOCAL
 	case 452:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2654
+//line sql.y:2654
 		{
 			yyVAL.str = ""
 		}
 	case 453:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2658
+//line sql.y:2658
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 454:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2662
+//line sql.y:2662
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 455:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2668
+//line sql.y:2668
 		{
 			yyLOCAL = true
 		}
@@ -13360,7 +13360,7 @@ yydefault:
 	case 456:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2672
+//line sql.y:2672
 		{
 			yyLOCAL = false
 		}
@@ -13368,7 +13368,7 @@ yydefault:
 	case 457:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2677
+//line sql.y:2677
 		{
 			yyLOCAL = true
 		}
@@ -13376,7 +13376,7 @@ yydefault:
 	case 458:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2681
+//line sql.y:2681
 		{
 			yyLOCAL = yyDollar[1].booleanUnion()
 		}
@@ -13384,7 +13384,7 @@ yydefault:
 	case 459:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL TableOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2686
+//line sql.y:2686
 		{
 			yyLOCAL = nil
 		}
@@ -13392,7 +13392,7 @@ yydefault:
 	case 460:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2690
+//line sql.y:2690
 		{
 			yyLOCAL = yyDollar[1].tableOptionsUnion()
 		}
@@ -13400,21 +13400,21 @@ yydefault:
 	case 461:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2696
+//line sql.y:2696
 		{
 			yyLOCAL = TableOptions{yyDollar[1].tableOptionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 462:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2700
+//line sql.y:2700
 		{
 			yySLICE := (*TableOptions)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].tableOptionUnion())
 		}
 	case 463:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2704
+//line sql.y:2704
 		{
 			yySLICE := (*TableOptions)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].tableOptionUnion())
@@ -13422,14 +13422,14 @@ yydefault:
 	case 464:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2710
+//line sql.y:2710
 		{
 			yyLOCAL = TableOptions{yyDollar[1].tableOptionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 465:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2714
+//line sql.y:2714
 		{
 			yySLICE := (*TableOptions)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].tableOptionUnion())
@@ -13437,7 +13437,7 @@ yydefault:
 	case 466:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2720
+//line sql.y:2720
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13445,7 +13445,7 @@ yydefault:
 	case 467:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2724
+//line sql.y:2724
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13453,7 +13453,7 @@ yydefault:
 	case 468:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2728
+//line sql.y:2728
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13461,7 +13461,7 @@ yydefault:
 	case 469:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2732
+//line sql.y:2732
 		{
 			yyLOCAL = &TableOption{Name: (string(yyDollar[2].str)), String: yyDollar[4].str, CaseSensitive: true}
 		}
@@ -13469,7 +13469,7 @@ yydefault:
 	case 470:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2736
+//line sql.y:2736
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[2].str), String: yyDollar[4].str, CaseSensitive: true}
 		}
@@ -13477,7 +13477,7 @@ yydefault:
 	case 471:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2740
+//line sql.y:2740
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13485,7 +13485,7 @@ yydefault:
 	case 472:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2744
+//line sql.y:2744
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13493,7 +13493,7 @@ yydefault:
 	case 473:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2748
+//line sql.y:2748
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13501,7 +13501,7 @@ yydefault:
 	case 474:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2752
+//line sql.y:2752
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13509,7 +13509,7 @@ yydefault:
 	case 475:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2756
+//line sql.y:2756
 		{
 			yyLOCAL = &TableOption{Name: (string(yyDollar[1].str) + " " + string(yyDollar[2].str)), Value: NewStrLiteral(yyDollar[4].str)}
 		}
@@ -13517,7 +13517,7 @@ yydefault:
 	case 476:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2760
+//line sql.y:2760
 		{
 			yyLOCAL = &TableOption{Name: (string(yyDollar[1].str) + " " + string(yyDollar[2].str)), Value: NewStrLiteral(yyDollar[4].str)}
 		}
@@ -13525,7 +13525,7 @@ yydefault:
 	case 477:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2764
+//line sql.y:2764
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13533,7 +13533,7 @@ yydefault:
 	case 478:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2768
+//line sql.y:2768
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13541,7 +13541,7 @@ yydefault:
 	case 479:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2772
+//line sql.y:2772
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: yyDollar[3].identifierCS.String(), CaseSensitive: true}
 		}
@@ -13549,7 +13549,7 @@ yydefault:
 	case 480:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2776
+//line sql.y:2776
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13557,7 +13557,7 @@ yydefault:
 	case 481:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2780
+//line sql.y:2780
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: string(yyDollar[3].str)}
 		}
@@ -13565,7 +13565,7 @@ yydefault:
 	case 482:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2784
+//line sql.y:2784
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13573,7 +13573,7 @@ yydefault:
 	case 483:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2788
+//line sql.y:2788
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13581,7 +13581,7 @@ yydefault:
 	case 484:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2792
+//line sql.y:2792
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13589,7 +13589,7 @@ yydefault:
 	case 485:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2796
+//line sql.y:2796
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13597,7 +13597,7 @@ yydefault:
 	case 486:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2800
+//line sql.y:2800
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: string(yyDollar[3].str)}
 		}
@@ -13605,7 +13605,7 @@ yydefault:
 	case 487:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2804
+//line sql.y:2804
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13613,7 +13613,7 @@ yydefault:
 	case 488:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2808
+//line sql.y:2808
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: string(yyDollar[3].str)}
 		}
@@ -13621,7 +13621,7 @@ yydefault:
 	case 489:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2812
+//line sql.y:2812
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewStrLiteral(yyDollar[3].str)}
 		}
@@ -13629,7 +13629,7 @@ yydefault:
 	case 490:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2816
+//line sql.y:2816
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13637,7 +13637,7 @@ yydefault:
 	case 491:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2820
+//line sql.y:2820
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: string(yyDollar[3].str)}
 		}
@@ -13645,7 +13645,7 @@ yydefault:
 	case 492:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2824
+//line sql.y:2824
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13653,7 +13653,7 @@ yydefault:
 	case 493:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2828
+//line sql.y:2828
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: string(yyDollar[3].str)}
 		}
@@ -13661,7 +13661,7 @@ yydefault:
 	case 494:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2832
+//line sql.y:2832
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Value: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -13669,7 +13669,7 @@ yydefault:
 	case 495:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2836
+//line sql.y:2836
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), String: (yyDollar[3].identifierCI.String() + yyDollar[4].str), CaseSensitive: true}
 		}
@@ -13677,63 +13677,63 @@ yydefault:
 	case 496:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *TableOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2840
+//line sql.y:2840
 		{
 			yyLOCAL = &TableOption{Name: string(yyDollar[1].str), Tables: yyDollar[4].tableNamesUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 497:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2845
+//line sql.y:2845
 		{
 			yyVAL.str = ""
 		}
 	case 498:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2849
+//line sql.y:2849
 		{
 			yyVAL.str = " " + string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 499:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2853
+//line sql.y:2853
 		{
 			yyVAL.str = " " + string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 509:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2872
+//line sql.y:2872
 		{
 			yyVAL.str = String(TableName{Qualifier: yyDollar[1].identifierCS, Name: yyDollar[3].identifierCS})
 		}
 	case 510:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2876
+//line sql.y:2876
 		{
 			yyVAL.str = yyDollar[1].identifierCI.String()
 		}
 	case 511:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2880
+//line sql.y:2880
 		{
 			yyVAL.str = encodeSQLString(yyDollar[1].str)
 		}
 	case 512:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2884
+//line sql.y:2884
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 513:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2889
+//line sql.y:2889
 		{
 			yyVAL.str = ""
 		}
 	case 515:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2895
+//line sql.y:2895
 		{
 			yyLOCAL = false
 		}
@@ -13741,7 +13741,7 @@ yydefault:
 	case 516:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2899
+//line sql.y:2899
 		{
 			yyLOCAL = true
 		}
@@ -13749,7 +13749,7 @@ yydefault:
 	case 517:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2904
+//line sql.y:2904
 		{
 			yyLOCAL = nil
 		}
@@ -13757,27 +13757,27 @@ yydefault:
 	case 518:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2908
+//line sql.y:2908
 		{
 			yyLOCAL = yyDollar[2].colNameUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 519:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2913
+//line sql.y:2913
 		{
 			yyVAL.str = ""
 		}
 	case 520:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2917
+//line sql.y:2917
 		{
 			yyVAL.str = string(yyDollar[2].str)
 		}
 	case 521:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2922
+//line sql.y:2922
 		{
 			yyLOCAL = nil
 		}
@@ -13785,7 +13785,7 @@ yydefault:
 	case 522:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2926
+//line sql.y:2926
 		{
 			yyLOCAL = NewIntLiteral(yyDollar[2].str)
 		}
@@ -13793,7 +13793,7 @@ yydefault:
 	case 523:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2930
+//line sql.y:2930
 		{
 			yyLOCAL = NewDecimalLiteral(yyDollar[2].str)
 		}
@@ -13801,7 +13801,7 @@ yydefault:
 	case 524:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2935
+//line sql.y:2935
 		{
 			yyLOCAL = nil
 		}
@@ -13809,14 +13809,14 @@ yydefault:
 	case 525:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2939
+//line sql.y:2939
 		{
 			yyLOCAL = yyDollar[1].alterOptionsUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 526:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2943
+//line sql.y:2943
 		{
 			yySLICE := (*[]AlterOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, &OrderByOption{Cols: yyDollar[5].columnsUnion()})
@@ -13824,14 +13824,14 @@ yydefault:
 	case 527:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2947
+//line sql.y:2947
 		{
 			yyLOCAL = yyDollar[1].alterOptionsUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 528:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2951
+//line sql.y:2951
 		{
 			yySLICE := (*[]AlterOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].alterOptionsUnion()...)
@@ -13839,7 +13839,7 @@ yydefault:
 	case 529:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2955
+//line sql.y:2955
 		{
 			yyLOCAL = append(append(yyDollar[1].alterOptionsUnion(), yyDollar[3].alterOptionsUnion()...), &OrderByOption{Cols: yyDollar[7].columnsUnion()})
 		}
@@ -13847,21 +13847,21 @@ yydefault:
 	case 530:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2961
+//line sql.y:2961
 		{
 			yyLOCAL = []AlterOption{yyDollar[1].alterOptionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 531:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2965
+//line sql.y:2965
 		{
 			yySLICE := (*[]AlterOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].alterOptionUnion())
 		}
 	case 532:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2969
+//line sql.y:2969
 		{
 			yySLICE := (*[]AlterOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].alterOptionUnion())
@@ -13869,7 +13869,7 @@ yydefault:
 	case 533:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2975
+//line sql.y:2975
 		{
 			yyLOCAL = yyDollar[1].tableOptionsUnion()
 		}
@@ -13877,7 +13877,7 @@ yydefault:
 	case 534:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2979
+//line sql.y:2979
 		{
 			yyLOCAL = &AddConstraintDefinition{ConstraintDefinition: yyDollar[2].constraintDefinitionUnion()}
 		}
@@ -13885,7 +13885,7 @@ yydefault:
 	case 535:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2983
+//line sql.y:2983
 		{
 			yyLOCAL = &AddConstraintDefinition{ConstraintDefinition: yyDollar[2].constraintDefinitionUnion()}
 		}
@@ -13893,7 +13893,7 @@ yydefault:
 	case 536:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2987
+//line sql.y:2987
 		{
 			yyLOCAL = &AddIndexDefinition{IndexDefinition: yyDollar[2].indexDefinitionUnion()}
 		}
@@ -13901,7 +13901,7 @@ yydefault:
 	case 537:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2991
+//line sql.y:2991
 		{
 			yyLOCAL = &AddColumns{Columns: yyDollar[4].columnDefinitionsUnion()}
 		}
@@ -13909,7 +13909,7 @@ yydefault:
 	case 538:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2995
+//line sql.y:2995
 		{
 			yyLOCAL = &AddColumns{Columns: []*ColumnDefinition{yyDollar[3].columnDefinitionUnion()}, First: yyDollar[4].booleanUnion(), After: yyDollar[5].colNameUnion()}
 		}
@@ -13917,7 +13917,7 @@ yydefault:
 	case 539:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:2999
+//line sql.y:2999
 		{
 			yyLOCAL = &AlterColumn{Column: yyDollar[3].colNameUnion(), DropDefault: true}
 		}
@@ -13925,7 +13925,7 @@ yydefault:
 	case 540:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3003
+//line sql.y:3003
 		{
 			yyLOCAL = &AlterColumn{Column: yyDollar[3].colNameUnion(), DropDefault: false, DefaultVal: yyDollar[6].exprUnion(), DefaultLiteral: true}
 		}
@@ -13933,7 +13933,7 @@ yydefault:
 	case 541:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3007
+//line sql.y:3007
 		{
 			yyLOCAL = &AlterColumn{Column: yyDollar[3].colNameUnion(), DropDefault: false, DefaultVal: yyDollar[7].exprUnion()}
 		}
@@ -13941,7 +13941,7 @@ yydefault:
 	case 542:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3011
+//line sql.y:3011
 		{
 			val := false
 			yyLOCAL = &AlterColumn{Column: yyDollar[3].colNameUnion(), Invisible: &val}
@@ -13950,7 +13950,7 @@ yydefault:
 	case 543:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3016
+//line sql.y:3016
 		{
 			val := true
 			yyLOCAL = &AlterColumn{Column: yyDollar[3].colNameUnion(), Invisible: &val}
@@ -13959,7 +13959,7 @@ yydefault:
 	case 544:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3021
+//line sql.y:3021
 		{
 			yyLOCAL = &AlterCheck{Name: yyDollar[3].identifierCI, Enforced: yyDollar[4].booleanUnion()}
 		}
@@ -13967,7 +13967,7 @@ yydefault:
 	case 545:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3025
+//line sql.y:3025
 		{
 			yyLOCAL = &AlterIndex{Name: yyDollar[3].identifierCI, Invisible: false}
 		}
@@ -13975,7 +13975,7 @@ yydefault:
 	case 546:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3029
+//line sql.y:3029
 		{
 			yyLOCAL = &AlterIndex{Name: yyDollar[3].identifierCI, Invisible: true}
 		}
@@ -13983,7 +13983,7 @@ yydefault:
 	case 547:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3033
+//line sql.y:3033
 		{
 			yyLOCAL = &ChangeColumn{OldColumn: yyDollar[3].colNameUnion(), NewColDefinition: yyDollar[4].columnDefinitionUnion(), First: yyDollar[5].booleanUnion(), After: yyDollar[6].colNameUnion()}
 		}
@@ -13991,7 +13991,7 @@ yydefault:
 	case 548:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3037
+//line sql.y:3037
 		{
 			yyLOCAL = &ModifyColumn{NewColDefinition: yyDollar[3].columnDefinitionUnion(), First: yyDollar[4].booleanUnion(), After: yyDollar[5].colNameUnion()}
 		}
@@ -13999,7 +13999,7 @@ yydefault:
 	case 549:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3041
+//line sql.y:3041
 		{
 			yyLOCAL = &RenameColumn{OldName: yyDollar[3].colNameUnion(), NewName: yyDollar[5].colNameUnion()}
 		}
@@ -14007,7 +14007,7 @@ yydefault:
 	case 550:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3045
+//line sql.y:3045
 		{
 			yyLOCAL = &AlterCharset{CharacterSet: yyDollar[4].str, Collate: yyDollar[5].str}
 		}
@@ -14015,7 +14015,7 @@ yydefault:
 	case 551:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3049
+//line sql.y:3049
 		{
 			yyLOCAL = &KeyState{Enable: false}
 		}
@@ -14023,7 +14023,7 @@ yydefault:
 	case 552:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3053
+//line sql.y:3053
 		{
 			yyLOCAL = &KeyState{Enable: true}
 		}
@@ -14031,7 +14031,7 @@ yydefault:
 	case 553:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3057
+//line sql.y:3057
 		{
 			yyLOCAL = &TablespaceOperation{Import: false}
 		}
@@ -14039,7 +14039,7 @@ yydefault:
 	case 554:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3061
+//line sql.y:3061
 		{
 			yyLOCAL = &TablespaceOperation{Import: true}
 		}
@@ -14047,7 +14047,7 @@ yydefault:
 	case 555:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3065
+//line sql.y:3065
 		{
 			yyLOCAL = &DropColumn{Name: yyDollar[3].colNameUnion()}
 		}
@@ -14055,7 +14055,7 @@ yydefault:
 	case 556:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3069
+//line sql.y:3069
 		{
 			yyLOCAL = &DropKey{Type: NormalKeyType, Name: yyDollar[3].identifierCI}
 		}
@@ -14063,7 +14063,7 @@ yydefault:
 	case 557:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3073
+//line sql.y:3073
 		{
 			yyLOCAL = &DropKey{Type: PrimaryKeyType}
 		}
@@ -14071,7 +14071,7 @@ yydefault:
 	case 558:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3077
+//line sql.y:3077
 		{
 			yyLOCAL = &DropKey{Type: ForeignKeyType, Name: yyDollar[4].identifierCI}
 		}
@@ -14079,7 +14079,7 @@ yydefault:
 	case 559:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3081
+//line sql.y:3081
 		{
 			yyLOCAL = &DropKey{Type: CheckKeyType, Name: yyDollar[3].identifierCI}
 		}
@@ -14087,7 +14087,7 @@ yydefault:
 	case 560:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3085
+//line sql.y:3085
 		{
 			yyLOCAL = &DropKey{Type: CheckKeyType, Name: yyDollar[3].identifierCI}
 		}
@@ -14095,7 +14095,7 @@ yydefault:
 	case 561:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3089
+//line sql.y:3089
 		{
 			yyLOCAL = &Force{}
 		}
@@ -14103,7 +14103,7 @@ yydefault:
 	case 562:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3093
+//line sql.y:3093
 		{
 			yyLOCAL = &RenameTableName{Table: yyDollar[3].tableName}
 		}
@@ -14111,7 +14111,7 @@ yydefault:
 	case 563:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3097
+//line sql.y:3097
 		{
 			yyLOCAL = &RenameIndex{OldName: yyDollar[3].identifierCI, NewName: yyDollar[5].identifierCI}
 		}
@@ -14119,14 +14119,14 @@ yydefault:
 	case 564:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3103
+//line sql.y:3103
 		{
 			yyLOCAL = []AlterOption{yyDollar[1].alterOptionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 565:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3107
+//line sql.y:3107
 		{
 			yySLICE := (*[]AlterOption)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].alterOptionUnion())
@@ -14134,7 +14134,7 @@ yydefault:
 	case 566:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3113
+//line sql.y:3113
 		{
 			yyLOCAL = AlgorithmValue(string(yyDollar[3].str))
 		}
@@ -14142,7 +14142,7 @@ yydefault:
 	case 567:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3117
+//line sql.y:3117
 		{
 			yyLOCAL = AlgorithmValue(string(yyDollar[3].str))
 		}
@@ -14150,7 +14150,7 @@ yydefault:
 	case 568:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3121
+//line sql.y:3121
 		{
 			yyLOCAL = AlgorithmValue(string(yyDollar[3].str))
 		}
@@ -14158,7 +14158,7 @@ yydefault:
 	case 569:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3125
+//line sql.y:3125
 		{
 			yyLOCAL = AlgorithmValue(string(yyDollar[3].str))
 		}
@@ -14166,7 +14166,7 @@ yydefault:
 	case 570:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3129
+//line sql.y:3129
 		{
 			yyLOCAL = &LockOption{Type: DefaultType}
 		}
@@ -14174,7 +14174,7 @@ yydefault:
 	case 571:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3133
+//line sql.y:3133
 		{
 			yyLOCAL = &LockOption{Type: NoneType}
 		}
@@ -14182,7 +14182,7 @@ yydefault:
 	case 572:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3137
+//line sql.y:3137
 		{
 			yyLOCAL = &LockOption{Type: SharedType}
 		}
@@ -14190,7 +14190,7 @@ yydefault:
 	case 573:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3141
+//line sql.y:3141
 		{
 			yyLOCAL = &LockOption{Type: ExclusiveType}
 		}
@@ -14198,7 +14198,7 @@ yydefault:
 	case 574:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3145
+//line sql.y:3145
 		{
 			yyLOCAL = &Validation{With: true}
 		}
@@ -14206,7 +14206,7 @@ yydefault:
 	case 575:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3149
+//line sql.y:3149
 		{
 			yyLOCAL = &Validation{With: false}
 		}
@@ -14214,7 +14214,7 @@ yydefault:
 	case 576:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3155
+//line sql.y:3155
 		{
 			yyDollar[1].alterTableUnion().FullyParsed = true
 			yyDollar[1].alterTableUnion().AlterOptions = yyDollar[2].alterOptionsUnion()
@@ -14225,7 +14225,7 @@ yydefault:
 	case 577:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3162
+//line sql.y:3162
 		{
 			yyDollar[1].alterTableUnion().FullyParsed = true
 			yyDollar[1].alterTableUnion().AlterOptions = yyDollar[2].alterOptionsUnion()
@@ -14236,7 +14236,7 @@ yydefault:
 	case 578:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3169
+//line sql.y:3169
 		{
 			yyDollar[1].alterTableUnion().FullyParsed = true
 			yyDollar[1].alterTableUnion().AlterOptions = yyDollar[2].alterOptionsUnion()
@@ -14247,7 +14247,7 @@ yydefault:
 	case 579:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3176
+//line sql.y:3176
 		{
 			yyDollar[1].alterTableUnion().FullyParsed = true
 			yyDollar[1].alterTableUnion().PartitionSpec = yyDollar[2].partSpecUnion()
@@ -14257,7 +14257,7 @@ yydefault:
 	case 580:
 		yyDollar = yyS[yypt-11 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3182
+//line sql.y:3182
 		{
 			yyLOCAL = &AlterView{ViewName: yyDollar[7].tableName, Comments: Comments(yyDollar[2].strs).Parsed(), Algorithm: yyDollar[3].str, Definer: yyDollar[4].definerUnion(), Security: yyDollar[5].str, Columns: yyDollar[8].columnsUnion(), Select: yyDollar[10].selStmtUnion(), CheckOption: yyDollar[11].str}
 		}
@@ -14265,7 +14265,7 @@ yydefault:
 	case 581:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3192
+//line sql.y:3192
 		{
 			yyDollar[1].alterDatabaseUnion().FullyParsed = true
 			yyDollar[1].alterDatabaseUnion().DBName = yyDollar[2].identifierCS
@@ -14276,7 +14276,7 @@ yydefault:
 	case 582:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3199
+//line sql.y:3199
 		{
 			yyDollar[1].alterDatabaseUnion().FullyParsed = true
 			yyDollar[1].alterDatabaseUnion().DBName = yyDollar[2].identifierCS
@@ -14287,7 +14287,7 @@ yydefault:
 	case 583:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3206
+//line sql.y:3206
 		{
 			yyLOCAL = &AlterVschema{
 				Action: CreateVindexDDLAction,
@@ -14303,7 +14303,7 @@ yydefault:
 	case 584:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3218
+//line sql.y:3218
 		{
 			yyLOCAL = &AlterVschema{
 				Action: CreateTindexDDLAction,
@@ -14319,7 +14319,7 @@ yydefault:
 	case 585:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3230
+//line sql.y:3230
 		{
 			yyLOCAL = &AlterVschema{
 				Action: DropVindexDDLAction,
@@ -14333,7 +14333,7 @@ yydefault:
 	case 586:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3240
+//line sql.y:3240
 		{
 			yyLOCAL = &AlterVschema{
 				Action: DropTindexDDLAction,
@@ -14347,7 +14347,7 @@ yydefault:
 	case 587:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3250
+//line sql.y:3250
 		{
 			yyLOCAL = &AlterVschema{Action: AddVschemaTableDDLAction, Table: yyDollar[6].tableName}
 		}
@@ -14355,7 +14355,7 @@ yydefault:
 	case 588:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3254
+//line sql.y:3254
 		{
 			yyLOCAL = &AlterVschema{Action: DropVschemaTableDDLAction, Table: yyDollar[6].tableName}
 		}
@@ -14363,7 +14363,7 @@ yydefault:
 	case 589:
 		yyDollar = yyS[yypt-13 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3258
+//line sql.y:3258
 		{
 			yyLOCAL = &AlterVschema{
 				Action: AddColVindexDDLAction,
@@ -14380,7 +14380,7 @@ yydefault:
 	case 590:
 		yyDollar = yyS[yypt-15 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3271
+//line sql.y:3271
 		{
 			yyLOCAL = &AlterVschema{
 				Action: AddColTindexDDLAction,
@@ -14398,7 +14398,7 @@ yydefault:
 	case 591:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3285
+//line sql.y:3285
 		{
 			yyLOCAL = &AlterVschema{
 				Action: DropColVindexDDLAction,
@@ -14412,7 +14412,7 @@ yydefault:
 	case 592:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3295
+//line sql.y:3295
 		{
 			yyLOCAL = &AlterVschema{
 				Action: DropColTindexDDLAction,
@@ -14426,7 +14426,7 @@ yydefault:
 	case 593:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3305
+//line sql.y:3305
 		{
 			yyLOCAL = &AlterVschema{Action: AddSequenceDDLAction, Table: yyDollar[6].tableName}
 		}
@@ -14434,7 +14434,7 @@ yydefault:
 	case 594:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3309
+//line sql.y:3309
 		{
 			yyLOCAL = &AlterVschema{Action: DropSequenceDDLAction, Table: yyDollar[6].tableName}
 		}
@@ -14442,7 +14442,7 @@ yydefault:
 	case 595:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3313
+//line sql.y:3313
 		{
 			yyLOCAL = &AlterVschema{
 				Action: AddAutoIncDDLAction,
@@ -14457,7 +14457,7 @@ yydefault:
 	case 596:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3324
+//line sql.y:3324
 		{
 			yyLOCAL = &AlterVschema{
 				Action: DropAutoIncDDLAction,
@@ -14468,7 +14468,7 @@ yydefault:
 	case 597:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3331
+//line sql.y:3331
 		{
 			yyLOCAL = &AlterMigration{
 				Type: RetryMigrationType,
@@ -14479,7 +14479,7 @@ yydefault:
 	case 598:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3338
+//line sql.y:3338
 		{
 			yyLOCAL = &AlterMigration{
 				Type: CleanupMigrationType,
@@ -14490,7 +14490,7 @@ yydefault:
 	case 599:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3345
+//line sql.y:3345
 		{
 			yyLOCAL = &AlterMigration{
 				Type: LaunchMigrationType,
@@ -14501,7 +14501,7 @@ yydefault:
 	case 600:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3352
+//line sql.y:3352
 		{
 			yyLOCAL = &AlterMigration{
 				Type:   LaunchMigrationType,
@@ -14513,7 +14513,7 @@ yydefault:
 	case 601:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3360
+//line sql.y:3360
 		{
 			yyLOCAL = &AlterMigration{
 				Type: LaunchAllMigrationType,
@@ -14523,7 +14523,7 @@ yydefault:
 	case 602:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3366
+//line sql.y:3366
 		{
 			yyLOCAL = &AlterMigration{
 				Type: CompleteMigrationType,
@@ -14534,7 +14534,7 @@ yydefault:
 	case 603:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3373
+//line sql.y:3373
 		{
 			yyLOCAL = &AlterMigration{
 				Type: CompleteAllMigrationType,
@@ -14544,7 +14544,7 @@ yydefault:
 	case 604:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3379
+//line sql.y:3379
 		{
 			yyLOCAL = &AlterMigration{
 				Type: CancelMigrationType,
@@ -14555,7 +14555,7 @@ yydefault:
 	case 605:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3386
+//line sql.y:3386
 		{
 			yyLOCAL = &AlterMigration{
 				Type: CancelAllMigrationType,
@@ -14565,7 +14565,7 @@ yydefault:
 	case 606:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3392
+//line sql.y:3392
 		{
 			yyLOCAL = &AlterMigration{
 				Type:   ThrottleMigrationType,
@@ -14578,7 +14578,7 @@ yydefault:
 	case 607:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3401
+//line sql.y:3401
 		{
 			yyLOCAL = &AlterMigration{
 				Type:   ThrottleAllMigrationType,
@@ -14590,7 +14590,7 @@ yydefault:
 	case 608:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3409
+//line sql.y:3409
 		{
 			yyLOCAL = &AlterMigration{
 				Type: UnthrottleMigrationType,
@@ -14601,7 +14601,7 @@ yydefault:
 	case 609:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3416
+//line sql.y:3416
 		{
 			yyLOCAL = &AlterMigration{
 				Type: UnthrottleAllMigrationType,
@@ -14611,7 +14611,7 @@ yydefault:
 	case 610:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *PartitionOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3423
+//line sql.y:3423
 		{
 			yyLOCAL = nil
 		}
@@ -14619,7 +14619,7 @@ yydefault:
 	case 611:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *PartitionOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3427
+//line sql.y:3427
 		{
 			yyDollar[3].partitionOptionUnion().Partitions = yyDollar[4].integerUnion()
 			yyDollar[3].partitionOptionUnion().SubPartition = yyDollar[5].subPartitionUnion()
@@ -14630,7 +14630,7 @@ yydefault:
 	case 612:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *PartitionOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3436
+//line sql.y:3436
 		{
 			yyLOCAL = &PartitionOption{
 				IsLinear: yyDollar[1].booleanUnion(),
@@ -14642,7 +14642,7 @@ yydefault:
 	case 613:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *PartitionOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3444
+//line sql.y:3444
 		{
 			yyLOCAL = &PartitionOption{
 				IsLinear:     yyDollar[1].booleanUnion(),
@@ -14655,7 +14655,7 @@ yydefault:
 	case 614:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3453
+//line sql.y:3453
 		{
 			yyLOCAL = &PartitionOption{
 				Type: yyDollar[1].partitionByTypeUnion(),
@@ -14666,7 +14666,7 @@ yydefault:
 	case 615:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *PartitionOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3460
+//line sql.y:3460
 		{
 			yyLOCAL = &PartitionOption{
 				Type:    yyDollar[1].partitionByTypeUnion(),
@@ -14677,7 +14677,7 @@ yydefault:
 	case 616:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *SubPartition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3468
+//line sql.y:3468
 		{
 			yyLOCAL = nil
 		}
@@ -14685,7 +14685,7 @@ yydefault:
 	case 617:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *SubPartition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3472
+//line sql.y:3472
 		{
 			yyLOCAL = &SubPartition{
 				IsLinear:      yyDollar[3].booleanUnion(),
@@ -14698,7 +14698,7 @@ yydefault:
 	case 618:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL *SubPartition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3481
+//line sql.y:3481
 		{
 			yyLOCAL = &SubPartition{
 				IsLinear:      yyDollar[3].booleanUnion(),
@@ -14712,7 +14712,7 @@ yydefault:
 	case 619:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []*PartitionDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3492
+//line sql.y:3492
 		{
 			yyLOCAL = nil
 		}
@@ -14720,7 +14720,7 @@ yydefault:
 	case 620:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL []*PartitionDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3496
+//line sql.y:3496
 		{
 			yyLOCAL = yyDollar[2].partDefsUnion()
 		}
@@ -14728,7 +14728,7 @@ yydefault:
 	case 621:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3501
+//line sql.y:3501
 		{
 			yyLOCAL = false
 		}
@@ -14736,7 +14736,7 @@ yydefault:
 	case 622:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3505
+//line sql.y:3505
 		{
 			yyLOCAL = true
 		}
@@ -14744,7 +14744,7 @@ yydefault:
 	case 623:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3510
+//line sql.y:3510
 		{
 			yyLOCAL = 0
 		}
@@ -14752,7 +14752,7 @@ yydefault:
 	case 624:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3514
+//line sql.y:3514
 		{
 			yyLOCAL = convertStringToInt(yyDollar[3].str)
 		}
@@ -14760,7 +14760,7 @@ yydefault:
 	case 625:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3520
+//line sql.y:3520
 		{
 			yyLOCAL = &JSONTableExpr{Expr: yyDollar[3].exprUnion(), Filter: yyDollar[5].exprUnion(), Columns: yyDollar[6].jtColumnListUnion(), Alias: yyDollar[8].identifierCS}
 		}
@@ -14768,7 +14768,7 @@ yydefault:
 	case 626:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL []*JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3526
+//line sql.y:3526
 		{
 			yyLOCAL = yyDollar[3].jtColumnListUnion()
 		}
@@ -14776,14 +14776,14 @@ yydefault:
 	case 627:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3532
+//line sql.y:3532
 		{
 			yyLOCAL = []*JtColumnDefinition{yyDollar[1].jtColumnDefinitionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 628:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3536
+//line sql.y:3536
 		{
 			yySLICE := (*[]*JtColumnDefinition)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].jtColumnDefinitionUnion())
@@ -14791,7 +14791,7 @@ yydefault:
 	case 629:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3542
+//line sql.y:3542
 		{
 			yyLOCAL = &JtColumnDefinition{JtOrdinal: &JtOrdinalColDef{Name: yyDollar[1].identifierCI}}
 		}
@@ -14799,7 +14799,7 @@ yydefault:
 	case 630:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3546
+//line sql.y:3546
 		{
 			yyDollar[2].columnType.Options = &ColumnTypeOptions{Collate: yyDollar[3].str}
 			jtPath := &JtPathColDef{Name: yyDollar[1].identifierCI, Type: yyDollar[2].columnType, JtColExists: yyDollar[4].booleanUnion(), Path: yyDollar[6].exprUnion()}
@@ -14809,7 +14809,7 @@ yydefault:
 	case 631:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3552
+//line sql.y:3552
 		{
 			yyDollar[2].columnType.Options = &ColumnTypeOptions{Collate: yyDollar[3].str}
 			jtPath := &JtPathColDef{Name: yyDollar[1].identifierCI, Type: yyDollar[2].columnType, JtColExists: yyDollar[4].booleanUnion(), Path: yyDollar[6].exprUnion(), EmptyOnResponse: yyDollar[7].jtOnResponseUnion()}
@@ -14819,7 +14819,7 @@ yydefault:
 	case 632:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3558
+//line sql.y:3558
 		{
 			yyDollar[2].columnType.Options = &ColumnTypeOptions{Collate: yyDollar[3].str}
 			jtPath := &JtPathColDef{Name: yyDollar[1].identifierCI, Type: yyDollar[2].columnType, JtColExists: yyDollar[4].booleanUnion(), Path: yyDollar[6].exprUnion(), ErrorOnResponse: yyDollar[7].jtOnResponseUnion()}
@@ -14829,7 +14829,7 @@ yydefault:
 	case 633:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL *JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3564
+//line sql.y:3564
 		{
 			yyDollar[2].columnType.Options = &ColumnTypeOptions{Collate: yyDollar[3].str}
 			jtPath := &JtPathColDef{Name: yyDollar[1].identifierCI, Type: yyDollar[2].columnType, JtColExists: yyDollar[4].booleanUnion(), Path: yyDollar[6].exprUnion(), EmptyOnResponse: yyDollar[7].jtOnResponseUnion(), ErrorOnResponse: yyDollar[8].jtOnResponseUnion()}
@@ -14839,7 +14839,7 @@ yydefault:
 	case 634:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *JtColumnDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3570
+//line sql.y:3570
 		{
 			jtNestedPath := &JtNestedPathColDef{Path: yyDollar[3].exprUnion(), Columns: yyDollar[4].jtColumnListUnion()}
 			yyLOCAL = &JtColumnDefinition{JtNestedPath: jtNestedPath}
@@ -14848,7 +14848,7 @@ yydefault:
 	case 635:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3576
+//line sql.y:3576
 		{
 			yyLOCAL = false
 		}
@@ -14856,7 +14856,7 @@ yydefault:
 	case 636:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3580
+//line sql.y:3580
 		{
 			yyLOCAL = true
 		}
@@ -14864,7 +14864,7 @@ yydefault:
 	case 637:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3584
+//line sql.y:3584
 		{
 			yyLOCAL = false
 		}
@@ -14872,7 +14872,7 @@ yydefault:
 	case 638:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3588
+//line sql.y:3588
 		{
 			yyLOCAL = true
 		}
@@ -14880,7 +14880,7 @@ yydefault:
 	case 639:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *JtOnResponse
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3594
+//line sql.y:3594
 		{
 			yyLOCAL = yyDollar[1].jtOnResponseUnion()
 		}
@@ -14888,7 +14888,7 @@ yydefault:
 	case 640:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *JtOnResponse
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3600
+//line sql.y:3600
 		{
 			yyLOCAL = yyDollar[1].jtOnResponseUnion()
 		}
@@ -14896,7 +14896,7 @@ yydefault:
 	case 641:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *JtOnResponse
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3606
+//line sql.y:3606
 		{
 			yyLOCAL = &JtOnResponse{ResponseType: ErrorJSONType}
 		}
@@ -14904,7 +14904,7 @@ yydefault:
 	case 642:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *JtOnResponse
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3610
+//line sql.y:3610
 		{
 			yyLOCAL = &JtOnResponse{ResponseType: NullJSONType}
 		}
@@ -14912,7 +14912,7 @@ yydefault:
 	case 643:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *JtOnResponse
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3614
+//line sql.y:3614
 		{
 			yyLOCAL = &JtOnResponse{ResponseType: DefaultJSONType, Expr: yyDollar[2].exprUnion()}
 		}
@@ -14920,7 +14920,7 @@ yydefault:
 	case 644:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL PartitionByType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3620
+//line sql.y:3620
 		{
 			yyLOCAL = RangeType
 		}
@@ -14928,7 +14928,7 @@ yydefault:
 	case 645:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL PartitionByType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3624
+//line sql.y:3624
 		{
 			yyLOCAL = ListType
 		}
@@ -14936,7 +14936,7 @@ yydefault:
 	case 646:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3629
+//line sql.y:3629
 		{
 			yyLOCAL = -1
 		}
@@ -14944,7 +14944,7 @@ yydefault:
 	case 647:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3633
+//line sql.y:3633
 		{
 			yyLOCAL = convertStringToInt(yyDollar[2].str)
 		}
@@ -14952,7 +14952,7 @@ yydefault:
 	case 648:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3638
+//line sql.y:3638
 		{
 			yyLOCAL = -1
 		}
@@ -14960,7 +14960,7 @@ yydefault:
 	case 649:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3642
+//line sql.y:3642
 		{
 			yyLOCAL = convertStringToInt(yyDollar[2].str)
 		}
@@ -14968,7 +14968,7 @@ yydefault:
 	case 650:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3648
+//line sql.y:3648
 		{
 			yyLOCAL = &PartitionSpec{Action: AddAction, Definitions: []*PartitionDefinition{yyDollar[4].partDefUnion()}}
 		}
@@ -14976,7 +14976,7 @@ yydefault:
 	case 651:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3652
+//line sql.y:3652
 		{
 			yyLOCAL = &PartitionSpec{Action: DropAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -14984,7 +14984,7 @@ yydefault:
 	case 652:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3656
+//line sql.y:3656
 		{
 			yyLOCAL = &PartitionSpec{Action: ReorganizeAction, Names: yyDollar[3].partitionsUnion(), Definitions: yyDollar[6].partDefsUnion()}
 		}
@@ -14992,7 +14992,7 @@ yydefault:
 	case 653:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3660
+//line sql.y:3660
 		{
 			yyLOCAL = &PartitionSpec{Action: DiscardAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15000,7 +15000,7 @@ yydefault:
 	case 654:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3664
+//line sql.y:3664
 		{
 			yyLOCAL = &PartitionSpec{Action: DiscardAction, IsAll: true}
 		}
@@ -15008,7 +15008,7 @@ yydefault:
 	case 655:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3668
+//line sql.y:3668
 		{
 			yyLOCAL = &PartitionSpec{Action: ImportAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15016,7 +15016,7 @@ yydefault:
 	case 656:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3672
+//line sql.y:3672
 		{
 			yyLOCAL = &PartitionSpec{Action: ImportAction, IsAll: true}
 		}
@@ -15024,7 +15024,7 @@ yydefault:
 	case 657:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3676
+//line sql.y:3676
 		{
 			yyLOCAL = &PartitionSpec{Action: TruncateAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15032,7 +15032,7 @@ yydefault:
 	case 658:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3680
+//line sql.y:3680
 		{
 			yyLOCAL = &PartitionSpec{Action: TruncateAction, IsAll: true}
 		}
@@ -15040,7 +15040,7 @@ yydefault:
 	case 659:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3684
+//line sql.y:3684
 		{
 			yyLOCAL = &PartitionSpec{Action: CoalesceAction, Number: NewIntLiteral(yyDollar[3].str)}
 		}
@@ -15048,7 +15048,7 @@ yydefault:
 	case 660:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3688
+//line sql.y:3688
 		{
 			yyLOCAL = &PartitionSpec{Action: ExchangeAction, Names: Partitions{yyDollar[3].identifierCI}, TableName: yyDollar[6].tableName, WithoutValidation: yyDollar[7].booleanUnion()}
 		}
@@ -15056,7 +15056,7 @@ yydefault:
 	case 661:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3692
+//line sql.y:3692
 		{
 			yyLOCAL = &PartitionSpec{Action: AnalyzeAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15064,7 +15064,7 @@ yydefault:
 	case 662:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3696
+//line sql.y:3696
 		{
 			yyLOCAL = &PartitionSpec{Action: AnalyzeAction, IsAll: true}
 		}
@@ -15072,7 +15072,7 @@ yydefault:
 	case 663:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3700
+//line sql.y:3700
 		{
 			yyLOCAL = &PartitionSpec{Action: CheckAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15080,7 +15080,7 @@ yydefault:
 	case 664:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3704
+//line sql.y:3704
 		{
 			yyLOCAL = &PartitionSpec{Action: CheckAction, IsAll: true}
 		}
@@ -15088,7 +15088,7 @@ yydefault:
 	case 665:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3708
+//line sql.y:3708
 		{
 			yyLOCAL = &PartitionSpec{Action: OptimizeAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15096,7 +15096,7 @@ yydefault:
 	case 666:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3712
+//line sql.y:3712
 		{
 			yyLOCAL = &PartitionSpec{Action: OptimizeAction, IsAll: true}
 		}
@@ -15104,7 +15104,7 @@ yydefault:
 	case 667:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3716
+//line sql.y:3716
 		{
 			yyLOCAL = &PartitionSpec{Action: RebuildAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15112,7 +15112,7 @@ yydefault:
 	case 668:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3720
+//line sql.y:3720
 		{
 			yyLOCAL = &PartitionSpec{Action: RebuildAction, IsAll: true}
 		}
@@ -15120,7 +15120,7 @@ yydefault:
 	case 669:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3724
+//line sql.y:3724
 		{
 			yyLOCAL = &PartitionSpec{Action: RepairAction, Names: yyDollar[3].partitionsUnion()}
 		}
@@ -15128,7 +15128,7 @@ yydefault:
 	case 670:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3728
+//line sql.y:3728
 		{
 			yyLOCAL = &PartitionSpec{Action: RepairAction, IsAll: true}
 		}
@@ -15136,7 +15136,7 @@ yydefault:
 	case 671:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionSpec
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3732
+//line sql.y:3732
 		{
 			yyLOCAL = &PartitionSpec{Action: UpgradeAction}
 		}
@@ -15144,7 +15144,7 @@ yydefault:
 	case 672:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3737
+//line sql.y:3737
 		{
 			yyLOCAL = false
 		}
@@ -15152,7 +15152,7 @@ yydefault:
 	case 673:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3741
+//line sql.y:3741
 		{
 			yyLOCAL = false
 		}
@@ -15160,7 +15160,7 @@ yydefault:
 	case 674:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3745
+//line sql.y:3745
 		{
 			yyLOCAL = true
 		}
@@ -15168,28 +15168,28 @@ yydefault:
 	case 675:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*PartitionDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3751
+//line sql.y:3751
 		{
 			yyLOCAL = []*PartitionDefinition{yyDollar[1].partDefUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 676:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3755
+//line sql.y:3755
 		{
 			yySLICE := (*[]*PartitionDefinition)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].partDefUnion())
 		}
 	case 677:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3761
+//line sql.y:3761
 		{
 			yyVAL.partDefUnion().Options = yyDollar[2].partitionDefinitionOptionsUnion()
 		}
 	case 678:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3766
+//line sql.y:3766
 		{
 			yyLOCAL = &PartitionDefinitionOptions{}
 		}
@@ -15197,7 +15197,7 @@ yydefault:
 	case 679:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3770
+//line sql.y:3770
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().ValueRange = yyDollar[2].partitionValueRangeUnion()
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15206,7 +15206,7 @@ yydefault:
 	case 680:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3775
+//line sql.y:3775
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().Comment = yyDollar[2].literalUnion()
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15215,7 +15215,7 @@ yydefault:
 	case 681:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3780
+//line sql.y:3780
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().Engine = yyDollar[2].partitionEngineUnion()
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15224,7 +15224,7 @@ yydefault:
 	case 682:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3785
+//line sql.y:3785
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().DataDirectory = yyDollar[2].literalUnion()
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15233,7 +15233,7 @@ yydefault:
 	case 683:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3790
+//line sql.y:3790
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().IndexDirectory = yyDollar[2].literalUnion()
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15242,7 +15242,7 @@ yydefault:
 	case 684:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3795
+//line sql.y:3795
 		{
 			val := yyDollar[2].integerUnion()
 			yyDollar[1].partitionDefinitionOptionsUnion().MaxRows = &val
@@ -15252,7 +15252,7 @@ yydefault:
 	case 685:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3801
+//line sql.y:3801
 		{
 			val := yyDollar[2].integerUnion()
 			yyDollar[1].partitionDefinitionOptionsUnion().MinRows = &val
@@ -15262,7 +15262,7 @@ yydefault:
 	case 686:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3807
+//line sql.y:3807
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().TableSpace = yyDollar[2].str
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15271,7 +15271,7 @@ yydefault:
 	case 687:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3812
+//line sql.y:3812
 		{
 			yyDollar[1].partitionDefinitionOptionsUnion().SubPartitionDefinitions = yyDollar[2].subPartitionDefinitionsUnion()
 			yyLOCAL = yyDollar[1].partitionDefinitionOptionsUnion()
@@ -15280,7 +15280,7 @@ yydefault:
 	case 688:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SubPartitionDefinitions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3818
+//line sql.y:3818
 		{
 			yyLOCAL = yyDollar[2].subPartitionDefinitionsUnion()
 		}
@@ -15288,14 +15288,14 @@ yydefault:
 	case 689:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SubPartitionDefinitions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3824
+//line sql.y:3824
 		{
 			yyLOCAL = SubPartitionDefinitions{yyDollar[1].subPartitionDefinitionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 690:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3828
+//line sql.y:3828
 		{
 			yySLICE := (*SubPartitionDefinitions)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].subPartitionDefinitionUnion())
@@ -15303,7 +15303,7 @@ yydefault:
 	case 691:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SubPartitionDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3834
+//line sql.y:3834
 		{
 			yyLOCAL = &SubPartitionDefinition{Name: yyDollar[2].identifierCI, Options: yyDollar[3].subPartitionDefinitionOptionsUnion()}
 		}
@@ -15311,7 +15311,7 @@ yydefault:
 	case 692:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3839
+//line sql.y:3839
 		{
 			yyLOCAL = &SubPartitionDefinitionOptions{}
 		}
@@ -15319,7 +15319,7 @@ yydefault:
 	case 693:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3843
+//line sql.y:3843
 		{
 			yyDollar[1].subPartitionDefinitionOptionsUnion().Comment = yyDollar[2].literalUnion()
 			yyLOCAL = yyDollar[1].subPartitionDefinitionOptionsUnion()
@@ -15328,7 +15328,7 @@ yydefault:
 	case 694:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3848
+//line sql.y:3848
 		{
 			yyDollar[1].subPartitionDefinitionOptionsUnion().Engine = yyDollar[2].partitionEngineUnion()
 			yyLOCAL = yyDollar[1].subPartitionDefinitionOptionsUnion()
@@ -15337,7 +15337,7 @@ yydefault:
 	case 695:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3853
+//line sql.y:3853
 		{
 			yyDollar[1].subPartitionDefinitionOptionsUnion().DataDirectory = yyDollar[2].literalUnion()
 			yyLOCAL = yyDollar[1].subPartitionDefinitionOptionsUnion()
@@ -15346,7 +15346,7 @@ yydefault:
 	case 696:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3858
+//line sql.y:3858
 		{
 			yyDollar[1].subPartitionDefinitionOptionsUnion().IndexDirectory = yyDollar[2].literalUnion()
 			yyLOCAL = yyDollar[1].subPartitionDefinitionOptionsUnion()
@@ -15355,7 +15355,7 @@ yydefault:
 	case 697:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3863
+//line sql.y:3863
 		{
 			val := yyDollar[2].integerUnion()
 			yyDollar[1].subPartitionDefinitionOptionsUnion().MaxRows = &val
@@ -15365,7 +15365,7 @@ yydefault:
 	case 698:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3869
+//line sql.y:3869
 		{
 			val := yyDollar[2].integerUnion()
 			yyDollar[1].subPartitionDefinitionOptionsUnion().MinRows = &val
@@ -15375,7 +15375,7 @@ yydefault:
 	case 699:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *SubPartitionDefinitionOptions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3875
+//line sql.y:3875
 		{
 			yyDollar[1].subPartitionDefinitionOptionsUnion().TableSpace = yyDollar[2].str
 			yyLOCAL = yyDollar[1].subPartitionDefinitionOptionsUnion()
@@ -15384,7 +15384,7 @@ yydefault:
 	case 700:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionValueRange
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3882
+//line sql.y:3882
 		{
 			yyLOCAL = &PartitionValueRange{
 				Type:  LessThanType,
@@ -15395,7 +15395,7 @@ yydefault:
 	case 701:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionValueRange
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3889
+//line sql.y:3889
 		{
 			yyLOCAL = &PartitionValueRange{
 				Type:     LessThanType,
@@ -15406,7 +15406,7 @@ yydefault:
 	case 702:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *PartitionValueRange
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3896
+//line sql.y:3896
 		{
 			yyLOCAL = &PartitionValueRange{
 				Type:  InType,
@@ -15417,7 +15417,7 @@ yydefault:
 	case 703:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3904
+//line sql.y:3904
 		{
 			yyLOCAL = false
 		}
@@ -15425,7 +15425,7 @@ yydefault:
 	case 704:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3908
+//line sql.y:3908
 		{
 			yyLOCAL = true
 		}
@@ -15433,7 +15433,7 @@ yydefault:
 	case 705:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *PartitionEngine
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3914
+//line sql.y:3914
 		{
 			yyLOCAL = &PartitionEngine{Storage: yyDollar[1].booleanUnion(), Name: yyDollar[4].identifierCS.String()}
 		}
@@ -15441,7 +15441,7 @@ yydefault:
 	case 706:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3920
+//line sql.y:3920
 		{
 			yyLOCAL = NewStrLiteral(yyDollar[3].str)
 		}
@@ -15449,7 +15449,7 @@ yydefault:
 	case 707:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3926
+//line sql.y:3926
 		{
 			yyLOCAL = NewStrLiteral(yyDollar[4].str)
 		}
@@ -15457,7 +15457,7 @@ yydefault:
 	case 708:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *Literal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3932
+//line sql.y:3932
 		{
 			yyLOCAL = NewStrLiteral(yyDollar[4].str)
 		}
@@ -15465,7 +15465,7 @@ yydefault:
 	case 709:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3938
+//line sql.y:3938
 		{
 			yyLOCAL = convertStringToInt(yyDollar[3].str)
 		}
@@ -15473,41 +15473,41 @@ yydefault:
 	case 710:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3944
+//line sql.y:3944
 		{
 			yyLOCAL = convertStringToInt(yyDollar[3].str)
 		}
 		yyVAL.union = yyLOCAL
 	case 711:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3950
+//line sql.y:3950
 		{
 			yyVAL.str = yyDollar[3].identifierCS.String()
 		}
 	case 712:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *PartitionDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3956
+//line sql.y:3956
 		{
 			yyLOCAL = &PartitionDefinition{Name: yyDollar[2].identifierCI}
 		}
 		yyVAL.union = yyLOCAL
 	case 713:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3962
+//line sql.y:3962
 		{
 			yyVAL.str = ""
 		}
 	case 714:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3966
+//line sql.y:3966
 		{
 			yyVAL.str = ""
 		}
 	case 715:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3972
+//line sql.y:3972
 		{
 			yyLOCAL = &RenameTable{TablePairs: yyDollar[3].renameTablePairsUnion()}
 		}
@@ -15515,14 +15515,14 @@ yydefault:
 	case 716:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL []*RenameTablePair
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3978
+//line sql.y:3978
 		{
 			yyLOCAL = []*RenameTablePair{{FromTable: yyDollar[1].tableName, ToTable: yyDollar[3].tableName}}
 		}
 		yyVAL.union = yyLOCAL
 	case 717:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3982
+//line sql.y:3982
 		{
 			yySLICE := (*[]*RenameTablePair)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, &RenameTablePair{FromTable: yyDollar[3].tableName, ToTable: yyDollar[5].tableName})
@@ -15530,7 +15530,7 @@ yydefault:
 	case 718:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3988
+//line sql.y:3988
 		{
 			yyLOCAL = &DropTable{FromTables: yyDollar[6].tableNamesUnion(), IfExists: yyDollar[5].booleanUnion(), Comments: Comments(yyDollar[2].strs).Parsed(), Temp: yyDollar[3].booleanUnion()}
 		}
@@ -15538,7 +15538,7 @@ yydefault:
 	case 719:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:3992
+//line sql.y:3992
 		{
 			// Change this to an alter statement
 			if yyDollar[4].identifierCI.Lowered() == "primary" {
@@ -15551,7 +15551,7 @@ yydefault:
 	case 720:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4001
+//line sql.y:4001
 		{
 			yyLOCAL = &DropView{FromTables: yyDollar[5].tableNamesUnion(), Comments: Comments(yyDollar[2].strs).Parsed(), IfExists: yyDollar[4].booleanUnion()}
 		}
@@ -15559,7 +15559,7 @@ yydefault:
 	case 721:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4005
+//line sql.y:4005
 		{
 			yyLOCAL = &DropDatabase{Comments: Comments(yyDollar[2].strs).Parsed(), DBName: yyDollar[5].identifierCS, IfExists: yyDollar[4].booleanUnion()}
 		}
@@ -15567,7 +15567,7 @@ yydefault:
 	case 722:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4011
+//line sql.y:4011
 		{
 			yyLOCAL = &TruncateTable{Table: yyDollar[3].tableName}
 		}
@@ -15575,7 +15575,7 @@ yydefault:
 	case 723:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4015
+//line sql.y:4015
 		{
 			yyLOCAL = &TruncateTable{Table: yyDollar[2].tableName}
 		}
@@ -15583,7 +15583,7 @@ yydefault:
 	case 724:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4021
+//line sql.y:4021
 		{
 			yyLOCAL = &Analyze{IsLocal: yyDollar[2].booleanUnion(), Table: yyDollar[4].tableName}
 		}
@@ -15591,7 +15591,7 @@ yydefault:
 	case 725:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4027
+//line sql.y:4027
 		{
 			yyLOCAL = &PurgeBinaryLogs{To: string(yyDollar[5].str)}
 		}
@@ -15599,7 +15599,7 @@ yydefault:
 	case 726:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4031
+//line sql.y:4031
 		{
 			yyLOCAL = &PurgeBinaryLogs{Before: string(yyDollar[5].str)}
 		}
@@ -15607,7 +15607,7 @@ yydefault:
 	case 727:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4037
+//line sql.y:4037
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Charset, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15615,7 +15615,7 @@ yydefault:
 	case 728:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4041
+//line sql.y:4041
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Collation, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15623,7 +15623,7 @@ yydefault:
 	case 729:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4045
+//line sql.y:4045
 		{
 			yyLOCAL = &Show{&ShowBasic{Full: yyDollar[2].booleanUnion(), Command: Column, Tbl: yyDollar[5].tableName, DbName: yyDollar[6].identifierCS, Filter: yyDollar[7].showFilterUnion()}}
 		}
@@ -15631,7 +15631,7 @@ yydefault:
 	case 730:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4049
+//line sql.y:4049
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Database, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15639,7 +15639,7 @@ yydefault:
 	case 731:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4053
+//line sql.y:4053
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Database, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15647,7 +15647,7 @@ yydefault:
 	case 732:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4057
+//line sql.y:4057
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Keyspace, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15655,7 +15655,7 @@ yydefault:
 	case 733:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4061
+//line sql.y:4061
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Keyspace, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15663,7 +15663,7 @@ yydefault:
 	case 734:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4065
+//line sql.y:4065
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Function, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15671,7 +15671,7 @@ yydefault:
 	case 735:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4069
+//line sql.y:4069
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Index, Tbl: yyDollar[5].tableName, DbName: yyDollar[6].identifierCS, Filter: yyDollar[7].showFilterUnion()}}
 		}
@@ -15679,7 +15679,7 @@ yydefault:
 	case 736:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4073
+//line sql.y:4073
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: OpenTable, DbName: yyDollar[4].identifierCS, Filter: yyDollar[5].showFilterUnion()}}
 		}
@@ -15687,7 +15687,7 @@ yydefault:
 	case 737:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4077
+//line sql.y:4077
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Privilege}}
 		}
@@ -15695,7 +15695,7 @@ yydefault:
 	case 738:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4081
+//line sql.y:4081
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Procedure, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15703,7 +15703,7 @@ yydefault:
 	case 739:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4085
+//line sql.y:4085
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: StatusSession, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15711,7 +15711,7 @@ yydefault:
 	case 740:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4089
+//line sql.y:4089
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: StatusGlobal, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15719,7 +15719,7 @@ yydefault:
 	case 741:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4093
+//line sql.y:4093
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VariableSession, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15727,7 +15727,7 @@ yydefault:
 	case 742:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4097
+//line sql.y:4097
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VariableGlobal, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15735,7 +15735,7 @@ yydefault:
 	case 743:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4101
+//line sql.y:4101
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: TableStatus, DbName: yyDollar[4].identifierCS, Filter: yyDollar[5].showFilterUnion()}}
 		}
@@ -15743,7 +15743,7 @@ yydefault:
 	case 744:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4105
+//line sql.y:4105
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Table, Full: yyDollar[2].booleanUnion(), DbName: yyDollar[4].identifierCS, Filter: yyDollar[5].showFilterUnion()}}
 		}
@@ -15751,7 +15751,7 @@ yydefault:
 	case 745:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4109
+//line sql.y:4109
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Trigger, DbName: yyDollar[3].identifierCS, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15759,7 +15759,7 @@ yydefault:
 	case 746:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4113
+//line sql.y:4113
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateDb, Op: yyDollar[4].tableName}}
 		}
@@ -15767,7 +15767,7 @@ yydefault:
 	case 747:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4117
+//line sql.y:4117
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateE, Op: yyDollar[4].tableName}}
 		}
@@ -15775,7 +15775,7 @@ yydefault:
 	case 748:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4121
+//line sql.y:4121
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateF, Op: yyDollar[4].tableName}}
 		}
@@ -15783,7 +15783,7 @@ yydefault:
 	case 749:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4125
+//line sql.y:4125
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateProc, Op: yyDollar[4].tableName}}
 		}
@@ -15791,7 +15791,7 @@ yydefault:
 	case 750:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4129
+//line sql.y:4129
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateTbl, Op: yyDollar[4].tableName}}
 		}
@@ -15799,7 +15799,7 @@ yydefault:
 	case 751:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4133
+//line sql.y:4133
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateTr, Op: yyDollar[4].tableName}}
 		}
@@ -15807,7 +15807,7 @@ yydefault:
 	case 752:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4137
+//line sql.y:4137
 		{
 			yyLOCAL = &Show{&ShowCreate{Command: CreateV, Op: yyDollar[4].tableName}}
 		}
@@ -15815,7 +15815,7 @@ yydefault:
 	case 753:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4141
+//line sql.y:4141
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Engines}}
 		}
@@ -15823,7 +15823,7 @@ yydefault:
 	case 754:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4145
+//line sql.y:4145
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Plugins}}
 		}
@@ -15831,7 +15831,7 @@ yydefault:
 	case 755:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4149
+//line sql.y:4149
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: GtidExecGlobal, DbName: yyDollar[4].identifierCS}}
 		}
@@ -15839,7 +15839,7 @@ yydefault:
 	case 756:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4153
+//line sql.y:4153
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VGtidExecGlobal, DbName: yyDollar[4].identifierCS}}
 		}
@@ -15847,7 +15847,7 @@ yydefault:
 	case 757:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4157
+//line sql.y:4157
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VitessVariables, Filter: yyDollar[4].showFilterUnion()}}
 		}
@@ -15855,7 +15855,7 @@ yydefault:
 	case 758:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4161
+//line sql.y:4161
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VitessMigrations, Filter: yyDollar[4].showFilterUnion(), DbName: yyDollar[3].identifierCS}}
 		}
@@ -15863,7 +15863,7 @@ yydefault:
 	case 759:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4165
+//line sql.y:4165
 		{
 			yyLOCAL = &ShowMigrationLogs{UUID: string(yyDollar[3].str)}
 		}
@@ -15871,7 +15871,7 @@ yydefault:
 	case 760:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4169
+//line sql.y:4169
 		{
 			yyLOCAL = &ShowThrottledApps{}
 		}
@@ -15879,7 +15879,7 @@ yydefault:
 	case 761:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4173
+//line sql.y:4173
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VitessReplicationStatus, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15887,7 +15887,7 @@ yydefault:
 	case 762:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4177
+//line sql.y:4177
 		{
 			yyLOCAL = &ShowThrottlerStatus{}
 		}
@@ -15895,7 +15895,7 @@ yydefault:
 	case 763:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4181
+//line sql.y:4181
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VschemaTables}}
 		}
@@ -15903,7 +15903,7 @@ yydefault:
 	case 764:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4185
+//line sql.y:4185
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VschemaVindexes}}
 		}
@@ -15911,7 +15911,7 @@ yydefault:
 	case 765:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4189
+//line sql.y:4189
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VschemaVindexes, Tbl: yyDollar[5].tableName}}
 		}
@@ -15919,7 +15919,7 @@ yydefault:
 	case 766:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4193
+//line sql.y:4193
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: Warnings}}
 		}
@@ -15927,7 +15927,7 @@ yydefault:
 	case 767:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4197
+//line sql.y:4197
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VitessShards, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15935,7 +15935,7 @@ yydefault:
 	case 768:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4201
+//line sql.y:4201
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VitessTablets, Filter: yyDollar[3].showFilterUnion()}}
 		}
@@ -15943,7 +15943,7 @@ yydefault:
 	case 769:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4205
+//line sql.y:4205
 		{
 			yyLOCAL = &Show{&ShowBasic{Command: VitessTarget}}
 		}
@@ -15951,7 +15951,7 @@ yydefault:
 	case 770:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4212
+//line sql.y:4212
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].identifierCI.String())}}
 		}
@@ -15959,7 +15959,7 @@ yydefault:
 	case 771:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4216
+//line sql.y:4216
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str) + " " + string(yyDollar[3].str)}}
 		}
@@ -15967,7 +15967,7 @@ yydefault:
 	case 772:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4220
+//line sql.y:4220
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str) + " " + yyDollar[3].identifierCI.String()}}
 		}
@@ -15975,7 +15975,7 @@ yydefault:
 	case 773:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4224
+//line sql.y:4224
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str) + " " + string(yyDollar[3].str)}}
 		}
@@ -15983,7 +15983,7 @@ yydefault:
 	case 774:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4228
+//line sql.y:4228
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str)}}
 		}
@@ -15991,7 +15991,7 @@ yydefault:
 	case 775:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4232
+//line sql.y:4232
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str) + " " + string(yyDollar[3].str) + " " + String(yyDollar[4].tableName)}}
 		}
@@ -15999,7 +15999,7 @@ yydefault:
 	case 776:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4236
+//line sql.y:4236
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str) + " " + string(yyDollar[3].str) + " " + String(yyDollar[4].tableName)}}
 		}
@@ -16007,7 +16007,7 @@ yydefault:
 	case 777:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4240
+//line sql.y:4240
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[3].str)}}
 		}
@@ -16015,27 +16015,27 @@ yydefault:
 	case 778:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4244
+//line sql.y:4244
 		{
 			yyLOCAL = &Show{&ShowOther{Command: string(yyDollar[2].str)}}
 		}
 		yyVAL.union = yyLOCAL
 	case 779:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4250
+//line sql.y:4250
 		{
 			yyVAL.str = ""
 		}
 	case 780:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4254
+//line sql.y:4254
 		{
 			yyVAL.str = "extended "
 		}
 	case 781:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4260
+//line sql.y:4260
 		{
 			yyLOCAL = false
 		}
@@ -16043,45 +16043,45 @@ yydefault:
 	case 782:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4264
+//line sql.y:4264
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 783:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4270
+//line sql.y:4270
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 784:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4274
+//line sql.y:4274
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 785:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4280
+//line sql.y:4280
 		{
 			yyVAL.identifierCS = NewIdentifierCS("")
 		}
 	case 786:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4284
+//line sql.y:4284
 		{
 			yyVAL.identifierCS = yyDollar[2].identifierCS
 		}
 	case 787:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4288
+//line sql.y:4288
 		{
 			yyVAL.identifierCS = yyDollar[2].identifierCS
 		}
 	case 788:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ShowFilter
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4294
+//line sql.y:4294
 		{
 			yyLOCAL = nil
 		}
@@ -16089,7 +16089,7 @@ yydefault:
 	case 789:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ShowFilter
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4298
+//line sql.y:4298
 		{
 			yyLOCAL = &ShowFilter{Like: string(yyDollar[2].str)}
 		}
@@ -16097,7 +16097,7 @@ yydefault:
 	case 790:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ShowFilter
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4302
+//line sql.y:4302
 		{
 			yyLOCAL = &ShowFilter{Filter: yyDollar[2].exprUnion()}
 		}
@@ -16105,7 +16105,7 @@ yydefault:
 	case 791:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ShowFilter
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4308
+//line sql.y:4308
 		{
 			yyLOCAL = nil
 		}
@@ -16113,45 +16113,45 @@ yydefault:
 	case 792:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ShowFilter
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4312
+//line sql.y:4312
 		{
 			yyLOCAL = &ShowFilter{Like: string(yyDollar[2].str)}
 		}
 		yyVAL.union = yyLOCAL
 	case 793:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4318
+//line sql.y:4318
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 794:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4322
+//line sql.y:4322
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 795:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4326
+//line sql.y:4326
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 796:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4332
+//line sql.y:4332
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 797:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4336
+//line sql.y:4336
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 798:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4342
+//line sql.y:4342
 		{
 			yyLOCAL = &Use{DBName: yyDollar[2].identifierCS}
 		}
@@ -16159,7 +16159,7 @@ yydefault:
 	case 799:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4346
+//line sql.y:4346
 		{
 			yyLOCAL = &Use{DBName: IdentifierCS{v: ""}}
 		}
@@ -16167,39 +16167,39 @@ yydefault:
 	case 800:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4350
+//line sql.y:4350
 		{
 			yyLOCAL = &Use{DBName: NewIdentifierCS(yyDollar[2].identifierCS.String() + "@" + string(yyDollar[3].str))}
 		}
 		yyVAL.union = yyLOCAL
 	case 801:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4357
+//line sql.y:4357
 		{
 			yyVAL.identifierCS = NewIdentifierCS(string(yyDollar[1].str))
 		}
 	case 802:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4361
+//line sql.y:4361
 		{
 			yyVAL.identifierCS = NewIdentifierCS("@" + string(yyDollar[1].str))
 		}
 	case 803:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4365
+//line sql.y:4365
 		{
 			yyVAL.identifierCS = NewIdentifierCS("@@" + string(yyDollar[1].str))
 		}
 	case 804:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4369
+//line sql.y:4369
 		{
 			yyVAL.identifierCS = NewIdentifierCS(string(yyDollar[1].str))
 		}
 	case 805:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4376
+//line sql.y:4376
 		{
 			yyLOCAL = &Begin{}
 		}
@@ -16207,7 +16207,7 @@ yydefault:
 	case 806:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4380
+//line sql.y:4380
 		{
 			yyLOCAL = &Begin{TxAccessModes: yyDollar[3].txAccessModesUnion()}
 		}
@@ -16215,7 +16215,7 @@ yydefault:
 	case 807:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []TxAccessMode
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4385
+//line sql.y:4385
 		{
 			yyLOCAL = nil
 		}
@@ -16223,7 +16223,7 @@ yydefault:
 	case 808:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []TxAccessMode
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4389
+//line sql.y:4389
 		{
 			yyLOCAL = yyDollar[1].txAccessModesUnion()
 		}
@@ -16231,14 +16231,14 @@ yydefault:
 	case 809:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []TxAccessMode
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4395
+//line sql.y:4395
 		{
 			yyLOCAL = []TxAccessMode{yyDollar[1].txAccessModeUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 810:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4399
+//line sql.y:4399
 		{
 			yySLICE := (*[]TxAccessMode)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].txAccessModeUnion())
@@ -16246,7 +16246,7 @@ yydefault:
 	case 811:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL TxAccessMode
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4405
+//line sql.y:4405
 		{
 			yyLOCAL = WithConsistentSnapshot
 		}
@@ -16254,7 +16254,7 @@ yydefault:
 	case 812:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL TxAccessMode
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4409
+//line sql.y:4409
 		{
 			yyLOCAL = ReadWrite
 		}
@@ -16262,7 +16262,7 @@ yydefault:
 	case 813:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL TxAccessMode
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4413
+//line sql.y:4413
 		{
 			yyLOCAL = ReadOnly
 		}
@@ -16270,7 +16270,7 @@ yydefault:
 	case 814:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4420
+//line sql.y:4420
 		{
 			yyLOCAL = &Commit{}
 		}
@@ -16278,7 +16278,7 @@ yydefault:
 	case 815:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4426
+//line sql.y:4426
 		{
 			yyLOCAL = &Rollback{}
 		}
@@ -16286,39 +16286,39 @@ yydefault:
 	case 816:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4430
+//line sql.y:4430
 		{
 			yyLOCAL = &SRollback{Name: yyDollar[5].identifierCI}
 		}
 		yyVAL.union = yyLOCAL
 	case 817:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4435
+//line sql.y:4435
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 818:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4437
+//line sql.y:4437
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 819:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4440
+//line sql.y:4440
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 820:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4442
+//line sql.y:4442
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 821:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4446
+//line sql.y:4446
 		{
 			yyLOCAL = &Savepoint{Name: yyDollar[2].identifierCI}
 		}
@@ -16326,7 +16326,7 @@ yydefault:
 	case 822:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4452
+//line sql.y:4452
 		{
 			yyLOCAL = &Release{Name: yyDollar[3].identifierCI}
 		}
@@ -16334,7 +16334,7 @@ yydefault:
 	case 823:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4457
+//line sql.y:4457
 		{
 			yyLOCAL = EmptyType
 		}
@@ -16342,7 +16342,7 @@ yydefault:
 	case 824:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4461
+//line sql.y:4461
 		{
 			yyLOCAL = JSONType
 		}
@@ -16350,7 +16350,7 @@ yydefault:
 	case 825:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4465
+//line sql.y:4465
 		{
 			yyLOCAL = TreeType
 		}
@@ -16358,7 +16358,7 @@ yydefault:
 	case 826:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4469
+//line sql.y:4469
 		{
 			yyLOCAL = VitessType
 		}
@@ -16366,7 +16366,7 @@ yydefault:
 	case 827:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4473
+//line sql.y:4473
 		{
 			yyLOCAL = VTExplainType
 		}
@@ -16374,7 +16374,7 @@ yydefault:
 	case 828:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4477
+//line sql.y:4477
 		{
 			yyLOCAL = TraditionalType
 		}
@@ -16382,7 +16382,7 @@ yydefault:
 	case 829:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4481
+//line sql.y:4481
 		{
 			yyLOCAL = AnalyzeType
 		}
@@ -16390,7 +16390,7 @@ yydefault:
 	case 830:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL VExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4486
+//line sql.y:4486
 		{
 			yyLOCAL = PlanVExplainType
 		}
@@ -16398,7 +16398,7 @@ yydefault:
 	case 831:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL VExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4490
+//line sql.y:4490
 		{
 			yyLOCAL = PlanVExplainType
 		}
@@ -16406,7 +16406,7 @@ yydefault:
 	case 832:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL VExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4494
+//line sql.y:4494
 		{
 			yyLOCAL = AllVExplainType
 		}
@@ -16414,33 +16414,33 @@ yydefault:
 	case 833:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL VExplainType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4498
+//line sql.y:4498
 		{
 			yyLOCAL = QueriesVExplainType
 		}
 		yyVAL.union = yyLOCAL
 	case 834:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4504
+//line sql.y:4504
 		{
 			yyVAL.str = yyDollar[1].str
 		}
 	case 835:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4508
+//line sql.y:4508
 		{
 			yyVAL.str = yyDollar[1].str
 		}
 	case 836:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4512
+//line sql.y:4512
 		{
 			yyVAL.str = yyDollar[1].str
 		}
 	case 837:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4518
+//line sql.y:4518
 		{
 			yyLOCAL = yyDollar[1].selStmtUnion()
 		}
@@ -16448,7 +16448,7 @@ yydefault:
 	case 838:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4522
+//line sql.y:4522
 		{
 			yyLOCAL = yyDollar[1].statementUnion()
 		}
@@ -16456,7 +16456,7 @@ yydefault:
 	case 839:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4526
+//line sql.y:4526
 		{
 			yyLOCAL = yyDollar[1].statementUnion()
 		}
@@ -16464,33 +16464,33 @@ yydefault:
 	case 840:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4530
+//line sql.y:4530
 		{
 			yyLOCAL = yyDollar[1].statementUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 841:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4535
+//line sql.y:4535
 		{
 			yyVAL.str = ""
 		}
 	case 842:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4539
+//line sql.y:4539
 		{
 			yyVAL.str = yyDollar[1].identifierCI.val
 		}
 	case 843:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4543
+//line sql.y:4543
 		{
 			yyVAL.str = encodeSQLString(yyDollar[1].str)
 		}
 	case 844:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4549
+//line sql.y:4549
 		{
 			yyLOCAL = &ExplainTab{Table: yyDollar[3].tableName, Wild: yyDollar[4].str}
 		}
@@ -16498,7 +16498,7 @@ yydefault:
 	case 845:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4553
+//line sql.y:4553
 		{
 			yyLOCAL = &ExplainStmt{Type: yyDollar[3].explainTypeUnion(), Statement: yyDollar[4].statementUnion(), Comments: Comments(yyDollar[2].strs).Parsed()}
 		}
@@ -16506,7 +16506,7 @@ yydefault:
 	case 846:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4559
+//line sql.y:4559
 		{
 			yyLOCAL = &VExplainStmt{Type: yyDollar[3].vexplainTypeUnion(), Statement: yyDollar[4].statementUnion(), Comments: Comments(yyDollar[2].strs).Parsed()}
 		}
@@ -16514,7 +16514,7 @@ yydefault:
 	case 847:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4565
+//line sql.y:4565
 		{
 			yyLOCAL = &OtherAdmin{}
 		}
@@ -16522,7 +16522,7 @@ yydefault:
 	case 848:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4569
+//line sql.y:4569
 		{
 			yyLOCAL = &OtherAdmin{}
 		}
@@ -16530,7 +16530,7 @@ yydefault:
 	case 849:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4575
+//line sql.y:4575
 		{
 			yyLOCAL = &LockTables{Tables: yyDollar[3].tableAndLockTypesUnion()}
 		}
@@ -16538,14 +16538,14 @@ yydefault:
 	case 850:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableAndLockTypes
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4581
+//line sql.y:4581
 		{
 			yyLOCAL = TableAndLockTypes{yyDollar[1].tableAndLockTypeUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 851:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4585
+//line sql.y:4585
 		{
 			yySLICE := (*TableAndLockTypes)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].tableAndLockTypeUnion())
@@ -16553,7 +16553,7 @@ yydefault:
 	case 852:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *TableAndLockType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4591
+//line sql.y:4591
 		{
 			yyLOCAL = &TableAndLockType{Table: yyDollar[1].aliasedTableNameUnion(), Lock: yyDollar[2].lockTypeUnion()}
 		}
@@ -16561,7 +16561,7 @@ yydefault:
 	case 853:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL LockType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4597
+//line sql.y:4597
 		{
 			yyLOCAL = Read
 		}
@@ -16569,7 +16569,7 @@ yydefault:
 	case 854:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL LockType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4601
+//line sql.y:4601
 		{
 			yyLOCAL = ReadLocal
 		}
@@ -16577,7 +16577,7 @@ yydefault:
 	case 855:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL LockType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4605
+//line sql.y:4605
 		{
 			yyLOCAL = Write
 		}
@@ -16585,7 +16585,7 @@ yydefault:
 	case 856:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL LockType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4609
+//line sql.y:4609
 		{
 			yyLOCAL = LowPriorityWrite
 		}
@@ -16593,7 +16593,7 @@ yydefault:
 	case 857:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4615
+//line sql.y:4615
 		{
 			yyLOCAL = &UnlockTables{}
 		}
@@ -16601,7 +16601,7 @@ yydefault:
 	case 858:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4621
+//line sql.y:4621
 		{
 			yyLOCAL = &RevertMigration{Comments: Comments(yyDollar[2].strs).Parsed(), UUID: string(yyDollar[4].str)}
 		}
@@ -16609,7 +16609,7 @@ yydefault:
 	case 859:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4627
+//line sql.y:4627
 		{
 			yyLOCAL = &Flush{IsLocal: yyDollar[2].booleanUnion(), FlushOptions: yyDollar[3].strs}
 		}
@@ -16617,7 +16617,7 @@ yydefault:
 	case 860:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4631
+//line sql.y:4631
 		{
 			yyLOCAL = &Flush{IsLocal: yyDollar[2].booleanUnion()}
 		}
@@ -16625,7 +16625,7 @@ yydefault:
 	case 861:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4635
+//line sql.y:4635
 		{
 			yyLOCAL = &Flush{IsLocal: yyDollar[2].booleanUnion(), WithLock: true}
 		}
@@ -16633,7 +16633,7 @@ yydefault:
 	case 862:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4639
+//line sql.y:4639
 		{
 			yyLOCAL = &Flush{IsLocal: yyDollar[2].booleanUnion(), TableNames: yyDollar[4].tableNamesUnion()}
 		}
@@ -16641,7 +16641,7 @@ yydefault:
 	case 863:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4643
+//line sql.y:4643
 		{
 			yyLOCAL = &Flush{IsLocal: yyDollar[2].booleanUnion(), TableNames: yyDollar[4].tableNamesUnion(), WithLock: true}
 		}
@@ -16649,99 +16649,99 @@ yydefault:
 	case 864:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4647
+//line sql.y:4647
 		{
 			yyLOCAL = &Flush{IsLocal: yyDollar[2].booleanUnion(), TableNames: yyDollar[4].tableNamesUnion(), ForExport: true}
 		}
 		yyVAL.union = yyLOCAL
 	case 865:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4653
+//line sql.y:4653
 		{
 			yyVAL.strs = []string{yyDollar[1].str}
 		}
 	case 866:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4657
+//line sql.y:4657
 		{
 			yyVAL.strs = append(yyDollar[1].strs, yyDollar[3].str)
 		}
 	case 867:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4663
+//line sql.y:4663
 		{
 			yyVAL.str = string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 868:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4667
+//line sql.y:4667
 		{
 			yyVAL.str = string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 869:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4671
+//line sql.y:4671
 		{
 			yyVAL.str = string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 870:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4675
+//line sql.y:4675
 		{
 			yyVAL.str = string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 871:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4679
+//line sql.y:4679
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 872:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4683
+//line sql.y:4683
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 873:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4687
+//line sql.y:4687
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 874:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4691
+//line sql.y:4691
 		{
 			yyVAL.str = string(yyDollar[1].str) + " " + string(yyDollar[2].str) + yyDollar[3].str
 		}
 	case 875:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4695
+//line sql.y:4695
 		{
 			yyVAL.str = string(yyDollar[1].str) + " " + string(yyDollar[2].str)
 		}
 	case 876:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4699
+//line sql.y:4699
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 877:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4703
+//line sql.y:4703
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 878:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4707
+//line sql.y:4707
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 879:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4712
+//line sql.y:4712
 		{
 			yyLOCAL = false
 		}
@@ -16749,7 +16749,7 @@ yydefault:
 	case 880:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4716
+//line sql.y:4716
 		{
 			yyLOCAL = true
 		}
@@ -16757,52 +16757,52 @@ yydefault:
 	case 881:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4720
+//line sql.y:4720
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 882:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4725
+//line sql.y:4725
 		{
 			yyVAL.str = ""
 		}
 	case 883:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4729
+//line sql.y:4729
 		{
 			yyVAL.str = " " + string(yyDollar[1].str) + " " + string(yyDollar[2].str) + " " + yyDollar[3].identifierCI.String()
 		}
 	case 884:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4734
+//line sql.y:4734
 		{
 			setAllowComments(yylex, true)
 		}
 	case 885:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4738
+//line sql.y:4738
 		{
 			yyVAL.strs = yyDollar[2].strs
 			setAllowComments(yylex, false)
 		}
 	case 886:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4744
+//line sql.y:4744
 		{
 			yyVAL.strs = nil
 		}
 	case 887:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4748
+//line sql.y:4748
 		{
 			yyVAL.strs = append(yyDollar[1].strs, yyDollar[2].str)
 		}
 	case 888:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4754
+//line sql.y:4754
 		{
 			yyLOCAL = true
 		}
@@ -16810,7 +16810,7 @@ yydefault:
 	case 889:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4758
+//line sql.y:4758
 		{
 			yyLOCAL = false
 		}
@@ -16818,33 +16818,33 @@ yydefault:
 	case 890:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4762
+//line sql.y:4762
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 891:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4767
+//line sql.y:4767
 		{
 			yyVAL.str = ""
 		}
 	case 892:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4771
+//line sql.y:4771
 		{
 			yyVAL.str = SQLNoCacheStr
 		}
 	case 893:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4775
+//line sql.y:4775
 		{
 			yyVAL.str = SQLCacheStr
 		}
 	case 894:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4780
+//line sql.y:4780
 		{
 			yyLOCAL = false
 		}
@@ -16852,7 +16852,7 @@ yydefault:
 	case 895:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4784
+//line sql.y:4784
 		{
 			yyLOCAL = true
 		}
@@ -16860,7 +16860,7 @@ yydefault:
 	case 896:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4788
+//line sql.y:4788
 		{
 			yyLOCAL = true
 		}
@@ -16868,7 +16868,7 @@ yydefault:
 	case 897:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4794
+//line sql.y:4794
 		{
 			yyLOCAL = &PrepareStmt{Name: yyDollar[3].identifierCI, Comments: Comments(yyDollar[2].strs).Parsed(), Statement: yyDollar[5].exprUnion()}
 		}
@@ -16876,7 +16876,7 @@ yydefault:
 	case 898:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4798
+//line sql.y:4798
 		{
 			yyLOCAL = &PrepareStmt{
 				Name:      yyDollar[3].identifierCI,
@@ -16888,7 +16888,7 @@ yydefault:
 	case 899:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4808
+//line sql.y:4808
 		{
 			yyLOCAL = &ExecuteStmt{Name: yyDollar[3].identifierCI, Comments: Comments(yyDollar[2].strs).Parsed(), Arguments: yyDollar[4].variablesUnion()}
 		}
@@ -16896,7 +16896,7 @@ yydefault:
 	case 900:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []*Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4813
+//line sql.y:4813
 		{
 			yyLOCAL = nil
 		}
@@ -16904,7 +16904,7 @@ yydefault:
 	case 901:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL []*Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4817
+//line sql.y:4817
 		{
 			yyLOCAL = yyDollar[2].variablesUnion()
 		}
@@ -16912,7 +16912,7 @@ yydefault:
 	case 902:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4823
+//line sql.y:4823
 		{
 			yyLOCAL = &DeallocateStmt{Comments: Comments(yyDollar[2].strs).Parsed(), Name: yyDollar[4].identifierCI}
 		}
@@ -16920,7 +16920,7 @@ yydefault:
 	case 903:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4827
+//line sql.y:4827
 		{
 			yyLOCAL = &DeallocateStmt{Comments: Comments(yyDollar[2].strs).Parsed(), Name: yyDollar[4].identifierCI}
 		}
@@ -16928,7 +16928,7 @@ yydefault:
 	case 904:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL SelectExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4832
+//line sql.y:4832
 		{
 			yyLOCAL = nil
 		}
@@ -16936,94 +16936,94 @@ yydefault:
 	case 905:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4836
+//line sql.y:4836
 		{
 			yyLOCAL = yyDollar[1].selectExprsUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 906:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4841
+//line sql.y:4841
 		{
 			yyVAL.strs = nil
 		}
 	case 907:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4845
+//line sql.y:4845
 		{
 			yyVAL.strs = []string{yyDollar[1].str}
 		}
 	case 908:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4849
+//line sql.y:4849
 		{ // TODO: This is a hack since I couldn't get it to work in a nicer way. I got 'conflicts: 8 shift/reduce'
 			yyVAL.strs = []string{yyDollar[1].str, yyDollar[2].str}
 		}
 	case 909:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4853
+//line sql.y:4853
 		{
 			yyVAL.strs = []string{yyDollar[1].str, yyDollar[2].str, yyDollar[3].str}
 		}
 	case 910:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4857
+//line sql.y:4857
 		{
 			yyVAL.strs = []string{yyDollar[1].str, yyDollar[2].str, yyDollar[3].str, yyDollar[4].str}
 		}
 	case 911:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4863
+//line sql.y:4863
 		{
 			yyVAL.str = SQLNoCacheStr
 		}
 	case 912:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4867
+//line sql.y:4867
 		{
 			yyVAL.str = SQLCacheStr
 		}
 	case 913:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4871
+//line sql.y:4871
 		{
 			yyVAL.str = DistinctStr
 		}
 	case 914:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4875
+//line sql.y:4875
 		{
 			yyVAL.str = DistinctStr
 		}
 	case 915:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4879
+//line sql.y:4879
 		{
 			yyVAL.str = StraightJoinHint
 		}
 	case 916:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4883
+//line sql.y:4883
 		{
 			yyVAL.str = SQLCalcFoundRowsStr
 		}
 	case 917:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4887
+//line sql.y:4887
 		{
 			yyVAL.str = AllStr // These are not picked up by NewSelect, and so ALL will be dropped. But this is OK, since it's redundant anyway
 		}
 	case 918:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4893
+//line sql.y:4893
 		{
 			yyLOCAL = SelectExprs{yyDollar[1].selectExprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 919:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4897
+//line sql.y:4897
 		{
 			yySLICE := (*SelectExprs)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].selectExprUnion())
@@ -17031,7 +17031,7 @@ yydefault:
 	case 920:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL SelectExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4903
+//line sql.y:4903
 		{
 			yyLOCAL = &StarExpr{}
 		}
@@ -17039,7 +17039,7 @@ yydefault:
 	case 921:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL SelectExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4907
+//line sql.y:4907
 		{
 			yyLOCAL = &AliasedExpr{Expr: yyDollar[1].exprUnion(), As: yyDollar[2].identifierCI}
 		}
@@ -17047,7 +17047,7 @@ yydefault:
 	case 922:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL SelectExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4911
+//line sql.y:4911
 		{
 			yyLOCAL = &StarExpr{TableName: TableName{Name: yyDollar[1].identifierCS}}
 		}
@@ -17055,39 +17055,39 @@ yydefault:
 	case 923:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL SelectExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4915
+//line sql.y:4915
 		{
 			yyLOCAL = &StarExpr{TableName: TableName{Qualifier: yyDollar[1].identifierCS, Name: yyDollar[3].identifierCS}}
 		}
 		yyVAL.union = yyLOCAL
 	case 924:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4920
+//line sql.y:4920
 		{
 			yyVAL.identifierCI = IdentifierCI{}
 		}
 	case 925:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4924
+//line sql.y:4924
 		{
 			yyVAL.identifierCI = yyDollar[1].identifierCI
 		}
 	case 926:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4928
+//line sql.y:4928
 		{
 			yyVAL.identifierCI = yyDollar[2].identifierCI
 		}
 	case 928:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4935
+//line sql.y:4935
 		{
 			yyVAL.identifierCI = NewIdentifierCI(string(yyDollar[1].str))
 		}
 	case 929:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL TableExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4940
+//line sql.y:4940
 		{
 			yyLOCAL = TableExprs{&AliasedTableExpr{Expr: TableName{Name: NewIdentifierCS("dual")}}}
 		}
@@ -17095,7 +17095,7 @@ yydefault:
 	case 930:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4944
+//line sql.y:4944
 		{
 			yyLOCAL = yyDollar[1].tableExprsUnion()
 		}
@@ -17103,7 +17103,7 @@ yydefault:
 	case 931:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL TableExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4950
+//line sql.y:4950
 		{
 			yyLOCAL = yyDollar[2].tableExprsUnion()
 		}
@@ -17111,14 +17111,14 @@ yydefault:
 	case 932:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4956
+//line sql.y:4956
 		{
 			yyLOCAL = TableExprs{yyDollar[1].tableExprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 933:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4960
+//line sql.y:4960
 		{
 			yySLICE := (*TableExprs)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].tableExprUnion())
@@ -17126,7 +17126,7 @@ yydefault:
 	case 936:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4970
+//line sql.y:4970
 		{
 			yyLOCAL = yyDollar[1].aliasedTableNameUnion()
 		}
@@ -17134,7 +17134,7 @@ yydefault:
 	case 937:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4974
+//line sql.y:4974
 		{
 			yyLOCAL = &AliasedTableExpr{Expr: yyDollar[1].derivedTableUnion(), As: yyDollar[3].identifierCS, Columns: yyDollar[4].columnsUnion()}
 		}
@@ -17142,7 +17142,7 @@ yydefault:
 	case 938:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4978
+//line sql.y:4978
 		{
 			yyLOCAL = &ParenTableExpr{Exprs: yyDollar[2].tableExprsUnion()}
 		}
@@ -17150,7 +17150,7 @@ yydefault:
 	case 939:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4982
+//line sql.y:4982
 		{
 			yyLOCAL = yyDollar[1].tableExprUnion()
 		}
@@ -17158,7 +17158,7 @@ yydefault:
 	case 940:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *DerivedTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4988
+//line sql.y:4988
 		{
 			yyLOCAL = &DerivedTable{Lateral: false, Select: yyDollar[1].selStmtUnion()}
 		}
@@ -17166,7 +17166,7 @@ yydefault:
 	case 941:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *DerivedTable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4992
+//line sql.y:4992
 		{
 			yyLOCAL = &DerivedTable{Lateral: true, Select: yyDollar[2].selStmtUnion()}
 		}
@@ -17174,7 +17174,7 @@ yydefault:
 	case 942:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *AliasedTableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:4998
+//line sql.y:4998
 		{
 			yyLOCAL = &AliasedTableExpr{Expr: yyDollar[1].tableName, As: yyDollar[2].identifierCS, Hints: yyDollar[3].indexHintsUnion()}
 		}
@@ -17182,7 +17182,7 @@ yydefault:
 	case 943:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL *AliasedTableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5002
+//line sql.y:5002
 		{
 			yyLOCAL = &AliasedTableExpr{Expr: yyDollar[1].tableName, Partitions: yyDollar[4].partitionsUnion(), As: yyDollar[6].identifierCS, Hints: yyDollar[7].indexHintsUnion()}
 		}
@@ -17190,7 +17190,7 @@ yydefault:
 	case 944:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5007
+//line sql.y:5007
 		{
 			yyLOCAL = nil
 		}
@@ -17198,7 +17198,7 @@ yydefault:
 	case 945:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5011
+//line sql.y:5011
 		{
 			yyLOCAL = yyDollar[2].columnsUnion()
 		}
@@ -17206,7 +17206,7 @@ yydefault:
 	case 946:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5016
+//line sql.y:5016
 		{
 			yyLOCAL = nil
 		}
@@ -17214,7 +17214,7 @@ yydefault:
 	case 947:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5020
+//line sql.y:5020
 		{
 			yyLOCAL = yyDollar[1].columnsUnion()
 		}
@@ -17222,14 +17222,14 @@ yydefault:
 	case 948:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5026
+//line sql.y:5026
 		{
 			yyLOCAL = Columns{yyDollar[1].identifierCI}
 		}
 		yyVAL.union = yyLOCAL
 	case 949:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5030
+//line sql.y:5030
 		{
 			yySLICE := (*Columns)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].identifierCI)
@@ -17237,14 +17237,14 @@ yydefault:
 	case 950:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*Variable
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5036
+//line sql.y:5036
 		{
 			yyLOCAL = []*Variable{yyDollar[1].variableUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 951:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5040
+//line sql.y:5040
 		{
 			yySLICE := (*[]*Variable)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].variableUnion())
@@ -17252,7 +17252,7 @@ yydefault:
 	case 952:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5046
+//line sql.y:5046
 		{
 			yyLOCAL = Columns{yyDollar[1].identifierCI}
 		}
@@ -17260,21 +17260,21 @@ yydefault:
 	case 953:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5050
+//line sql.y:5050
 		{
 			yyLOCAL = Columns{NewIdentifierCI(string(yyDollar[1].str))}
 		}
 		yyVAL.union = yyLOCAL
 	case 954:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5054
+//line sql.y:5054
 		{
 			yySLICE := (*Columns)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].identifierCI)
 		}
 	case 955:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5058
+//line sql.y:5058
 		{
 			yySLICE := (*Columns)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, NewIdentifierCI(string(yyDollar[3].str)))
@@ -17282,14 +17282,14 @@ yydefault:
 	case 956:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Partitions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5064
+//line sql.y:5064
 		{
 			yyLOCAL = Partitions{yyDollar[1].identifierCI}
 		}
 		yyVAL.union = yyLOCAL
 	case 957:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5068
+//line sql.y:5068
 		{
 			yySLICE := (*Partitions)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].identifierCI)
@@ -17297,7 +17297,7 @@ yydefault:
 	case 958:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5081
+//line sql.y:5081
 		{
 			yyLOCAL = &JoinTableExpr{LeftExpr: yyDollar[1].tableExprUnion(), Join: yyDollar[2].joinTypeUnion(), RightExpr: yyDollar[3].tableExprUnion(), Condition: yyDollar[4].joinCondition}
 		}
@@ -17305,7 +17305,7 @@ yydefault:
 	case 959:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5085
+//line sql.y:5085
 		{
 			yyLOCAL = &JoinTableExpr{LeftExpr: yyDollar[1].tableExprUnion(), Join: yyDollar[2].joinTypeUnion(), RightExpr: yyDollar[3].tableExprUnion(), Condition: yyDollar[4].joinCondition}
 		}
@@ -17313,7 +17313,7 @@ yydefault:
 	case 960:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5089
+//line sql.y:5089
 		{
 			yyLOCAL = &JoinTableExpr{LeftExpr: yyDollar[1].tableExprUnion(), Join: yyDollar[2].joinTypeUnion(), RightExpr: yyDollar[3].tableExprUnion(), Condition: yyDollar[4].joinCondition}
 		}
@@ -17321,87 +17321,87 @@ yydefault:
 	case 961:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL TableExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5093
+//line sql.y:5093
 		{
 			yyLOCAL = &JoinTableExpr{LeftExpr: yyDollar[1].tableExprUnion(), Join: yyDollar[2].joinTypeUnion(), RightExpr: yyDollar[3].tableExprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 962:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5099
+//line sql.y:5099
 		{
 			yyVAL.joinCondition = &JoinCondition{On: yyDollar[2].exprUnion()}
 		}
 	case 963:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5101
+//line sql.y:5101
 		{
 			yyVAL.joinCondition = &JoinCondition{Using: yyDollar[3].columnsUnion()}
 		}
 	case 964:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5105
+//line sql.y:5105
 		{
 			yyVAL.joinCondition = &JoinCondition{}
 		}
 	case 965:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5107
+//line sql.y:5107
 		{
 			yyVAL.joinCondition = yyDollar[1].joinCondition
 		}
 	case 966:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5111
+//line sql.y:5111
 		{
 			yyVAL.joinCondition = &JoinCondition{}
 		}
 	case 967:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5113
+//line sql.y:5113
 		{
 			yyVAL.joinCondition = &JoinCondition{On: yyDollar[2].exprUnion()}
 		}
 	case 968:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5116
+//line sql.y:5116
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 969:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5118
+//line sql.y:5118
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 970:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5121
+//line sql.y:5121
 		{
 			yyVAL.identifierCS = NewIdentifierCS("")
 		}
 	case 971:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5125
+//line sql.y:5125
 		{
 			yyVAL.identifierCS = yyDollar[1].identifierCS
 		}
 	case 972:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5129
+//line sql.y:5129
 		{
 			yyVAL.identifierCS = yyDollar[2].identifierCS
 		}
 	case 974:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5136
+//line sql.y:5136
 		{
 			yyVAL.identifierCS = NewIdentifierCS(string(yyDollar[1].str))
 		}
 	case 975:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5142
+//line sql.y:5142
 		{
 			yyLOCAL = NormalJoinType
 		}
@@ -17409,7 +17409,7 @@ yydefault:
 	case 976:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5146
+//line sql.y:5146
 		{
 			yyLOCAL = NormalJoinType
 		}
@@ -17417,7 +17417,7 @@ yydefault:
 	case 977:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5150
+//line sql.y:5150
 		{
 			yyLOCAL = NormalJoinType
 		}
@@ -17425,7 +17425,7 @@ yydefault:
 	case 978:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5156
+//line sql.y:5156
 		{
 			yyLOCAL = StraightJoinType
 		}
@@ -17433,7 +17433,7 @@ yydefault:
 	case 979:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5162
+//line sql.y:5162
 		{
 			yyLOCAL = LeftJoinType
 		}
@@ -17441,7 +17441,7 @@ yydefault:
 	case 980:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5166
+//line sql.y:5166
 		{
 			yyLOCAL = LeftJoinType
 		}
@@ -17449,7 +17449,7 @@ yydefault:
 	case 981:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5170
+//line sql.y:5170
 		{
 			yyLOCAL = RightJoinType
 		}
@@ -17457,7 +17457,7 @@ yydefault:
 	case 982:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5174
+//line sql.y:5174
 		{
 			yyLOCAL = RightJoinType
 		}
@@ -17465,7 +17465,7 @@ yydefault:
 	case 983:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5180
+//line sql.y:5180
 		{
 			yyLOCAL = NaturalJoinType
 		}
@@ -17473,7 +17473,7 @@ yydefault:
 	case 984:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL JoinType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5184
+//line sql.y:5184
 		{
 			if yyDollar[2].joinTypeUnion() == LeftJoinType {
 				yyLOCAL = NaturalLeftJoinType
@@ -17484,38 +17484,38 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 985:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5194
+//line sql.y:5194
 		{
 			yyVAL.tableName = yyDollar[2].tableName
 		}
 	case 986:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5198
+//line sql.y:5198
 		{
 			yyVAL.tableName = yyDollar[1].tableName
 		}
 	case 987:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5204
+//line sql.y:5204
 		{
 			yyVAL.tableName = TableName{Name: yyDollar[1].identifierCS}
 		}
 	case 988:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5208
+//line sql.y:5208
 		{
 			yyVAL.tableName = TableName{Qualifier: yyDollar[1].identifierCS, Name: yyDollar[3].identifierCS}
 		}
 	case 989:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5214
+//line sql.y:5214
 		{
 			yyVAL.tableName = TableName{Name: yyDollar[1].identifierCS}
 		}
 	case 990:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL IndexHints
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5219
+//line sql.y:5219
 		{
 			yyLOCAL = nil
 		}
@@ -17523,7 +17523,7 @@ yydefault:
 	case 991:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IndexHints
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5223
+//line sql.y:5223
 		{
 			yyLOCAL = yyDollar[1].indexHintsUnion()
 		}
@@ -17531,14 +17531,14 @@ yydefault:
 	case 992:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IndexHints
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5229
+//line sql.y:5229
 		{
 			yyLOCAL = IndexHints{yyDollar[1].indexHintUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 993:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5233
+//line sql.y:5233
 		{
 			yySLICE := (*IndexHints)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].indexHintUnion())
@@ -17546,7 +17546,7 @@ yydefault:
 	case 994:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *IndexHint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5239
+//line sql.y:5239
 		{
 			yyLOCAL = &IndexHint{Type: UseOp, ForType: yyDollar[3].indexHintForTypeUnion(), Indexes: yyDollar[5].columnsUnion()}
 		}
@@ -17554,7 +17554,7 @@ yydefault:
 	case 995:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *IndexHint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5243
+//line sql.y:5243
 		{
 			yyLOCAL = &IndexHint{Type: UseOp, ForType: yyDollar[3].indexHintForTypeUnion()}
 		}
@@ -17562,7 +17562,7 @@ yydefault:
 	case 996:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *IndexHint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5247
+//line sql.y:5247
 		{
 			yyLOCAL = &IndexHint{Type: IgnoreOp, ForType: yyDollar[3].indexHintForTypeUnion(), Indexes: yyDollar[5].columnsUnion()}
 		}
@@ -17570,7 +17570,7 @@ yydefault:
 	case 997:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL *IndexHint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5251
+//line sql.y:5251
 		{
 			yyLOCAL = &IndexHint{Type: ForceOp, ForType: yyDollar[3].indexHintForTypeUnion(), Indexes: yyDollar[5].columnsUnion()}
 		}
@@ -17578,7 +17578,7 @@ yydefault:
 	case 998:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL IndexHintForType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5256
+//line sql.y:5256
 		{
 			yyLOCAL = NoForType
 		}
@@ -17586,7 +17586,7 @@ yydefault:
 	case 999:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL IndexHintForType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5260
+//line sql.y:5260
 		{
 			yyLOCAL = JoinForType
 		}
@@ -17594,7 +17594,7 @@ yydefault:
 	case 1000:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL IndexHintForType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5264
+//line sql.y:5264
 		{
 			yyLOCAL = OrderByForType
 		}
@@ -17602,7 +17602,7 @@ yydefault:
 	case 1001:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL IndexHintForType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5268
+//line sql.y:5268
 		{
 			yyLOCAL = GroupByForType
 		}
@@ -17610,7 +17610,7 @@ yydefault:
 	case 1002:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5274
+//line sql.y:5274
 		{
 			yyLOCAL = nil
 		}
@@ -17618,7 +17618,7 @@ yydefault:
 	case 1003:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5278
+//line sql.y:5278
 		{
 			yyLOCAL = yyDollar[2].exprUnion()
 		}
@@ -17626,7 +17626,7 @@ yydefault:
 	case 1004:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5285
+//line sql.y:5285
 		{
 			yyLOCAL = &OrExpr{Left: yyDollar[1].exprUnion(), Right: yyDollar[3].exprUnion()}
 		}
@@ -17634,7 +17634,7 @@ yydefault:
 	case 1005:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5289
+//line sql.y:5289
 		{
 			yyLOCAL = &XorExpr{Left: yyDollar[1].exprUnion(), Right: yyDollar[3].exprUnion()}
 		}
@@ -17642,7 +17642,7 @@ yydefault:
 	case 1006:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5293
+//line sql.y:5293
 		{
 			yyLOCAL = &AndExpr{Left: yyDollar[1].exprUnion(), Right: yyDollar[3].exprUnion()}
 		}
@@ -17650,7 +17650,7 @@ yydefault:
 	case 1007:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5297
+//line sql.y:5297
 		{
 			yyLOCAL = &NotExpr{Expr: yyDollar[2].exprUnion()}
 		}
@@ -17658,7 +17658,7 @@ yydefault:
 	case 1008:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5301
+//line sql.y:5301
 		{
 			yyLOCAL = &IsExpr{Left: yyDollar[1].exprUnion(), Right: yyDollar[3].isExprOperatorUnion()}
 		}
@@ -17666,7 +17666,7 @@ yydefault:
 	case 1009:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5305
+//line sql.y:5305
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17674,7 +17674,7 @@ yydefault:
 	case 1010:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5309
+//line sql.y:5309
 		{
 			yyLOCAL = &AssignmentExpr{Left: yyDollar[1].variableUnion(), Right: yyDollar[3].exprUnion()}
 		}
@@ -17682,7 +17682,7 @@ yydefault:
 	case 1011:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5313
+//line sql.y:5313
 		{
 			yyLOCAL = &MemberOfExpr{Value: yyDollar[1].exprUnion(), JSONArr: yyDollar[5].exprUnion()}
 		}
@@ -17690,7 +17690,7 @@ yydefault:
 	case 1012:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5319
+//line sql.y:5319
 		{
 			yyLOCAL = &IsExpr{Left: yyDollar[1].exprUnion(), Right: IsNullOp}
 		}
@@ -17698,7 +17698,7 @@ yydefault:
 	case 1013:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5323
+//line sql.y:5323
 		{
 			yyLOCAL = &IsExpr{Left: yyDollar[1].exprUnion(), Right: IsNotNullOp}
 		}
@@ -17706,7 +17706,7 @@ yydefault:
 	case 1014:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5327
+//line sql.y:5327
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: yyDollar[2].comparisonExprOperatorUnion(), Right: yyDollar[3].exprUnion()}
 		}
@@ -17714,7 +17714,7 @@ yydefault:
 	case 1015:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5331
+//line sql.y:5331
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17722,7 +17722,7 @@ yydefault:
 	case 1016:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5337
+//line sql.y:5337
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: InOp, Right: yyDollar[3].colTupleUnion()}
 		}
@@ -17730,7 +17730,7 @@ yydefault:
 	case 1017:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5341
+//line sql.y:5341
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: NotInOp, Right: yyDollar[4].colTupleUnion()}
 		}
@@ -17738,7 +17738,7 @@ yydefault:
 	case 1018:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5345
+//line sql.y:5345
 		{
 			yyLOCAL = &BetweenExpr{Left: yyDollar[1].exprUnion(), IsBetween: true, From: yyDollar[3].exprUnion(), To: yyDollar[5].exprUnion()}
 		}
@@ -17746,7 +17746,7 @@ yydefault:
 	case 1019:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5349
+//line sql.y:5349
 		{
 			yyLOCAL = &BetweenExpr{Left: yyDollar[1].exprUnion(), IsBetween: false, From: yyDollar[4].exprUnion(), To: yyDollar[6].exprUnion()}
 		}
@@ -17754,7 +17754,7 @@ yydefault:
 	case 1020:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5353
+//line sql.y:5353
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: LikeOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17762,7 +17762,7 @@ yydefault:
 	case 1021:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5357
+//line sql.y:5357
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: NotLikeOp, Right: yyDollar[4].exprUnion()}
 		}
@@ -17770,7 +17770,7 @@ yydefault:
 	case 1022:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5361
+//line sql.y:5361
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: LikeOp, Right: yyDollar[3].exprUnion(), Escape: yyDollar[5].exprUnion()}
 		}
@@ -17778,7 +17778,7 @@ yydefault:
 	case 1023:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5365
+//line sql.y:5365
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: NotLikeOp, Right: yyDollar[4].exprUnion(), Escape: yyDollar[6].exprUnion()}
 		}
@@ -17786,7 +17786,7 @@ yydefault:
 	case 1024:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5369
+//line sql.y:5369
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: RegexpOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17794,7 +17794,7 @@ yydefault:
 	case 1025:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5373
+//line sql.y:5373
 		{
 			yyLOCAL = &ComparisonExpr{Left: yyDollar[1].exprUnion(), Operator: NotRegexpOp, Right: yyDollar[4].exprUnion()}
 		}
@@ -17802,25 +17802,25 @@ yydefault:
 	case 1026:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5377
+//line sql.y:5377
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 1027:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5383
+//line sql.y:5383
 		{
 		}
 	case 1028:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5386
+//line sql.y:5386
 		{
 		}
 	case 1029:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5392
+//line sql.y:5392
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: BitOrOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17828,7 +17828,7 @@ yydefault:
 	case 1030:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5396
+//line sql.y:5396
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: BitAndOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17836,7 +17836,7 @@ yydefault:
 	case 1031:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5400
+//line sql.y:5400
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: ShiftLeftOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17844,7 +17844,7 @@ yydefault:
 	case 1032:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5404
+//line sql.y:5404
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: ShiftRightOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17852,7 +17852,7 @@ yydefault:
 	case 1033:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5408
+//line sql.y:5408
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: PlusOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17860,7 +17860,7 @@ yydefault:
 	case 1034:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5412
+//line sql.y:5412
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: MinusOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17868,7 +17868,7 @@ yydefault:
 	case 1035:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5416
+//line sql.y:5416
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprBinaryAdd, Date: yyDollar[1].exprUnion(), Unit: yyDollar[5].intervalTypeUnion(), Interval: yyDollar[4].exprUnion()}
 		}
@@ -17876,7 +17876,7 @@ yydefault:
 	case 1036:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5420
+//line sql.y:5420
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprBinarySub, Date: yyDollar[1].exprUnion(), Unit: yyDollar[5].intervalTypeUnion(), Interval: yyDollar[4].exprUnion()}
 		}
@@ -17884,7 +17884,7 @@ yydefault:
 	case 1037:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5424
+//line sql.y:5424
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: MultOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17892,7 +17892,7 @@ yydefault:
 	case 1038:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5428
+//line sql.y:5428
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: DivOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17900,7 +17900,7 @@ yydefault:
 	case 1039:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5432
+//line sql.y:5432
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: ModOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17908,7 +17908,7 @@ yydefault:
 	case 1040:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5436
+//line sql.y:5436
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: IntDivOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17916,7 +17916,7 @@ yydefault:
 	case 1041:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5440
+//line sql.y:5440
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: ModOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17924,7 +17924,7 @@ yydefault:
 	case 1042:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5444
+//line sql.y:5444
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: BitXorOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -17932,7 +17932,7 @@ yydefault:
 	case 1043:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5448
+//line sql.y:5448
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17940,7 +17940,7 @@ yydefault:
 	case 1044:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5454
+//line sql.y:5454
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17948,7 +17948,7 @@ yydefault:
 	case 1045:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5458
+//line sql.y:5458
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17956,7 +17956,7 @@ yydefault:
 	case 1046:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5462
+//line sql.y:5462
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17964,7 +17964,7 @@ yydefault:
 	case 1047:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5466
+//line sql.y:5466
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17972,7 +17972,7 @@ yydefault:
 	case 1048:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5470
+//line sql.y:5470
 		{
 			yyLOCAL = &CollateExpr{Expr: yyDollar[1].exprUnion(), Collation: yyDollar[3].str}
 		}
@@ -17980,7 +17980,7 @@ yydefault:
 	case 1049:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5474
+//line sql.y:5474
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17988,7 +17988,7 @@ yydefault:
 	case 1050:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5478
+//line sql.y:5478
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -17996,7 +17996,7 @@ yydefault:
 	case 1051:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5482
+//line sql.y:5482
 		{
 			yyLOCAL = yyDollar[1].variableUnion()
 		}
@@ -18004,7 +18004,7 @@ yydefault:
 	case 1052:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5486
+//line sql.y:5486
 		{
 			yyLOCAL = yyDollar[2].exprUnion() // TODO: do we really want to ignore unary '+' before any kind of literals?
 		}
@@ -18012,7 +18012,7 @@ yydefault:
 	case 1053:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5490
+//line sql.y:5490
 		{
 			yyLOCAL = &UnaryExpr{Operator: UMinusOp, Expr: yyDollar[2].exprUnion()}
 		}
@@ -18020,7 +18020,7 @@ yydefault:
 	case 1054:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5494
+//line sql.y:5494
 		{
 			yyLOCAL = &UnaryExpr{Operator: TildaOp, Expr: yyDollar[2].exprUnion()}
 		}
@@ -18028,7 +18028,7 @@ yydefault:
 	case 1055:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5498
+//line sql.y:5498
 		{
 			yyLOCAL = &UnaryExpr{Operator: BangOp, Expr: yyDollar[2].exprUnion()}
 		}
@@ -18036,7 +18036,7 @@ yydefault:
 	case 1056:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5502
+//line sql.y:5502
 		{
 			yyLOCAL = yyDollar[1].subqueryUnion()
 		}
@@ -18044,7 +18044,7 @@ yydefault:
 	case 1057:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5506
+//line sql.y:5506
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -18052,7 +18052,7 @@ yydefault:
 	case 1058:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5510
+//line sql.y:5510
 		{
 			yyLOCAL = &ExistsExpr{Subquery: yyDollar[2].subqueryUnion()}
 		}
@@ -18060,7 +18060,7 @@ yydefault:
 	case 1059:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5514
+//line sql.y:5514
 		{
 			yyLOCAL = &MatchExpr{Columns: yyDollar[2].colNamesUnion(), Expr: yyDollar[5].exprUnion(), Option: yyDollar[6].matchExprOptionUnion()}
 		}
@@ -18068,7 +18068,7 @@ yydefault:
 	case 1060:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5518
+//line sql.y:5518
 		{
 			yyLOCAL = &CastExpr{Expr: yyDollar[3].exprUnion(), Type: yyDollar[5].convertTypeUnion(), Array: yyDollar[6].booleanUnion()}
 		}
@@ -18076,7 +18076,7 @@ yydefault:
 	case 1061:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5522
+//line sql.y:5522
 		{
 			yyLOCAL = &ConvertExpr{Expr: yyDollar[3].exprUnion(), Type: yyDollar[5].convertTypeUnion()}
 		}
@@ -18084,7 +18084,7 @@ yydefault:
 	case 1062:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5526
+//line sql.y:5526
 		{
 			yyLOCAL = &ConvertUsingExpr{Expr: yyDollar[3].exprUnion(), Type: yyDollar[5].str}
 		}
@@ -18092,7 +18092,7 @@ yydefault:
 	case 1063:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5530
+//line sql.y:5530
 		{
 			// From: https://dev.mysql.com/doc/refman/8.0/en/cast-functions.html#operator_binary
 			// To convert a string expression to a binary string, these constructs are equivalent:
@@ -18104,7 +18104,7 @@ yydefault:
 	case 1064:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5538
+//line sql.y:5538
 		{
 			yyLOCAL = &Default{ColName: yyDollar[2].str}
 		}
@@ -18112,7 +18112,7 @@ yydefault:
 	case 1065:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5542
+//line sql.y:5542
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprBinaryAddLeft, Date: yyDollar[5].exprUnion(), Unit: yyDollar[3].intervalTypeUnion(), Interval: yyDollar[2].exprUnion()}
 		}
@@ -18120,7 +18120,7 @@ yydefault:
 	case 1066:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5546
+//line sql.y:5546
 		{
 			yyLOCAL = &IntervalFuncExpr{Expr: yyDollar[3].exprUnion(), Exprs: yyDollar[5].exprsUnion()}
 		}
@@ -18128,7 +18128,7 @@ yydefault:
 	case 1067:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5550
+//line sql.y:5550
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: JSONExtractOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -18136,7 +18136,7 @@ yydefault:
 	case 1068:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5554
+//line sql.y:5554
 		{
 			yyLOCAL = &BinaryExpr{Left: yyDollar[1].exprUnion(), Operator: JSONUnquoteExtractOp, Right: yyDollar[3].exprUnion()}
 		}
@@ -18144,7 +18144,7 @@ yydefault:
 	case 1069:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5560
+//line sql.y:5560
 		{
 			yyLOCAL = yyDollar[1].colNamesUnion()
 		}
@@ -18152,7 +18152,7 @@ yydefault:
 	case 1070:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL []*ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5564
+//line sql.y:5564
 		{
 			yyLOCAL = yyDollar[2].colNamesUnion()
 		}
@@ -18160,14 +18160,14 @@ yydefault:
 	case 1071:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5570
+//line sql.y:5570
 		{
 			yyLOCAL = []*ColName{yyDollar[1].colNameUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1072:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5574
+//line sql.y:5574
 		{
 			yySLICE := (*[]*ColName)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].colNameUnion())
@@ -18175,7 +18175,7 @@ yydefault:
 	case 1073:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TrimType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5580
+//line sql.y:5580
 		{
 			yyLOCAL = BothTrimType
 		}
@@ -18183,7 +18183,7 @@ yydefault:
 	case 1074:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TrimType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5584
+//line sql.y:5584
 		{
 			yyLOCAL = LeadingTrimType
 		}
@@ -18191,7 +18191,7 @@ yydefault:
 	case 1075:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL TrimType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5588
+//line sql.y:5588
 		{
 			yyLOCAL = TrailingTrimType
 		}
@@ -18199,7 +18199,7 @@ yydefault:
 	case 1076:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL FrameUnitType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5594
+//line sql.y:5594
 		{
 			yyLOCAL = FrameRowsType
 		}
@@ -18207,7 +18207,7 @@ yydefault:
 	case 1077:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL FrameUnitType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5598
+//line sql.y:5598
 		{
 			yyLOCAL = FrameRangeType
 		}
@@ -18215,7 +18215,7 @@ yydefault:
 	case 1078:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ArgumentLessWindowExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5605
+//line sql.y:5605
 		{
 			yyLOCAL = CumeDistExprType
 		}
@@ -18223,7 +18223,7 @@ yydefault:
 	case 1079:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ArgumentLessWindowExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5609
+//line sql.y:5609
 		{
 			yyLOCAL = DenseRankExprType
 		}
@@ -18231,7 +18231,7 @@ yydefault:
 	case 1080:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ArgumentLessWindowExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5613
+//line sql.y:5613
 		{
 			yyLOCAL = PercentRankExprType
 		}
@@ -18239,7 +18239,7 @@ yydefault:
 	case 1081:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ArgumentLessWindowExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5617
+//line sql.y:5617
 		{
 			yyLOCAL = RankExprType
 		}
@@ -18247,7 +18247,7 @@ yydefault:
 	case 1082:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ArgumentLessWindowExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5621
+//line sql.y:5621
 		{
 			yyLOCAL = RowNumberExprType
 		}
@@ -18255,7 +18255,7 @@ yydefault:
 	case 1083:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5627
+//line sql.y:5627
 		{
 			yyLOCAL = &FramePoint{Type: CurrentRowType}
 		}
@@ -18263,7 +18263,7 @@ yydefault:
 	case 1084:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5631
+//line sql.y:5631
 		{
 			yyLOCAL = &FramePoint{Type: UnboundedPrecedingType}
 		}
@@ -18271,7 +18271,7 @@ yydefault:
 	case 1085:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5635
+//line sql.y:5635
 		{
 			yyLOCAL = &FramePoint{Type: UnboundedFollowingType}
 		}
@@ -18279,7 +18279,7 @@ yydefault:
 	case 1086:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5639
+//line sql.y:5639
 		{
 			yyLOCAL = &FramePoint{Type: ExprPrecedingType, Expr: yyDollar[1].exprUnion()}
 		}
@@ -18287,7 +18287,7 @@ yydefault:
 	case 1087:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5643
+//line sql.y:5643
 		{
 			yyLOCAL = &FramePoint{Type: ExprPrecedingType, Expr: yyDollar[2].exprUnion(), Unit: yyDollar[3].intervalTypeUnion()}
 		}
@@ -18295,7 +18295,7 @@ yydefault:
 	case 1088:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5647
+//line sql.y:5647
 		{
 			yyLOCAL = &FramePoint{Type: ExprFollowingType, Expr: yyDollar[1].exprUnion()}
 		}
@@ -18303,7 +18303,7 @@ yydefault:
 	case 1089:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *FramePoint
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5651
+//line sql.y:5651
 		{
 			yyLOCAL = &FramePoint{Type: ExprFollowingType, Expr: yyDollar[2].exprUnion(), Unit: yyDollar[3].intervalTypeUnion()}
 		}
@@ -18311,7 +18311,7 @@ yydefault:
 	case 1090:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *FrameClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5656
+//line sql.y:5656
 		{
 			yyLOCAL = nil
 		}
@@ -18319,7 +18319,7 @@ yydefault:
 	case 1091:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *FrameClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5660
+//line sql.y:5660
 		{
 			yyLOCAL = yyDollar[1].frameClauseUnion()
 		}
@@ -18327,7 +18327,7 @@ yydefault:
 	case 1092:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *FrameClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5666
+//line sql.y:5666
 		{
 			yyLOCAL = &FrameClause{Unit: yyDollar[1].frameUnitTypeUnion(), Start: yyDollar[2].framePointUnion()}
 		}
@@ -18335,7 +18335,7 @@ yydefault:
 	case 1093:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *FrameClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5670
+//line sql.y:5670
 		{
 			yyLOCAL = &FrameClause{Unit: yyDollar[1].frameUnitTypeUnion(), Start: yyDollar[3].framePointUnion(), End: yyDollar[5].framePointUnion()}
 		}
@@ -18343,7 +18343,7 @@ yydefault:
 	case 1094:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5675
+//line sql.y:5675
 		{
 			yyLOCAL = nil
 		}
@@ -18351,26 +18351,26 @@ yydefault:
 	case 1095:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5679
+//line sql.y:5679
 		{
 			yyLOCAL = yyDollar[3].exprsUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 1096:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5684
+//line sql.y:5684
 		{
 		}
 	case 1097:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5687
+//line sql.y:5687
 		{
 			yyVAL.identifierCI = yyDollar[1].identifierCI
 		}
 	case 1098:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *WindowSpecification
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5693
+//line sql.y:5693
 		{
 			yyLOCAL = &WindowSpecification{Name: yyDollar[1].identifierCI, PartitionClause: yyDollar[2].exprsUnion(), OrderClause: yyDollar[3].orderByUnion(), FrameClause: yyDollar[4].frameClauseUnion()}
 		}
@@ -18378,7 +18378,7 @@ yydefault:
 	case 1099:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *OverClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5699
+//line sql.y:5699
 		{
 			yyLOCAL = &OverClause{WindowSpec: yyDollar[3].windowSpecificationUnion()}
 		}
@@ -18386,7 +18386,7 @@ yydefault:
 	case 1100:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *OverClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5703
+//line sql.y:5703
 		{
 			yyLOCAL = &OverClause{WindowName: yyDollar[2].identifierCI}
 		}
@@ -18394,7 +18394,7 @@ yydefault:
 	case 1101:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *NullTreatmentClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5708
+//line sql.y:5708
 		{
 			yyLOCAL = nil
 		}
@@ -18402,7 +18402,7 @@ yydefault:
 	case 1103:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *NullTreatmentClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5715
+//line sql.y:5715
 		{
 			yyLOCAL = &NullTreatmentClause{yyDollar[1].nullTreatmentTypeUnion()}
 		}
@@ -18410,7 +18410,7 @@ yydefault:
 	case 1104:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL NullTreatmentType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5721
+//line sql.y:5721
 		{
 			yyLOCAL = RespectNullsType
 		}
@@ -18418,7 +18418,7 @@ yydefault:
 	case 1105:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL NullTreatmentType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5725
+//line sql.y:5725
 		{
 			yyLOCAL = IgnoreNullsType
 		}
@@ -18426,7 +18426,7 @@ yydefault:
 	case 1106:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL FirstOrLastValueExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5731
+//line sql.y:5731
 		{
 			yyLOCAL = FirstValueExprType
 		}
@@ -18434,7 +18434,7 @@ yydefault:
 	case 1107:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL FirstOrLastValueExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5735
+//line sql.y:5735
 		{
 			yyLOCAL = LastValueExprType
 		}
@@ -18442,7 +18442,7 @@ yydefault:
 	case 1108:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL FromFirstLastType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5741
+//line sql.y:5741
 		{
 			yyLOCAL = FromFirstType
 		}
@@ -18450,7 +18450,7 @@ yydefault:
 	case 1109:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL FromFirstLastType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5745
+//line sql.y:5745
 		{
 			yyLOCAL = FromLastType
 		}
@@ -18458,7 +18458,7 @@ yydefault:
 	case 1110:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *FromFirstLastClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5750
+//line sql.y:5750
 		{
 			yyLOCAL = nil
 		}
@@ -18466,7 +18466,7 @@ yydefault:
 	case 1112:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *FromFirstLastClause
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5757
+//line sql.y:5757
 		{
 			yyLOCAL = &FromFirstLastClause{yyDollar[1].fromFirstLastTypeUnion()}
 		}
@@ -18474,7 +18474,7 @@ yydefault:
 	case 1113:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL LagLeadExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5763
+//line sql.y:5763
 		{
 			yyLOCAL = LagExprType
 		}
@@ -18482,7 +18482,7 @@ yydefault:
 	case 1114:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL LagLeadExprType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5767
+//line sql.y:5767
 		{
 			yyLOCAL = LeadExprType
 		}
@@ -18490,7 +18490,7 @@ yydefault:
 	case 1115:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *WindowDefinition
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5773
+//line sql.y:5773
 		{
 			yyLOCAL = &WindowDefinition{Name: yyDollar[1].identifierCI, WindowSpec: yyDollar[4].windowSpecificationUnion()}
 		}
@@ -18498,34 +18498,34 @@ yydefault:
 	case 1116:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL WindowDefinitions
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5779
+//line sql.y:5779
 		{
 			yyLOCAL = WindowDefinitions{yyDollar[1].windowDefinitionUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1117:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5783
+//line sql.y:5783
 		{
 			yySLICE := (*WindowDefinitions)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].windowDefinitionUnion())
 		}
 	case 1118:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5789
+//line sql.y:5789
 		{
 			yyVAL.str = ""
 		}
 	case 1119:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5793
+//line sql.y:5793
 		{
 			yyVAL.str = string(yyDollar[2].identifierCI.String())
 		}
 	case 1120:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL BoolVal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5799
+//line sql.y:5799
 		{
 			yyLOCAL = BoolVal(true)
 		}
@@ -18533,7 +18533,7 @@ yydefault:
 	case 1121:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL BoolVal
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5803
+//line sql.y:5803
 		{
 			yyLOCAL = BoolVal(false)
 		}
@@ -18541,7 +18541,7 @@ yydefault:
 	case 1122:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IsExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5810
+//line sql.y:5810
 		{
 			yyLOCAL = IsTrueOp
 		}
@@ -18549,7 +18549,7 @@ yydefault:
 	case 1123:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL IsExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5814
+//line sql.y:5814
 		{
 			yyLOCAL = IsNotTrueOp
 		}
@@ -18557,7 +18557,7 @@ yydefault:
 	case 1124:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IsExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5818
+//line sql.y:5818
 		{
 			yyLOCAL = IsFalseOp
 		}
@@ -18565,7 +18565,7 @@ yydefault:
 	case 1125:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL IsExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5822
+//line sql.y:5822
 		{
 			yyLOCAL = IsNotFalseOp
 		}
@@ -18573,7 +18573,7 @@ yydefault:
 	case 1126:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5828
+//line sql.y:5828
 		{
 			yyLOCAL = EqualOp
 		}
@@ -18581,7 +18581,7 @@ yydefault:
 	case 1127:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5832
+//line sql.y:5832
 		{
 			yyLOCAL = LessThanOp
 		}
@@ -18589,7 +18589,7 @@ yydefault:
 	case 1128:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5836
+//line sql.y:5836
 		{
 			yyLOCAL = GreaterThanOp
 		}
@@ -18597,7 +18597,7 @@ yydefault:
 	case 1129:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5840
+//line sql.y:5840
 		{
 			yyLOCAL = LessEqualOp
 		}
@@ -18605,7 +18605,7 @@ yydefault:
 	case 1130:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5844
+//line sql.y:5844
 		{
 			yyLOCAL = GreaterEqualOp
 		}
@@ -18613,7 +18613,7 @@ yydefault:
 	case 1131:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5848
+//line sql.y:5848
 		{
 			yyLOCAL = NotEqualOp
 		}
@@ -18621,7 +18621,7 @@ yydefault:
 	case 1132:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ComparisonExprOperator
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5852
+//line sql.y:5852
 		{
 			yyLOCAL = NullSafeEqualOp
 		}
@@ -18629,7 +18629,7 @@ yydefault:
 	case 1133:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5858
+//line sql.y:5858
 		{
 			yyLOCAL = yyDollar[1].valTupleUnion()
 		}
@@ -18637,7 +18637,7 @@ yydefault:
 	case 1134:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5862
+//line sql.y:5862
 		{
 			yyLOCAL = yyDollar[1].subqueryUnion()
 		}
@@ -18645,7 +18645,7 @@ yydefault:
 	case 1135:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ColTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5866
+//line sql.y:5866
 		{
 			yyLOCAL = ListArg(yyDollar[1].str[2:])
 			markBindVariable(yylex, yyDollar[1].str[2:])
@@ -18654,7 +18654,7 @@ yydefault:
 	case 1136:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Subquery
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5873
+//line sql.y:5873
 		{
 			yyLOCAL = &Subquery{yyDollar[1].selStmtUnion()}
 		}
@@ -18662,14 +18662,14 @@ yydefault:
 	case 1137:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5879
+//line sql.y:5879
 		{
 			yyLOCAL = Exprs{yyDollar[1].exprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1138:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5883
+//line sql.y:5883
 		{
 			yySLICE := (*Exprs)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].exprUnion())
@@ -18677,7 +18677,7 @@ yydefault:
 	case 1139:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5893
+//line sql.y:5893
 		{
 			yyLOCAL = &FuncExpr{Name: yyDollar[1].identifierCI, Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -18685,7 +18685,7 @@ yydefault:
 	case 1140:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5897
+//line sql.y:5897
 		{
 			yyLOCAL = &FuncExpr{Qualifier: yyDollar[1].identifierCS, Name: yyDollar[3].identifierCI, Exprs: yyDollar[5].selectExprsUnion()}
 		}
@@ -18693,7 +18693,7 @@ yydefault:
 	case 1141:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5907
+//line sql.y:5907
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("left"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -18701,7 +18701,7 @@ yydefault:
 	case 1142:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5911
+//line sql.y:5911
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("right"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -18709,7 +18709,7 @@ yydefault:
 	case 1143:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5915
+//line sql.y:5915
 		{
 			yyLOCAL = &SubstrExpr{Name: yyDollar[3].exprUnion(), From: yyDollar[5].exprUnion(), To: yyDollar[7].exprUnion()}
 		}
@@ -18717,7 +18717,7 @@ yydefault:
 	case 1144:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5919
+//line sql.y:5919
 		{
 			yyLOCAL = &SubstrExpr{Name: yyDollar[3].exprUnion(), From: yyDollar[5].exprUnion()}
 		}
@@ -18725,7 +18725,7 @@ yydefault:
 	case 1145:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5923
+//line sql.y:5923
 		{
 			yyLOCAL = &SubstrExpr{Name: yyDollar[3].exprUnion(), From: yyDollar[5].exprUnion(), To: yyDollar[7].exprUnion()}
 		}
@@ -18733,7 +18733,7 @@ yydefault:
 	case 1146:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5927
+//line sql.y:5927
 		{
 			yyLOCAL = &SubstrExpr{Name: yyDollar[3].exprUnion(), From: yyDollar[5].exprUnion()}
 		}
@@ -18741,7 +18741,7 @@ yydefault:
 	case 1147:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5931
+//line sql.y:5931
 		{
 			yyLOCAL = &CaseExpr{Expr: yyDollar[2].exprUnion(), Whens: yyDollar[3].whensUnion(), Else: yyDollar[4].exprUnion()}
 		}
@@ -18749,7 +18749,7 @@ yydefault:
 	case 1148:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5935
+//line sql.y:5935
 		{
 			yyLOCAL = &ValuesFuncExpr{Name: yyDollar[3].colNameUnion()}
 		}
@@ -18757,7 +18757,7 @@ yydefault:
 	case 1149:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5939
+//line sql.y:5939
 		{
 			yyLOCAL = &InsertExpr{Str: yyDollar[3].exprUnion(), Pos: yyDollar[5].exprUnion(), Len: yyDollar[7].exprUnion(), NewStr: yyDollar[9].exprUnion()}
 		}
@@ -18765,7 +18765,7 @@ yydefault:
 	case 1150:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5943
+//line sql.y:5943
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI(yyDollar[1].str)}
 		}
@@ -18773,7 +18773,7 @@ yydefault:
 	case 1151:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5954
+//line sql.y:5954
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("utc_date")}
 		}
@@ -18781,7 +18781,7 @@ yydefault:
 	case 1152:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5958
+//line sql.y:5958
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -18789,7 +18789,7 @@ yydefault:
 	case 1153:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5964
+//line sql.y:5964
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("current_date")}
 		}
@@ -18797,7 +18797,7 @@ yydefault:
 	case 1154:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5968
+//line sql.y:5968
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("curdate")}
 		}
@@ -18805,7 +18805,7 @@ yydefault:
 	case 1155:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5972
+//line sql.y:5972
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("utc_time"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -18813,7 +18813,7 @@ yydefault:
 	case 1156:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5977
+//line sql.y:5977
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("curtime"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -18821,7 +18821,7 @@ yydefault:
 	case 1157:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5982
+//line sql.y:5982
 		{
 			yyLOCAL = &CurTimeFuncExpr{Name: NewIdentifierCI("current_time"), Fsp: yyDollar[2].integerUnion()}
 		}
@@ -18829,7 +18829,7 @@ yydefault:
 	case 1158:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5986
+//line sql.y:5986
 		{
 			yyLOCAL = &CountStar{}
 		}
@@ -18837,7 +18837,7 @@ yydefault:
 	case 1159:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5990
+//line sql.y:5990
 		{
 			yyLOCAL = &Count{Distinct: yyDollar[3].booleanUnion(), Args: yyDollar[4].exprsUnion()}
 		}
@@ -18845,7 +18845,7 @@ yydefault:
 	case 1160:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5994
+//line sql.y:5994
 		{
 			yyLOCAL = &Max{Distinct: yyDollar[3].booleanUnion(), Arg: yyDollar[4].exprUnion()}
 		}
@@ -18853,7 +18853,7 @@ yydefault:
 	case 1161:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:5998
+//line sql.y:5998
 		{
 			yyLOCAL = &Min{Distinct: yyDollar[3].booleanUnion(), Arg: yyDollar[4].exprUnion()}
 		}
@@ -18861,7 +18861,7 @@ yydefault:
 	case 1162:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6002
+//line sql.y:6002
 		{
 			yyLOCAL = &Sum{Distinct: yyDollar[3].booleanUnion(), Arg: yyDollar[4].exprUnion()}
 		}
@@ -18869,7 +18869,7 @@ yydefault:
 	case 1163:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6006
+//line sql.y:6006
 		{
 			yyLOCAL = &Avg{Distinct: yyDollar[3].booleanUnion(), Arg: yyDollar[4].exprUnion()}
 		}
@@ -18877,7 +18877,7 @@ yydefault:
 	case 1164:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6010
+//line sql.y:6010
 		{
 			yyLOCAL = &BitAnd{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18885,7 +18885,7 @@ yydefault:
 	case 1165:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6014
+//line sql.y:6014
 		{
 			yyLOCAL = &BitOr{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18893,7 +18893,7 @@ yydefault:
 	case 1166:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6018
+//line sql.y:6018
 		{
 			yyLOCAL = &BitXor{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18901,7 +18901,7 @@ yydefault:
 	case 1167:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6022
+//line sql.y:6022
 		{
 			yyLOCAL = &Std{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18909,7 +18909,7 @@ yydefault:
 	case 1168:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6026
+//line sql.y:6026
 		{
 			yyLOCAL = &StdDev{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18917,7 +18917,7 @@ yydefault:
 	case 1169:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6030
+//line sql.y:6030
 		{
 			yyLOCAL = &StdPop{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18925,7 +18925,7 @@ yydefault:
 	case 1170:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6034
+//line sql.y:6034
 		{
 			yyLOCAL = &StdSamp{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18933,7 +18933,7 @@ yydefault:
 	case 1171:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6038
+//line sql.y:6038
 		{
 			yyLOCAL = &VarPop{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18941,7 +18941,7 @@ yydefault:
 	case 1172:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6042
+//line sql.y:6042
 		{
 			yyLOCAL = &VarSamp{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18949,7 +18949,7 @@ yydefault:
 	case 1173:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6046
+//line sql.y:6046
 		{
 			yyLOCAL = &Variance{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18957,7 +18957,7 @@ yydefault:
 	case 1174:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6050
+//line sql.y:6050
 		{
 			yyLOCAL = &GroupConcatExpr{Distinct: yyDollar[3].booleanUnion(), Exprs: yyDollar[4].exprsUnion(), OrderBy: yyDollar[5].orderByUnion(), Separator: yyDollar[6].str, Limit: yyDollar[7].limitUnion()}
 		}
@@ -18965,7 +18965,7 @@ yydefault:
 	case 1175:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6054
+//line sql.y:6054
 		{
 			yyLOCAL = &AnyValue{Arg: yyDollar[3].exprUnion()}
 		}
@@ -18973,7 +18973,7 @@ yydefault:
 	case 1176:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6058
+//line sql.y:6058
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprTimestampadd, Date: yyDollar[7].exprUnion(), Interval: yyDollar[5].exprUnion(), Unit: yyDollar[3].intervalTypeUnion()}
 		}
@@ -18981,7 +18981,7 @@ yydefault:
 	case 1177:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6062
+//line sql.y:6062
 		{
 			yyLOCAL = &TimestampDiffExpr{Unit: yyDollar[3].intervalTypeUnion(), Expr1: yyDollar[5].exprUnion(), Expr2: yyDollar[7].exprUnion()}
 		}
@@ -18989,7 +18989,7 @@ yydefault:
 	case 1178:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6066
+//line sql.y:6066
 		{
 			yyLOCAL = &ExtractFuncExpr{IntervalType: yyDollar[3].intervalTypeUnion(), Expr: yyDollar[5].exprUnion()}
 		}
@@ -18997,7 +18997,7 @@ yydefault:
 	case 1179:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6070
+//line sql.y:6070
 		{
 			yyLOCAL = &WeightStringFuncExpr{Expr: yyDollar[3].exprUnion(), As: yyDollar[4].convertTypeUnion()}
 		}
@@ -19005,7 +19005,7 @@ yydefault:
 	case 1180:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6074
+//line sql.y:6074
 		{
 			yyLOCAL = &JSONPrettyExpr{JSONVal: yyDollar[3].exprUnion()}
 		}
@@ -19013,7 +19013,7 @@ yydefault:
 	case 1181:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6078
+//line sql.y:6078
 		{
 			yyLOCAL = &JSONStorageFreeExpr{JSONVal: yyDollar[3].exprUnion()}
 		}
@@ -19021,7 +19021,7 @@ yydefault:
 	case 1182:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6082
+//line sql.y:6082
 		{
 			yyLOCAL = &JSONStorageSizeExpr{JSONVal: yyDollar[3].exprUnion()}
 		}
@@ -19029,7 +19029,7 @@ yydefault:
 	case 1183:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6086
+//line sql.y:6086
 		{
 			yyLOCAL = &TrimFuncExpr{TrimFuncType: LTrimType, Type: LeadingTrimType, StringArg: yyDollar[3].exprUnion()}
 		}
@@ -19037,7 +19037,7 @@ yydefault:
 	case 1184:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6090
+//line sql.y:6090
 		{
 			yyLOCAL = &TrimFuncExpr{TrimFuncType: RTrimType, Type: TrailingTrimType, StringArg: yyDollar[3].exprUnion()}
 		}
@@ -19045,7 +19045,7 @@ yydefault:
 	case 1185:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6094
+//line sql.y:6094
 		{
 			yyLOCAL = &TrimFuncExpr{Type: yyDollar[3].trimTypeUnion(), TrimArg: yyDollar[4].exprUnion(), StringArg: yyDollar[6].exprUnion()}
 		}
@@ -19053,7 +19053,7 @@ yydefault:
 	case 1186:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6098
+//line sql.y:6098
 		{
 			yyLOCAL = &TrimFuncExpr{StringArg: yyDollar[3].exprUnion()}
 		}
@@ -19061,7 +19061,7 @@ yydefault:
 	case 1187:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6102
+//line sql.y:6102
 		{
 			yyLOCAL = &CharExpr{Exprs: yyDollar[3].exprsUnion()}
 		}
@@ -19069,7 +19069,7 @@ yydefault:
 	case 1188:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6106
+//line sql.y:6106
 		{
 			yyLOCAL = &CharExpr{Exprs: yyDollar[3].exprsUnion(), Charset: yyDollar[5].str}
 		}
@@ -19077,7 +19077,7 @@ yydefault:
 	case 1189:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6110
+//line sql.y:6110
 		{
 			yyLOCAL = &TrimFuncExpr{TrimArg: yyDollar[3].exprUnion(), StringArg: yyDollar[5].exprUnion()}
 		}
@@ -19085,7 +19085,7 @@ yydefault:
 	case 1190:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6114
+//line sql.y:6114
 		{
 			yyLOCAL = &LocateExpr{SubStr: yyDollar[3].exprUnion(), Str: yyDollar[5].exprUnion()}
 		}
@@ -19093,7 +19093,7 @@ yydefault:
 	case 1191:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6118
+//line sql.y:6118
 		{
 			yyLOCAL = &LocateExpr{SubStr: yyDollar[3].exprUnion(), Str: yyDollar[5].exprUnion(), Pos: yyDollar[7].exprUnion()}
 		}
@@ -19101,7 +19101,7 @@ yydefault:
 	case 1192:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6122
+//line sql.y:6122
 		{
 			yyLOCAL = &LocateExpr{SubStr: yyDollar[3].exprUnion(), Str: yyDollar[5].exprUnion()}
 		}
@@ -19109,7 +19109,7 @@ yydefault:
 	case 1193:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6126
+//line sql.y:6126
 		{
 			yyLOCAL = &LockingFunc{Type: GetLock, Name: yyDollar[3].exprUnion(), Timeout: yyDollar[5].exprUnion()}
 		}
@@ -19117,7 +19117,7 @@ yydefault:
 	case 1194:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6130
+//line sql.y:6130
 		{
 			yyLOCAL = &LockingFunc{Type: IsFreeLock, Name: yyDollar[3].exprUnion()}
 		}
@@ -19125,7 +19125,7 @@ yydefault:
 	case 1195:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6134
+//line sql.y:6134
 		{
 			yyLOCAL = &LockingFunc{Type: IsUsedLock, Name: yyDollar[3].exprUnion()}
 		}
@@ -19133,7 +19133,7 @@ yydefault:
 	case 1196:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6138
+//line sql.y:6138
 		{
 			yyLOCAL = &LockingFunc{Type: ReleaseAllLocks}
 		}
@@ -19141,7 +19141,7 @@ yydefault:
 	case 1197:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6142
+//line sql.y:6142
 		{
 			yyLOCAL = &LockingFunc{Type: ReleaseLock, Name: yyDollar[3].exprUnion()}
 		}
@@ -19149,7 +19149,7 @@ yydefault:
 	case 1198:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6146
+//line sql.y:6146
 		{
 			yyLOCAL = &JSONSchemaValidFuncExpr{Schema: yyDollar[3].exprUnion(), Document: yyDollar[5].exprUnion()}
 		}
@@ -19157,7 +19157,7 @@ yydefault:
 	case 1199:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6150
+//line sql.y:6150
 		{
 			yyLOCAL = &JSONSchemaValidationReportFuncExpr{Schema: yyDollar[3].exprUnion(), Document: yyDollar[5].exprUnion()}
 		}
@@ -19165,7 +19165,7 @@ yydefault:
 	case 1200:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6154
+//line sql.y:6154
 		{
 			yyLOCAL = &JSONArrayExpr{Params: yyDollar[3].exprsUnion()}
 		}
@@ -19173,7 +19173,7 @@ yydefault:
 	case 1201:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6158
+//line sql.y:6158
 		{
 			yyLOCAL = &GeomFormatExpr{FormatType: BinaryFormat, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19181,7 +19181,7 @@ yydefault:
 	case 1202:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6162
+//line sql.y:6162
 		{
 			yyLOCAL = &GeomFormatExpr{FormatType: BinaryFormat, Geom: yyDollar[3].exprUnion(), AxisOrderOpt: yyDollar[5].exprUnion()}
 		}
@@ -19189,7 +19189,7 @@ yydefault:
 	case 1203:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6166
+//line sql.y:6166
 		{
 			yyLOCAL = &GeomFormatExpr{FormatType: TextFormat, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19197,7 +19197,7 @@ yydefault:
 	case 1204:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6170
+//line sql.y:6170
 		{
 			yyLOCAL = &GeomFormatExpr{FormatType: TextFormat, Geom: yyDollar[3].exprUnion(), AxisOrderOpt: yyDollar[5].exprUnion()}
 		}
@@ -19205,7 +19205,7 @@ yydefault:
 	case 1205:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6174
+//line sql.y:6174
 		{
 			yyLOCAL = &GeomPropertyFuncExpr{Property: IsEmpty, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19213,7 +19213,7 @@ yydefault:
 	case 1206:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6178
+//line sql.y:6178
 		{
 			yyLOCAL = &GeomPropertyFuncExpr{Property: IsSimple, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19221,7 +19221,7 @@ yydefault:
 	case 1207:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6182
+//line sql.y:6182
 		{
 			yyLOCAL = &GeomPropertyFuncExpr{Property: Dimension, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19229,7 +19229,7 @@ yydefault:
 	case 1208:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6186
+//line sql.y:6186
 		{
 			yyLOCAL = &GeomPropertyFuncExpr{Property: Envelope, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19237,7 +19237,7 @@ yydefault:
 	case 1209:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6190
+//line sql.y:6190
 		{
 			yyLOCAL = &GeomPropertyFuncExpr{Property: GeometryType, Geom: yyDollar[3].exprUnion()}
 		}
@@ -19245,7 +19245,7 @@ yydefault:
 	case 1210:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6194
+//line sql.y:6194
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: Latitude, Point: yyDollar[3].exprUnion()}
 		}
@@ -19253,7 +19253,7 @@ yydefault:
 	case 1211:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6198
+//line sql.y:6198
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: Latitude, Point: yyDollar[3].exprUnion(), ValueToSet: yyDollar[5].exprUnion()}
 		}
@@ -19261,7 +19261,7 @@ yydefault:
 	case 1212:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6202
+//line sql.y:6202
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: Longitude, Point: yyDollar[3].exprUnion()}
 		}
@@ -19269,7 +19269,7 @@ yydefault:
 	case 1213:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6206
+//line sql.y:6206
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: Longitude, Point: yyDollar[3].exprUnion(), ValueToSet: yyDollar[5].exprUnion()}
 		}
@@ -19277,7 +19277,7 @@ yydefault:
 	case 1214:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6210
+//line sql.y:6210
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: EndPoint, Linestring: yyDollar[3].exprUnion()}
 		}
@@ -19285,7 +19285,7 @@ yydefault:
 	case 1215:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6214
+//line sql.y:6214
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: IsClosed, Linestring: yyDollar[3].exprUnion()}
 		}
@@ -19293,7 +19293,7 @@ yydefault:
 	case 1216:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6218
+//line sql.y:6218
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: Length, Linestring: yyDollar[3].exprUnion()}
 		}
@@ -19301,7 +19301,7 @@ yydefault:
 	case 1217:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6222
+//line sql.y:6222
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: Length, Linestring: yyDollar[3].exprUnion(), PropertyDefArg: yyDollar[5].exprUnion()}
 		}
@@ -19309,7 +19309,7 @@ yydefault:
 	case 1218:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6226
+//line sql.y:6226
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: NumPoints, Linestring: yyDollar[3].exprUnion()}
 		}
@@ -19317,7 +19317,7 @@ yydefault:
 	case 1219:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6230
+//line sql.y:6230
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: PointN, Linestring: yyDollar[3].exprUnion(), PropertyDefArg: yyDollar[5].exprUnion()}
 		}
@@ -19325,7 +19325,7 @@ yydefault:
 	case 1220:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6234
+//line sql.y:6234
 		{
 			yyLOCAL = &LinestrPropertyFuncExpr{Property: StartPoint, Linestring: yyDollar[3].exprUnion()}
 		}
@@ -19333,7 +19333,7 @@ yydefault:
 	case 1221:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6238
+//line sql.y:6238
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: XCordinate, Point: yyDollar[3].exprUnion()}
 		}
@@ -19341,7 +19341,7 @@ yydefault:
 	case 1222:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6242
+//line sql.y:6242
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: XCordinate, Point: yyDollar[3].exprUnion(), ValueToSet: yyDollar[5].exprUnion()}
 		}
@@ -19349,7 +19349,7 @@ yydefault:
 	case 1223:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6246
+//line sql.y:6246
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: YCordinate, Point: yyDollar[3].exprUnion()}
 		}
@@ -19357,7 +19357,7 @@ yydefault:
 	case 1224:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6250
+//line sql.y:6250
 		{
 			yyLOCAL = &PointPropertyFuncExpr{Property: YCordinate, Point: yyDollar[3].exprUnion(), ValueToSet: yyDollar[5].exprUnion()}
 		}
@@ -19365,7 +19365,7 @@ yydefault:
 	case 1225:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6254
+//line sql.y:6254
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: GeometryFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19373,7 +19373,7 @@ yydefault:
 	case 1226:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6258
+//line sql.y:6258
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: GeometryFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19381,7 +19381,7 @@ yydefault:
 	case 1227:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6262
+//line sql.y:6262
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: GeometryFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19389,7 +19389,7 @@ yydefault:
 	case 1228:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6266
+//line sql.y:6266
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: GeometryCollectionFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19397,7 +19397,7 @@ yydefault:
 	case 1229:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6270
+//line sql.y:6270
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: GeometryCollectionFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19405,7 +19405,7 @@ yydefault:
 	case 1230:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6274
+//line sql.y:6274
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: GeometryCollectionFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19413,7 +19413,7 @@ yydefault:
 	case 1231:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6278
+//line sql.y:6278
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: LineStringFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19421,7 +19421,7 @@ yydefault:
 	case 1232:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6282
+//line sql.y:6282
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: LineStringFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19429,7 +19429,7 @@ yydefault:
 	case 1233:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6286
+//line sql.y:6286
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: LineStringFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19437,7 +19437,7 @@ yydefault:
 	case 1234:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6290
+//line sql.y:6290
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiLinestringFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19445,7 +19445,7 @@ yydefault:
 	case 1235:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6294
+//line sql.y:6294
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiLinestringFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19453,7 +19453,7 @@ yydefault:
 	case 1236:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6298
+//line sql.y:6298
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiLinestringFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19461,7 +19461,7 @@ yydefault:
 	case 1237:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6302
+//line sql.y:6302
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiPointFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19469,7 +19469,7 @@ yydefault:
 	case 1238:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6306
+//line sql.y:6306
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiPointFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19477,7 +19477,7 @@ yydefault:
 	case 1239:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6310
+//line sql.y:6310
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiPointFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19485,7 +19485,7 @@ yydefault:
 	case 1240:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6314
+//line sql.y:6314
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiPolygonFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19493,7 +19493,7 @@ yydefault:
 	case 1241:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6318
+//line sql.y:6318
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiPolygonFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19501,7 +19501,7 @@ yydefault:
 	case 1242:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6322
+//line sql.y:6322
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: MultiPolygonFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19509,7 +19509,7 @@ yydefault:
 	case 1243:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6326
+//line sql.y:6326
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: PointFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19517,7 +19517,7 @@ yydefault:
 	case 1244:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6330
+//line sql.y:6330
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: PointFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19525,7 +19525,7 @@ yydefault:
 	case 1245:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6334
+//line sql.y:6334
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: PointFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19533,7 +19533,7 @@ yydefault:
 	case 1246:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6338
+//line sql.y:6338
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: PolygonFromText, WktText: yyDollar[3].exprUnion()}
 		}
@@ -19541,7 +19541,7 @@ yydefault:
 	case 1247:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6342
+//line sql.y:6342
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: PolygonFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19549,7 +19549,7 @@ yydefault:
 	case 1248:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6346
+//line sql.y:6346
 		{
 			yyLOCAL = &GeomFromTextExpr{Type: PolygonFromText, WktText: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19557,7 +19557,7 @@ yydefault:
 	case 1249:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6350
+//line sql.y:6350
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: GeometryFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19565,7 +19565,7 @@ yydefault:
 	case 1250:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6354
+//line sql.y:6354
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: GeometryFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19573,7 +19573,7 @@ yydefault:
 	case 1251:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6358
+//line sql.y:6358
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: GeometryFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19581,7 +19581,7 @@ yydefault:
 	case 1252:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6362
+//line sql.y:6362
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: GeometryCollectionFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19589,7 +19589,7 @@ yydefault:
 	case 1253:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6366
+//line sql.y:6366
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: GeometryCollectionFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19597,7 +19597,7 @@ yydefault:
 	case 1254:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6370
+//line sql.y:6370
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: GeometryCollectionFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19605,7 +19605,7 @@ yydefault:
 	case 1255:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6374
+//line sql.y:6374
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: LineStringFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19613,7 +19613,7 @@ yydefault:
 	case 1256:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6378
+//line sql.y:6378
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: LineStringFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19621,7 +19621,7 @@ yydefault:
 	case 1257:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6382
+//line sql.y:6382
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: LineStringFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19629,7 +19629,7 @@ yydefault:
 	case 1258:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6386
+//line sql.y:6386
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiLinestringFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19637,7 +19637,7 @@ yydefault:
 	case 1259:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6390
+//line sql.y:6390
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiLinestringFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19645,7 +19645,7 @@ yydefault:
 	case 1260:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6394
+//line sql.y:6394
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiLinestringFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19653,7 +19653,7 @@ yydefault:
 	case 1261:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6398
+//line sql.y:6398
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiPointFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19661,7 +19661,7 @@ yydefault:
 	case 1262:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6402
+//line sql.y:6402
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiPointFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19669,7 +19669,7 @@ yydefault:
 	case 1263:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6406
+//line sql.y:6406
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiPointFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19677,7 +19677,7 @@ yydefault:
 	case 1264:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6410
+//line sql.y:6410
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiPolygonFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19685,7 +19685,7 @@ yydefault:
 	case 1265:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6414
+//line sql.y:6414
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiPolygonFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19693,7 +19693,7 @@ yydefault:
 	case 1266:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6418
+//line sql.y:6418
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: MultiPolygonFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19701,7 +19701,7 @@ yydefault:
 	case 1267:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6422
+//line sql.y:6422
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: PointFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19709,7 +19709,7 @@ yydefault:
 	case 1268:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6426
+//line sql.y:6426
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: PointFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19717,7 +19717,7 @@ yydefault:
 	case 1269:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6430
+//line sql.y:6430
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: PointFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19725,7 +19725,7 @@ yydefault:
 	case 1270:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6434
+//line sql.y:6434
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: PolygonFromWKB, WkbBlob: yyDollar[3].exprUnion()}
 		}
@@ -19733,7 +19733,7 @@ yydefault:
 	case 1271:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6438
+//line sql.y:6438
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: PolygonFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion()}
 		}
@@ -19741,7 +19741,7 @@ yydefault:
 	case 1272:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6442
+//line sql.y:6442
 		{
 			yyLOCAL = &GeomFromWKBExpr{Type: PolygonFromWKB, WkbBlob: yyDollar[3].exprUnion(), Srid: yyDollar[5].exprUnion(), AxisOrderOpt: yyDollar[7].exprUnion()}
 		}
@@ -19749,7 +19749,7 @@ yydefault:
 	case 1273:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6446
+//line sql.y:6446
 		{
 			yyLOCAL = &PolygonPropertyFuncExpr{Property: Area, Polygon: yyDollar[3].exprUnion()}
 		}
@@ -19757,7 +19757,7 @@ yydefault:
 	case 1274:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6450
+//line sql.y:6450
 		{
 			yyLOCAL = &PolygonPropertyFuncExpr{Property: Centroid, Polygon: yyDollar[3].exprUnion()}
 		}
@@ -19765,7 +19765,7 @@ yydefault:
 	case 1275:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6454
+//line sql.y:6454
 		{
 			yyLOCAL = &PolygonPropertyFuncExpr{Property: ExteriorRing, Polygon: yyDollar[3].exprUnion()}
 		}
@@ -19773,7 +19773,7 @@ yydefault:
 	case 1276:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6458
+//line sql.y:6458
 		{
 			yyLOCAL = &PolygonPropertyFuncExpr{Property: InteriorRingN, Polygon: yyDollar[3].exprUnion(), PropertyDefArg: yyDollar[5].exprUnion()}
 		}
@@ -19781,7 +19781,7 @@ yydefault:
 	case 1277:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6462
+//line sql.y:6462
 		{
 			yyLOCAL = &PolygonPropertyFuncExpr{Property: NumInteriorRings, Polygon: yyDollar[3].exprUnion()}
 		}
@@ -19789,7 +19789,7 @@ yydefault:
 	case 1278:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6466
+//line sql.y:6466
 		{
 			yyLOCAL = &GeomCollPropertyFuncExpr{Property: GeometryN, GeomColl: yyDollar[3].exprUnion(), PropertyDefArg: yyDollar[5].exprUnion()}
 		}
@@ -19797,7 +19797,7 @@ yydefault:
 	case 1279:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6470
+//line sql.y:6470
 		{
 			yyLOCAL = &GeomCollPropertyFuncExpr{Property: NumGeometries, GeomColl: yyDollar[3].exprUnion()}
 		}
@@ -19805,7 +19805,7 @@ yydefault:
 	case 1280:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6474
+//line sql.y:6474
 		{
 			yyLOCAL = &GeoHashFromLatLongExpr{Longitude: yyDollar[3].exprUnion(), Latitude: yyDollar[5].exprUnion(), MaxLength: yyDollar[7].exprUnion()}
 		}
@@ -19813,7 +19813,7 @@ yydefault:
 	case 1281:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6478
+//line sql.y:6478
 		{
 			yyLOCAL = &GeoHashFromPointExpr{Point: yyDollar[3].exprUnion(), MaxLength: yyDollar[5].exprUnion()}
 		}
@@ -19821,7 +19821,7 @@ yydefault:
 	case 1282:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6482
+//line sql.y:6482
 		{
 			yyLOCAL = &GeomFromGeoHashExpr{GeomType: LatitudeFromHash, GeoHash: yyDollar[3].exprUnion()}
 		}
@@ -19829,7 +19829,7 @@ yydefault:
 	case 1283:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6486
+//line sql.y:6486
 		{
 			yyLOCAL = &GeomFromGeoHashExpr{GeomType: LongitudeFromHash, GeoHash: yyDollar[3].exprUnion()}
 		}
@@ -19837,7 +19837,7 @@ yydefault:
 	case 1284:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6490
+//line sql.y:6490
 		{
 			yyLOCAL = &GeomFromGeoHashExpr{GeomType: PointFromHash, GeoHash: yyDollar[3].exprUnion(), SridOpt: yyDollar[5].exprUnion()}
 		}
@@ -19845,7 +19845,7 @@ yydefault:
 	case 1285:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6494
+//line sql.y:6494
 		{
 			yyLOCAL = &GeomFromGeoJSONExpr{GeoJSON: yyDollar[3].exprUnion()}
 		}
@@ -19853,7 +19853,7 @@ yydefault:
 	case 1286:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6498
+//line sql.y:6498
 		{
 			yyLOCAL = &GeomFromGeoJSONExpr{GeoJSON: yyDollar[3].exprUnion(), HigherDimHandlerOpt: yyDollar[5].exprUnion()}
 		}
@@ -19861,7 +19861,7 @@ yydefault:
 	case 1287:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6502
+//line sql.y:6502
 		{
 			yyLOCAL = &GeomFromGeoJSONExpr{GeoJSON: yyDollar[3].exprUnion(), HigherDimHandlerOpt: yyDollar[5].exprUnion(), Srid: yyDollar[7].exprUnion()}
 		}
@@ -19869,7 +19869,7 @@ yydefault:
 	case 1288:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6506
+//line sql.y:6506
 		{
 			yyLOCAL = &GeoJSONFromGeomExpr{Geom: yyDollar[3].exprUnion()}
 		}
@@ -19877,7 +19877,7 @@ yydefault:
 	case 1289:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6510
+//line sql.y:6510
 		{
 			yyLOCAL = &GeoJSONFromGeomExpr{Geom: yyDollar[3].exprUnion(), MaxDecimalDigits: yyDollar[5].exprUnion()}
 		}
@@ -19885,7 +19885,7 @@ yydefault:
 	case 1290:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6514
+//line sql.y:6514
 		{
 			yyLOCAL = &GeoJSONFromGeomExpr{Geom: yyDollar[3].exprUnion(), MaxDecimalDigits: yyDollar[5].exprUnion(), Bitmask: yyDollar[7].exprUnion()}
 		}
@@ -19893,7 +19893,7 @@ yydefault:
 	case 1291:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6518
+//line sql.y:6518
 		{
 			yyLOCAL = &JSONObjectExpr{Params: yyDollar[3].jsonObjectParamsUnion()}
 		}
@@ -19901,7 +19901,7 @@ yydefault:
 	case 1292:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6522
+//line sql.y:6522
 		{
 			yyLOCAL = &JSONQuoteExpr{StringArg: yyDollar[3].exprUnion()}
 		}
@@ -19909,7 +19909,7 @@ yydefault:
 	case 1293:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6526
+//line sql.y:6526
 		{
 			yyLOCAL = &JSONContainsExpr{Target: yyDollar[3].exprUnion(), Candidate: yyDollar[5].exprsUnion()[0], PathList: yyDollar[5].exprsUnion()[1:]}
 		}
@@ -19917,7 +19917,7 @@ yydefault:
 	case 1294:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6530
+//line sql.y:6530
 		{
 			yyLOCAL = &JSONContainsPathExpr{JSONDoc: yyDollar[3].exprUnion(), OneOrAll: yyDollar[5].exprUnion(), PathList: yyDollar[7].exprsUnion()}
 		}
@@ -19925,7 +19925,7 @@ yydefault:
 	case 1295:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6534
+//line sql.y:6534
 		{
 			yyLOCAL = &JSONExtractExpr{JSONDoc: yyDollar[3].exprUnion(), PathList: yyDollar[5].exprsUnion()}
 		}
@@ -19933,7 +19933,7 @@ yydefault:
 	case 1296:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6538
+//line sql.y:6538
 		{
 			yyLOCAL = &JSONKeysExpr{JSONDoc: yyDollar[3].exprUnion()}
 		}
@@ -19941,7 +19941,7 @@ yydefault:
 	case 1297:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6542
+//line sql.y:6542
 		{
 			yyLOCAL = &JSONKeysExpr{JSONDoc: yyDollar[3].exprUnion(), Path: yyDollar[5].exprUnion()}
 		}
@@ -19949,7 +19949,7 @@ yydefault:
 	case 1298:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6546
+//line sql.y:6546
 		{
 			yyLOCAL = &JSONOverlapsExpr{JSONDoc1: yyDollar[3].exprUnion(), JSONDoc2: yyDollar[5].exprUnion()}
 		}
@@ -19957,7 +19957,7 @@ yydefault:
 	case 1299:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6550
+//line sql.y:6550
 		{
 			yyLOCAL = &JSONSearchExpr{JSONDoc: yyDollar[3].exprUnion(), OneOrAll: yyDollar[5].exprUnion(), SearchStr: yyDollar[7].exprUnion()}
 		}
@@ -19965,7 +19965,7 @@ yydefault:
 	case 1300:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6554
+//line sql.y:6554
 		{
 			yyLOCAL = &JSONSearchExpr{JSONDoc: yyDollar[3].exprUnion(), OneOrAll: yyDollar[5].exprUnion(), SearchStr: yyDollar[7].exprUnion(), EscapeChar: yyDollar[9].exprsUnion()[0], PathList: yyDollar[9].exprsUnion()[1:]}
 		}
@@ -19973,7 +19973,7 @@ yydefault:
 	case 1301:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6558
+//line sql.y:6558
 		{
 			yyLOCAL = &JSONValueExpr{JSONDoc: yyDollar[3].exprUnion(), Path: yyDollar[5].exprUnion(), ReturningType: yyDollar[6].convertTypeUnion()}
 		}
@@ -19981,7 +19981,7 @@ yydefault:
 	case 1302:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6562
+//line sql.y:6562
 		{
 			yyLOCAL = &JSONValueExpr{JSONDoc: yyDollar[3].exprUnion(), Path: yyDollar[5].exprUnion(), ReturningType: yyDollar[6].convertTypeUnion(), EmptyOnResponse: yyDollar[7].jtOnResponseUnion()}
 		}
@@ -19989,7 +19989,7 @@ yydefault:
 	case 1303:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6566
+//line sql.y:6566
 		{
 			yyLOCAL = &JSONValueExpr{JSONDoc: yyDollar[3].exprUnion(), Path: yyDollar[5].exprUnion(), ReturningType: yyDollar[6].convertTypeUnion(), ErrorOnResponse: yyDollar[7].jtOnResponseUnion()}
 		}
@@ -19997,7 +19997,7 @@ yydefault:
 	case 1304:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6570
+//line sql.y:6570
 		{
 			yyLOCAL = &JSONValueExpr{JSONDoc: yyDollar[3].exprUnion(), Path: yyDollar[5].exprUnion(), ReturningType: yyDollar[6].convertTypeUnion(), EmptyOnResponse: yyDollar[7].jtOnResponseUnion(), ErrorOnResponse: yyDollar[8].jtOnResponseUnion()}
 		}
@@ -20005,7 +20005,7 @@ yydefault:
 	case 1305:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6574
+//line sql.y:6574
 		{
 			yyLOCAL = &JSONAttributesExpr{Type: DepthAttributeType, JSONDoc: yyDollar[3].exprUnion()}
 		}
@@ -20013,7 +20013,7 @@ yydefault:
 	case 1306:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6578
+//line sql.y:6578
 		{
 			yyLOCAL = &JSONAttributesExpr{Type: ValidAttributeType, JSONDoc: yyDollar[3].exprUnion()}
 		}
@@ -20021,7 +20021,7 @@ yydefault:
 	case 1307:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6582
+//line sql.y:6582
 		{
 			yyLOCAL = &JSONAttributesExpr{Type: TypeAttributeType, JSONDoc: yyDollar[3].exprUnion()}
 		}
@@ -20029,7 +20029,7 @@ yydefault:
 	case 1308:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6586
+//line sql.y:6586
 		{
 			yyLOCAL = &JSONAttributesExpr{Type: LengthAttributeType, JSONDoc: yyDollar[3].exprUnion()}
 		}
@@ -20037,7 +20037,7 @@ yydefault:
 	case 1309:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6590
+//line sql.y:6590
 		{
 			yyLOCAL = &JSONAttributesExpr{Type: LengthAttributeType, JSONDoc: yyDollar[3].exprUnion(), Path: yyDollar[5].exprUnion()}
 		}
@@ -20045,7 +20045,7 @@ yydefault:
 	case 1310:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6594
+//line sql.y:6594
 		{
 			yyLOCAL = &JSONValueModifierExpr{Type: JSONArrayAppendType, JSONDoc: yyDollar[3].exprUnion(), Params: yyDollar[5].jsonObjectParamsUnion()}
 		}
@@ -20053,7 +20053,7 @@ yydefault:
 	case 1311:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6598
+//line sql.y:6598
 		{
 			yyLOCAL = &JSONValueModifierExpr{Type: JSONArrayInsertType, JSONDoc: yyDollar[3].exprUnion(), Params: yyDollar[5].jsonObjectParamsUnion()}
 		}
@@ -20061,7 +20061,7 @@ yydefault:
 	case 1312:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6602
+//line sql.y:6602
 		{
 			yyLOCAL = &JSONValueModifierExpr{Type: JSONInsertType, JSONDoc: yyDollar[3].exprUnion(), Params: yyDollar[5].jsonObjectParamsUnion()}
 		}
@@ -20069,7 +20069,7 @@ yydefault:
 	case 1313:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6606
+//line sql.y:6606
 		{
 			yyLOCAL = &JSONValueModifierExpr{Type: JSONReplaceType, JSONDoc: yyDollar[3].exprUnion(), Params: yyDollar[5].jsonObjectParamsUnion()}
 		}
@@ -20077,7 +20077,7 @@ yydefault:
 	case 1314:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6610
+//line sql.y:6610
 		{
 			yyLOCAL = &JSONValueModifierExpr{Type: JSONSetType, JSONDoc: yyDollar[3].exprUnion(), Params: yyDollar[5].jsonObjectParamsUnion()}
 		}
@@ -20085,7 +20085,7 @@ yydefault:
 	case 1315:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6614
+//line sql.y:6614
 		{
 			yyLOCAL = &JSONValueMergeExpr{Type: JSONMergeType, JSONDoc: yyDollar[3].exprUnion(), JSONDocList: yyDollar[5].exprsUnion()}
 		}
@@ -20093,7 +20093,7 @@ yydefault:
 	case 1316:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6618
+//line sql.y:6618
 		{
 			yyLOCAL = &JSONValueMergeExpr{Type: JSONMergePatchType, JSONDoc: yyDollar[3].exprUnion(), JSONDocList: yyDollar[5].exprsUnion()}
 		}
@@ -20101,7 +20101,7 @@ yydefault:
 	case 1317:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6622
+//line sql.y:6622
 		{
 			yyLOCAL = &JSONValueMergeExpr{Type: JSONMergePreserveType, JSONDoc: yyDollar[3].exprUnion(), JSONDocList: yyDollar[5].exprsUnion()}
 		}
@@ -20109,7 +20109,7 @@ yydefault:
 	case 1318:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6626
+//line sql.y:6626
 		{
 			yyLOCAL = &JSONRemoveExpr{JSONDoc: yyDollar[3].exprUnion(), PathList: yyDollar[5].exprsUnion()}
 		}
@@ -20117,7 +20117,7 @@ yydefault:
 	case 1319:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6630
+//line sql.y:6630
 		{
 			yyLOCAL = &JSONUnquoteExpr{JSONValue: yyDollar[3].exprUnion()}
 		}
@@ -20125,7 +20125,7 @@ yydefault:
 	case 1320:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6634
+//line sql.y:6634
 		{
 			yyLOCAL = &MultiPolygonExpr{PolygonParams: yyDollar[3].exprsUnion()}
 		}
@@ -20133,7 +20133,7 @@ yydefault:
 	case 1321:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6638
+//line sql.y:6638
 		{
 			yyLOCAL = &MultiPointExpr{PointParams: yyDollar[3].exprsUnion()}
 		}
@@ -20141,7 +20141,7 @@ yydefault:
 	case 1322:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6642
+//line sql.y:6642
 		{
 			yyLOCAL = &MultiLinestringExpr{LinestringParams: yyDollar[3].exprsUnion()}
 		}
@@ -20149,7 +20149,7 @@ yydefault:
 	case 1323:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6646
+//line sql.y:6646
 		{
 			yyLOCAL = &PolygonExpr{LinestringParams: yyDollar[3].exprsUnion()}
 		}
@@ -20157,7 +20157,7 @@ yydefault:
 	case 1324:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6650
+//line sql.y:6650
 		{
 			yyLOCAL = &LineStringExpr{PointParams: yyDollar[3].exprsUnion()}
 		}
@@ -20165,7 +20165,7 @@ yydefault:
 	case 1325:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6654
+//line sql.y:6654
 		{
 			yyLOCAL = &PointExpr{XCordinate: yyDollar[3].exprUnion(), YCordinate: yyDollar[5].exprUnion()}
 		}
@@ -20173,7 +20173,7 @@ yydefault:
 	case 1326:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6658
+//line sql.y:6658
 		{
 			yyLOCAL = &ArgumentLessWindowExpr{Type: yyDollar[1].argumentLessWindowExprTypeUnion(), OverClause: yyDollar[4].overClauseUnion()}
 		}
@@ -20181,7 +20181,7 @@ yydefault:
 	case 1327:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6662
+//line sql.y:6662
 		{
 			yyLOCAL = &FirstOrLastValueExpr{Type: yyDollar[1].firstOrLastValueExprTypeUnion(), Expr: yyDollar[3].exprUnion(), NullTreatmentClause: yyDollar[5].nullTreatmentClauseUnion(), OverClause: yyDollar[6].overClauseUnion()}
 		}
@@ -20189,7 +20189,7 @@ yydefault:
 	case 1328:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6666
+//line sql.y:6666
 		{
 			yyLOCAL = &NtileExpr{N: yyDollar[3].exprUnion(), OverClause: yyDollar[5].overClauseUnion()}
 		}
@@ -20197,7 +20197,7 @@ yydefault:
 	case 1329:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6670
+//line sql.y:6670
 		{
 			yyLOCAL = &NTHValueExpr{Expr: yyDollar[3].exprUnion(), N: yyDollar[5].exprUnion(), FromFirstLastClause: yyDollar[7].fromFirstLastClauseUnion(), NullTreatmentClause: yyDollar[8].nullTreatmentClauseUnion(), OverClause: yyDollar[9].overClauseUnion()}
 		}
@@ -20205,7 +20205,7 @@ yydefault:
 	case 1330:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6674
+//line sql.y:6674
 		{
 			yyLOCAL = &LagLeadExpr{Type: yyDollar[1].lagLeadExprTypeUnion(), Expr: yyDollar[3].exprUnion(), NullTreatmentClause: yyDollar[5].nullTreatmentClauseUnion(), OverClause: yyDollar[6].overClauseUnion()}
 		}
@@ -20213,7 +20213,7 @@ yydefault:
 	case 1331:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6678
+//line sql.y:6678
 		{
 			yyLOCAL = &LagLeadExpr{Type: yyDollar[1].lagLeadExprTypeUnion(), Expr: yyDollar[3].exprUnion(), N: yyDollar[5].exprUnion(), Default: yyDollar[6].exprUnion(), NullTreatmentClause: yyDollar[8].nullTreatmentClauseUnion(), OverClause: yyDollar[9].overClauseUnion()}
 		}
@@ -20221,7 +20221,7 @@ yydefault:
 	case 1332:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6682
+//line sql.y:6682
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprAdddate, Date: yyDollar[3].exprUnion(), Interval: yyDollar[6].exprUnion(), Unit: yyDollar[7].intervalTypeUnion()}
 		}
@@ -20229,7 +20229,7 @@ yydefault:
 	case 1333:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6686
+//line sql.y:6686
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprAdddate, Date: yyDollar[3].exprUnion(), Interval: yyDollar[5].exprUnion(), Unit: IntervalNone}
 		}
@@ -20237,7 +20237,7 @@ yydefault:
 	case 1334:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6690
+//line sql.y:6690
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprDateAdd, Date: yyDollar[3].exprUnion(), Interval: yyDollar[6].exprUnion(), Unit: yyDollar[7].intervalTypeUnion()}
 		}
@@ -20245,7 +20245,7 @@ yydefault:
 	case 1335:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6694
+//line sql.y:6694
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprDateSub, Date: yyDollar[3].exprUnion(), Interval: yyDollar[6].exprUnion(), Unit: yyDollar[7].intervalTypeUnion()}
 		}
@@ -20253,7 +20253,7 @@ yydefault:
 	case 1336:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6698
+//line sql.y:6698
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprSubdate, Date: yyDollar[3].exprUnion(), Interval: yyDollar[6].exprUnion(), Unit: yyDollar[7].intervalTypeUnion()}
 		}
@@ -20261,7 +20261,7 @@ yydefault:
 	case 1337:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6702
+//line sql.y:6702
 		{
 			yyLOCAL = &IntervalDateExpr{Syntax: IntervalDateExprSubdate, Date: yyDollar[3].exprUnion(), Interval: yyDollar[5].exprUnion(), Unit: IntervalNone}
 		}
@@ -20269,7 +20269,7 @@ yydefault:
 	case 1342:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6712
+//line sql.y:6712
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
@@ -20277,7 +20277,7 @@ yydefault:
 	case 1343:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6716
+//line sql.y:6716
 		{
 			yyLOCAL = NewIntLiteral(yyDollar[1].str)
 		}
@@ -20285,7 +20285,7 @@ yydefault:
 	case 1344:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6720
+//line sql.y:6720
 		{
 			yyLOCAL = yyDollar[1].variableUnion()
 		}
@@ -20293,7 +20293,7 @@ yydefault:
 	case 1345:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6724
+//line sql.y:6724
 		{
 			yyLOCAL = parseBindVariable(yylex, yyDollar[1].str[1:])
 		}
@@ -20301,7 +20301,7 @@ yydefault:
 	case 1346:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6729
+//line sql.y:6729
 		{
 			yyLOCAL = nil
 		}
@@ -20309,7 +20309,7 @@ yydefault:
 	case 1347:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6733
+//line sql.y:6733
 		{
 			yyLOCAL = yyDollar[2].exprUnion()
 		}
@@ -20317,7 +20317,7 @@ yydefault:
 	case 1348:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6739
+//line sql.y:6739
 		{
 			yyLOCAL = &RegexpInstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion()}
 		}
@@ -20325,7 +20325,7 @@ yydefault:
 	case 1349:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6743
+//line sql.y:6743
 		{
 			yyLOCAL = &RegexpInstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion()}
 		}
@@ -20333,7 +20333,7 @@ yydefault:
 	case 1350:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6747
+//line sql.y:6747
 		{
 			yyLOCAL = &RegexpInstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion(), Occurrence: yyDollar[9].exprUnion()}
 		}
@@ -20341,7 +20341,7 @@ yydefault:
 	case 1351:
 		yyDollar = yyS[yypt-12 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6751
+//line sql.y:6751
 		{
 			yyLOCAL = &RegexpInstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion(), Occurrence: yyDollar[9].exprUnion(), ReturnOption: yyDollar[11].exprUnion()}
 		}
@@ -20349,7 +20349,7 @@ yydefault:
 	case 1352:
 		yyDollar = yyS[yypt-14 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6755
+//line sql.y:6755
 		{
 			// Match type is kept expression as TRIM( ' m  ') is accepted
 			yyLOCAL = &RegexpInstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion(), Occurrence: yyDollar[9].exprUnion(), ReturnOption: yyDollar[11].exprUnion(), MatchType: yyDollar[13].exprUnion()}
@@ -20358,7 +20358,7 @@ yydefault:
 	case 1353:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6760
+//line sql.y:6760
 		{
 			yyLOCAL = &RegexpLikeExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion()}
 		}
@@ -20366,7 +20366,7 @@ yydefault:
 	case 1354:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6764
+//line sql.y:6764
 		{
 			yyLOCAL = &RegexpLikeExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), MatchType: yyDollar[7].exprUnion()}
 		}
@@ -20374,7 +20374,7 @@ yydefault:
 	case 1355:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6768
+//line sql.y:6768
 		{
 			yyLOCAL = &RegexpReplaceExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Repl: yyDollar[7].exprUnion()}
 		}
@@ -20382,7 +20382,7 @@ yydefault:
 	case 1356:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6772
+//line sql.y:6772
 		{
 			yyLOCAL = &RegexpReplaceExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Repl: yyDollar[7].exprUnion(), Position: yyDollar[9].exprUnion()}
 		}
@@ -20390,7 +20390,7 @@ yydefault:
 	case 1357:
 		yyDollar = yyS[yypt-12 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6776
+//line sql.y:6776
 		{
 			yyLOCAL = &RegexpReplaceExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Repl: yyDollar[7].exprUnion(), Position: yyDollar[9].exprUnion(), Occurrence: yyDollar[11].exprUnion()}
 		}
@@ -20398,7 +20398,7 @@ yydefault:
 	case 1358:
 		yyDollar = yyS[yypt-14 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6780
+//line sql.y:6780
 		{
 			// Match type is kept expression as TRIM( ' m  ') is accepted
 			yyLOCAL = &RegexpReplaceExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Repl: yyDollar[7].exprUnion(), Position: yyDollar[9].exprUnion(), Occurrence: yyDollar[11].exprUnion(), MatchType: yyDollar[13].exprUnion()}
@@ -20407,7 +20407,7 @@ yydefault:
 	case 1359:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6785
+//line sql.y:6785
 		{
 			yyLOCAL = &RegexpSubstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion()}
 		}
@@ -20415,7 +20415,7 @@ yydefault:
 	case 1360:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6789
+//line sql.y:6789
 		{
 			yyLOCAL = &RegexpSubstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion()}
 		}
@@ -20423,7 +20423,7 @@ yydefault:
 	case 1361:
 		yyDollar = yyS[yypt-10 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6793
+//line sql.y:6793
 		{
 			yyLOCAL = &RegexpSubstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion(), Occurrence: yyDollar[9].exprUnion()}
 		}
@@ -20431,7 +20431,7 @@ yydefault:
 	case 1362:
 		yyDollar = yyS[yypt-12 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6797
+//line sql.y:6797
 		{
 			// Match type is kept expression as TRIM( ' m  ') is accepted
 			yyLOCAL = &RegexpSubstrExpr{Expr: yyDollar[3].exprUnion(), Pattern: yyDollar[5].exprUnion(), Position: yyDollar[7].exprUnion(), Occurrence: yyDollar[9].exprUnion(), MatchType: yyDollar[11].exprUnion()}
@@ -20440,7 +20440,7 @@ yydefault:
 	case 1363:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6804
+//line sql.y:6804
 		{
 			yyLOCAL = &ExtractValueExpr{Fragment: yyDollar[3].exprUnion(), XPathExpr: yyDollar[5].exprUnion()}
 		}
@@ -20448,7 +20448,7 @@ yydefault:
 	case 1364:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6808
+//line sql.y:6808
 		{
 			yyLOCAL = &UpdateXMLExpr{Target: yyDollar[3].exprUnion(), XPathExpr: yyDollar[5].exprUnion(), NewXML: yyDollar[7].exprUnion()}
 		}
@@ -20456,7 +20456,7 @@ yydefault:
 	case 1365:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6814
+//line sql.y:6814
 		{
 			yyLOCAL = &PerformanceSchemaFuncExpr{Type: FormatBytesType, Argument: yyDollar[3].exprUnion()}
 		}
@@ -20464,7 +20464,7 @@ yydefault:
 	case 1366:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6818
+//line sql.y:6818
 		{
 			yyLOCAL = &PerformanceSchemaFuncExpr{Type: FormatPicoTimeType, Argument: yyDollar[3].exprUnion()}
 		}
@@ -20472,7 +20472,7 @@ yydefault:
 	case 1367:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6822
+//line sql.y:6822
 		{
 			yyLOCAL = &PerformanceSchemaFuncExpr{Type: PsCurrentThreadIDType}
 		}
@@ -20480,7 +20480,7 @@ yydefault:
 	case 1368:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6826
+//line sql.y:6826
 		{
 			yyLOCAL = &PerformanceSchemaFuncExpr{Type: PsThreadIDType, Argument: yyDollar[3].exprUnion()}
 		}
@@ -20488,7 +20488,7 @@ yydefault:
 	case 1369:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6832
+//line sql.y:6832
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: GTIDSubsetType, Set1: yyDollar[3].exprUnion(), Set2: yyDollar[5].exprUnion()}
 		}
@@ -20496,7 +20496,7 @@ yydefault:
 	case 1370:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6836
+//line sql.y:6836
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: GTIDSubtractType, Set1: yyDollar[3].exprUnion(), Set2: yyDollar[5].exprUnion()}
 		}
@@ -20504,7 +20504,7 @@ yydefault:
 	case 1371:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6840
+//line sql.y:6840
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: WaitForExecutedGTIDSetType, Set1: yyDollar[3].exprUnion()}
 		}
@@ -20512,7 +20512,7 @@ yydefault:
 	case 1372:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6844
+//line sql.y:6844
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: WaitForExecutedGTIDSetType, Set1: yyDollar[3].exprUnion(), Timeout: yyDollar[5].exprUnion()}
 		}
@@ -20520,7 +20520,7 @@ yydefault:
 	case 1373:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6848
+//line sql.y:6848
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: WaitUntilSQLThreadAfterGTIDSType, Set1: yyDollar[3].exprUnion()}
 		}
@@ -20528,7 +20528,7 @@ yydefault:
 	case 1374:
 		yyDollar = yyS[yypt-6 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6852
+//line sql.y:6852
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: WaitUntilSQLThreadAfterGTIDSType, Set1: yyDollar[3].exprUnion(), Timeout: yyDollar[5].exprUnion()}
 		}
@@ -20536,7 +20536,7 @@ yydefault:
 	case 1375:
 		yyDollar = yyS[yypt-8 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6856
+//line sql.y:6856
 		{
 			yyLOCAL = &GTIDFuncExpr{Type: WaitUntilSQLThreadAfterGTIDSType, Set1: yyDollar[3].exprUnion(), Timeout: yyDollar[5].exprUnion(), Channel: yyDollar[7].exprUnion()}
 		}
@@ -20544,7 +20544,7 @@ yydefault:
 	case 1376:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6861
+//line sql.y:6861
 		{
 			yyLOCAL = nil
 		}
@@ -20552,7 +20552,7 @@ yydefault:
 	case 1377:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6865
+//line sql.y:6865
 		{
 			yyLOCAL = yyDollar[2].convertTypeUnion()
 		}
@@ -20560,7 +20560,7 @@ yydefault:
 	case 1378:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6871
+//line sql.y:6871
 		{
 			yyLOCAL = IntervalDayHour
 		}
@@ -20568,7 +20568,7 @@ yydefault:
 	case 1379:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6875
+//line sql.y:6875
 		{
 			yyLOCAL = IntervalDayMicrosecond
 		}
@@ -20576,7 +20576,7 @@ yydefault:
 	case 1380:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6879
+//line sql.y:6879
 		{
 			yyLOCAL = IntervalDayMinute
 		}
@@ -20584,7 +20584,7 @@ yydefault:
 	case 1381:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6883
+//line sql.y:6883
 		{
 			yyLOCAL = IntervalDaySecond
 		}
@@ -20592,7 +20592,7 @@ yydefault:
 	case 1382:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6887
+//line sql.y:6887
 		{
 			yyLOCAL = IntervalHourMicrosecond
 		}
@@ -20600,7 +20600,7 @@ yydefault:
 	case 1383:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6891
+//line sql.y:6891
 		{
 			yyLOCAL = IntervalHourMinute
 		}
@@ -20608,7 +20608,7 @@ yydefault:
 	case 1384:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6895
+//line sql.y:6895
 		{
 			yyLOCAL = IntervalHourSecond
 		}
@@ -20616,7 +20616,7 @@ yydefault:
 	case 1385:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6899
+//line sql.y:6899
 		{
 			yyLOCAL = IntervalMinuteMicrosecond
 		}
@@ -20624,7 +20624,7 @@ yydefault:
 	case 1386:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6903
+//line sql.y:6903
 		{
 			yyLOCAL = IntervalMinuteSecond
 		}
@@ -20632,7 +20632,7 @@ yydefault:
 	case 1387:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6907
+//line sql.y:6907
 		{
 			yyLOCAL = IntervalSecondMicrosecond
 		}
@@ -20640,7 +20640,7 @@ yydefault:
 	case 1388:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6911
+//line sql.y:6911
 		{
 			yyLOCAL = IntervalYearMonth
 		}
@@ -20648,7 +20648,7 @@ yydefault:
 	case 1389:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6915
+//line sql.y:6915
 		{
 			yyLOCAL = IntervalDay
 		}
@@ -20656,7 +20656,7 @@ yydefault:
 	case 1390:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6919
+//line sql.y:6919
 		{
 			yyLOCAL = IntervalWeek
 		}
@@ -20664,7 +20664,7 @@ yydefault:
 	case 1391:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6923
+//line sql.y:6923
 		{
 			yyLOCAL = IntervalHour
 		}
@@ -20672,7 +20672,7 @@ yydefault:
 	case 1392:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6927
+//line sql.y:6927
 		{
 			yyLOCAL = IntervalMinute
 		}
@@ -20680,7 +20680,7 @@ yydefault:
 	case 1393:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6931
+//line sql.y:6931
 		{
 			yyLOCAL = IntervalMonth
 		}
@@ -20688,7 +20688,7 @@ yydefault:
 	case 1394:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6935
+//line sql.y:6935
 		{
 			yyLOCAL = IntervalQuarter
 		}
@@ -20696,7 +20696,7 @@ yydefault:
 	case 1395:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6939
+//line sql.y:6939
 		{
 			yyLOCAL = IntervalSecond
 		}
@@ -20704,7 +20704,7 @@ yydefault:
 	case 1396:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6943
+//line sql.y:6943
 		{
 			yyLOCAL = IntervalMicrosecond
 		}
@@ -20712,7 +20712,7 @@ yydefault:
 	case 1397:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6947
+//line sql.y:6947
 		{
 			yyLOCAL = IntervalYear
 		}
@@ -20720,7 +20720,7 @@ yydefault:
 	case 1398:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6953
+//line sql.y:6953
 		{
 			yyLOCAL = IntervalDay
 		}
@@ -20728,7 +20728,7 @@ yydefault:
 	case 1399:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6957
+//line sql.y:6957
 		{
 			yyLOCAL = IntervalWeek
 		}
@@ -20736,7 +20736,7 @@ yydefault:
 	case 1400:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6961
+//line sql.y:6961
 		{
 			yyLOCAL = IntervalHour
 		}
@@ -20744,7 +20744,7 @@ yydefault:
 	case 1401:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6965
+//line sql.y:6965
 		{
 			yyLOCAL = IntervalMinute
 		}
@@ -20752,7 +20752,7 @@ yydefault:
 	case 1402:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6969
+//line sql.y:6969
 		{
 			yyLOCAL = IntervalMonth
 		}
@@ -20760,7 +20760,7 @@ yydefault:
 	case 1403:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6973
+//line sql.y:6973
 		{
 			yyLOCAL = IntervalQuarter
 		}
@@ -20768,7 +20768,7 @@ yydefault:
 	case 1404:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6977
+//line sql.y:6977
 		{
 			yyLOCAL = IntervalSecond
 		}
@@ -20776,7 +20776,7 @@ yydefault:
 	case 1405:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6981
+//line sql.y:6981
 		{
 			yyLOCAL = IntervalMicrosecond
 		}
@@ -20784,7 +20784,7 @@ yydefault:
 	case 1406:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6985
+//line sql.y:6985
 		{
 			yyLOCAL = IntervalYear
 		}
@@ -20792,7 +20792,7 @@ yydefault:
 	case 1407:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6989
+//line sql.y:6989
 		{
 			yyLOCAL = IntervalDay
 		}
@@ -20800,7 +20800,7 @@ yydefault:
 	case 1408:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6993
+//line sql.y:6993
 		{
 			yyLOCAL = IntervalWeek
 		}
@@ -20808,7 +20808,7 @@ yydefault:
 	case 1409:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:6997
+//line sql.y:6997
 		{
 			yyLOCAL = IntervalHour
 		}
@@ -20816,7 +20816,7 @@ yydefault:
 	case 1410:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7001
+//line sql.y:7001
 		{
 			yyLOCAL = IntervalMinute
 		}
@@ -20824,7 +20824,7 @@ yydefault:
 	case 1411:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7005
+//line sql.y:7005
 		{
 			yyLOCAL = IntervalMonth
 		}
@@ -20832,7 +20832,7 @@ yydefault:
 	case 1412:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7009
+//line sql.y:7009
 		{
 			yyLOCAL = IntervalQuarter
 		}
@@ -20840,7 +20840,7 @@ yydefault:
 	case 1413:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7013
+//line sql.y:7013
 		{
 			yyLOCAL = IntervalSecond
 		}
@@ -20848,7 +20848,7 @@ yydefault:
 	case 1414:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7017
+//line sql.y:7017
 		{
 			yyLOCAL = IntervalMicrosecond
 		}
@@ -20856,7 +20856,7 @@ yydefault:
 	case 1415:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL IntervalType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7021
+//line sql.y:7021
 		{
 			yyLOCAL = IntervalYear
 		}
@@ -20864,7 +20864,7 @@ yydefault:
 	case 1418:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7031
+//line sql.y:7031
 		{
 			yyLOCAL = 0
 		}
@@ -20872,7 +20872,7 @@ yydefault:
 	case 1419:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7035
+//line sql.y:7035
 		{
 			yyLOCAL = 0
 		}
@@ -20880,7 +20880,7 @@ yydefault:
 	case 1420:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL int
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7039
+//line sql.y:7039
 		{
 			yyLOCAL = convertStringToInt(yyDollar[2].str)
 		}
@@ -20888,7 +20888,7 @@ yydefault:
 	case 1421:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7049
+//line sql.y:7049
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("if"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -20896,7 +20896,7 @@ yydefault:
 	case 1422:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7053
+//line sql.y:7053
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("database"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -20904,7 +20904,7 @@ yydefault:
 	case 1423:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7057
+//line sql.y:7057
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("schema"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -20912,7 +20912,7 @@ yydefault:
 	case 1424:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7061
+//line sql.y:7061
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("mod"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -20920,7 +20920,7 @@ yydefault:
 	case 1425:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7065
+//line sql.y:7065
 		{
 			yyLOCAL = &FuncExpr{Name: NewIdentifierCI("replace"), Exprs: yyDollar[3].selectExprsUnion()}
 		}
@@ -20928,7 +20928,7 @@ yydefault:
 	case 1426:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL MatchExprOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7071
+//line sql.y:7071
 		{
 			yyLOCAL = NoOption
 		}
@@ -20936,7 +20936,7 @@ yydefault:
 	case 1427:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL MatchExprOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7075
+//line sql.y:7075
 		{
 			yyLOCAL = BooleanModeOpt
 		}
@@ -20944,7 +20944,7 @@ yydefault:
 	case 1428:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL MatchExprOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7079
+//line sql.y:7079
 		{
 			yyLOCAL = NaturalLanguageModeOpt
 		}
@@ -20952,7 +20952,7 @@ yydefault:
 	case 1429:
 		yyDollar = yyS[yypt-7 : yypt+1]
 		var yyLOCAL MatchExprOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7083
+//line sql.y:7083
 		{
 			yyLOCAL = NaturalLanguageModeWithQueryExpansionOpt
 		}
@@ -20960,33 +20960,33 @@ yydefault:
 	case 1430:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL MatchExprOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7087
+//line sql.y:7087
 		{
 			yyLOCAL = QueryExpansionOpt
 		}
 		yyVAL.union = yyLOCAL
 	case 1431:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7093
+//line sql.y:7093
 		{
 			yyVAL.str = string(yyDollar[1].identifierCI.String())
 		}
 	case 1432:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7097
+//line sql.y:7097
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1433:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7101
+//line sql.y:7101
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1434:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7107
+//line sql.y:7107
 		{
 			yyLOCAL = nil
 		}
@@ -20994,7 +20994,7 @@ yydefault:
 	case 1435:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7111
+//line sql.y:7111
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[2].str), Length: NewIntLiteral(yyDollar[4].str)}
 		}
@@ -21002,7 +21002,7 @@ yydefault:
 	case 1436:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7115
+//line sql.y:7115
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[2].str), Length: NewIntLiteral(yyDollar[4].str)}
 		}
@@ -21010,7 +21010,7 @@ yydefault:
 	case 1437:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7121
+//line sql.y:7121
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
@@ -21018,7 +21018,7 @@ yydefault:
 	case 1438:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7125
+//line sql.y:7125
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion(), Charset: yyDollar[3].columnCharset}
 		}
@@ -21026,7 +21026,7 @@ yydefault:
 	case 1439:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7129
+//line sql.y:7129
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21034,7 +21034,7 @@ yydefault:
 	case 1440:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7133
+//line sql.y:7133
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
@@ -21042,7 +21042,7 @@ yydefault:
 	case 1441:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7137
+//line sql.y:7137
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 			yyLOCAL.Length = yyDollar[2].LengthScaleOption.Length
@@ -21052,7 +21052,7 @@ yydefault:
 	case 1442:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7143
+//line sql.y:7143
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21060,7 +21060,7 @@ yydefault:
 	case 1443:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7147
+//line sql.y:7147
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
@@ -21068,7 +21068,7 @@ yydefault:
 	case 1444:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7151
+//line sql.y:7151
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21076,7 +21076,7 @@ yydefault:
 	case 1445:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7155
+//line sql.y:7155
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21084,7 +21084,7 @@ yydefault:
 	case 1446:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7159
+//line sql.y:7159
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
@@ -21092,7 +21092,7 @@ yydefault:
 	case 1447:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7163
+//line sql.y:7163
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21100,7 +21100,7 @@ yydefault:
 	case 1448:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7167
+//line sql.y:7167
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21108,7 +21108,7 @@ yydefault:
 	case 1449:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7171
+//line sql.y:7171
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str), Length: yyDollar[2].literalUnion()}
 		}
@@ -21116,7 +21116,7 @@ yydefault:
 	case 1450:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7175
+//line sql.y:7175
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21124,7 +21124,7 @@ yydefault:
 	case 1451:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ConvertType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7179
+//line sql.y:7179
 		{
 			yyLOCAL = &ConvertType{Type: string(yyDollar[1].str)}
 		}
@@ -21132,7 +21132,7 @@ yydefault:
 	case 1452:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7185
+//line sql.y:7185
 		{
 			yyLOCAL = false
 		}
@@ -21140,7 +21140,7 @@ yydefault:
 	case 1453:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7189
+//line sql.y:7189
 		{
 			yyLOCAL = true
 		}
@@ -21148,7 +21148,7 @@ yydefault:
 	case 1454:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7194
+//line sql.y:7194
 		{
 			yyLOCAL = nil
 		}
@@ -21156,34 +21156,34 @@ yydefault:
 	case 1455:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7198
+//line sql.y:7198
 		{
 			yyLOCAL = yyDollar[1].exprUnion()
 		}
 		yyVAL.union = yyLOCAL
 	case 1456:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7203
+//line sql.y:7203
 		{
 			yyVAL.str = string("")
 		}
 	case 1457:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7207
+//line sql.y:7207
 		{
 			yyVAL.str = encodeSQLString(yyDollar[2].str)
 		}
 	case 1458:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*When
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7213
+//line sql.y:7213
 		{
 			yyLOCAL = []*When{yyDollar[1].whenUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1459:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7217
+//line sql.y:7217
 		{
 			yySLICE := (*[]*When)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[2].whenUnion())
@@ -21191,7 +21191,7 @@ yydefault:
 	case 1460:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *When
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7223
+//line sql.y:7223
 		{
 			yyLOCAL = &When{Cond: yyDollar[2].exprUnion(), Val: yyDollar[4].exprUnion()}
 		}
@@ -21199,7 +21199,7 @@ yydefault:
 	case 1461:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7228
+//line sql.y:7228
 		{
 			yyLOCAL = nil
 		}
@@ -21207,7 +21207,7 @@ yydefault:
 	case 1462:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7232
+//line sql.y:7232
 		{
 			yyLOCAL = yyDollar[2].exprUnion()
 		}
@@ -21215,7 +21215,7 @@ yydefault:
 	case 1463:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7238
+//line sql.y:7238
 		{
 			yyLOCAL = &ColName{Name: yyDollar[1].identifierCI}
 		}
@@ -21223,7 +21223,7 @@ yydefault:
 	case 1464:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7242
+//line sql.y:7242
 		{
 			yyLOCAL = &ColName{Name: NewIdentifierCI(string(yyDollar[1].str))}
 		}
@@ -21231,7 +21231,7 @@ yydefault:
 	case 1465:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7246
+//line sql.y:7246
 		{
 			yyLOCAL = &ColName{Qualifier: TableName{Name: yyDollar[1].identifierCS}, Name: yyDollar[3].identifierCI}
 		}
@@ -21239,7 +21239,7 @@ yydefault:
 	case 1466:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *ColName
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7250
+//line sql.y:7250
 		{
 			yyLOCAL = &ColName{Qualifier: TableName{Qualifier: yyDollar[1].identifierCS, Name: yyDollar[3].identifierCS}, Name: yyDollar[5].identifierCI}
 		}
@@ -21247,7 +21247,7 @@ yydefault:
 	case 1467:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7256
+//line sql.y:7256
 		{
 			yyLOCAL = yyDollar[1].colNameUnion()
 		}
@@ -21255,7 +21255,7 @@ yydefault:
 	case 1468:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7260
+//line sql.y:7260
 		{
 			yyLOCAL = &Offset{V: convertStringToInt(yyDollar[1].str)}
 		}
@@ -21263,7 +21263,7 @@ yydefault:
 	case 1469:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7266
+//line sql.y:7266
 		{
 			// TODO(sougou): Deprecate this construct.
 			if yyDollar[1].identifierCI.Lowered() != "value" {
@@ -21276,7 +21276,7 @@ yydefault:
 	case 1470:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7275
+//line sql.y:7275
 		{
 			yyLOCAL = NewIntLiteral(yyDollar[1].str)
 		}
@@ -21284,7 +21284,7 @@ yydefault:
 	case 1471:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7279
+//line sql.y:7279
 		{
 			yyLOCAL = parseBindVariable(yylex, yyDollar[1].str[1:])
 		}
@@ -21292,7 +21292,7 @@ yydefault:
 	case 1472:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7284
+//line sql.y:7284
 		{
 			yyLOCAL = nil
 		}
@@ -21300,7 +21300,7 @@ yydefault:
 	case 1473:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7288
+//line sql.y:7288
 		{
 			yyLOCAL = yyDollar[3].exprsUnion()
 		}
@@ -21308,7 +21308,7 @@ yydefault:
 	case 1474:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7293
+//line sql.y:7293
 		{
 			yyLOCAL = nil
 		}
@@ -21316,7 +21316,7 @@ yydefault:
 	case 1475:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7297
+//line sql.y:7297
 		{
 			yyLOCAL = yyDollar[2].exprUnion()
 		}
@@ -21324,7 +21324,7 @@ yydefault:
 	case 1476:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *NamedWindow
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7303
+//line sql.y:7303
 		{
 			yyLOCAL = &NamedWindow{yyDollar[2].windowDefinitionsUnion()}
 		}
@@ -21332,14 +21332,14 @@ yydefault:
 	case 1477:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL NamedWindows
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7309
+//line sql.y:7309
 		{
 			yyLOCAL = NamedWindows{yyDollar[1].namedWindowUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1478:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7313
+//line sql.y:7313
 		{
 			yySLICE := (*NamedWindows)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].namedWindowUnion())
@@ -21347,7 +21347,7 @@ yydefault:
 	case 1479:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL NamedWindows
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7318
+//line sql.y:7318
 		{
 			yyLOCAL = nil
 		}
@@ -21355,7 +21355,7 @@ yydefault:
 	case 1480:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL NamedWindows
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7322
+//line sql.y:7322
 		{
 			yyLOCAL = yyDollar[1].namedWindowsUnion()
 		}
@@ -21363,7 +21363,7 @@ yydefault:
 	case 1481:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL OrderBy
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7327
+//line sql.y:7327
 		{
 			yyLOCAL = nil
 		}
@@ -21371,7 +21371,7 @@ yydefault:
 	case 1482:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL OrderBy
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7331
+//line sql.y:7331
 		{
 			yyLOCAL = yyDollar[1].orderByUnion()
 		}
@@ -21379,7 +21379,7 @@ yydefault:
 	case 1483:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL OrderBy
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7337
+//line sql.y:7337
 		{
 			yyLOCAL = yyDollar[3].orderByUnion()
 		}
@@ -21387,14 +21387,14 @@ yydefault:
 	case 1484:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL OrderBy
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7343
+//line sql.y:7343
 		{
 			yyLOCAL = OrderBy{yyDollar[1].orderUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1485:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7347
+//line sql.y:7347
 		{
 			yySLICE := (*OrderBy)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].orderUnion())
@@ -21402,7 +21402,7 @@ yydefault:
 	case 1486:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Order
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7353
+//line sql.y:7353
 		{
 			yyLOCAL = &Order{Expr: yyDollar[1].exprUnion(), Direction: yyDollar[2].orderDirectionUnion()}
 		}
@@ -21410,7 +21410,7 @@ yydefault:
 	case 1487:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL OrderDirection
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7358
+//line sql.y:7358
 		{
 			yyLOCAL = AscOrder
 		}
@@ -21418,7 +21418,7 @@ yydefault:
 	case 1488:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL OrderDirection
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7362
+//line sql.y:7362
 		{
 			yyLOCAL = AscOrder
 		}
@@ -21426,7 +21426,7 @@ yydefault:
 	case 1489:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL OrderDirection
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7366
+//line sql.y:7366
 		{
 			yyLOCAL = DescOrder
 		}
@@ -21434,7 +21434,7 @@ yydefault:
 	case 1490:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *Limit
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7371
+//line sql.y:7371
 		{
 			yyLOCAL = nil
 		}
@@ -21442,7 +21442,7 @@ yydefault:
 	case 1491:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Limit
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7375
+//line sql.y:7375
 		{
 			yyLOCAL = yyDollar[1].limitUnion()
 		}
@@ -21450,7 +21450,7 @@ yydefault:
 	case 1492:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Limit
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7381
+//line sql.y:7381
 		{
 			yyLOCAL = &Limit{Rowcount: yyDollar[2].exprUnion()}
 		}
@@ -21458,7 +21458,7 @@ yydefault:
 	case 1493:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *Limit
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7385
+//line sql.y:7385
 		{
 			yyLOCAL = &Limit{Offset: yyDollar[2].exprUnion(), Rowcount: yyDollar[4].exprUnion()}
 		}
@@ -21466,7 +21466,7 @@ yydefault:
 	case 1494:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *Limit
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7389
+//line sql.y:7389
 		{
 			yyLOCAL = &Limit{Offset: yyDollar[4].exprUnion(), Rowcount: yyDollar[2].exprUnion()}
 		}
@@ -21474,7 +21474,7 @@ yydefault:
 	case 1495:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7394
+//line sql.y:7394
 		{
 			yyLOCAL = nil
 		}
@@ -21482,7 +21482,7 @@ yydefault:
 	case 1496:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7398
+//line sql.y:7398
 		{
 			yyLOCAL = []AlterOption{yyDollar[1].alterOptionUnion(), yyDollar[2].alterOptionUnion()}
 		}
@@ -21490,7 +21490,7 @@ yydefault:
 	case 1497:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7402
+//line sql.y:7402
 		{
 			yyLOCAL = []AlterOption{yyDollar[1].alterOptionUnion(), yyDollar[2].alterOptionUnion()}
 		}
@@ -21498,7 +21498,7 @@ yydefault:
 	case 1498:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7406
+//line sql.y:7406
 		{
 			yyLOCAL = []AlterOption{yyDollar[1].alterOptionUnion()}
 		}
@@ -21506,7 +21506,7 @@ yydefault:
 	case 1499:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7410
+//line sql.y:7410
 		{
 			yyLOCAL = []AlterOption{yyDollar[1].alterOptionUnion()}
 		}
@@ -21514,7 +21514,7 @@ yydefault:
 	case 1500:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7417
+//line sql.y:7417
 		{
 			yyLOCAL = &LockOption{Type: DefaultType}
 		}
@@ -21522,7 +21522,7 @@ yydefault:
 	case 1501:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7421
+//line sql.y:7421
 		{
 			yyLOCAL = &LockOption{Type: NoneType}
 		}
@@ -21530,7 +21530,7 @@ yydefault:
 	case 1502:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7425
+//line sql.y:7425
 		{
 			yyLOCAL = &LockOption{Type: SharedType}
 		}
@@ -21538,7 +21538,7 @@ yydefault:
 	case 1503:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7429
+//line sql.y:7429
 		{
 			yyLOCAL = &LockOption{Type: ExclusiveType}
 		}
@@ -21546,7 +21546,7 @@ yydefault:
 	case 1504:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7435
+//line sql.y:7435
 		{
 			yyLOCAL = AlgorithmValue(yyDollar[3].str)
 		}
@@ -21554,7 +21554,7 @@ yydefault:
 	case 1505:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7439
+//line sql.y:7439
 		{
 			yyLOCAL = AlgorithmValue(yyDollar[3].str)
 		}
@@ -21562,7 +21562,7 @@ yydefault:
 	case 1506:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7443
+//line sql.y:7443
 		{
 			yyLOCAL = AlgorithmValue(yyDollar[3].str)
 		}
@@ -21570,93 +21570,93 @@ yydefault:
 	case 1507:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL AlterOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7447
+//line sql.y:7447
 		{
 			yyLOCAL = AlgorithmValue(yyDollar[3].str)
 		}
 		yyVAL.union = yyLOCAL
 	case 1508:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7452
+//line sql.y:7452
 		{
 			yyVAL.str = ""
 		}
 	case 1509:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7456
+//line sql.y:7456
 		{
 			yyVAL.str = string(yyDollar[3].str)
 		}
 	case 1510:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7460
+//line sql.y:7460
 		{
 			yyVAL.str = string(yyDollar[3].str)
 		}
 	case 1511:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7464
+//line sql.y:7464
 		{
 			yyVAL.str = string(yyDollar[3].str)
 		}
 	case 1512:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7469
+//line sql.y:7469
 		{
 			yyVAL.str = ""
 		}
 	case 1513:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7473
+//line sql.y:7473
 		{
 			yyVAL.str = yyDollar[3].str
 		}
 	case 1514:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7479
+//line sql.y:7479
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1515:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7483
+//line sql.y:7483
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1516:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7488
+//line sql.y:7488
 		{
 			yyVAL.str = ""
 		}
 	case 1517:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7492
+//line sql.y:7492
 		{
 			yyVAL.str = yyDollar[2].str
 		}
 	case 1518:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7497
+//line sql.y:7497
 		{
 			yyVAL.str = "cascaded"
 		}
 	case 1519:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7501
+//line sql.y:7501
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1520:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7505
+//line sql.y:7505
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1521:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL *Definer
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7510
+//line sql.y:7510
 		{
 			yyLOCAL = nil
 		}
@@ -21664,7 +21664,7 @@ yydefault:
 	case 1522:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *Definer
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7514
+//line sql.y:7514
 		{
 			yyLOCAL = yyDollar[3].definerUnion()
 		}
@@ -21672,7 +21672,7 @@ yydefault:
 	case 1523:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Definer
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7520
+//line sql.y:7520
 		{
 			yyLOCAL = &Definer{
 				Name: string(yyDollar[1].str),
@@ -21682,7 +21682,7 @@ yydefault:
 	case 1524:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *Definer
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7526
+//line sql.y:7526
 		{
 			yyLOCAL = &Definer{
 				Name: string(yyDollar[1].str),
@@ -21692,7 +21692,7 @@ yydefault:
 	case 1525:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Definer
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7532
+//line sql.y:7532
 		{
 			yyLOCAL = &Definer{
 				Name:    yyDollar[1].str,
@@ -21702,32 +21702,32 @@ yydefault:
 		yyVAL.union = yyLOCAL
 	case 1526:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7541
+//line sql.y:7541
 		{
 			yyVAL.str = encodeSQLString(yyDollar[1].str)
 		}
 	case 1527:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7545
+//line sql.y:7545
 		{
 			yyVAL.str = formatIdentifier(yyDollar[1].str)
 		}
 	case 1528:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7550
+//line sql.y:7550
 		{
 			yyVAL.str = ""
 		}
 	case 1529:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7554
+//line sql.y:7554
 		{
 			yyVAL.str = formatAddress(yyDollar[1].str)
 		}
 	case 1530:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL Lock
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7560
+//line sql.y:7560
 		{
 			yyLOCAL = ForUpdateLock
 		}
@@ -21735,7 +21735,7 @@ yydefault:
 	case 1531:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL Lock
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7564
+//line sql.y:7564
 		{
 			yyLOCAL = ShareModeLock
 		}
@@ -21743,7 +21743,7 @@ yydefault:
 	case 1532:
 		yyDollar = yyS[yypt-9 : yypt+1]
 		var yyLOCAL *SelectInto
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7570
+//line sql.y:7570
 		{
 			yyLOCAL = &SelectInto{Type: IntoOutfileS3, FileName: encodeSQLString(yyDollar[4].str), Charset: yyDollar[5].columnCharset, FormatOption: yyDollar[6].str, ExportOption: yyDollar[7].str, Manifest: yyDollar[8].str, Overwrite: yyDollar[9].str}
 		}
@@ -21751,7 +21751,7 @@ yydefault:
 	case 1533:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *SelectInto
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7574
+//line sql.y:7574
 		{
 			yyLOCAL = &SelectInto{Type: IntoDumpfile, FileName: encodeSQLString(yyDollar[3].str), Charset: ColumnCharset{}, FormatOption: "", ExportOption: "", Manifest: "", Overwrite: ""}
 		}
@@ -21759,177 +21759,177 @@ yydefault:
 	case 1534:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *SelectInto
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7578
+//line sql.y:7578
 		{
 			yyLOCAL = &SelectInto{Type: IntoOutfile, FileName: encodeSQLString(yyDollar[3].str), Charset: yyDollar[4].columnCharset, FormatOption: "", ExportOption: yyDollar[5].str, Manifest: "", Overwrite: ""}
 		}
 		yyVAL.union = yyLOCAL
 	case 1535:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7583
+//line sql.y:7583
 		{
 			yyVAL.str = ""
 		}
 	case 1536:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7587
+//line sql.y:7587
 		{
 			yyVAL.str = " format csv" + yyDollar[3].str
 		}
 	case 1537:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7591
+//line sql.y:7591
 		{
 			yyVAL.str = " format text" + yyDollar[3].str
 		}
 	case 1538:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7596
+//line sql.y:7596
 		{
 			yyVAL.str = ""
 		}
 	case 1539:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7600
+//line sql.y:7600
 		{
 			yyVAL.str = " header"
 		}
 	case 1540:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7605
+//line sql.y:7605
 		{
 			yyVAL.str = ""
 		}
 	case 1541:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7609
+//line sql.y:7609
 		{
 			yyVAL.str = " manifest on"
 		}
 	case 1542:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7613
+//line sql.y:7613
 		{
 			yyVAL.str = " manifest off"
 		}
 	case 1543:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7618
+//line sql.y:7618
 		{
 			yyVAL.str = ""
 		}
 	case 1544:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7622
+//line sql.y:7622
 		{
 			yyVAL.str = " overwrite on"
 		}
 	case 1545:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7626
+//line sql.y:7626
 		{
 			yyVAL.str = " overwrite off"
 		}
 	case 1546:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7632
+//line sql.y:7632
 		{
 			yyVAL.str = yyDollar[1].str + yyDollar[2].str
 		}
 	case 1547:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7637
+//line sql.y:7637
 		{
 			yyVAL.str = ""
 		}
 	case 1548:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7641
+//line sql.y:7641
 		{
 			yyVAL.str = " lines" + yyDollar[2].str
 		}
 	case 1549:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7647
+//line sql.y:7647
 		{
 			yyVAL.str = yyDollar[1].str
 		}
 	case 1550:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7651
+//line sql.y:7651
 		{
 			yyVAL.str = yyDollar[1].str + yyDollar[2].str
 		}
 	case 1551:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7657
+//line sql.y:7657
 		{
 			yyVAL.str = " starting by " + encodeSQLString(yyDollar[3].str)
 		}
 	case 1552:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7661
+//line sql.y:7661
 		{
 			yyVAL.str = " terminated by " + encodeSQLString(yyDollar[3].str)
 		}
 	case 1553:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7666
+//line sql.y:7666
 		{
 			yyVAL.str = ""
 		}
 	case 1554:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7670
+//line sql.y:7670
 		{
 			yyVAL.str = " " + yyDollar[1].str + yyDollar[2].str
 		}
 	case 1555:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7676
+//line sql.y:7676
 		{
 			yyVAL.str = yyDollar[1].str
 		}
 	case 1556:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7680
+//line sql.y:7680
 		{
 			yyVAL.str = yyDollar[1].str + yyDollar[2].str
 		}
 	case 1557:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7686
+//line sql.y:7686
 		{
 			yyVAL.str = " terminated by " + encodeSQLString(yyDollar[3].str)
 		}
 	case 1558:
 		yyDollar = yyS[yypt-4 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7690
+//line sql.y:7690
 		{
 			yyVAL.str = yyDollar[1].str + " enclosed by " + encodeSQLString(yyDollar[4].str)
 		}
 	case 1559:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7694
+//line sql.y:7694
 		{
 			yyVAL.str = " escaped by " + encodeSQLString(yyDollar[3].str)
 		}
 	case 1560:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7699
+//line sql.y:7699
 		{
 			yyVAL.str = ""
 		}
 	case 1561:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7703
+//line sql.y:7703
 		{
 			yyVAL.str = " optionally"
 		}
 	case 1562:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *Insert
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7716
+//line sql.y:7716
 		{
 			yyLOCAL = &Insert{Rows: yyDollar[2].valuesUnion()}
 		}
@@ -21937,7 +21937,7 @@ yydefault:
 	case 1563:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL *Insert
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7720
+//line sql.y:7720
 		{
 			yyLOCAL = &Insert{Rows: yyDollar[1].selStmtUnion()}
 		}
@@ -21945,7 +21945,7 @@ yydefault:
 	case 1564:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL *Insert
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7724
+//line sql.y:7724
 		{
 			yyLOCAL = &Insert{Columns: yyDollar[2].columnsUnion(), Rows: yyDollar[5].valuesUnion()}
 		}
@@ -21953,7 +21953,7 @@ yydefault:
 	case 1565:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *Insert
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7728
+//line sql.y:7728
 		{
 			yyLOCAL = &Insert{Columns: []IdentifierCI{}, Rows: yyDollar[4].valuesUnion()}
 		}
@@ -21961,7 +21961,7 @@ yydefault:
 	case 1566:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL *Insert
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7732
+//line sql.y:7732
 		{
 			yyLOCAL = &Insert{Columns: yyDollar[2].columnsUnion(), Rows: yyDollar[4].selStmtUnion()}
 		}
@@ -21969,7 +21969,7 @@ yydefault:
 	case 1567:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7738
+//line sql.y:7738
 		{
 			yyLOCAL = Columns{yyDollar[1].identifierCI}
 		}
@@ -21977,21 +21977,21 @@ yydefault:
 	case 1568:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7742
+//line sql.y:7742
 		{
 			yyLOCAL = Columns{yyDollar[3].identifierCI}
 		}
 		yyVAL.union = yyLOCAL
 	case 1569:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7746
+//line sql.y:7746
 		{
 			yySLICE := (*Columns)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].identifierCI)
 		}
 	case 1570:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7750
+//line sql.y:7750
 		{
 			yySLICE := (*Columns)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[5].identifierCI)
@@ -21999,7 +21999,7 @@ yydefault:
 	case 1571:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL UpdateExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7755
+//line sql.y:7755
 		{
 			yyLOCAL = nil
 		}
@@ -22007,7 +22007,7 @@ yydefault:
 	case 1572:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL UpdateExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7759
+//line sql.y:7759
 		{
 			yyLOCAL = yyDollar[5].updateExprsUnion()
 		}
@@ -22015,14 +22015,14 @@ yydefault:
 	case 1573:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Values
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7765
+//line sql.y:7765
 		{
 			yyLOCAL = Values{yyDollar[1].valTupleUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1574:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7769
+//line sql.y:7769
 		{
 			yySLICE := (*Values)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].valTupleUnion())
@@ -22030,7 +22030,7 @@ yydefault:
 	case 1575:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL ValTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7775
+//line sql.y:7775
 		{
 			yyLOCAL = yyDollar[1].valTupleUnion()
 		}
@@ -22038,7 +22038,7 @@ yydefault:
 	case 1576:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL ValTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7779
+//line sql.y:7779
 		{
 			yyLOCAL = ValTuple{}
 		}
@@ -22046,7 +22046,7 @@ yydefault:
 	case 1577:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL ValTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7785
+//line sql.y:7785
 		{
 			yyLOCAL = ValTuple(yyDollar[2].exprsUnion())
 		}
@@ -22054,7 +22054,7 @@ yydefault:
 	case 1578:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL ValTuple
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7789
+//line sql.y:7789
 		{
 			yyLOCAL = ValTuple(yyDollar[3].exprsUnion())
 		}
@@ -22062,7 +22062,7 @@ yydefault:
 	case 1579:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7794
+//line sql.y:7794
 		{
 			if len(yyDollar[1].valTupleUnion()) == 1 {
 				yyLOCAL = yyDollar[1].valTupleUnion()[0]
@@ -22074,14 +22074,14 @@ yydefault:
 	case 1580:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL UpdateExprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7804
+//line sql.y:7804
 		{
 			yyLOCAL = UpdateExprs{yyDollar[1].updateExprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1581:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7808
+//line sql.y:7808
 		{
 			yySLICE := (*UpdateExprs)(yyIaddr(yyVAL.union))
 			*yySLICE = append(*yySLICE, yyDollar[3].updateExprUnion())
@@ -22089,21 +22089,21 @@ yydefault:
 	case 1582:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL *UpdateExpr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7814
+//line sql.y:7814
 		{
 			yyLOCAL = &UpdateExpr{Name: yyDollar[1].colNameUnion(), Expr: yyDollar[3].exprUnion()}
 		}
 		yyVAL.union = yyLOCAL
 	case 1584:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7821
+//line sql.y:7821
 		{
 			yyVAL.str = "charset"
 		}
 	case 1587:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7831
+//line sql.y:7831
 		{
 			yyLOCAL = NewStrLiteral(yyDollar[1].identifierCI.String())
 		}
@@ -22111,7 +22111,7 @@ yydefault:
 	case 1588:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7835
+//line sql.y:7835
 		{
 			yyLOCAL = NewStrLiteral(yyDollar[1].str)
 		}
@@ -22119,7 +22119,7 @@ yydefault:
 	case 1589:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Expr
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7839
+//line sql.y:7839
 		{
 			yyLOCAL = &Default{}
 		}
@@ -22127,7 +22127,7 @@ yydefault:
 	case 1592:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7848
+//line sql.y:7848
 		{
 			yyLOCAL = false
 		}
@@ -22135,7 +22135,7 @@ yydefault:
 	case 1593:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7850
+//line sql.y:7850
 		{
 			yyLOCAL = true
 		}
@@ -22143,7 +22143,7 @@ yydefault:
 	case 1594:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7853
+//line sql.y:7853
 		{
 			yyLOCAL = false
 		}
@@ -22151,7 +22151,7 @@ yydefault:
 	case 1595:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7855
+//line sql.y:7855
 		{
 			yyLOCAL = true
 		}
@@ -22159,7 +22159,7 @@ yydefault:
 	case 1596:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7858
+//line sql.y:7858
 		{
 			yyLOCAL = false
 		}
@@ -22167,7 +22167,7 @@ yydefault:
 	case 1597:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL bool
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7860
+//line sql.y:7860
 		{
 			yyLOCAL = true
 		}
@@ -22175,7 +22175,7 @@ yydefault:
 	case 1598:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Ignore
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7863
+//line sql.y:7863
 		{
 			yyLOCAL = false
 		}
@@ -22183,33 +22183,33 @@ yydefault:
 	case 1599:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Ignore
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7865
+//line sql.y:7865
 		{
 			yyLOCAL = true
 		}
 		yyVAL.union = yyLOCAL
 	case 1600:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7868
+//line sql.y:7868
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 1601:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7870
+//line sql.y:7870
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 1602:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7872
+//line sql.y:7872
 		{
 			yyVAL.empty = struct{}{}
 		}
 	case 1603:
 		yyDollar = yyS[yypt-5 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7876
+//line sql.y:7876
 		{
 			yyLOCAL = &CallProc{Name: yyDollar[2].tableName, Params: yyDollar[4].exprsUnion()}
 		}
@@ -22217,7 +22217,7 @@ yydefault:
 	case 1604:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7881
+//line sql.y:7881
 		{
 			yyLOCAL = nil
 		}
@@ -22225,7 +22225,7 @@ yydefault:
 	case 1605:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL Exprs
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7885
+//line sql.y:7885
 		{
 			yyLOCAL = yyDollar[1].exprsUnion()
 		}
@@ -22233,7 +22233,7 @@ yydefault:
 	case 1606:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL []*IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7890
+//line sql.y:7890
 		{
 			yyLOCAL = nil
 		}
@@ -22241,7 +22241,7 @@ yydefault:
 	case 1607:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL []*IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7892
+//line sql.y:7892
 		{
 			yyLOCAL = []*IndexOption{yyDollar[1].indexOptionUnion()}
 		}
@@ -22249,75 +22249,75 @@ yydefault:
 	case 1608:
 		yyDollar = yyS[yypt-2 : yypt+1]
 		var yyLOCAL *IndexOption
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7896
+//line sql.y:7896
 		{
 			yyLOCAL = &IndexOption{Name: string(yyDollar[1].str), String: string(yyDollar[2].identifierCI.String())}
 		}
 		yyVAL.union = yyLOCAL
 	case 1609:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7902
+//line sql.y:7902
 		{
 			yyVAL.identifierCI = yyDollar[1].identifierCI
 		}
 	case 1610:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7906
+//line sql.y:7906
 		{
 			yyVAL.identifierCI = NewIdentifierCI(string(yyDollar[1].str))
 		}
 	case 1612:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7913
+//line sql.y:7913
 		{
 			yyVAL.identifierCI = NewIdentifierCI(string(yyDollar[1].str))
 		}
 	case 1613:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7919
+//line sql.y:7919
 		{
 			yyVAL.identifierCS = NewIdentifierCS(string(yyDollar[1].str))
 		}
 	case 1614:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7923
+//line sql.y:7923
 		{
 			yyVAL.identifierCS = NewIdentifierCS(string(yyDollar[1].str))
 		}
 	case 1615:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7929
+//line sql.y:7929
 		{
 			yyVAL.identifierCS = NewIdentifierCS("")
 		}
 	case 1616:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7933
+//line sql.y:7933
 		{
 			yyVAL.identifierCS = yyDollar[1].identifierCS
 		}
 	case 1618:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7940
+//line sql.y:7940
 		{
 			yyVAL.identifierCS = NewIdentifierCS(string(yyDollar[1].str))
 		}
 	case 1619:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7945
+//line sql.y:7945
 		{
 			yyVAL.str = ""
 		}
 	case 1620:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7949
+//line sql.y:7949
 		{
 			yyVAL.str = string(yyDollar[1].str)
 		}
 	case 1621:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7954
+//line sql.y:7954
 		{
 			yyLOCAL = nil
 		}
@@ -22325,7 +22325,7 @@ yydefault:
 	case 1622:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Columns
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7958
+//line sql.y:7958
 		{
 			yyLOCAL = yyDollar[2].columnsUnion()
 		}
@@ -22333,7 +22333,7 @@ yydefault:
 	case 1623:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7963
+//line sql.y:7963
 		{
 			escape := "\\"
 			yyLOCAL = &FieldsClause{
@@ -22345,7 +22345,7 @@ yydefault:
 	case 1624:
 		yyDollar = yyS[yypt-4 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7971
+//line sql.y:7971
 		{
 			escape := yyDollar[4].itemUnion().(string)
 			if escape != "\\" && len(escape) > 1 {
@@ -22370,7 +22370,7 @@ yydefault:
 	case 1625:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7993
+//line sql.y:7993
 		{
 			yyLOCAL = &LinesClause{Terminated: "\n"}
 		}
@@ -22378,7 +22378,7 @@ yydefault:
 	case 1626:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:7997
+//line sql.y:7997
 		{
 			yyLOCAL = &LinesClause{Starting: yyDollar[2].itemUnion().(string), Terminated: yyDollar[3].itemUnion().(string)}
 		}
@@ -22386,7 +22386,7 @@ yydefault:
 	case 1627:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8002
+//line sql.y:8002
 		{
 			yyLOCAL = "\t"
 		}
@@ -22394,7 +22394,7 @@ yydefault:
 	case 1628:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8006
+//line sql.y:8006
 		{
 			yyLOCAL = string(yyDollar[3].str)
 		}
@@ -22402,7 +22402,7 @@ yydefault:
 	case 1629:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8011
+//line sql.y:8011
 		{
 			yyLOCAL = ""
 		}
@@ -22410,7 +22410,7 @@ yydefault:
 	case 1630:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8015
+//line sql.y:8015
 		{
 			yyLOCAL = string(yyDollar[3].str)
 		}
@@ -22418,7 +22418,7 @@ yydefault:
 	case 1631:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8020
+//line sql.y:8020
 		{
 			yyLOCAL = "\\"
 		}
@@ -22426,7 +22426,7 @@ yydefault:
 	case 1632:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8024
+//line sql.y:8024
 		{
 			yyLOCAL = string(yyDollar[3].str)
 		}
@@ -22434,7 +22434,7 @@ yydefault:
 	case 1633:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8029
+//line sql.y:8029
 		{
 			yyLOCAL = ""
 		}
@@ -22442,7 +22442,7 @@ yydefault:
 	case 1634:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8033
+//line sql.y:8033
 		{
 			yyLOCAL = string(yyDollar[3].str)
 
@@ -22451,7 +22451,7 @@ yydefault:
 	case 1635:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8039
+//line sql.y:8039
 		{
 			yyLOCAL = "\n"
 		}
@@ -22459,7 +22459,7 @@ yydefault:
 	case 1636:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL interface{}
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8043
+//line sql.y:8043
 		{
 			yyLOCAL = string(yyDollar[3].str)
 		}
@@ -22467,7 +22467,7 @@ yydefault:
 	case 1639:
 		yyDollar = yyS[yypt-11 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8052
+//line sql.y:8052
 		{
 			x := &LoadDataStmt{
 				Action:  string(yyDollar[1].str),
@@ -22490,7 +22490,7 @@ yydefault:
 	case 1640:
 		yyDollar = yyS[yypt-3 : yypt+1]
 		var yyLOCAL Statement
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8073
+//line sql.y:8073
 		{
 			yyLOCAL = &Kill{Type: yyDollar[2].killTypeUnion(), ProcesslistID: convertStringToUInt64(yyDollar[3].str)}
 		}
@@ -22498,7 +22498,7 @@ yydefault:
 	case 1641:
 		yyDollar = yyS[yypt-0 : yypt+1]
 		var yyLOCAL KillType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8079
+//line sql.y:8079
 		{
 			yyLOCAL = ConnectionType
 		}
@@ -22506,7 +22506,7 @@ yydefault:
 	case 1642:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL KillType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8083
+//line sql.y:8083
 		{
 			yyLOCAL = ConnectionType
 		}
@@ -22514,42 +22514,42 @@ yydefault:
 	case 1643:
 		yyDollar = yyS[yypt-1 : yypt+1]
 		var yyLOCAL KillType
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8087
+//line sql.y:8087
 		{
 			yyLOCAL = QueryType
 		}
 		yyVAL.union = yyLOCAL
 	case 2260:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8732
+//line sql.y:8732
 		{
 		}
 	case 2261:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8737
+//line sql.y:8737
 		{
 		}
 	case 2262:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8741
+//line sql.y:8741
 		{
 			skipToEnd(yylex)
 		}
 	case 2263:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8746
+//line sql.y:8746
 		{
 			skipToEnd(yylex)
 		}
 	case 2264:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8750
+//line sql.y:8750
 		{
 			skipToEnd(yylex)
 		}
 	case 2265:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line /Users/caoguoshun/JDSK/StarDBPlus/vitess/go/vt/sqlparser/sql.y:8754
+//line sql.y:8754
 		{
 			skipToEnd(yylex)
 		}
