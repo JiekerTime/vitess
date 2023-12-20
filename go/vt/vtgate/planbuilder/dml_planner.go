@@ -33,6 +33,12 @@ func rewriteRoutedTables(stmt sqlparser.Statement, vschema plancontext.VSchema) 
 		if !ok {
 			return true, nil
 		}
+		isActualTable, err := vschema.IsSplitTableActualTable("", tableName.Name.String())
+		if err != nil {
+			return false, err
+		} else if isActualTable {
+			return false, vterrors.VT12001("actualTable dml is intercepted ")
+		}
 		vschemaTable, vindexTbl, _, _, _, err := vschema.FindTableOrVindex(tableName)
 		if err != nil {
 			return false, err

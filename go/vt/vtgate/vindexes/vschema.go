@@ -195,14 +195,15 @@ func (col *Column) MarshalJSON() ([]byte, error) {
 
 // KeyspaceSchema contains the schema(table) for a keyspace.
 type KeyspaceSchema struct {
-	Keyspace           *Keyspace
-	ForeignKeyMode     vschemapb.Keyspace_ForeignKeyMode
-	Tables             map[string]*Table
-	Vindexes           map[string]Vindex
-	Views              map[string]sqlparser.SelectStatement
-	Error              error
-	SplitTableTables   map[string]*LogicTableConfig
-	SplitTableVindexes map[string]Vindex
+	Keyspace               *Keyspace
+	ForeignKeyMode         vschemapb.Keyspace_ForeignKeyMode
+	Tables                 map[string]*Table
+	Vindexes               map[string]Vindex
+	Views                  map[string]sqlparser.SelectStatement
+	Error                  error
+	SplitTableTables       map[string]*LogicTableConfig
+	SplitTableVindexes     map[string]Vindex
+	SplitTableActualTables map[string]struct{}
 }
 
 type ksJSON struct {
@@ -352,6 +353,9 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 		}
 		if len(ks.SplittableVindexes) > 0 {
 			ksvschema.SplitTableVindexes = make(map[string]Vindex)
+		}
+		if len(ks.SplittableVindexes) > 0 {
+			ksvschema.SplitTableActualTables = make(map[string]struct{})
 		}
 		vschema.Keyspaces[ksname] = ksvschema
 		ksvschema.Error = buildTables(ks, vschema, ksvschema)

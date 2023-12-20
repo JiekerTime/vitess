@@ -1287,6 +1287,21 @@ func (vc *vcursorImpl) FindAllTables(keyspace string) (map[string]*vindexes.Logi
 	return vc.vschema.FindAllTables(keyspace)
 }
 
+func (vc *vcursorImpl) IsSplitTableActualTable(keyspace, tableName string) (bool, error) {
+	if keyspace == "" {
+		keyspace = vc.getActualKeyspace()
+	}
+	if keyspace == "" {
+		ks, err := vc.AnyKeyspace()
+		if err != nil {
+			keyspace = ""
+		} else {
+			keyspace = ks.Name
+		}
+	}
+	return vc.vschema.IsSplitTableActualTable(keyspace, tableName)
+}
+
 // ExecuteBatchMultiShard executing a batch of SQL statements on each shard
 func (vc *vcursorImpl) ExecuteBatchMultiShard(ctx context.Context, primitive engine.Primitive, rss []*srvtopo.ResolvedShard, queries [][]*querypb.BoundQuery, rollbackOnError, canAutocommit bool) (*sqltypes.Result, []error) {
 	noOfShards := len(rss)

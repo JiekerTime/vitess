@@ -90,6 +90,8 @@ type VSchema interface {
 	FindSplitTable(keyspace, tableName string) (*vindexes.LogicTableConfig, error)
 
 	FindAllTables(keyspace string) (map[string]*vindexes.LogicTableConfig, map[string]*vindexes.Table, error)
+
+	IsSplitTableActualTable(keyspace, tableName string) (bool, error)
 }
 
 // PlannerNameToVersion returns the numerical representation of the planner

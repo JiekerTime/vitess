@@ -84,16 +84,16 @@ func (vschema *VSchema) FindSplitTableVindex(keyspace, name string) (Vindex, err
 }
 
 // logicToActualTable split table  logic table -> all actual tables list
-func logicToActualTable(logicTableName string, tableIndex int, table *LogicTableConfig) error {
+func logicToActualTable(logicTableName string, tableIndex int, table *LogicTableConfig) (string, error) {
 	if len(logicTableName) == 0 {
-		return vterrors.Errorf(
+		return "", vterrors.Errorf(
 			vtrpcpb.Code_INVALID_ARGUMENT,
 			"logic to actual table name failed table name is:%v",
 			logicTableName,
 		)
 	}
 	if tableIndex < 0 || int(table.TableCount) < tableIndex {
-		return vterrors.Errorf(
+		return "", vterrors.Errorf(
 			vtrpcpb.Code_INVALID_ARGUMENT,
 			"logic to actual table name failed '%v' for table index: %v TableCount: %v",
 			logicTableName,
@@ -110,8 +110,9 @@ func logicToActualTable(logicTableName string, tableIndex int, table *LogicTable
 	builder.WriteString(logicTableName[:position])
 	builder.WriteString(splitTableIndex)
 	builder.WriteString(logicTableName[position:])
-	table.ActualTableList = append(table.ActualTableList, ActualTable{ActualTableName: builder.String(), Index: tableIndex})
-	return nil
+	actualTable := builder.String()
+	table.ActualTableList = append(table.ActualTableList, ActualTable{ActualTableName: actualTable, Index: tableIndex})
+	return actualTable, nil
 }
 
 func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *KeyspaceSchema) error {
@@ -154,9 +155,11 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 			t.TableIndexColumn = append(t.TableIndexColumn, &TableColumn{Column: sqlparser.NewIdentifierCI(col.Column), Index: col.Index, ColumnType: col.ColumnType})
 		}
 		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
-			if err := logicToActualTable(t.LogicTableName, int(tableIndex), t); err != nil {
+			actualTable, err := logicToActualTable(t.LogicTableName, int(tableIndex), t)
+			if err != nil {
 				return err
 			}
+			ksvschema.SplitTableActualTables[actualTable] = struct{}{}
 		}
 
 		// Add the table to the map entries.
@@ -206,4 +209,21 @@ func (vschema *VSchema) FindAllTables(keyspace string) (map[string]*LogicTableCo
 	splitTables := ks.findSplitAllTables()
 	tables := ks.findAllTables()
 	return splitTables, tables, nil
+}
+
+func (ks *KeyspaceSchema) isSplitTableActualTable(
+	tableName string,
+) bool {
+	_, exists := ks.SplitTableActualTables[tableName]
+	return exists
+}
+
+func (vschema *VSchema) IsSplitTableActualTable(keyspace, tableName string) (bool, error) {
+	ks, ok := vschema.Keyspaces[keyspace]
+	if !ok {
+		return false, vterrors.VT05003(keyspace)
+	}
+	res := ks.isSplitTableActualTable(tableName)
+
+	return res, nil
 }

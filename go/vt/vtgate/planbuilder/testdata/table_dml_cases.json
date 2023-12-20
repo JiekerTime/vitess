@@ -1246,5 +1246,20 @@
         "user.t_music"
       ]
     }
+  },
+  {
+    "comment": "insert  actual table ",
+    "query": "insert into t_user_0(id,col) values( 1, 'a')",
+    "plan": "VT12001: unsupported: actualTable dml is intercepted "
+  },
+  {
+    "comment": "update  actual table ",
+    "query": "update t_user_0 set id=1 ",
+    "plan": "VT12001: unsupported: actualTable dml is intercepted "
+  },
+  {
+    "comment": " delete actual table ",
+    "query": "delete from  t_user_0 ",
+    "plan": "VT12001: unsupported: actualTable dml is intercepted "
   }
 ]

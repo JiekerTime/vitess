@@ -58,6 +58,10 @@ func (vw *VSchemaWrapper) FindAllTables(keyspace string) (map[string]*vindexes.L
 	return vw.V.FindAllTables(keyspace)
 }
 
+func (vc *VSchemaWrapper) IsSplitTableActualTable(keyspace, tableName string) (bool, error) {
+	return vc.V.IsSplitTableActualTable("user", tableName)
+}
+
 func (vw *VSchemaWrapper) GetPrepareData(stmtName string) *vtgatepb.PrepareData {
 	switch stmtName {
 	case "prep_one_param":
