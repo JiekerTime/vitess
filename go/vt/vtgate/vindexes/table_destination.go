@@ -22,7 +22,6 @@ import (
 	"encoding/hex"
 	"math/rand"
 	"strconv"
-
 	"vitess.io/vitess/go/vt/key"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"
@@ -141,6 +140,79 @@ func (d TableDestinationKeyspaceID) String() string {
 // GetTableIndexForKeyspaceID finds the right shard for a keyspace id.
 func GetTableIndexForKeyspaceID(tables *LogicTableConfig, keyspaceID []byte) (int, error) {
 	return int(binary.BigEndian.Uint64(keyspaceID) % uint64(tables.TableCount)), nil
+}
+
+//
+// TableDestinationUint64KeyspaceID
+//
+
+// TableDestinationUint64KeyspaceID is the destination for a single KeyspaceID.
+// It implements the Destination interface.
+type TableDestinationUint64KeyspaceID uint64
+
+// Resolve is part of the Destination interface.
+func (d TableDestinationUint64KeyspaceID) Resolve(tables *LogicTableConfig, addTable func(actualTableIndex int) error) error {
+	table, err := GetTableIndexForUint64KeyspaceID(tables, uint64(d))
+	if err != nil {
+		return err
+	}
+	return addTable(table)
+}
+
+// String is part of the Destination interface.
+func (d TableDestinationUint64KeyspaceID) String() string {
+	return "DestinationKeyspaceID(" + strconv.Itoa(int(d)) + ")"
+}
+
+// GetTableIndexForUint64KeyspaceID finds the right shard for a keyspace id.
+func GetTableIndexForUint64KeyspaceID(tables *LogicTableConfig, keyspaceID uint64) (int, error) {
+	return int(keyspaceID % uint64(tables.TableCount)), nil
+}
+
+// TableDestinationList is the destination for a single split table.
+// It implements the Destination interface.
+type TableDestinationList string
+
+// Resolve is part of the Destination interface.
+func (d TableDestinationList) Resolve(tables *LogicTableConfig, addTable func(actualTableIndex int) error) error {
+	if value, ok := tables.Params[string(d)]; ok {
+		return addTable(value.Index)
+	} else {
+		return vterrors.Errorf(vtrpcpb.Code_OUT_OF_RANGE, "column data %s out of range", d.String())
+	}
+}
+
+// String is part of the Destination interface.
+func (d TableDestinationList) String() string {
+	return "TableDestinationList(" + string(d) + ")"
+}
+
+// TableDestinationRangeMMDD is the destination for a single split table.
+// It implements the Destination interface.
+type TableDestinationRangeMMDD int
+
+// Resolve is part of the Destination interface.
+func (d TableDestinationRangeMMDD) Resolve(tables *LogicTableConfig, addTable func(actualTableIndex int) error) error {
+	return addTable(int(d) - 1)
+}
+
+// String is part of the Destination interface.
+func (d TableDestinationRangeMMDD) String() string {
+	return "TableDestinationRangeMMDD(" + strconv.Itoa(int(d)) + ")"
+}
+
+// TableDestinationRangeMM is the destination for a single split table.
+// It implements the Destination interface.
+type TableDestinationRangeMM int
+
+// Resolve is part of the Destination interface.
+func (d TableDestinationRangeMM) Resolve(tables *LogicTableConfig, addTable func(actualTableIndex int) error) error {
+	return addTable(int(d) - 1)
+}
+
+// String is part of the Destination interface.
+func (d TableDestinationRangeMM) String() string {
+	return "TableDestinationRangeMM(" + strconv.Itoa(int(d)) + ")"
 }
 
 // TableDestinationModKeyspaceID is the destination for a single KeyspaceID.

@@ -315,7 +315,16 @@ func TestUnshardedButSplitTableVSchema(t *testing.T) {
 			"unsharded": {
 				Tables: map[string]*vschemapb.Table{
 					"t1": {}},
-				SplittableTables: map[string]*vschemapb.SplitTable{"t2": {}}}}}
+				SplittableTables: map[string]*vschemapb.SplitTable{"t2": {TableVindex: "stln1"}}, SplittableVindexes: map[string]*vschemapb.Vindex{
+					"stfu1": {
+						Type: "stfu",
+						Params: map[string]string{
+							"stfu1": "1"},
+						Owner: "t1"},
+					"stln1": {
+						Type:  "stln",
+						Owner: "t2"}},
+			}}}
 
 	got := BuildVSchema(&good)
 	require.NoError(t, got.Keyspaces["unsharded"].Error)
@@ -352,14 +361,22 @@ func TestVSchemaSplitTableColumns(t *testing.T) {
 			"unsharded": {
 				SplittableTables: map[string]*vschemapb.SplitTable{
 					"t1": {
-						TableVindex:       "splitTableHashMod",
+						TableVindex:       "split_table_binaryhash",
 						TableCount:        10,
 						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
 					"`t2`": {
-						TableVindex:       "splitTableHashMod",
+						TableVindex:       "split_table_binaryhash",
 						TableCount:        20,
 						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
-				}}}}
+				}, SplittableVindexes: map[string]*vschemapb.Vindex{
+					"split_table_binaryhash": {
+						Type: "split_table_binaryhash",
+						Params: map[string]string{
+							"stfu1": "1"},
+						Owner: "t1"},
+					"stln1": {
+						Type:  "stln",
+						Owner: "t2"}}}}}
 
 	got := BuildVSchema(&good)
 	require.NoError(t, got.Keyspaces["unsharded"].Error)
@@ -539,14 +556,22 @@ func TestSplitTableVSchemaColumnsFail(t *testing.T) {
 			"unsharded": {
 				SplittableTables: map[string]*vschemapb.SplitTable{
 					"t1": {
-						TableVindex:       "splitTableHashMod",
+						TableVindex:       "split_table_binaryhash",
 						TableCount:        10,
 						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.VarChar}, {Index: 1, Column: "col1", ColumnType: sqltypes.Int32}}},
 					"`t2`": {
-						TableVindex:       "splitTableHashMod",
+						TableVindex:       "split_table_binaryhash",
 						TableCount:        20,
 						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col1", ColumnType: sqltypes.Null}, {Index: 1, Column: "`col2`", ColumnType: sqltypes.Int32}}},
-				}}}}
+				}, SplittableVindexes: map[string]*vschemapb.Vindex{
+					"split_table_binaryhash": {
+						Type: "split_table_binaryhash",
+						Params: map[string]string{
+							"stfu1": "1"},
+						Owner: "t1"},
+					"stln1": {
+						Type:  "stln",
+						Owner: "t2"}}}}}
 
 	got := BuildVSchema(&good)
 	require.EqualError(t, got.Keyspaces["unsharded"].Error, "duplicate column name 'col1' for table: t1")

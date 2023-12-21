@@ -117,6 +117,7 @@ message SplitTable {
   string table_vindex = 2;
   repeated TableVindexColumn table_vindex_column = 3;
   int32 table_count = 4;
+  map<string, string> params = 5;
 }
 message TableVindexColumn {
   int32 index = 1;

@@ -31,13 +31,13 @@ func TestInsertTableShardedSimple(t *testing.T) {
 					},
 				},
 				SplittableVindexes: map[string]*vschemapb.Vindex{
-					"splitTableHashMod": {
-						Type: "splitTableHashMod",
+					"split_table_binaryhash": {
+						Type: "split_table_binaryhash",
 					},
 				},
 				SplittableTables: map[string]*vschemapb.SplitTable{
 					"t1": {
-						TableVindex:       "splitTableHashMod",
+						TableVindex:       "split_table_binaryhash",
 						TableCount:        10,
 						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col", ColumnType: sqltypes.Int32}}},
 				},
@@ -153,13 +153,13 @@ func TestInsertTableShardedGenerate(t *testing.T) {
 					},
 				},
 				SplittableVindexes: map[string]*vschemapb.Vindex{
-					"splitTableHashMod": {
-						Type: "splitTableHashMod",
+					"split_table_binaryhash": {
+						Type: "split_table_binaryhash",
 					},
 				},
 				SplittableTables: map[string]*vschemapb.SplitTable{
 					"t1": {
-						TableVindex:       "splitTableHashMod",
+						TableVindex:       "split_table_binaryhash",
 						TableCount:        10,
 						TableVindexColumn: []*vschemapb.TableVindexColumn{{Index: 0, Column: "col", ColumnType: sqltypes.Int32}}},
 				},

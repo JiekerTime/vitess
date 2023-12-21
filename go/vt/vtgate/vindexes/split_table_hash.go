@@ -26,13 +26,17 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 )
 
+const (
+	VindexTypeSplitTableBinaryHash = "split_table_binaryhash"
+)
+
 var _ Vindex = (*SplitTableHash)(nil)
 
 type SplitTableHash struct {
 	name string
 }
 
-// NewSplitTable creates a new SplitTableHashMod.
+// NewSplitTable creates a new split_table_binaryhash.
 func NewSplitTable(name string, m map[string]string) (Vindex, error) {
 	return &SplitTableHash{
 		name: name,
@@ -101,5 +105,5 @@ func (m *SplitTableHash) Verify(ctx context.Context, vcursor VCursor, ids []sqlt
 	return out, nil
 }
 func init() {
-	Register("splitTableHashMod", NewSplitTable)
+	Register("split_table_binaryhash", NewSplitTable)
 }

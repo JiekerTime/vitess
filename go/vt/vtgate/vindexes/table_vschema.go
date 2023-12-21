@@ -17,14 +17,25 @@ limitations under the License.
 package vindexes
 
 import (
+	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
+	"vitess.io/vitess/go/hack"
 
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
+)
+
+const (
+	TableIndexTypeList      = "split_table_list"
+	TableIndexTypeRangeMM   = "split_table_range_mm"
+	RangeMMTableCount       = 12
+	TableIndexTypeRangeMMDD = "split_table_range_mmdd"
+	RangeMMDDTableCount     = 366
 )
 
 type SplitTable struct {
@@ -83,8 +94,8 @@ func (vschema *VSchema) FindSplitTableVindex(keyspace, name string) (Vindex, err
 	return splitTableVindex, nil
 }
 
-// logicToActualTable split table  logic table -> all actual tables list
-func logicToActualTable(logicTableName string, tableIndex int, table *LogicTableConfig) (string, error) {
+// LogicToActualTable split table  logic table -> all actual tables list
+func LogicToActualTable(logicTableName string, tableIndex int, tableIndexType string, table *LogicTableConfig) (string, error) {
 	if len(logicTableName) == 0 {
 		return "", vterrors.Errorf(
 			vtrpcpb.Code_INVALID_ARGUMENT,
@@ -101,7 +112,18 @@ func logicToActualTable(logicTableName string, tableIndex int, table *LogicTable
 			table.TableCount,
 		)
 	}
-	splitTableIndex := "_" + strconv.Itoa(tableIndex)
+	tableNameIndexStr := ""
+	switch tableIndexType {
+	case TableIndexTypeList:
+		for _, value := range table.Params {
+			if value.Index == tableIndex {
+				tableNameIndexStr = value.Name
+			}
+		}
+	default:
+		tableNameIndexStr = strconv.Itoa(tableIndex)
+	}
+	splitTableIndex := "_" + tableNameIndexStr
 	position := len(logicTableName)
 	if logicTableName[0] == '`' && logicTableName[len(logicTableName)-1] == '`' {
 		position = len(logicTableName) - 1
@@ -121,7 +143,6 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 		if err != nil {
 			return err
 		}
-
 		// If the keyspace requires explicit routing, don't include its indexes
 		// in global routing.
 		if !ks.RequireExplicitRouting {
@@ -134,10 +155,47 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 		ksvschema.SplitTableVindexes[vname] = vindex
 	}
 	for tname, table := range ks.SplittableTables {
+		data := make(map[string][]string)
+		list := make(map[string]*TableParams)
+		if _, ok := ks.SplittableVindexes[table.TableVindex]; !ok {
+			break
+		}
+		switch ks.SplittableVindexes[table.TableVindex].Type {
+		case TableIndexTypeRangeMM:
+			table.TableCount = RangeMMTableCount
+		case TableIndexTypeRangeMMDD:
+			table.TableCount = RangeMMDDTableCount
+		case TableIndexTypeList:
+
+			err := json.Unmarshal(hack.StringBytes(table.Params["json"]), &data)
+			if err != nil {
+				return err
+			}
+			var actualTableList []string
+			for key, value := range data {
+				actualTableList = append(actualTableList, key)
+				for _, listValue := range value {
+					if _, ok := list[listValue]; ok {
+						return vterrors.NewErrorf(vtrpcpb.Code_INVALID_ARGUMENT, vterrors.WrongValue, " Unable to configure duplicate data:%v", listValue)
+					}
+					list[listValue] = &TableParams{Name: key}
+				}
+			}
+			sort.Strings(actualTableList)
+			for key, actualTable := range list {
+				for idx, actualTableTag := range actualTableList {
+					if actualTable.Name == actualTableTag {
+						list[key].Index = idx
+					}
+				}
+			}
+			table.TableCount = int32(len(actualTableList))
+		}
 		t := &LogicTableConfig{
 			LogicTableName: tname,
 			TableVindex:    ksvschema.SplitTableVindexes[table.TableVindex],
 			TableCount:     table.TableCount,
+			Params:         list,
 		}
 		// Initialize Columns.
 		colNames := make(map[string]bool)
@@ -155,7 +213,8 @@ func buildSplitTables(ks *vschemapb.Keyspace, vschema *VSchema, ksvschema *Keysp
 			t.TableIndexColumn = append(t.TableIndexColumn, &TableColumn{Column: sqlparser.NewIdentifierCI(col.Column), Index: col.Index, ColumnType: col.ColumnType})
 		}
 		for tableIndex := int32(0); tableIndex < t.TableCount; tableIndex++ {
-			actualTable, err := logicToActualTable(t.LogicTableName, int(tableIndex), t)
+
+			actualTable, err := LogicToActualTable(t.LogicTableName, int(tableIndex), ks.SplittableVindexes[table.TableVindex].Type, t)
 			if err != nil {
 				return err
 			}

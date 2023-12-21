@@ -285,7 +285,7 @@ func BenchmarkBenchDMLStmtsTokenRewriteMethodWithCache(b *testing.B) {
 }
 
 func getTableRoute(stmt sqlparser.Statement, logicalTables []string) TableRoute {
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	vindex, _ := vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig, len(logicalTables))
 
@@ -327,7 +327,7 @@ func getTableRoute(stmt sqlparser.Statement, logicalTables []string) TableRoute 
 }
 
 func getTableDML(stmt sqlparser.Statement, logicalTables []string) TableDML {
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	vindex, _ := vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig, len(logicalTables))
 

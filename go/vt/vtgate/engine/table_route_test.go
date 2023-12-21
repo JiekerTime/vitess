@@ -186,7 +186,7 @@ func TestTableRouteGetFields(t *testing.T) {
 }
 
 func TestTableRouteSelectScatter(t *testing.T) {
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	vindex, _ := vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -257,7 +257,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 	)
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	vindex, _ := vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -337,7 +337,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
 
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	vindex, _ := vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -433,7 +433,7 @@ func TestTableRouteSelectIN(t *testing.T) {
 	)
 
 	sel.Vindex = selvIndex.(vindexes.SingleColumn)
-	vindex, _ := vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+	vindex, _ := vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 	logicTable := &vindexes.LogicTableConfig{
 		LogicTableName: "lkp",
 		ActualTableList: []vindexes.ActualTable{
@@ -646,7 +646,7 @@ func getTestLogicTableConfig(tableName string, tableIndexColumn []*vindexes.Tabl
 	if len(tableIndexColumn) == 0 {
 		tableIndexColumn = []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}}
 		tableName = "t_user"
-		tableVindex, _ = vindexes.CreateVindex("splitTableHashMod", "splitTableHashMod", nil)
+		tableVindex, _ = vindexes.CreateVindex("split_table_binaryhash", "split_table_binaryhash", nil)
 	}
 
 	logicTableMap := make(map[string]*vindexes.LogicTableConfig)

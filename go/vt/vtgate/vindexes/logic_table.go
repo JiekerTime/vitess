@@ -8,10 +8,11 @@ import (
 type SplitTableMap map[string]*LogicTableConfig
 
 type LogicTableConfig struct {
-	LogicTableName     string         `json:"logic_table_name,omitempty"`
-	TableVindex        Vindex         `json:"table_vindex,omitempty"`
-	TableCount         int32          `json:"table_count,omitempty"`
-	TableIndexColumn   []*TableColumn `json:"table_vindex_column,omitempty"`
+	LogicTableName     string                  `json:"logic_table_name,omitempty"`
+	TableVindex        Vindex                  `json:"table_vindex,omitempty"`
+	TableCount         int32                   `json:"table_count,omitempty"`
+	TableIndexColumn   []*TableColumn          `json:"table_vindex_column,omitempty"`
+	Params             map[string]*TableParams `json:"params,omitempty"`
 	ActualTableList    []ActualTable
 	SequenceColumnName string
 }
@@ -19,6 +20,10 @@ type LogicTableConfig struct {
 type ActualTable struct {
 	ActualTableName string
 	Index           int
+}
+type TableParams struct {
+	Name  string
+	Index int
 }
 
 type TableColumn struct {

@@ -225,7 +225,7 @@
   },
   "splittable_vindexes": {
     "split_table_hash": {
-      "type": "splitTableHashMod"
+      "type": "split_table_xxhash"
     },
     "multicol_hash": {
       "params": {

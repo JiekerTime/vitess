@@ -42127,6 +42127,9 @@ export namespace vschema {
 
         /** SplitTable table_count */
         table_count?: (number|null);
+
+        /** SplitTable params */
+        params?: ({ [k: string]: string }|null);
     }
 
     /** Represents a SplitTable. */
@@ -42149,6 +42152,9 @@ export namespace vschema {
 
         /** SplitTable table_count. */
         public table_count: number;
+
+        /** SplitTable params. */
+        public params: { [k: string]: string };
 
         /**
          * Creates a new SplitTable instance using the specified properties.
