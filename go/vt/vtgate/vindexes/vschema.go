@@ -350,12 +350,10 @@ func buildKeyspaces(source *vschemapb.SrvVSchema, vschema *VSchema) {
 		}
 		if len(ks.SplittableTables) > 0 {
 			ksvschema.SplitTableTables = make(map[string]*LogicTableConfig)
+			ksvschema.SplitTableActualTables = make(map[string]struct{})
 		}
 		if len(ks.SplittableVindexes) > 0 {
 			ksvschema.SplitTableVindexes = make(map[string]Vindex)
-		}
-		if len(ks.SplittableVindexes) > 0 {
-			ksvschema.SplitTableActualTables = make(map[string]struct{})
 		}
 		vschema.Keyspaces[ksname] = ksvschema
 		ksvschema.Error = buildTables(ks, vschema, ksvschema)

@@ -59,7 +59,12 @@ func (vw *VSchemaWrapper) FindAllTables(keyspace string) (map[string]*vindexes.L
 }
 
 func (vc *VSchemaWrapper) IsSplitTableActualTable(keyspace, tableName string) (bool, error) {
-	return vc.V.IsSplitTableActualTable("user", tableName)
+	keyspace = vc.getActualKeyspace()
+	if keyspace == "" {
+		defaultKeyspace, _ := vc.DefaultKeyspace()
+		keyspace = defaultKeyspace.Name
+	}
+	return vc.V.IsSplitTableActualTable(keyspace, tableName)
 }
 
 func (vw *VSchemaWrapper) GetPrepareData(stmtName string) *vtgatepb.PrepareData {
