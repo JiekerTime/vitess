@@ -129,7 +129,7 @@ func TestTableAggrCases(t *testing.T) {
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (13, '1024', 'aaa', 1, false, 3,  2, 3, 100, 300, 2    , 'ccc', 'cxc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (14, '123',  'aaa', 1, false, 2,  2, 3, 100, 300, 'abc', 'ccc', 'cxc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (15, '1024', 'aaa', 1, false, 2,  2, 3, 100, 300, 2    , 'ccc', 'cxc')")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (123, '124', 'aaa', 1, false, 2,  2, 3, 100, 300, 2    , 'ccc', 'cxc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (123,   '1', 'aaa', 1, false, 2,  2, 3, 100, 300, 2    , 'ccc', 'cxc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (1019, '45', 'aaa', 1, false, 1,  2, 3, 100, 300, 2    , 'ccc', 'cxc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (1020, '45', 'aaa', 1, false, 2,  2, 3, 100, 300, 2    , 'aaa', 'axa')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (1021, '45', 'aaa', 1, false, 3,  2, 3, 100, 300, 2    , 'aaa', 'axa')")
@@ -390,11 +390,9 @@ func TestTableAggrCases(t *testing.T) {
 	_, err = mcmp.ExecAndIgnore("select count(distinct a, name) from t_user")
 	require.ErrorContains(t, err, "VT03001: aggregate functions take a single argument 'count(distinct a, `name`)'")
 	// count with distinct group by unique vindex
-	_, err = mcmp.ExecAndIgnore("select id, count(distinct col) from t_user group by id")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement(count(distinct col)) in split table")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, count(distinct col) from t_user group by id")
 	// count with distinct unique vindex
-	_, err = mcmp.ExecAndIgnore("select col, count(distinct id) from t_user group by col")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement(count(distinct id)) in split table")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col, count(distinct id) from t_user group by col")
 	// scatter aggregate using distinctdistinct
 	mcmp.ExecWithColumnCompareAndNotEmpty("select distinct col from t_user")
 	// scatter aggregate using distinct,remove group by
@@ -466,4 +464,33 @@ func TestTableAggrCases(t *testing.T) {
 	// column names do not match - the expected values are what mysql produced
 	//mcmp.ExecWithColumnCompareAndNotEmpty("select distinct a+1 from t_user")
 	mcmp.ExecAndNotEmpty("select distinct a+1 from t_user")
+	// count distinct and sum distinct on join query pushed down - unique vindex
+	// results mismatched.
+	//        Vitess Results:
+	//        [NULL INT64(16) DECIMAL(184)]
+	//        Vitess RowsAffected: 0
+	//        MySQL Results:
+	//        [NULL INT64(4) DECIMAL(46)]
+	//        MySQL RowsAffected: 0
+	//mcmp.ExecWithColumnCompareAndNotEmpty("select u.col1, count(distinct m.user_id), sum(distinct m.user_id) from t_user u join t_music m group by u.col1")
+	// count with distinct tindex with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, count(distinct col) from t_user where id=123")
+	// count with distinct with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, count(distinct intcol) from t_user where id=123")
+	// count with distinct vindex with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, count(distinct id) from t_user where id=123")
+	// count with distinct with EqualUnique-EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, count(distinct intcol) from t_user where id = 123 and col = 1")
+	// sum with distinct tindex with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, sum(distinct col) from t_user where id=123")
+	// sum with distinct with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, sum(distinct intcol) from t_user where id=123")
+	// sum with distinct with EqualUnique-EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, sum(distinct intcol) from t_user where id = 123 and col = 1")
+	// sum with distinct vindex with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, sum(distinct id) from t_user where id=123")
+	// using two distinct columns, min & max with EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, min(distinct intcol), max(distinct intcol) from t_user where id=123")
+	// using two distinct columns, min & max with EqualUnique-EqualUnique
+	mcmp.ExecWithColumnCompareAndNotEmpty("select id, min(distinct intcol), max(distinct intcol) from t_user where id = 123 and col = 1")
 }

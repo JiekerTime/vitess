@@ -52,7 +52,7 @@ func runRewritersForSplitTable(ctx *plancontext.PlanningContext, root ops.Operat
 		case *Ordering:
 			return tryPushingDownOrderingForSplitTable(ctx, in)
 		case *Aggregator:
-			return tryPushingDownAggregatorForSplitTable(ctx, in)
+			return tryPushAggregatorForSplitTable(ctx, in)
 		case *Distinct:
 			return tryPushDistinctForSplitTable(ctx, in)
 		case *QueryGraph:

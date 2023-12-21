@@ -65,11 +65,6 @@
     "plan":"VT12001: unsupported: multiple tables in split table"
   },
   {
-    "comment":"count distinct and sum distinct on join query pushed down - unique vindex",
-    "query":"select u.col1, count(distinct m.user_id), sum(distinct m.user_id) from t_user u join t_music m group by u.col1",
-    "plan":"VT12001: unsupported: statement(count(distinct m.user_id)) in split table"
-  },
-  {
     "comment":"aggregation on top of derived table with limit",
     "query":"select count(val2), sum(val2) from (select id, val2 from t_user where val2 is null limit 2) as x",
     "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"

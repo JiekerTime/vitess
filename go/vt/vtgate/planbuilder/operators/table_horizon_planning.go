@@ -14,11 +14,6 @@ import (
 )
 
 func tablePlanQuery(ctx *plancontext.PlanningContext, root ops.Operator) (output ops.Operator, err error) {
-	// for DML
-	if _, ok := root.(*Horizon); !ok {
-		return root, nil
-	}
-
 	output, err = runPhasesForSplitTable(ctx, root)
 	if err != nil {
 		return nil, err
@@ -34,7 +29,7 @@ func tablePlanQuery(ctx *plancontext.PlanningContext, root ops.Operator) (output
 		fmt.Println(ops.ToTree(output))
 	}
 
-	return addTruncationOrProjectionToReturnOutputForSplitTable(ctx, root, output)
+	return addTruncationOrProjectionToReturnOutput(ctx, root, output)
 }
 
 func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limit) (ops.Operator, *rewrite.ApplyResult, error) {
@@ -232,27 +227,6 @@ func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horiz
 	}
 
 	return op, rewrite.NewTree(fmt.Sprintf("expand SELECT horizon into (%s)", strings.Join(extracted, ", ")), op), nil
-}
-
-func addTruncationOrProjectionToReturnOutputForSplitTable(ctx *plancontext.PlanningContext, oldHorizon ops.Operator, output ops.Operator) (ops.Operator, error) {
-	cols, err := output.GetSelectExprs(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	horizon := oldHorizon.(*Horizon)
-
-	sel := sqlparser.GetFirstSelect(horizon.Query)
-
-	if len(sel.SelectExprs) == len(cols) {
-		return output, nil
-	}
-
-	if tryTruncateColumnsAt(output, len(sel.SelectExprs)) {
-		return output, nil
-	}
-
-	return nil, vterrors.VT13001("split table not implement yet")
 }
 
 // createProjectionFromSelectForSplitTable is simplified to createProjectionFromSelect.
