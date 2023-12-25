@@ -1,0 +1,99 @@
+{
+    "sharded": true,
+    "vindexes": {
+        "hash": {
+            "type": "hash"
+        },
+        "xxhash": {
+            "type": "xxhash"
+        }
+    },
+    "tables": {
+        "customer": {
+            "column_vindexes": [
+                {
+                    "column": "customer_id",
+                    "name": "hash"
+                }
+            ],
+            "auto_increment": {
+                "column": "customer_id",
+                "sequence": "customer.customer_seq"
+            }
+        },
+        "corder": {
+            "column_vindexes": [
+                {
+                    "column": "customer_id",
+                    "name": "hash"
+                }
+            ],
+            "auto_increment": {
+                "column": "order_id",
+                "sequence": "customer.order_seq"
+            }
+        },
+        "messages": {
+            "pinned": "00"
+        },
+        "test": {
+            "column_vindexes": [
+                {
+                    "column": "id",
+                    "name": "hash"
+                }
+            ]
+        },
+        "customer_seq": {
+            "type": "sequence",
+            "pinned": "00"
+        },
+        "order_seq": {
+            "type": "sequence",
+            "pinned": "00"
+        },
+        "t_user": {
+            "columnVindexes": [
+                {
+                    "column": "id",
+                    "name": "xxhash"
+                }
+            ]
+        },
+        "t_user_0": {
+            "columnVindexes": [
+                {
+                    "column": "id",
+                    "name": "xxhash"
+                }
+            ]
+        },
+        "t_user_1": {
+            "columnVindexes": [
+                {
+                    "column": "id",
+                    "name": "xxhash"
+                }
+            ]
+        }
+    },
+    "splittable_vindexes": {
+        "split_table_hash": {
+            "type": "splitTableHashMod"
+        }
+    },
+    "splittable_tables": {
+        "t_user": {
+            "logic_table_name": "t_user",
+            "table_vindex": "split_table_hash",
+            "table_vindex_column": [
+                {
+                    "index": 0,
+                    "column": "col",
+                    "column_type": "VARCHAR"
+                }
+            ],
+            "table_count": 2
+        }
+    }
+}
