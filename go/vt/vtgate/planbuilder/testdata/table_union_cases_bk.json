@@ -125,49 +125,24 @@
   },
   {
     "comment": "union with the same target shard because of vindex",
-    "query": "select * from music where id = 1 union select * from user where id = 1",
+    "query": "select * from music where user_id = 1 union select * from user where id = 1",
     "plan": {
       "QueryType": "SELECT",
-      "Original": "select * from music where id = 1 union select * from user where id = 1",
+      "Original": "select * from music where user_id = 1 union select * from user where id = 1",
       "Instructions": {
-        "OperatorType": "Distinct",
-        "Inputs": [
-          {
-            "OperatorType": "Concatenate",
-            "Inputs": [
-              {
-                "OperatorType": "Route",
-                "Variant": "EqualUnique",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select * from music where 1 != 1",
-                "Query": "select distinct * from music where id = 1",
-                "Table": "music",
-                "Values": [
-                  "INT64(1)"
-                ],
-                "Vindex": "music_user_map"
-              },
-              {
-                "OperatorType": "Route",
-                "Variant": "EqualUnique",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select * from `user` where 1 != 1",
-                "Query": "select distinct * from `user` where id = 1",
-                "Table": "`user`",
-                "Values": [
-                  "INT64(1)"
-                ],
-                "Vindex": "user_index"
-              }
-            ]
-          }
-        ]
+        "OperatorType": "Route",
+        "Variant": "EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from music where 1 != 1 union select * from `user` where 1 != 1",
+        "Query": "select * from music where user_id = 1 union select * from `user` where id = 1",
+        "Table": "`user`, music",
+        "Values": [
+          "INT64(1)"
+        ],
+        "Vindex": "user_index"
       },
       "TablesUsed": [
         "user.music",
@@ -690,6 +665,43 @@
         "main.unsharded",
         "user.authoritative",
         "user.user"
+      ]
+    }
+  },
+  {
+    "comment": "union with the different target shard because of vindex (music -> lookup vindex, user -> hash vindex)",
+    "query": "select * from music where id = 1 union select * from user where id = 1",
+    "plan": "VT09015: schema tracking required"
+  },
+  {
+    "comment": "UNION ALL with repeating column on the LHS",
+    "query": "select foo, foo, foo from user union all select bar, baz, toto from music",
+    "plan": "VT12001: unsupported: statement type *sqlparser.Union in split table"
+  },
+  {
+    "comment": "UNION with repeating column on the LHS",
+    "query": "select foo, foo, foo from user union select bar, baz, toto from music",
+    "plan": "Duplicate column name 'foo'"
+  },
+  {
+    "comment": "unknown columns are OK as long as the whole query is unsharded",
+    "query": "(SELECT * FROM (SELECT * FROM unsharded WHERE branchId = 203622 AND buildNumber <= 113893 AND state = 'FAILED' ORDER BY buildNumber DESC LIMIT 1) AS last_failed) UNION ALL (SELECT * FROM (SELECT * FROM unsharded WHERE branchId = 203622 AND buildNumber <= 113893 AND state = 'SUCCEEDED' ORDER BY buildNumber DESC LIMIT 1) AS last_succeeded) ORDER BY buildNumber DESC LIMIT 1",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "(SELECT * FROM (SELECT * FROM unsharded WHERE branchId = 203622 AND buildNumber <= 113893 AND state = 'FAILED' ORDER BY buildNumber DESC LIMIT 1) AS last_failed) UNION ALL (SELECT * FROM (SELECT * FROM unsharded WHERE branchId = 203622 AND buildNumber <= 113893 AND state = 'SUCCEEDED' ORDER BY buildNumber DESC LIMIT 1) AS last_succeeded) ORDER BY buildNumber DESC LIMIT 1",
+      "Instructions": {
+        "OperatorType": "Route",
+        "Variant": "Unsharded",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "FieldQuery": "select * from (select * from unsharded where 1 != 1) as last_failed where 1 != 1 union all select * from (select * from unsharded where 1 != 1) as last_succeeded where 1 != 1",
+        "Query": "select * from (select * from unsharded where branchId = 203622 and buildNumber <= 113893 and state = 'FAILED' order by buildNumber desc limit 1) as last_failed union all select * from (select * from unsharded where branchId = 203622 and buildNumber <= 113893 and state = 'SUCCEEDED' order by buildNumber desc limit 1) as last_succeeded order by buildNumber desc limit 1",
+        "Table": "unsharded"
+      },
+      "TablesUsed": [
+        "main.unsharded"
       ]
     }
   }

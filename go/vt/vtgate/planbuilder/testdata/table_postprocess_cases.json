@@ -2188,6 +2188,67 @@
     }
   },
   {
+    "comment": "distinct with order by using aggregation engine",
+    "query": "select distinct col from t_user where id between :vtg1 and :vtg2 order by col asc",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct col from t_user where id between :vtg1 and :vtg2 order by col asc",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "0",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from t_user_0 where 1 != 1 group by col",
+            "OrderBy": "0 ASC",
+            "Query": "select col from t_user where id between :vtg1 and :vtg2 group by col order by col asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "distinct with order by having additional non-order by columns in the selection using aggregation engine",
+    "query": "select distinct foo, col from t_user where id between :vtg1 and :vtg2 order by col asc",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct foo, col from t_user where id between :vtg1 and :vtg2 order by col asc",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "GroupBy": "1, (0|2)",
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select foo, col, weight_string(foo) from t_user_0 where 1 != 1 group by col, foo, weight_string(foo)",
+            "OrderBy": "1 ASC, (0|2) ASC",
+            "Query": "select foo, col, weight_string(foo) from t_user where id between :vtg1 and :vtg2 group by col, foo, weight_string(foo) order by col asc, foo asc",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
     "comment": "Distinct with cross shard query",
     "query": "select distinct t_user.a from t_user join t_user_extra",
     "plan": {
@@ -2301,5 +2362,161 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "Distinct with cross shard query",
+    "query": "select distinct t_user.a from t_user join t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct t_user.a from t_user join t_user_extra",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:1)"
+        ],
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Join",
+            "Variant": "Join",
+            "JoinColumnIndexes": "L:0,L:1",
+            "TableName": "t_user_t_user_extra",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select t_user_0.a, weight_string(t_user_0.a) from t_user_0 where 1 != 1",
+                "Query": "select distinct t_user.a, weight_string(t_user.a) from t_user",
+                "Table": "t_user"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select 1 from t_user_extra_0 where 1 != 1",
+                "Query": "select distinct 1 from t_user_extra",
+                "Table": "t_user_extra"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "Distinct with column alias",
+    "query": "select distinct a as c, a from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct a as c, a from t_user",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:2)",
+          "(1:2)"
+        ],
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a as c, a, weight_string(a) from t_user_0 where 1 != 1",
+            "Query": "select distinct a as c, a, weight_string(a) from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+
+  },
+  {
+    "comment": "Distinct with same column",
+    "query": "select distinct a, a from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct a, a from t_user",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:2)",
+          "(1:2)"
+        ],
+        "ResultColumns": 2,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select a, a, weight_string(a) from t_user_0 where 1 != 1",
+            "Query": "select distinct a, a, weight_string(a) from t_user",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "distinct with order by having no overalap with the selection columns - using distinct engine",
+    "query": "select distinct foo from t_user where id between :vtg1 and :vtg2 order by col asc",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select distinct foo from t_user where id between :vtg1 and :vtg2 order by col asc",
+      "Instructions": {
+        "OperatorType": "Sort",
+        "Variant": "Memory",
+        "OrderBy": "1 ASC",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Distinct",
+            "Collations": [
+              "(0:2)",
+              "1"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "Scatter-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select foo, col, weight_string(foo) from t_user_0 where 1 != 1",
+                "Query": "select distinct foo, col, weight_string(foo) from t_user where id between :vtg1 and :vtg2",
+                "Table": "t_user"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+
   }
 ]
