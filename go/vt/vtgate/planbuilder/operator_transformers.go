@@ -392,7 +392,7 @@ func routeToEngineRoute(ctx *plancontext.PlanningContext, op *operators.Route) (
 
 	return &engine.Route{
 		TableName:           strings.Join(tableNames, ", "),
-		TableNameSlice:      tableNames,
+		TableNameSlice:      operators.TableNamesUsed(op),
 		RoutingParameters:   rp,
 		TruncateColumnCount: op.ResultColumns,
 	}, nil

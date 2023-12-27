@@ -216,13 +216,8 @@ func createOperatorFromInsertForSplitTable(ctx *plancontext.PlanningContext, ins
 			return nil, err
 		}
 	case sqlparser.SelectStatement:
-		/*	route.Source, err = insertSelectPlan(ctx, insOp, ins, rows)
-			if err != nil {
-				return nil, err
-			}*/
 		return nil, vterrors.VT12001("Unsupport split table insert into select")
 	}
-	//2、
 
 	return route, nil
 }

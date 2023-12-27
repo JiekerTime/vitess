@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"math/rand"
 	"strconv"
+
 	"vitess.io/vitess/go/vt/key"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/vterrors"

@@ -48,3 +48,8 @@ func GetSingleFirstActualTableMap(logicTable *LogicTableConfig) map[string]strin
 	firstActualTable[logicTable.LogicTableName] = logicTable.ActualTableList[0].ActualTableName
 	return firstActualTable
 }
+
+// GetFirstActualTable Gets the first ActualTable of the split table
+func GetFirstActualTable(logicTable *LogicTableConfig) string {
+	return logicTable.ActualTableList[0].ActualTableName
+}

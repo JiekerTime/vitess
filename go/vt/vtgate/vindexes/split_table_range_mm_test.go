@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+
 	"vitess.io/vitess/go/sqltypes"
 )
 

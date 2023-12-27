@@ -141,7 +141,7 @@ func TestTableRouteGetFields(t *testing.T) {
 	}
 
 	TableRoute := TableRoute{
-		TableName:       "lkp",
+		TableNames:      []string{"lkp"},
 		Query:           statement,
 		FieldQuery:      "select f1, f2 from lkp",
 		ShardRouteParam: routingParameters,
@@ -218,7 +218,7 @@ func TestTableRouteSelectScatter(t *testing.T) {
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
 	TableRoute := TableRoute{
-		TableName:       "lkp",
+		TableNames:      []string{"lkp"},
 		Query:           statement,
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
@@ -293,7 +293,7 @@ func TestTableRouteSelectEqualUnique(t *testing.T) {
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
 	TableRoute := TableRoute{
-		TableName:       "lkp",
+		TableNames:      []string{"lkp"},
 		Query:           statement,
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
@@ -373,7 +373,7 @@ func TestTableRouteSelectEqual(t *testing.T) {
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
 	TableRoute := TableRoute{
-		TableName:       "lkp",
+		TableNames:      []string{"lkp"},
 		Query:           statement,
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
@@ -473,7 +473,7 @@ func TestTableRouteSelectIN(t *testing.T) {
 	statement, _, _ := sqlparser.Parse2("select f1, f2 from lkp")
 
 	TableRoute := TableRoute{
-		TableName:       "lkp",
+		TableNames:      []string{"lkp"},
 		Query:           statement,
 		FieldQuery:      "dummy_select_field",
 		ShardRouteParam: routingParameters,
@@ -633,7 +633,7 @@ func TestTableRouteSortTruncate(t *testing.T) {
 
 func newTestTableRoute(shardRouteParam *RoutingParameters, tableName string, tableIndexColumn []*vindexes.TableColumn, tableOpcode Opcode) *TableRoute {
 	return &TableRoute{
-		TableName:       tableName,
+		TableNames:      []string{tableName},
 		ShardRouteParam: shardRouteParam,
 		TableRouteParam: &TableRoutingParameters{
 			TableOpcode: tableOpcode,

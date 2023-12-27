@@ -145,5 +145,5 @@ func (to *Table) TableNamesUsed() []string {
 	if sqlparser.SystemSchema(to.QTable.Table.Qualifier.String()) {
 		return nil
 	}
-	return []string{to.VTable.Name.String()}
+	return []string{to.QTable.Table.Name.String()}
 }

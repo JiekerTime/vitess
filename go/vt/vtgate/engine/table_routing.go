@@ -212,11 +212,7 @@ func (rp *TableRoutingParameters) byDestination(ctx context.Context, vcursor VCu
 }
 
 func (rp *TableRoutingParameters) IsSingleTable() bool {
-	switch rp.TableOpcode {
-	case EqualUnique:
-		return true
-	}
-	return false
+	return rp.TableOpcode == EqualUnique
 }
 
 func (trp *TableRoutingParameters) LoadRewriteCache(stmt sqlparser.SQLNode, replaceToken string) error {

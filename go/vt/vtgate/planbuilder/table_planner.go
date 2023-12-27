@@ -2,6 +2,7 @@ package planbuilder
 
 import (
 	"fmt"
+	"strings"
 
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -9,15 +10,14 @@ import (
 	oprewriters "vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
-	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableNames []string,
-) (ksAndTablePlan logicalPlan, semTable *semantics.SemTable, tablesUsed []string, err error) {
+) (ksAndTablePlan logicalPlan, err error) {
 	// get split table metadata
 	found := findTableSchema(ctx, tableNames)
 	if !found {
-		return ksPlan, ctx.SemTable, nil, nil
+		return ksPlan, nil
 	}
 
 	// The routePlan is used as input to generate the tablePlan
@@ -27,11 +27,10 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 		case *route:
 			ctx.KsPrimitive = node.eroute
 
-			if len(node.eroute.TableNameSlice) == 1 && getSplitTableConfig(ctx, node.eroute.TableNameSlice[0]) == nil {
+			if !isSplitTable(ctx, node.eroute.TableNameSlice) {
 				return false, logicalPlan, nil
 			}
-
-			if len(node.eroute.TableNameSlice) == 1 && isSameFieldSplitKey(ctx, node.eroute.TableNameSlice[0]) {
+			if isSameFieldSplitKey(ctx, node.eroute.TableNameSlice...) {
 				tablePlan, err := doBuildSelectBestTablePlan(ctx, node)
 				if err != nil {
 					return false, nil, err
@@ -63,7 +62,7 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 			switch prim := node.Primitive().(type) {
 			case *engine.Delete:
 				ctx.DMLEngine = *prim.DML
-				if isSameFieldSplitKey(ctx, prim.GetTableName()) {
+				if isSameFieldSplitKey(ctx, prim.TableNames...) {
 					tablePlan, err := doBuildDeleteBestTablePlan(ctx)
 					if err != nil {
 						return false, nil, err
@@ -78,8 +77,7 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 				return false, deleteTablePlan, nil
 			case *engine.Update:
 				ctx.DMLEngine = *prim.DML
-
-				if isSameFieldSplitKey(ctx, prim.GetTableName()) {
+				if isSameFieldSplitKey(ctx, prim.TableNames...) {
 					tablePlan, err := doBuildUpdateBestTablePlan(ctx)
 					if err != nil {
 						return false, nil, err
@@ -98,14 +96,14 @@ func buildTablePlan(ctx *plancontext.PlanningContext, ksPlan logicalPlan, tableN
 		return true, logicalPlan, nil
 	})
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 	ksAndTablePlan, err = truncateColumns(ctx, ksAndTablePlan)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
-	return ksAndTablePlan, semTable, nil, nil
+	return ksAndTablePlan, nil
 }
 
 func doBuildTablePlan(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) (tablePlan logicalPlan, err error) {
@@ -154,10 +152,6 @@ func findTableSchema(ctx *plancontext.PlanningContext, tableNames []string) (fou
 		found = true
 	}
 	return found
-}
-
-func getSplitTableConfig(ctx *plancontext.PlanningContext, tName string) *vindexes.LogicTableConfig {
-	return ctx.SplitTableConfig[tName]
 }
 
 func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logicalPlan, error) {
@@ -220,4 +214,17 @@ func truncateColumns(ctx *plancontext.PlanningContext, plan logicalPlan) (logica
 	}
 
 	return plan, nil
+}
+
+func isSplitTable(ctx *plancontext.PlanningContext, tableNames []string) bool {
+	if len(tableNames) != 1 {
+		return true
+	}
+	if strings.EqualFold(tableNames[0], "dual") {
+		return false
+	}
+	if ctx.SplitTableConfig[tableNames[0]] == nil {
+		return false
+	}
+	return true
 }

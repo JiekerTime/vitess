@@ -30,6 +30,20 @@ type primitiveWrapper struct {
 }
 
 func (p *primitiveWrapper) Wireup(*plancontext.PlanningContext) error {
+	switch primitive := p.prim.(type) {
+	case *engine.TableDelete:
+		err := primitive.TableRouteParam.LoadRewriteCache(primitive.AST, "")
+		if err != nil {
+			return err
+		}
+	case *engine.TableUpdate:
+		err := primitive.TableRouteParam.LoadRewriteCache(primitive.AST, "")
+		if err != nil {
+			return err
+		}
+	default:
+		return nil
+	}
 	return nil
 }
 

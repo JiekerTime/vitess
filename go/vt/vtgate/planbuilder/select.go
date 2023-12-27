@@ -238,7 +238,7 @@ func newBuildSelectPlan(
 	}
 
 	ctx.OriginSelStmt = selStmt
-	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
+	plan, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, nil, err
 	}

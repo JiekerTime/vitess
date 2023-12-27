@@ -19,7 +19,9 @@ package vindexes
 import (
 	"bytes"
 	"context"
+
 	"github.com/cespare/xxhash/v2"
+
 	"vitess.io/vitess/go/sqltypes"
 )
 

@@ -1163,7 +1163,7 @@
   {
     "comment": "Comments",
     "query": "select /* comment */ t_user.col from t_user",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select /* comment */ t_user.col from t_user",
       "Instructions": {
@@ -1185,7 +1185,7 @@
   {
     "comment": "Comments",
     "query": "select /* comment */ t_user.col from t_user join t_user_extra",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select /* comment */ t_user.col from t_user join t_user_extra",
       "Instructions": {
@@ -1227,7 +1227,7 @@
   {
     "comment": "Comments",
     "query": "select /* comment */ t_user.col from t_user group by id",
-    "plan":{
+    "plan": {
       "QueryType": "SELECT",
       "Original": "select /* comment */ t_user.col from t_user group by id",
       "Instructions": {
@@ -1298,6 +1298,47 @@
         "user.t_user_extra"
       ]
     }
-
+  },
+  {
+    "comment": "split table join shard table",
+    "query": "select id, user_id from t_user join music_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id, user_id from t_user join music_extra",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "TableName": "t_user_music_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "Route",
+            "Variant": "Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user_id from music_extra where 1 != 1",
+            "Query": "select user_id from music_extra",
+            "Table": "music_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.music_extra",
+        "user.t_user"
+      ]
+    }
   }
 ]

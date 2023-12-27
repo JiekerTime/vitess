@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"testing"
+
 	"vitess.io/vitess/go/sqltypes"
 )
 

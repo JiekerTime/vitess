@@ -303,10 +303,7 @@ func transformFilterForSplitTable(ctx *plancontext.PlanningContext, op *operator
 }
 
 func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *engine.RoutingParameters, op *operators.TableRoute) (*engine.TableRoute, error) {
-	tableNames, err := getAllTableNamesForSplitTable(op)
-	if err != nil {
-		return nil, err
-	}
+	tableNames := operators.TableNamesUsed(op)
 
 	rp := newTableRoutingParams(ctx, op.Routing.OpCode())
 	logicTableMap := map[string]*vindexes.LogicTableConfig{}
@@ -321,18 +318,17 @@ func routeToEngineTableRoute(ctx *plancontext.PlanningContext, shardRouteParam *
 
 	tableRouting, ok := op.Routing.(*operators.TableShardedRouting)
 	if ok {
-		err = tableRouting.UpdateTableRoutingParams(ctx, rp)
+		err := tableRouting.UpdateTableRoutingParams(ctx, rp)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &engine.TableRoute{
-		TableName:       tableNames[0],
+		TableNames:      tableNames,
 		ShardRouteParam: shardRouteParam,
 		TableRouteParam: rp,
 	}, nil
-
 }
 
 func newTableRoutingParams(ctx *plancontext.PlanningContext, opCode engine.Opcode) *engine.TableRoutingParameters {

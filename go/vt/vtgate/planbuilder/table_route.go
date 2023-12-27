@@ -6,6 +6,7 @@ import (
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 	"vitess.io/vitess/go/vt/vtgate/semantics"
+	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
 var _ logicalPlan = (*tableRoute)(nil)
@@ -19,7 +20,7 @@ type tableRoute struct {
 	eroute *engine.TableRoute
 }
 
-func (t *tableRoute) Wireup(context *plancontext.PlanningContext) error {
+func (t *tableRoute) Wireup(_ *plancontext.PlanningContext) error {
 	t.eroute.Query = t.Select
 
 	err := t.eroute.TableRouteParam.LoadRewriteCache(t.Select, "")
@@ -32,8 +33,9 @@ func (t *tableRoute) Wireup(context *plancontext.PlanningContext) error {
 	parsedQuery := node.ParsedQuery()
 	// Get one query for field query.
 	for logTb, tbConfig := range t.eroute.TableRouteParam.LogicTable {
+		firstActualTable := vindexes.GetFirstActualTable(tbConfig)
 		if token, ok := t.eroute.TableRouteParam.LogicalNameTokens[logTb]; ok {
-			parsedQuery.Query = sqlparser.ReplaceToken(parsedQuery.Query, token, tbConfig.ActualTableList[0].ActualTableName)
+			parsedQuery.Query = sqlparser.ReplaceToken(parsedQuery.Query, token, firstActualTable)
 		}
 	}
 	t.eroute.FieldQuery = parsedQuery.Query

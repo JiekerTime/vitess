@@ -88,7 +88,7 @@ func gen4InsertStmtPlanner(version querypb.ExecuteOptions_PlannerVersion, insStm
 		return nil, err
 	}
 
-	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
+	plan, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, err
 	}

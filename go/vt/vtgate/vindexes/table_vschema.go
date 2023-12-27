@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
 	"vitess.io/vitess/go/hack"
 
 	querypb "vitess.io/vitess/go/vt/proto/query"

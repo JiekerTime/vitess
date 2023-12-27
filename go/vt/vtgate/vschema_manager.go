@@ -197,7 +197,7 @@ func (vm *VSchemaManager) updateFromSchema(vschema *vindexes.VSchema) {
 		m := vm.schema.Tables(ksName)
 		mapActToLogical := make(map[string]string)
 		for _, config := range ks.SplitTableTables {
-			mapActToLogical[config.ActualTableList[0].ActualTableName] = config.LogicTableName
+			mapActToLogical[vindexes.GetFirstActualTable(config)] = config.LogicTableName
 		}
 		// Before we add the foreign key definitions in the tables, we need to make sure that all the tables
 		// are created in the Vschema, so that later when we try to find the routed tables, we don't end up

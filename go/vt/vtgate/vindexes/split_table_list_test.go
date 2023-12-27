@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+
 	"vitess.io/vitess/go/sqltypes"
 )
 

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
 	"vitess.io/vitess/go/mysql/collations"
 
 	"vitess.io/vitess/go/vt/sqlparser"
@@ -86,18 +87,18 @@ func TestFindTableRouteSplitTableListSelectEqual(t *testing.T) {
 		TableIndexColumn: []*vindexes.TableColumn{{Column: sqlparser.NewIdentifierCI("col"), ColumnType: querypb.Type_VARCHAR}},
 		TableVindex:      vindex,
 		Params: map[string]*vindexes.TableParams{
-			"0":  {"east", 0},
-			"1":  {"east", 0},
-			"2":  {"east", 0},
-			"3":  {"east", 0},
-			"4":  {"south", 1},
-			"5":  {"south", 1},
-			"6":  {"south", 1},
-			"7":  {"west", 2},
-			"8":  {"west", 2},
-			"9":  {"north", 3},
-			"10": {"north", 3},
-			"11": {"north", 3},
+			"0":  {Name: "east", Index: 0},
+			"1":  {Name: "east", Index: 0},
+			"2":  {Name: "east", Index: 0},
+			"3":  {Name: "east", Index: 0},
+			"4":  {Name: "south", Index: 1},
+			"5":  {Name: "south", Index: 1},
+			"6":  {Name: "south", Index: 1},
+			"7":  {Name: "west", Index: 2},
+			"8":  {Name: "west", Index: 2},
+			"9":  {Name: "north", Index: 3},
+			"10": {Name: "north", Index: 3},
+			"11": {Name: "north", Index: 3},
 		},
 	}
 

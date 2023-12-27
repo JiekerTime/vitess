@@ -1360,8 +1360,13 @@ func (cached *TableRoute) CachedSize(alloc bool) int64 {
 	if alloc {
 		size += int64(112)
 	}
-	// field TableName string
-	size += hack.RuntimeAllocSize(int64(len(cached.TableName)))
+	// field TableNames []string
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.TableNames)) * int64(16))
+		for _, elem := range cached.TableNames {
+			size += hack.RuntimeAllocSize(int64(len(elem)))
+		}
+	}
 	// field ShardRouteParam *vitess.io/vitess/go/vt/vtgate/engine.RoutingParameters
 	size += cached.ShardRouteParam.CachedSize(true)
 	// field TableRouteParam *vitess.io/vitess/go/vt/vtgate/engine.TableRoutingParameters

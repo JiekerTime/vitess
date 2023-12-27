@@ -20,8 +20,7 @@ var _ Primitive = (*TableRoute)(nil)
 
 type TableRoute struct {
 	// TableName specifies the tables to send the query to.
-	// FIXME! This should be a list.
-	TableName string
+	TableNames []string
 
 	ShardRouteParam *RoutingParameters
 
@@ -59,12 +58,21 @@ func (tableRoute *TableRoute) GetKeyspaceName() string {
 }
 
 func (tableRoute *TableRoute) GetTableName() string {
-	return tableRoute.TableName
+	sort.Strings(tableRoute.TableNames)
+	var tableNames []string
+	var previousTbl string
+	for _, name := range tableRoute.TableNames {
+		if name != previousTbl {
+			tableNames = append(tableNames, name)
+			previousTbl = name
+		}
+	}
+	return strings.Join(tableNames, ", ")
 }
 
 func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable) (*sqltypes.Result, error) {
 	if tableRoute.TableRouteParam == nil {
-		return nil, vterrors.VT13001(fmt.Sprintf("No table Route available : %s", tableRoute.TableName))
+		return nil, vterrors.VT13001(fmt.Sprintf("No table Route available : %s", tableRoute.GetTableName()))
 	}
 
 	var rs *srvtopo.ResolvedShard
@@ -96,9 +104,18 @@ func (tableRoute *TableRoute) GetFields(ctx context.Context, vcursor VCursor, bi
 		return nil, err
 	}
 
-	for _, field := range qr.Fields {
-		field.Table = tableRoute.TableRouteParam.LogicTable[tableRoute.TableName].LogicTableName
+	var nameMap = make(map[string]string)
+	for _, logicTableConfig := range tableRoute.TableRouteParam.LogicTable {
+		actualTable := vindexes.GetFirstActualTable(logicTableConfig)
+		nameMap[actualTable] = logicTableConfig.LogicTableName
 	}
+	for _, field := range qr.Fields {
+		logicTableName := nameMap[field.Table]
+		if logicTableName != "" {
+			field.Table = logicTableName
+		}
+	}
+
 	return qr.Truncate(tableRoute.TruncateColumnCount), nil
 }
 
@@ -140,7 +157,7 @@ func (tableRoute *TableRoute) executeInternal(
 	//排序分表
 	SortTableList(actualTableMap)
 
-	return tableRoute.executeShards(ctx, vcursor, bindVars, wantfields, rss, bvs, actualTableMap)
+	return tableRoute.executeShards(ctx, vcursor, rss, bvs, actualTableMap)
 }
 
 func SortTableList(tables map[string][]vindexes.ActualTable) {
@@ -154,8 +171,6 @@ func SortTableList(tables map[string][]vindexes.ActualTable) {
 func (tableRoute *TableRoute) executeShards(
 	ctx context.Context,
 	vcursor VCursor,
-	bindVars map[string]*querypb.BindVariable,
-	wantfields bool,
 	rss []*srvtopo.ResolvedShard,
 	bvs []map[string]*querypb.BindVariable,
 	actualTableNameMap map[string][]vindexes.ActualTable,
@@ -163,7 +178,6 @@ func (tableRoute *TableRoute) executeShards(
 	querieses := make([][]*querypb.BoundQuery, len(rss))
 	for j := range rss {
 		// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
-
 		boundQueries, err := tableRoute.TableRouteParam.getTableQueries(tableRoute.Query, bvs[j], actualTableNameMap)
 		if err != nil {
 			return nil, err

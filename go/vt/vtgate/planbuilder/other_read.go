@@ -82,7 +82,7 @@ func getSplitTableInfo(stmt sqlparser.ExplainStmt, vschema plancontext.VSchema) 
 				if err != nil {
 					continue
 				}
-				mapForSplitTable[tableName] = splitTableConfig.ActualTableList[0].ActualTableName
+				mapForSplitTable[tableName] = vindexes.GetFirstActualTable(splitTableConfig)
 				found = true
 			}
 		}

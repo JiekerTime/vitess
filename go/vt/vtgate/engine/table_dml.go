@@ -87,10 +87,6 @@ func (dml *TableDML) execMultiDestination(ctx context.Context, primitive Primiti
 	if errs != nil {
 		return nil, vterrors.Aggregate(errs)
 	}
-
-	for _, field := range result.Fields {
-		field.Table = dml.TableRouteParam.LogicTable[dml.TableNames[0]].LogicTableName
-	}
 	return result, nil
 }
 

@@ -91,7 +91,7 @@ func gen4DeleteStmtPlanner(
 	}
 
 	// build split table plan
-	plan, _, _, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
+	plan, err = buildTablePlan(ctx, plan, operators.TableNamesUsed(op))
 	if err != nil {
 		return nil, err
 	}

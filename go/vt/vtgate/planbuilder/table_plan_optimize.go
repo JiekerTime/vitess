@@ -10,9 +10,12 @@ import (
 )
 
 // isSameFieldSplitKey 切分片字段和切分表字段是否相同
-func isSameFieldSplitKey(ctx *plancontext.PlanningContext, tableName string) bool {
-	//后期可以在这加个缓存
-
+func isSameFieldSplitKey(ctx *plancontext.PlanningContext, tableNames ...string) bool {
+	// 后期可以在这加个缓存
+	if len(tableNames) != 1 {
+		return false
+	}
+	tableName := tableNames[0]
 	for _, vtable := range ctx.SemTable.Tables {
 		if vtable == nil || vtable.GetVindexTable() == nil {
 			continue
@@ -20,31 +23,28 @@ func isSameFieldSplitKey(ctx *plancontext.PlanningContext, tableName string) boo
 		if tableName != vtable.GetVindexTable().Name.String() {
 			continue
 		}
-		//分片键数量大于1暂时不走下面流程
-		if len(vtable.GetVindexTable().ColumnVindexes) > 1 {
+		// 分片键数量不为1暂时不走下面流程
+		if len(vtable.GetVindexTable().ColumnVindexes) != 1 {
 			continue
 		}
-		////分表键数量大于1暂时不走下面流程
-		if len(ctx.SplitTableConfig[tableName].TableIndexColumn) > 1 {
+		// 分表键数量不为1暂时不走下面流程
+		if len(ctx.SplitTableConfig[tableName].TableIndexColumn) != 1 {
 			continue
 		}
-		for _, columnVindex := range vtable.GetVindexTable().ColumnVindexes {
-			if columnVindex.Columns != nil {
-				for _, singleColumn := range columnVindex.Columns {
-					for _, tableIndexColumn := range ctx.SplitTableConfig[tableName].TableIndexColumn {
-						if singleColumn.Equal(tableIndexColumn.Column) {
-							return true
-						}
-					}
-				}
-			}
+		vindex := vtable.GetVindexTable().ColumnVindexes[0]
+		if len(vindex.Columns) != 1 {
+			continue
+		}
+		singleColumn := vindex.Columns[0]
+		tableIndexColumn := ctx.SplitTableConfig[tableName].TableIndexColumn[0]
+		if singleColumn.Equal(tableIndexColumn.Column) {
+			return true
 		}
 	}
 	return false
 }
 
 func doBuildSelectBestTablePlan(ctx *plancontext.PlanningContext, node *route) (tablePlan logicalPlan, err error) {
-
 	splitRoute, err := engineRouteToTableRoute(ctx, ctx.GetRoute(), node)
 	if err != nil {
 		return nil, err
@@ -58,9 +58,7 @@ func doBuildSelectBestTablePlan(ctx *plancontext.PlanningContext, node *route) (
 	if err = tablePlan.Wireup(ctx); err != nil {
 		return nil, err
 	}
-
 	return tablePlan, nil
-
 }
 
 func engineRouteToTableRoute(ctx *plancontext.PlanningContext, route engine.Route, node *route) (*engine.TableRoute, error) {
@@ -71,18 +69,20 @@ func engineRouteToTableRoute(ctx *plancontext.PlanningContext, route engine.Rout
 	}
 
 	logicTableMap := map[string]*vindexes.LogicTableConfig{}
-	value, ok := rp.LogicTable[node.eroute.TableName]
-	if ok {
-		logicTableMap[node.eroute.TableName] = value
+	for _, tableName := range node.eroute.TableNameSlice {
+		value, ok := rp.LogicTable[tableName]
+		if ok {
+			logicTableMap[tableName] = value
+		}
+		rp.LogicTable = logicTableMap
 	}
-	rp.LogicTable = logicTableMap
 
 	if route.RoutingParameters.Values != nil {
 		rp.TableValues = route.RoutingParameters.Values
 	}
 
 	return &engine.TableRoute{
-		TableName:       node.eroute.TableName,
+		TableNames:      node.eroute.TableNameSlice,
 		ShardRouteParam: route.RoutingParameters,
 		TableRouteParam: rp,
 		OrderBy:         node.eroute.OrderBy,
@@ -119,7 +119,12 @@ func doBuildUpdateBestTablePlan(ctx *plancontext.PlanningContext) (logicalPlan, 
 	e := &engine.TableUpdate{
 		TableDML: edml,
 	}
-	return &primitiveWrapper{prim: e}, nil
+	tablePlan := &primitiveWrapper{prim: e}
+
+	if err := tablePlan.Wireup(ctx); err != nil {
+		return nil, err
+	}
+	return tablePlan, nil
 }
 
 func doBuildDeleteBestTablePlan(ctx *plancontext.PlanningContext) (logicalPlan, error) {
@@ -142,7 +147,12 @@ func doBuildDeleteBestTablePlan(ctx *plancontext.PlanningContext) (logicalPlan, 
 	e := &engine.TableDelete{
 		TableDML: edml,
 	}
-	return &primitiveWrapper{prim: e}, nil
+	tablePlan := &primitiveWrapper{prim: e}
+
+	if err := tablePlan.Wireup(ctx); err != nil {
+		return nil, err
+	}
+	return tablePlan, nil
 }
 
 func doBuildInsertBestTablePlan(ctx *plancontext.PlanningContext, tableName string) (i *insert, err error) {
@@ -158,10 +168,6 @@ func doBuildInsertBestTablePlan(ctx *plancontext.PlanningContext, tableName stri
 		i = &insert{eInsert: &eins}
 
 	case sqlparser.SelectStatement:
-		/*	route.Source, err = insertSelectPlan(ctx, insOp, ins, rows)
-			if err != nil {
-				return nil, err
-			}*/
 		return nil, vterrors.VT12001("Unsupport split table insert into select")
 	}
 

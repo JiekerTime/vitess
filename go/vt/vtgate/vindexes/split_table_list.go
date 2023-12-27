@@ -19,6 +19,7 @@ package vindexes
 import (
 	"bytes"
 	"context"
+
 	"vitess.io/vitess/go/sqltypes"
 )
 
