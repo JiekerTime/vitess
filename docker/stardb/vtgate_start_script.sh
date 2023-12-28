@@ -18,7 +18,7 @@ function install_dependencies() {
   fi
 
   if [ ! -d "/export/data/mysql/tmp" ];then
-     cd /vt && tar zxf stardbplus_bin.tar.gz && rm -f stardbplus_bin.tar.gz
+     cd /vt && tar zxf stardbplus_bin.tar.gz && mv bin /export/ && rm -f stardbplus_bin.tar.gz
     mkdir -p /export/data/mysql/tmp
     chown -R vitess /vt
     chown -R vitess /export
@@ -35,6 +35,9 @@ function pre_start(){
 }
 
 function vtgate_start() {
+  if [ "$MYSQL_VERSION" == "" ];then
+      MYSQL_VERSION="5.7.32-stardb"
+  fi
   if [ "$ETCD_USER" == "" ];then
     ARGS="--alsologtostderr \
     --grpc_prometheus \
@@ -51,6 +54,7 @@ function vtgate_start() {
     --cells_to_watch $WATCH_CELLS \
     --tablet_types_to_wait PRIMARY,REPLICA \
     --service_map 'grpc-vtgateservice' \
+    --mysql_server_version $MYSQL_VERSION \
     --pid_file /export/data/mysql/tmp/vtgate.pid \
     --mysql_auth_server_config_file /vt/config/vtgate/user.json \
     > /export/data/mysql/tmp/vtgate.out 2>&1"
@@ -72,12 +76,13 @@ function vtgate_start() {
     --cells_to_watch $WATCH_CELLS \
     --tablet_types_to_wait PRIMARY,REPLICA \
     --service_map 'grpc-vtgateservice' \
+    --mysql_server_version $MYSQL_VERSION \
     --pid_file /export/data/mysql/tmp/vtgate.pid \
     --mysql_auth_server_config_file /vt/config/vtgate/user.json \
     > /export/data/mysql/tmp/vtgate.out 2>&1"
   fi
-  echo "su -c \"/vt/bin/vtgate ${ARGS}\" vitess"
-  exec su -p -c "/vt/bin/vtgate ${ARGS}" vitess
+  echo "su -c \"/export/bin/vtgate ${ARGS}\" vitess"
+  exec su -p -c "/export/bin/vtgate ${ARGS}" vitess
 }
 
 if [ "${COMPONENTROLE}" == "vtgate" ]; then

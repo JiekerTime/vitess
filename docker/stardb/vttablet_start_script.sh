@@ -97,8 +97,8 @@ function vttablet_start() {
     --watch_replication_stream=true"
   fi
 
-  echo "su -p -c \"/vt/bin/vttablet ${ARGS}\" mysql"
-  exec su -p -c "/vt/bin/vttablet ${ARGS}" mysql
+  echo "su -p -c \"/export/bin/vttablet ${ARGS}\" mysql"
+  exec su -p -c "/export/bin/vttablet ${ARGS}" mysql
 }
 
 if [ "${COMPONENTROLE}" == "vttablet" ]; then

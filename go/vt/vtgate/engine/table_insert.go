@@ -200,7 +200,7 @@ func (ins *Insert) getInsertTableShardedRoute(
 		sort.Strings(sortedKeys) // 对表名进行排序
 		for _, tableName := range sortedKeys {
 			queries[i] = append(queries[i], &querypb.BoundQuery{
-				Sql:           ins.Prefix + tableName + ins.Columns + strings.Join(mids[tableName], ",") + ins.Suffix,
+				Sql:           ins.Prefix + tableName + ins.Columns + strings.Join(mids[tableName], ",") + sqlparser.String(ins.Suffix),
 				BindVariables: shardBindVars,
 			})
 		}

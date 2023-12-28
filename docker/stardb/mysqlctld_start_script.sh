@@ -14,7 +14,7 @@ function install_dependencies() {
   fi
 
   if [ ! -d /export/servers ]; then
-    cd /vt && tar zxvf stardbplus_bin.tar.gz && rm -f stardbplus_bin.tar.gz
+    cd /vt && tar zxvf stardbplus_bin.tar.gz && mv bin /export/ && rm -f stardbplus_bin.tar.gz
     cd /servers && tar zxf mysql.tar.gz && rm -f mysql.tar.gz
     mv /servers /export/
     mkdir -p /export/servers/mysql/etc/
@@ -54,8 +54,8 @@ function mysqlctld_start() {
   --mysqlctl_mycnf_template /vt/config/vttablet/my.cnf \
   --tablet_uid $TABLET_UID"
 
-  echo "su -p -c \"/vt/bin/mysqlctld ${ARGS}\" mysql"
-  exec su -p -c "/vt/bin/mysqlctld ${ARGS}" mysql
+  echo "su -p -c \"/export/bin/mysqlctld ${ARGS}\" mysql"
+  exec su -p -c "/export/bin/mysqlctld ${ARGS}" mysql
 }
 
 if [ "${COMPONENTROLE}" == "vttablet" ]; then

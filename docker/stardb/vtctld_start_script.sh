@@ -18,7 +18,7 @@ function install_dependencies() {
   fi
 
   if [ ! -d "/export/data/mysql/tmp" ];then
-    cd /vt && tar zxf stardbplus_bin.tar.gz && rm -f stardbplus_bin.tar.gz
+    cd /vt && tar zxf stardbplus_bin.tar.gz && mv bin /export/ && rm -f stardbplus_bin.tar.gz
     mkdir -p /export/data/mysql/tmp
     chown -R vitess /vt
     chown -R vitess /export
@@ -68,8 +68,8 @@ function vtctld_start() {
     --pid_file /export/data/mysql/tmp/vtctld.pid \
     > /export/data/mysql/tmp/vtctld.out 2>&1"
   fi
-  echo "su -p -c \"/vt/bin/vtctld ${ARGS}\""
-  exec su -p -c "/vt/bin/vtctld ${ARGS}" vitess
+  echo "su -p -c \"/export/bin/vtctld ${ARGS}\""
+  exec su -p -c "/export/bin/vtctld ${ARGS}" vitess
 }
 
 if [ "${COMPONENTROLE}" == "vtctld" ]; then
