@@ -4587,6 +4587,8 @@ func (c *cow) copyOnRewriteRefOfPartitionOption(n *PartitionOption, parent SQLNo
 		_ColList, changedColList := c.copyOnRewriteColumns(n.ColList, n)
 		_Expr, changedExpr := c.copyOnRewriteExpr(n.Expr, n)
 		_SubPartition, changedSubPartition := c.copyOnRewriteRefOfSubPartition(n.SubPartition, n)
+		_PartitionMethodName, changedPartitionMethodName := c.copyOnRewriteIdentifierCI(n.PartitionMethodName, n)
+		_PartitionMethodType, changedPartitionMethodType := c.copyOnRewriteIdentifierCI(n.PartitionMethodType, n)
 		var changedDefinitions bool
 		_Definitions := make([]*PartitionDefinition, len(n.Definitions))
 		for x, el := range n.Definitions {
@@ -4596,11 +4598,13 @@ func (c *cow) copyOnRewriteRefOfPartitionOption(n *PartitionOption, parent SQLNo
 				changedDefinitions = true
 			}
 		}
-		if changedColList || changedExpr || changedSubPartition || changedDefinitions {
+		if changedColList || changedExpr || changedSubPartition || changedPartitionMethodName || changedPartitionMethodType || changedDefinitions {
 			res := *n
 			res.ColList, _ = _ColList.(Columns)
 			res.Expr, _ = _Expr.(Expr)
 			res.SubPartition, _ = _SubPartition.(*SubPartition)
+			res.PartitionMethodName, _ = _PartitionMethodName.(IdentifierCI)
+			res.PartitionMethodType, _ = _PartitionMethodType.(IdentifierCI)
 			res.Definitions = _Definitions
 			out = &res
 			if c.cloned != nil {

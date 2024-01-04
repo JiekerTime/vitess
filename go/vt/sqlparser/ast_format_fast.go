@@ -408,6 +408,16 @@ func (node *AlterVschema) formatFast(buf *TrackedBuffer) {
 		node.Table.formatFast(buf)
 		buf.WriteString(" drop auto_increment ")
 		node.AutoIncSpec.formatFast(buf)
+	case AddColSingleDDLAction:
+		buf.WriteString("alter vschema on ")
+		node.Table.formatFast(buf)
+		buf.WriteString(" add single ")
+		buf.WriteString(node.Value)
+	case DropColSingleDDLAction:
+		buf.WriteString("alter vschema on ")
+		node.Table.formatFast(buf)
+		buf.WriteString(" drop single ")
+		buf.WriteString(node.Value)
 	default:
 		buf.WriteString(node.Action.ToString())
 		buf.WriteString(" table ")
@@ -897,7 +907,11 @@ func (ts *TableSpec) formatFast(buf *TrackedBuffer) {
 		}
 		buf.WriteByte(' ')
 		buf.WriteString(opt.Name)
-		if opt.String != "" {
+		if opt.DBPartitionOption != nil {
+			ts.Options.formatDBPartition(buf, opt)
+		} else if opt.TBPartitionOption != nil {
+			ts.Options.formatTBPartition(buf, opt)
+		} else if opt.String != "" {
 			if opt.CaseSensitive {
 				buf.WriteByte(' ')
 				buf.WriteString(opt.String)
@@ -3198,6 +3212,10 @@ func (node TableOptions) formatFast(buf *TrackedBuffer) {
 		}
 		buf.WriteString(option.Name)
 		switch {
+		case option.DBPartitionOption != nil:
+			node.formatDBPartition(buf, option)
+		case option.TBPartitionOption != nil:
+			node.formatTBPartition(buf, option)
 		case option.String != "":
 			if option.CaseSensitive {
 				buf.WriteByte(' ')

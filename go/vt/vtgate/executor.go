@@ -23,10 +23,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
+	"vitess.io/vitess/go/vt/topotools"
 
 	"github.com/spf13/pflag"
 
@@ -1131,7 +1134,53 @@ func (e *Executor) buildStatement(
 	reservedVars *sqlparser.ReservedVars,
 	bindVarNeeds *sqlparser.BindVarNeeds,
 ) (*engine.Plan, error) {
-	plan, err := planbuilder.BuildFromStmt(ctx, query, stmt, reservedVars, vcursor, bindVarNeeds, enableOnlineDDL, enableDirectDDL)
+	var plan *engine.Plan
+	var err error
+	switch stmt := stmt.(type) {
+	case sqlparser.DDLStatement:
+		distTableOptionParam, errDistSql := extractDistGrama(stmt)
+		if errDistSql != nil {
+			return nil, errDistSql
+		}
+		var applySchemaChangeAfterExec *DistSqlSchemaChangeParam
+		if distTableOptionParam != nil && distTableOptionParam.DistSQL {
+			keySpace, _, err := planbuilder.GetKeySpaceFromStatement(ctx, query, stmt, reservedVars, vcursor, enableOnlineDDL, enableDirectDDL)
+			srvVschema := vcursor.GetSrvVschema()
+			keyspace := srvVschema.Keyspaces[keySpace.Name]
+			if !distTableOptionParam.DropSchema {
+				// create table
+				if err != nil {
+					return nil, err
+				}
+				distSqlSchemaChangeParam, errDistSqlSchema := generateDistSqlSchema(ctx, vcursor, distTableOptionParam, stmt, keySpace.Name, keyspace, vcursor, srvVschema)
+				if errDistSqlSchema != nil {
+					return nil, errDistSqlSchema
+				}
+
+				errApplyDistSqlSchema := applyDistSqlSchemaChange(ctx, distSqlSchemaChangeParam, vcursor)
+				if errApplyDistSqlSchema != nil {
+					return nil, errApplyDistSqlSchema
+				}
+				vs := e.VSchema()
+				vcursor.vschema = vs
+			} else {
+				// drop table and drop vschema
+				distSqlSchemaChangeParam, errDistSqlSchema := generateDistSqlSchemaFromVschema(ctx, vcursor.vschema, stmt, keySpace.Name, keyspace, vcursor, srvVschema)
+				if errDistSqlSchema != nil {
+					return nil, errDistSqlSchema
+				}
+				applySchemaChangeAfterExec = distSqlSchemaChangeParam
+			}
+		}
+		plan, err = planbuilder.BuildFromStmt(ctx, query, stmt, reservedVars, vcursor, bindVarNeeds, enableOnlineDDL, enableDirectDDL)
+		if applySchemaChangeAfterExec != nil {
+			plan.KSName = applySchemaChangeAfterExec.KSName
+			plan.AlterVschemaArray = applySchemaChangeAfterExec.AlterSchemaArray
+		}
+		break
+	default:
+		plan, err = planbuilder.BuildFromStmt(ctx, query, stmt, reservedVars, vcursor, bindVarNeeds, enableOnlineDDL, enableDirectDDL)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -1141,6 +1190,253 @@ func (e *Executor) buildStatement(
 
 	err = e.checkThatPlanIsValid(stmt, plan)
 	return plan, err
+}
+
+type DistTableOptionParam struct {
+	DBPartitionOption                 *sqlparser.TableOption
+	TBPartitionOption                 *sqlparser.TableOption
+	DistributionPrimaryKeyTableOption *sqlparser.TableOption
+	Broadcast                         bool
+	Single                            bool
+	// singe table used (pinned)
+	Value      string
+	DistSQL    bool
+	DropSchema bool
+}
+
+type DistSqlSchemaChangeParam struct {
+	VSchema          plancontext.VSchema
+	KSName           string
+	KS               *vschemapb.Keyspace
+	AlterSchemaArray []*sqlparser.AlterVschema
+}
+
+func applyDistSqlSchemaChange(ctx context.Context, distSqlSchemaChangeParam *DistSqlSchemaChangeParam, vcursor *vcursorImpl) error {
+	srvVschema := vcursor.vm.GetCurrentSrvVschema()
+	var ks *vschemapb.Keyspace
+	var err error
+
+	for _, vschema := range distSqlSchemaChangeParam.AlterSchemaArray {
+		ks, err = topotools.ApplyVSchemaDDL(distSqlSchemaChangeParam.KSName, distSqlSchemaChangeParam.KS, vschema)
+		if err != nil {
+			return err
+		}
+	}
+	srvVschema.Keyspaces[distSqlSchemaChangeParam.KSName] = ks
+	err = vcursor.vm.UpdateVSchema(ctx, distSqlSchemaChangeParam.KSName, srvVschema)
+	return err
+}
+
+func applyDistSqlSchemaArray(ctx context.Context, ksName string, alterSchemaArray []*sqlparser.AlterVschema, vcursor *vcursorImpl) error {
+	srvVschema := vcursor.vm.GetCurrentSrvVschema()
+	var err error
+	keyspace := srvVschema.Keyspaces[ksName]
+	for _, vschema := range alterSchemaArray {
+		keyspace, err = topotools.ApplyVSchemaDDL(ksName, keyspace, vschema)
+		if err != nil {
+			return err
+		}
+	}
+	srvVschema.Keyspaces[ksName] = keyspace
+	err = vcursor.vm.UpdateVSchema(ctx, ksName, srvVschema)
+	return err
+}
+
+// generateDistSqlSchema apply schema for dist sql, CreateTable statement used  only
+func generateDistSqlSchema(ctx context.Context, vcursor engine.VCursor, distTableOptionParam *DistTableOptionParam, ddlStatement sqlparser.DDLStatement, ksName string, ks *vschemapb.Keyspace, vschema plancontext.VSchema, srvVSchema *vschemapb.SrvVSchema) (*DistSqlSchemaChangeParam, error) {
+	distSqlSchemaChangeParam := DistSqlSchemaChangeParam{}
+	distSqlSchemaChangeParam.VSchema = vschema
+	distSqlSchemaChangeParam.KSName = ksName
+	distSqlSchemaChangeParam.KS = ks
+
+	if distTableOptionParam.DistributionPrimaryKeyTableOption != nil {
+		distributionPrimaryKeyOption := distTableOptionParam.DistributionPrimaryKeyTableOption.DistributionPrimaryKeyOption
+		alterVschema := sqlparser.AlterVschema{AutoIncSpec: &sqlparser.AutoIncSpec{}}
+		alterVschema.Action = sqlparser.AddAutoIncDDLAction
+		alterVschema.Table = ddlStatement.GetTable()
+		alterVschema.AutoIncSpec.Column = distributionPrimaryKeyOption.ColList[0]
+		alterVschema.AutoIncSpec.Sequence = distributionPrimaryKeyOption.TableName
+		distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+	}
+
+	if distTableOptionParam.Single {
+		alterVschema := sqlparser.AlterVschema{}
+		alterVschema.Action = sqlparser.AddColSingleDDLAction
+		alterVschema.Table = ddlStatement.GetTable()
+		alterVschema.Value = distTableOptionParam.Value
+		distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+	}
+
+	if distTableOptionParam.DBPartitionOption != nil {
+		dbPartitionOption := distTableOptionParam.DBPartitionOption
+		partitionOption := dbPartitionOption.DBPartitionOption
+		alterVschema := sqlparser.AlterVschema{VindexSpec: &sqlparser.VindexSpec{}}
+		alterVschema.Action = sqlparser.AddColVindexDDLAction
+		alterVschema.Table = ddlStatement.GetTable()
+		alterVschema.VindexSpec.Type = partitionOption.PartitionMethodType
+		alterVschema.VindexSpec.Name = partitionOption.PartitionMethodName
+		alterVschema.VindexCols = partitionOption.ColList
+		distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+	}
+
+	if distTableOptionParam.TBPartitionOption != nil {
+		tbPartitionOption := distTableOptionParam.TBPartitionOption
+		partitionOption := tbPartitionOption.TBPartitionOption
+		tableCount, err := strconv.Atoi(tbPartitionOption.Value.Val)
+		if err != nil {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "TableCount Param cannot convert to int")
+		}
+		alterVschema := sqlparser.AlterVschema{VindexSpec: &sqlparser.VindexSpec{}}
+		alterVschema.Action = sqlparser.AddColTindexDDLAction
+		alterVschema.Table = ddlStatement.GetTable()
+		alterVschema.TableCount = tableCount
+		alterVschema.VindexSpec.Type = partitionOption.PartitionMethodType
+		alterVschema.VindexSpec.Name = partitionOption.PartitionMethodName
+		alterVschema.VindexCols = partitionOption.ColList
+		distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+	}
+
+	return &distSqlSchemaChangeParam, nil
+
+}
+
+// generateDistSqlSchemaFromVschema extract vschema information from keyspace
+func generateDistSqlSchemaFromVschema(ctx context.Context, vSchema *vindexes.VSchema, ddlStatement sqlparser.DDLStatement, ksName string, ks *vschemapb.Keyspace, VSchemaPlanContext plancontext.VSchema, srvVSchema *vschemapb.SrvVSchema) (*DistSqlSchemaChangeParam, error) {
+	distSqlSchemaChangeParam := DistSqlSchemaChangeParam{}
+	distSqlSchemaChangeParam.VSchema = VSchemaPlanContext
+	distSqlSchemaChangeParam.KSName = ksName
+	distSqlSchemaChangeParam.KS = ks
+
+	keyspaceSchema := vSchema.Keyspaces[ksName]
+	tableName := ddlStatement.GetFromTables()[0]
+	table := ks.Tables[tableName.Name.String()]
+
+	if table.AutoIncrement != nil {
+		//just ignore AutoIncrement
+	}
+
+	// single table
+	if len(table.Pinned) > 0 {
+		alterVschema := sqlparser.AlterVschema{}
+		alterVschema.Action = sqlparser.DropColSingleDDLAction
+		alterVschema.Table = tableName
+		alterVschema.Value = string(table.Pinned)
+		distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+	}
+
+	logicTableConfig := keyspaceSchema.SplitTableTables[tableName.Name.String()]
+	if logicTableConfig != nil {
+		alterVschema := sqlparser.AlterVschema{VindexSpec: &sqlparser.VindexSpec{}}
+		alterVschema.Action = sqlparser.DropColTindexDDLAction
+		alterVschema.Table = tableName
+		alterVschema.VindexSpec.Name = sqlparser.NewIdentifierCI(logicTableConfig.TableVindex.String())
+		distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+	}
+
+	if len(table.ColumnVindexes) > 0 {
+		for _, vindex := range table.ColumnVindexes {
+			alterVschema := sqlparser.AlterVschema{VindexSpec: &sqlparser.VindexSpec{}}
+			alterVschema.Action = sqlparser.DropColVindexDDLAction
+			alterVschema.Table = tableName
+			alterVschema.VindexSpec.Name = sqlparser.NewIdentifierCI(vindex.Name)
+			distSqlSchemaChangeParam.AlterSchemaArray = append(distSqlSchemaChangeParam.AlterSchemaArray, &alterVschema)
+		}
+	}
+
+	return &distSqlSchemaChangeParam, nil
+}
+
+func checkDistSQLRule(distTableOptionParam *DistTableOptionParam, ddlStatement sqlparser.DDLStatement) error {
+
+	if distTableOptionParam.Single && distTableOptionParam.Broadcast {
+		return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "table cannot be single and broadcast")
+	}
+
+	if (distTableOptionParam.Single || distTableOptionParam.Broadcast) &&
+		(distTableOptionParam.DBPartitionOption != nil || distTableOptionParam.TBPartitionOption != nil) {
+		return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "table cannot be single or broadcast and sharded table")
+	}
+
+	if distTableOptionParam.TBPartitionOption != nil && distTableOptionParam.DBPartitionOption == nil {
+		return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "split table should be shared table")
+	}
+
+	if distTableOptionParam.DistributionPrimaryKeyTableOption != nil && (distTableOptionParam.Single || distTableOptionParam.Broadcast) {
+		return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "distribution primary key should belong to sharded table")
+	}
+
+	if distTableOptionParam.DistributionPrimaryKeyTableOption != nil && (distTableOptionParam.DBPartitionOption == nil && distTableOptionParam.TBPartitionOption == nil) {
+		return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "distribution primary key should belong to sharded table")
+	}
+
+	if distTableOptionParam.DistributionPrimaryKeyTableOption != nil {
+		distributionPrimaryKeyOption := distTableOptionParam.DistributionPrimaryKeyTableOption.DistributionPrimaryKeyOption
+		if len(distributionPrimaryKeyOption.ColList) != 1 {
+			return vterrors.Errorf(vtrpcpb.Code_INTERNAL, "distribution primary key should have only one column")
+		}
+	}
+
+	return nil
+}
+
+// extractDistGrama extract dist sql table option
+func extractDistGrama(ddlStatement sqlparser.DDLStatement) (*DistTableOptionParam, error) {
+	switch ddlStatement := ddlStatement.(type) {
+	case *sqlparser.CreateTable:
+		distTableOptionParam := extractDistGramaForCreateTable(ddlStatement)
+		if !distTableOptionParam.DistSQL {
+			return &distTableOptionParam, nil
+		}
+		err := checkDistSQLRule(&distTableOptionParam, ddlStatement)
+		if err != nil {
+			return nil, err
+		}
+		return &distTableOptionParam, nil
+	case *sqlparser.DropTable:
+		if ddlStatement.DropSchema {
+			return &DistTableOptionParam{DistSQL: true, DropSchema: true}, nil
+		}
+		return nil, nil
+	}
+
+	return nil, nil
+
+}
+
+func extractDistGramaForCreateTable(ddlStatement *sqlparser.CreateTable) DistTableOptionParam {
+	tableSpec := ddlStatement.GetTableSpec()
+	tableOptions := tableSpec.Options
+	distTableOptionParam := DistTableOptionParam{}
+	for i := 0; i < len(tableOptions); {
+		tableOption := tableOptions[i]
+		isDistTableOption := false
+		if strings.EqualFold(tableOption.Name, "DISTRIBUTION") {
+			distTableOptionParam.DistributionPrimaryKeyTableOption = tableOption
+			isDistTableOption = true
+		} else if strings.EqualFold(tableOption.Name, "BROADCAST") {
+			distTableOptionParam.Broadcast = true
+			isDistTableOption = true
+		} else if strings.EqualFold(tableOption.Name, "SINGLE") {
+			distTableOptionParam.Single = true
+			distTableOptionParam.Value = tableOption.String
+			isDistTableOption = true
+		} else if strings.EqualFold(tableOption.Name, "TBPARTITION") {
+			distTableOptionParam.TBPartitionOption = tableOption
+			isDistTableOption = true
+		} else if strings.EqualFold(tableOption.Name, "DBPARTITION") {
+			distTableOptionParam.DBPartitionOption = tableOption
+			isDistTableOption = true
+		}
+
+		if isDistTableOption {
+			distTableOptionParam.DistSQL = true
+			tableOptions = append(tableOptions[:i], tableOptions[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	ddlStatement.GetTableSpec().Options = tableOptions
+	return distTableOptionParam
 }
 
 func (e *Executor) cacheAndBuildStatement(
@@ -1288,6 +1584,27 @@ func buildVarCharFields(names ...string) []*querypb.Field {
 }
 
 func buildVarCharRow(values ...string) []sqltypes.Value {
+	row := make([]sqltypes.Value, len(values))
+	for i, v := range values {
+		row[i] = sqltypes.NewVarChar(v)
+	}
+	return row
+}
+
+func BuildVarCharFieldsForEndToEnd(names ...string) []*querypb.Field {
+	fields := make([]*querypb.Field, len(names))
+	for i, v := range names {
+		fields[i] = &querypb.Field{
+			Name:    v,
+			Type:    sqltypes.VarChar,
+			Charset: uint32(collations.SystemCollation.Collation),
+			Flags:   uint32(querypb.MySqlFlag_NOT_NULL_FLAG),
+		}
+	}
+	return fields
+}
+
+func BuildVarCharRowForEndToEnd(values ...string) []sqltypes.Value {
 	row := make([]sqltypes.Value, len(values))
 	for i, v := range values {
 		row[i] = sqltypes.NewVarChar(v)

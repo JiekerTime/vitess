@@ -112,5 +112,43 @@
         "user.t_user"
       ]
     }
+  },
+  {
+    "comment": "create table with distsql",
+    "query": "create table t_user(id bigint, primary key(id)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin  DBPARTITION BY binary_hash(id) USING binaryhash  TBPARTITION BY split_table_hash (id) USING splitTableHashMod TableCount 32  COMMENT='批量任务表';",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "create table t_user(id bigint, primary key(id)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin  DBPARTITION BY binary_hash(id) USING binaryhash  TBPARTITION BY split_table_hash (id) USING splitTableHashMod TableCount 32  COMMENT='批量任务表';",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "create table t_user (\n\tid bigint,\n\tprimary key (id)\n) ENGINE InnoDB,\n  AUTO_INCREMENT 1,\n  CHARSET utf8mb4,\n  COLLATE utf8mb4_bin,\n  DBPARTITION BY binary_hash(id) USING binaryhash,\n  TBPARTITION BY split_table_hash(id) USING splitTableHashMod TableCount 32,\n  COMMENT '批量任务表'"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "create table single",
+    "query": "create table t_user(id bigint, primary key(id)) SINGLE '00'",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "create table t_user(id bigint, primary key(id)) SINGLE '00'",
+      "Instructions": {
+        "OperatorType": "SplitTableDDL",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "Query": "create table t_user (\n\tid bigint,\n\tprimary key (id)\n) SINGLE '00'"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

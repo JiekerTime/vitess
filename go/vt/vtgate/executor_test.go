@@ -546,6 +546,7 @@ func TestExecutorShowVIndex(t *testing.T) {
 			buildVarCharRow("music_extra_reversed", "SHARD_TABLE", "user_id", "hash_index", "", "", "", ""),
 			buildVarCharRow("noauto_table", "SHARD_TABLE", "id", "idx_noauto", "", "", "", ""),
 			buildVarCharRow("sharded_user_msgs", "SHARD_TABLE", "user_id", "hash_index", "", "", "", ""),
+			buildVarCharRow("single_table", "PINNED", "00", "", "", "", "", ""),
 			buildVarCharRow("t1", "SHARD_TABLE", "id", "hash_index", "", "", "", ""),
 			buildVarCharRow("t1", "SHARD_TABLE", "unq_col", "t1_lkp_vdx", "", "", "", ""),
 			buildVarCharRow("t1_lkp_idx", "SHARD_TABLE", "unq_col", "hash_index", "", "", "", ""),

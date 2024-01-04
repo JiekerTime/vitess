@@ -154,6 +154,13 @@ func (e *Executor) newExecute(
 				})
 		} else {
 			err = execPlan(ctx, plan, vcursor, bindVars, execStart)
+			if plan.AlterVschemaArray != nil && err == nil {
+				// return err if execute apply vschema failed
+				err = applyDistSqlSchemaArray(ctx, plan.KSName, plan.AlterVschemaArray, vcursor)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		if err == nil || safeSession.InTransaction() {

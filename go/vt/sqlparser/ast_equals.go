@@ -1831,6 +1831,7 @@ func (cmp *Comparator) RefOfAlterVschema(a, b *AlterVschema) bool {
 		return false
 	}
 	return a.TableCount == b.TableCount &&
+		a.Value == b.Value &&
 		a.Action == b.Action &&
 		cmp.TableName(a.Table, b.Table) &&
 		cmp.RefOfVindexSpec(a.VindexSpec, b.VindexSpec) &&
@@ -2447,6 +2448,7 @@ func (cmp *Comparator) RefOfDropTable(a, b *DropTable) bool {
 	}
 	return a.Temp == b.Temp &&
 		a.IfExists == b.IfExists &&
+		a.DropSchema == b.DropSchema &&
 		cmp.TableNames(a.FromTables, b.FromTables) &&
 		cmp.RefOfParsedComments(a.Comments, b.Comments)
 }
@@ -3865,6 +3867,8 @@ func (cmp *Comparator) RefOfPartitionOption(a, b *PartitionOption) bool {
 		cmp.Columns(a.ColList, b.ColList) &&
 		cmp.Expr(a.Expr, b.Expr) &&
 		cmp.RefOfSubPartition(a.SubPartition, b.SubPartition) &&
+		cmp.IdentifierCI(a.PartitionMethodName, b.PartitionMethodName) &&
+		cmp.IdentifierCI(a.PartitionMethodType, b.PartitionMethodType) &&
 		cmp.SliceOfRefOfPartitionDefinition(a.Definitions, b.Definitions)
 }
 
@@ -7531,7 +7535,10 @@ func (cmp *Comparator) RefOfTableOption(a, b *TableOption) bool {
 		a.String == b.String &&
 		a.CaseSensitive == b.CaseSensitive &&
 		cmp.RefOfLiteral(a.Value, b.Value) &&
-		cmp.TableNames(a.Tables, b.Tables)
+		cmp.TableNames(a.Tables, b.Tables) &&
+		cmp.RefOfPartitionOption(a.DBPartitionOption, b.DBPartitionOption) &&
+		cmp.RefOfPartitionOption(a.TBPartitionOption, b.TBPartitionOption) &&
+		cmp.RefOfDistributionPrimaryKeyOption(a.DistributionPrimaryKeyOption, b.DistributionPrimaryKeyOption)
 }
 
 // SliceOfRefOfIndexDefinition does deep equals between the two objects.
@@ -7666,6 +7673,18 @@ func (cmp *Comparator) RefOfRenameTablePair(a, b *RenameTablePair) bool {
 	}
 	return cmp.TableName(a.FromTable, b.FromTable) &&
 		cmp.TableName(a.ToTable, b.ToTable)
+}
+
+// RefOfDistributionPrimaryKeyOption does deep equals between the two objects.
+func (cmp *Comparator) RefOfDistributionPrimaryKeyOption(a, b *DistributionPrimaryKeyOption) bool {
+	if a == b {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return cmp.TableName(a.TableName, b.TableName) &&
+		cmp.Columns(a.ColList, b.ColList)
 }
 
 // RefOfDatabaseOption does deep equals between the two objects.

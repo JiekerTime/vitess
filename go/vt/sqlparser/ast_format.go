@@ -271,6 +271,10 @@ func (node *AlterVschema) Format(buf *TrackedBuffer) {
 		buf.astPrintf(node, "alter vschema on %v add auto_increment %v", node.Table, node.AutoIncSpec)
 	case DropAutoIncDDLAction:
 		buf.astPrintf(node, "alter vschema on %v drop auto_increment %v", node.Table, node.AutoIncSpec)
+	case AddColSingleDDLAction:
+		buf.astPrintf(node, "alter vschema on %v add single %v", node.Table, NewIdentifierCI(node.Value))
+	case DropColSingleDDLAction:
+		buf.astPrintf(node, "alter vschema on %v drop single %v", node.Table, NewIdentifierCI(node.Value))
 	default:
 		buf.astPrintf(node, "%s table %v", node.Action.ToString(), node.Table)
 	}
@@ -2419,6 +2423,10 @@ func (node TableOptions) Format(buf *TrackedBuffer) {
 		}
 		buf.astPrintf(node, "%s", option.Name)
 		switch {
+		case option.DBPartitionOption != nil:
+			node.formatDBPartition(buf, option)
+		case option.TBPartitionOption != nil:
+			node.formatTBPartition(buf, option)
 		case option.String != "":
 			if option.CaseSensitive {
 				buf.astPrintf(node, " %#s", option.String)
@@ -2430,6 +2438,40 @@ func (node TableOptions) Format(buf *TrackedBuffer) {
 		default:
 			buf.astPrintf(node, " (%v)", option.Tables)
 		}
+	}
+}
+
+func (node TableOptions) formatTBPartition(buf *TrackedBuffer, option *TableOption) {
+	if !option.TBPartitionOption.PartitionMethodName.IsEmpty() {
+		buf.astPrintf(node, " BY %s", option.TBPartitionOption.PartitionMethodName.val)
+	}
+	buf.WriteString("(")
+	prefix := ""
+	for _, n := range option.TBPartitionOption.ColList {
+		buf.astPrintf(node, "%s%v", prefix, n)
+		prefix = ", "
+	}
+	buf.WriteString(")")
+	if !option.TBPartitionOption.PartitionMethodType.IsEmpty() {
+		buf.astPrintf(node, " USING %s", option.TBPartitionOption.PartitionMethodType.val)
+	}
+	buf.WriteString(" TableCount ")
+	option.Value.formatFast(buf)
+}
+
+func (node TableOptions) formatDBPartition(buf *TrackedBuffer, option *TableOption) {
+	if !option.DBPartitionOption.PartitionMethodName.IsEmpty() {
+		buf.astPrintf(node, " BY %s", option.DBPartitionOption.PartitionMethodName.val)
+	}
+	buf.WriteString("(")
+	prefix := ""
+	for _, n := range option.DBPartitionOption.ColList {
+		buf.astPrintf(node, "%s%v", prefix, n)
+		prefix = ", "
+	}
+	buf.WriteString(")")
+	if !option.DBPartitionOption.PartitionMethodType.IsEmpty() {
+		buf.astPrintf(node, " USING %s", option.DBPartitionOption.PartitionMethodType.val)
 	}
 }
 

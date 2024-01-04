@@ -18,7 +18,7 @@ package topotools
 
 import (
 	"reflect"
-
+	"strings"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 
@@ -375,6 +375,50 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 
 		table.AutoIncrement = nil
 
+		return ks, nil
+	case sqlparser.AddColSingleDDLAction:
+		name := alterVschema.Table.Name.String()
+		table := ks.Tables[name]
+		if table == nil {
+			table = &vschemapb.Table{
+				ColumnVindexes: make([]*vschemapb.ColumnVindex, 0, 4),
+			}
+		}
+
+		if len(table.Pinned) != 0 {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema already contains pinned table %s in keyspace %s", name, ksName)
+		}
+
+		if len(table.ColumnVindexes) > 0 {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema already contains shard table %s in keyspace %s", name, ksName)
+		}
+		if strings.HasPrefix(alterVschema.Value, "'") {
+			alterVschema.Value = alterVschema.Value[1 : len(alterVschema.Value)-1]
+		}
+		table.Pinned = alterVschema.Value
+		ks.Tables[name] = table
+		return ks, nil
+	case sqlparser.DropColSingleDDLAction:
+		name := alterVschema.Table.Name.String()
+		table := ks.Tables[name]
+		if table == nil {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema does not contain table %s in keyspace %s", name, ksName)
+		}
+		if len(table.ColumnVindexes) > 0 {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema already contains shard table %s in keyspace %s", name, ksName)
+		}
+
+		if len(table.Pinned) == 0 {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema does not contains pinned table %s in keyspace %s", name, ksName)
+		}
+		if strings.HasPrefix(alterVschema.Value, "'") {
+			alterVschema.Value = alterVschema.Value[1 : len(alterVschema.Value)-1]
+		}
+
+		if !strings.EqualFold(table.Pinned, alterVschema.Value) {
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema contains a different pinned table %s in keyspace %s", name, ksName)
+		}
+		delete(ks.Tables, name)
 		return ks, nil
 	}
 

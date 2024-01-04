@@ -728,11 +728,15 @@ func buildVschemaRow(keySpaceName string, tableName string, vs *vschemapb.SrvVSc
 		splitTable = schemaKs.SplittableTables[tableName]
 		if splitTable != nil {
 			tableType = "SPLIT_TABLE"
-		} else {
+		} else if len(tbl.Pinned) == 0 {
 			tableType = "SHARD_TABLE"
 		}
 	}
 
+	if len(tbl.Pinned) > 0 {
+		rows = append(rows, buildVarCharRow(tableName, tableType, tbl.Pinned, "", "", "", "", ""))
+		return rows, nil
+	}
 	for _, colVindex := range tbl.ColumnVindexes {
 		_, ok := schemaKs.Vindexes[colVindex.GetName()]
 		columns := colVindex.GetColumns()

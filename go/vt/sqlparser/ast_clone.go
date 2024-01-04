@@ -2467,6 +2467,8 @@ func CloneRefOfPartitionOption(n *PartitionOption) *PartitionOption {
 	out.ColList = CloneColumns(n.ColList)
 	out.Expr = CloneExpr(n.Expr)
 	out.SubPartition = CloneRefOfSubPartition(n.SubPartition)
+	out.PartitionMethodName = CloneIdentifierCI(n.PartitionMethodName)
+	out.PartitionMethodType = CloneIdentifierCI(n.PartitionMethodType)
 	out.Definitions = CloneSliceOfRefOfPartitionDefinition(n.Definitions)
 	return &out
 }
@@ -4625,6 +4627,9 @@ func CloneRefOfTableOption(n *TableOption) *TableOption {
 	out := *n
 	out.Value = CloneRefOfLiteral(n.Value)
 	out.Tables = CloneTableNames(n.Tables)
+	out.DBPartitionOption = CloneRefOfPartitionOption(n.DBPartitionOption)
+	out.TBPartitionOption = CloneRefOfPartitionOption(n.TBPartitionOption)
+	out.DistributionPrimaryKeyOption = CloneRefOfDistributionPrimaryKeyOption(n.DistributionPrimaryKeyOption)
 	return &out
 }
 
@@ -4740,6 +4745,17 @@ func CloneRefOfRenameTablePair(n *RenameTablePair) *RenameTablePair {
 	out := *n
 	out.FromTable = CloneTableName(n.FromTable)
 	out.ToTable = CloneTableName(n.ToTable)
+	return &out
+}
+
+// CloneRefOfDistributionPrimaryKeyOption creates a deep clone of the input.
+func CloneRefOfDistributionPrimaryKeyOption(n *DistributionPrimaryKeyOption) *DistributionPrimaryKeyOption {
+	if n == nil {
+		return nil
+	}
+	out := *n
+	out.TableName = CloneTableName(n.TableName)
+	out.ColList = CloneColumns(n.ColList)
 	return &out
 }
 

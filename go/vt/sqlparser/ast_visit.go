@@ -3101,6 +3101,12 @@ func VisitRefOfPartitionOption(in *PartitionOption, f Visit) error {
 	if err := VisitRefOfSubPartition(in.SubPartition, f); err != nil {
 		return err
 	}
+	if err := VisitIdentifierCI(in.PartitionMethodName, f); err != nil {
+		return err
+	}
+	if err := VisitIdentifierCI(in.PartitionMethodType, f); err != nil {
+		return err
+	}
 	for _, el := range in.Definitions {
 		if err := VisitRefOfPartitionDefinition(el, f); err != nil {
 			return err

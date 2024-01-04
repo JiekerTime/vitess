@@ -157,6 +157,9 @@
 				}
 			]
 		},
+		"single_table": {
+			"pinned": "00"
+		},
 		"user2": {
 			"column_vindexes": [
 				{

@@ -245,5 +245,44 @@
         "main.a"
       ]
     }
+  },
+  {
+    "comment": "Add Single",
+    "query": "alter vschema on a add single '00'",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter vschema on a add single '00'",
+      "Instructions": {
+        "OperatorType": "AlterVSchema",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "query": "alter vschema on a add single '00'"
+      },
+      "TablesUsed": [
+        "main.a"
+      ]
+    }
+  },
+  {
+    "comment": "Drop Single",
+    "query": "alter vschema on a drop single '00'",
+    "plan": {
+      "QueryType": "DDL",
+      "Original": "alter vschema on a drop single '00'",
+      "Instructions": {
+        "OperatorType": "AlterVSchema",
+        "Keyspace": {
+          "Name": "main",
+          "Sharded": false
+        },
+        "query": "alter vschema on a drop single '00'"
+      },
+      "TablesUsed": [
+        "main.a"
+      ]
+    }
   }
+
 ]

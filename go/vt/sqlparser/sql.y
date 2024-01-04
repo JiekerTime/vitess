@@ -94,6 +94,7 @@ func markBindVariable(yylex yyLexer, bvar string) {
   indexOption   *IndexOption
   indexColumn   *IndexColumn
   partDef       *PartitionDefinition
+  distributionPrimaryKeyOption *DistributionPrimaryKeyOption
   partSpec      *PartitionSpec
   showFilter    *ShowFilter
   optLike       *OptLike
@@ -278,6 +279,8 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %left <str> '^'
 %right <str> '~' UNARY
 %left <str> COLLATE
+%left <str> DBPARTITION
+%left <str> TBPARTITION
 %right <str> BINARY UNDERSCORE_ARMSCII8 UNDERSCORE_ASCII UNDERSCORE_BIG5 UNDERSCORE_BINARY UNDERSCORE_CP1250 UNDERSCORE_CP1251
 %right <str> UNDERSCORE_CP1256 UNDERSCORE_CP1257 UNDERSCORE_CP850 UNDERSCORE_CP852 UNDERSCORE_CP866 UNDERSCORE_CP932
 %right <str> UNDERSCORE_DEC8 UNDERSCORE_EUCJPMS UNDERSCORE_EUCKR UNDERSCORE_GB18030 UNDERSCORE_GB2312 UNDERSCORE_GBK UNDERSCORE_GEOSTD8
@@ -296,8 +299,8 @@ func markBindVariable(yylex yyLexer, bvar string) {
 // DDL Tokens
 %token <str> CREATE ALTER DROP RENAME ANALYZE ADD FLUSH CHANGE MODIFY DEALLOCATE
 %token <str> REVERT QUERIES
-%token <str> SCHEMA TABLE INDEX VIEW TO IGNORE IF PRIMARY COLUMN SPATIAL FULLTEXT KEY_BLOCK_SIZE CHECK INDEXES
-%token <str> ACTION CASCADE CONSTRAINT FOREIGN NO REFERENCES RESTRICT
+%token <str> SCHEMA TABLE INDEX VIEW TO IGNORE IF PRIMARY COLUMN SPATIAL FULLTEXT KEY_BLOCK_SIZE CHECK INDEXES DISTRIBUTION BROADCAST SINGLE
+%token <str> ACTION CASCADE CONSTRAINT FOREIGN NO REFERENCES RESTRICT WITHSCHEMA
 %token <str> SHOW DESCRIBE EXPLAIN DATE ESCAPE REPAIR OPTIMIZE TRUNCATE COALESCE EXCHANGE REBUILD PARTITIONING REMOVE PREPARE EXECUTE
 %token <str> MAXVALUE PARTITION REORGANIZE LESS THAN PROCEDURE TRIGGER
 %token <str> VINDEX VINDEXES DIRECTORY NAME UPGRADE TINDEX
@@ -449,7 +452,8 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %type <namedWindows> named_windows_list named_windows_list_opt
 %type <insertAction> insert_or_replace
 %type <str> explain_synonyms
-%type <partitionOption> partitions_options_opt partitions_options_beginning
+%type <partitionOption> partitions_options_opt partitions_options_beginning dbpartion_optition
+%type <distributionPrimaryKeyOption> distribution_primary_key_option
 %type <partitionDefinitionOptions> partition_definition_attribute_list_opt
 %type <subPartition> subpartition_opt
 %type <subPartitionDefinition> subpartition_definition
@@ -458,7 +462,7 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %type <intervalType> interval timestampadd_interval
 %type <str> cache_opt separator_opt flush_option for_channel_opt maxvalue
 %type <matchExprOption> match_option
-%type <boolean> distinct_opt union_op replace_opt local_opt
+%type <boolean> distinct_opt union_op replace_opt local_opt with_schema_opt
 %type <selectExprs> select_expression_list select_expression_list_opt
 %type <selectExpr> select_expression
 %type <strs> select_options flush_option_list
@@ -574,7 +578,7 @@ func markBindVariable(yylex yyLexer, bvar string) {
 %type <vindexParams> vindex_param_list vindex_params_opt
 %type <jsonObjectParam> json_object_param
 %type <jsonObjectParams> json_object_param_list json_object_param_opt
-%type <identifierCI> ci_identifier ci_identifier_opt vindex_type vindex_type_opt
+%type <identifierCI> ci_identifier ci_identifier_opt vindex_type vindex_type_opt vindex_name
 %type <str> database_or_schema column_opt insert_method_options row_format_options
 %type <referenceAction> fk_reference_action fk_on_delete fk_on_update
 %type <matchAction> fk_match fk_match_opt fk_match_action
@@ -1179,6 +1183,13 @@ vindex_type_opt:
   {
     $$ = $2
   }
+
+vindex_name:
+  sql_id
+  {
+    $$ = $1
+  }
+
 
 vindex_type:
   sql_id
@@ -2663,6 +2674,15 @@ restrict_or_cascade_opt:
     $$ = string($1)
   }
 
+with_schema_opt:
+ {
+    $$ = false
+  }
+| WITHSCHEMA
+  {
+    $$ = true
+  }
+
 enforced:
   ENFORCED
   {
@@ -2840,6 +2860,27 @@ table_option:
   {
     $$ = &TableOption{Name:string($1), Tables: $4}
   }
+| DBPARTITION BY  dbpartion_optition
+  {
+    $$ = &TableOption{Name: string($1), DBPartitionOption: $3}
+  }
+| TBPARTITION BY  dbpartion_optition TableCount INTEGRAL
+  {
+    $$ = &TableOption{Name: string($1), TBPartitionOption: $3, Value:NewIntLiteral($5)}
+  }
+| DISTRIBUTION PRIMARY KEY distribution_primary_key_option
+  {
+    $$ = &TableOption{Name: string($1), DistributionPrimaryKeyOption: $4}
+  }
+| BROADCAST
+  {
+    $$ = &TableOption{Name: string($1)}
+  }
+| SINGLE STRING
+  {
+    $$ = &TableOption{Name: string($1), String: encodeSQLString($2)}
+  }
+
 
 storage_opt:
   {
@@ -3327,6 +3368,36 @@ alter_statement:
         Table: $5,
     }
   }
+| ALTER comment_opt VSCHEMA ON table_name ADD SINGLE STRING
+  {
+    $$ = &AlterVschema{
+        Action: AddColSingleDDLAction,
+        Table: $5,
+        Value: encodeSQLString($8),
+    }
+  }
+| ALTER comment_opt VSCHEMA ON table_name DROP SINGLE STRING
+  {
+    $$ = &AlterVschema{
+        Action: DropColSingleDDLAction,
+        Table: $5,
+        Value: encodeSQLString($8),
+    }
+  }
+| ALTER comment_opt VSCHEMA ON table_name ADD BROADCAST
+  {
+    $$ = &AlterVschema{
+        Action: AddColBroadcastDDLAction,
+        Table: $5,
+    }
+  }
+| ALTER comment_opt VSCHEMA ON table_name DROP BROADCAST
+  {
+    $$ = &AlterVschema{
+        Action: DropColBroadcastDDLAction,
+        Table: $5,
+    }
+  }
 | ALTER comment_opt VITESS_MIGRATION STRING RETRY
   {
     $$ = &AlterMigration{
@@ -3463,6 +3534,27 @@ partitions_options_beginning:
         ColList: $4,
     }
   }
+
+
+distribution_primary_key_option:
+  table_name  '(' column_list ')'
+    {
+         $$ = &DistributionPrimaryKeyOption {
+             TableName: $1,
+             ColList: $3,
+         }
+       }
+
+dbpartion_optition:
+  vindex_name  '(' column_list ')' vindex_type_opt
+    {
+      $$ = &PartitionOption {
+          PartitionMethodName: $1,
+          ColList: $3,
+          PartitionMethodType: $5,
+      }
+    }
+
 
 subpartition_opt:
   {
@@ -3984,9 +4076,9 @@ rename_list:
   }
 
 drop_statement:
-  DROP comment_opt temp_opt TABLE exists_opt table_name_list restrict_or_cascade_opt
+  DROP comment_opt temp_opt TABLE exists_opt table_name_list restrict_or_cascade_opt with_schema_opt
   {
-    $$ = &DropTable{FromTables: $6, IfExists: $5, Comments: Comments($2).Parsed(), Temp: $3}
+    $$ = &DropTable{FromTables: $6, IfExists: $5, Comments: Comments($2).Parsed(), Temp: $3, DropSchema: $8}
   }
 | DROP comment_opt INDEX ci_identifier ON table_name algorithm_lock_opt
   {
@@ -8135,6 +8227,7 @@ reserved_keyword:
 | DESCRIBE
 | DISTINCT
 | DISTINCTROW
+| DBPARTITION
 | DIV
 | DROP
 | ELSE
@@ -8228,6 +8321,7 @@ reserved_keyword:
 | SYSDATE
 | SYSTEM
 | TABLE
+| TBPARTITION
 | THEN
 | TO
 | TRAILING
@@ -8702,6 +8796,7 @@ non_reserved_keyword:
 | WARNINGS
 | WEEK %prec FUNCTION_CALL_NON_KEYWORD
 | WITHOUT
+| WITHSCHEMA
 | WORK
 | YEAR
 | ZEROFILL

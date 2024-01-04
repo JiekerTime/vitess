@@ -453,6 +453,8 @@ type (
 		AutoIncSpec *AutoIncSpec
 		// split table count
 		TableCount int
+		// single table used now (pinned)
+		Value string
 	}
 
 	// ShowMigrationLogs represents a SHOW VITESS_MIGRATION '<uuid>' LOGS statement
@@ -504,8 +506,9 @@ type (
 		Temp       bool
 		FromTables TableNames
 		// The following fields are set if a DDL was fully analyzed.
-		IfExists bool
-		Comments *ParsedComments
+		IfExists   bool
+		Comments   *ParsedComments
+		DropSchema bool
 	}
 
 	// DropView represents a DROP VIEW statement.
@@ -1762,14 +1765,21 @@ type PartitionByType int8
 
 // PartitionOption describes partitioning control (for create table statements)
 type PartitionOption struct {
-	Type         PartitionByType
-	IsLinear     bool
-	KeyAlgorithm int
-	ColList      Columns
-	Expr         Expr
-	Partitions   int
-	SubPartition *SubPartition
-	Definitions  []*PartitionDefinition
+	Type                PartitionByType
+	IsLinear            bool
+	KeyAlgorithm        int
+	ColList             Columns
+	Expr                Expr
+	Partitions          int
+	SubPartition        *SubPartition
+	PartitionMethodName IdentifierCI
+	PartitionMethodType IdentifierCI
+	Definitions         []*PartitionDefinition
+}
+
+type DistributionPrimaryKeyOption struct {
+	TableName TableName
+	ColList   Columns
 }
 
 // SubPartition describes subpartitions control

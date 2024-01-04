@@ -895,4 +895,26 @@ func TestAppendAstFormat(t *testing.T) {
 	if got != want {
 		t.Errorf("Append: %s, want %s", got, want)
 	}
+
+	query = "alter vschema on a add single '00'"
+	src, _ = Parse(query)
+	buf4 := NewTrackedBuffer(nil)
+	buf4.SetEscapeNoIdentifier()
+	src.Format(buf4)
+	got = buf4.String()
+	want = query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
+
+	query = "alter vschema on a drop single '00'"
+	src, _ = Parse(query)
+	buf5 := NewTrackedBuffer(nil)
+	buf5.SetEscapeNoIdentifier()
+	src.Format(buf5)
+	got = buf5.String()
+	want = query
+	if got != want {
+		t.Errorf("Append: %s, want %s", got, want)
+	}
 }

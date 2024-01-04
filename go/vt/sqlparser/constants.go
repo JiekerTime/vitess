@@ -72,6 +72,8 @@ const (
 	AddColTindexStr     = "on table add tindex"
 	DropTindexStr       = "drop tindex"
 	DropColTindexStr    = "on table drop tindex"
+	AddColSingleStr     = "on table add single"
+	DropColSingleStr    = "on table drop single"
 
 	// ALTER TABLE ALGORITHM string.
 	DefaultStr = "default"
@@ -503,6 +505,10 @@ const (
 	AddColTindexDDLAction
 	DropTindexDDLAction
 	DropColTindexDDLAction
+	AddColSingleDDLAction
+	DropColSingleDDLAction
+	AddColBroadcastDDLAction
+	DropColBroadcastDDLAction
 )
 
 // Constants for scope of variables

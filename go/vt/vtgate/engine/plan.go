@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"sync/atomic"
 	"time"
-
 	"vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 )
@@ -39,12 +38,14 @@ type Plan struct {
 	Warnings     []*query.QueryWarning   // Warnings that need to be yielded every time this query runs
 	TablesUsed   []string                // TablesUsed is the list of tables that this plan will query
 
-	ExecCount    uint64 // Count of times this plan was executed
-	ExecTime     uint64 // Total execution time
-	ShardQueries uint64 // Total number of shard queries
-	RowsReturned uint64 // Total number of rows
-	RowsAffected uint64 // Total number of rows
-	Errors       uint64 // Total number of errors
+	ExecCount         uint64 // Count of times this plan was executed
+	ExecTime          uint64 // Total execution time
+	ShardQueries      uint64 // Total number of shard queries
+	RowsReturned      uint64 // Total number of rows
+	RowsAffected      uint64 // Total number of rows
+	Errors            uint64 // Total number of errors
+	AlterVschemaArray []*sqlparser.AlterVschema
+	KSName            string
 }
 
 // AddStats updates the plan execution statistics

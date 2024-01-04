@@ -3,7 +3,6 @@ package planbuilder
 import (
 	"context"
 	"fmt"
-
 	"vitess.io/vitess/go/vt/key"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	"vitess.io/vitess/go/vt/sqlparser"
@@ -183,6 +182,50 @@ func buildDDLPlans(ctx context.Context, sql string, ddlStatement sqlparser.DDLSt
 			DDL:               ddlStatement,
 			SQL:               query,
 		}, nil
+
+}
+
+func GetKeySpaceFromStatement(ctx context.Context, sql string, ddlStatement sqlparser.DDLStatement, reservedVars *sqlparser.ReservedVars, vschema plancontext.VSchema, enableOnlineDDL, enableDirectDDL bool) (*vindexes.Keyspace, key.Destination, error) {
+	var destination key.Destination
+	var keyspace *vindexes.Keyspace
+	var err error
+
+	switch ddl := ddlStatement.(type) {
+	case *sqlparser.AlterTable, *sqlparser.CreateTable, *sqlparser.TruncateTable:
+		// For ALTER TABLE and TRUNCATE TABLE, the table must already exist
+		//
+		// For CREATE TABLE, the table may (in the case of --declarative)
+		// already exist.
+		//
+		// We should find the target of the query from this tables location.
+		destination, keyspace, err = findTableDestinationAndKeyspace(vschema, ddlStatement)
+		if err != nil {
+			return nil, nil, err
+		}
+		err = checkFKError(vschema, ddlStatement, keyspace)
+	case *sqlparser.CreateView:
+		destination, keyspace, err = buildCreateView(ctx, vschema, ddl, reservedVars, enableOnlineDDL, enableDirectDDL)
+	case *sqlparser.AlterView:
+		destination, keyspace, err = buildAlterView(ctx, vschema, ddl, reservedVars, enableOnlineDDL, enableDirectDDL)
+	case *sqlparser.DropView:
+		destination, keyspace, err = buildDropView(vschema, ddlStatement)
+	case *sqlparser.DropTable:
+		destination, keyspace, err = buildDropTable(vschema, ddlStatement)
+	case *sqlparser.RenameTable:
+		destination, keyspace, err = buildRenameTable(vschema, ddl)
+	default:
+		return nil, nil, vterrors.VT13001(fmt.Sprintf("unexpected DDL statement type: %T", ddlStatement))
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if destination == nil {
+		destination = key.DestinationAllShards{}
+	}
+
+	return keyspace, destination, nil
 
 }
 

@@ -6543,6 +6543,16 @@ func (a *application) rewriteRefOfPartitionOption(parent SQLNode, node *Partitio
 	}) {
 		return false
 	}
+	if !a.rewriteIdentifierCI(node, node.PartitionMethodName, func(newNode, parent SQLNode) {
+		parent.(*PartitionOption).PartitionMethodName = newNode.(IdentifierCI)
+	}) {
+		return false
+	}
+	if !a.rewriteIdentifierCI(node, node.PartitionMethodType, func(newNode, parent SQLNode) {
+		parent.(*PartitionOption).PartitionMethodType = newNode.(IdentifierCI)
+	}) {
+		return false
+	}
 	for x, el := range node.Definitions {
 		if !a.rewriteRefOfPartitionDefinition(node, el, func(idx int) replacerFunc {
 			return func(newNode, parent SQLNode) {
