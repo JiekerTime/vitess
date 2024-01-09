@@ -1310,6 +1310,9 @@ func generateDistSqlSchemaFromVschema(ctx context.Context, vSchema *vindexes.VSc
 	keyspaceSchema := vSchema.Keyspaces[ksName]
 	tableName := ddlStatement.GetFromTables()[0]
 	table := ks.Tables[tableName.Name.String()]
+	if table == nil {
+		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema does not contain table %s in keyspace %s", tableName.Name.String(), ksName)
+	}
 
 	if table.AutoIncrement != nil {
 		//just ignore AutoIncrement

@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 )

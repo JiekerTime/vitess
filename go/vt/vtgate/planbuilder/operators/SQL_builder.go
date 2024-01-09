@@ -199,6 +199,7 @@ func (qb *queryBuilder) unionWith(other *queryBuilder, distinct bool) {
 		Right:    other.asSelectStatement(),
 		Distinct: distinct,
 	}
+	qb.tableNames = append(qb.tableNames, other.tableNames...)
 }
 
 func (qb *queryBuilder) joinInnerWith(other *queryBuilder, onCondition sqlparser.Expr) {
