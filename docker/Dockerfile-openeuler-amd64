@@ -47,28 +47,56 @@ RUN umask ${DEFAULT_UMASK} \
  xinetd nc chrony libconfig lldpad lldpad-devel gcc-c++ cloud-utils-growpart gdisk libtool-ltdl aide jq at bridge-utils quota vconfig libcgroup man-pages \
  lrzsz expect make bison gcc bc libaio libaio-devel zlib zlib-devel ncurses-devel sysstat dos2unix libarchive libev numactl numactl-devel libconfuse apr \
  tmpwatch cmake readline-devel perl-Data-Dumper openssl rhash rhash-devel libuv libuv-devel cmake-filesystem jsoncpp jsoncpp-devel cmake-rpm-macros \
- emacs-filesystem cmake-data libstdc++-devel gcc-c++ libaio-devel rpcgen openssl-devel libtirpc-devel systemd-sysv
+ emacs-filesystem cmake-data libstdc++-devel gcc-c++ libaio-devel rpcgen openssl-devel libtirpc-devel systemd-sysv m4
 
 # mysql downloads
 RUN umask ${DEFAULT_UMASK} \
     && cd /root && wget ${MYSQL_URL} \
-    && tar xzvf mysql-boost-${MYSQL_VERSION}.tar.gz && rm -rf mysql-boost-${MYSQL_VERSION}.tar.gz
+    && tar xzvf mysql-boost-${MYSQL_VERSION}.tar.gz && rm -rf mysql-boost-${MYSQL_VERSION}.tar.gz \
+    && if [ "${MYSQL_VERSION:0:2}" = "8." ]; \
+    then cd /root && wget https://cmake.org/files/v3.9/cmake-3.9.2.tar.gz &&\
+      tar -xvf cmake-3.9.2.tar.gz && \
+      rm -rf  cmake-3.9.2.tar.gz && \
+      cd cmake-3.9.2 && \
+      ./configure && \
+      make -j4 && make install  && \
+      rm -rf cmake-3.9.2 ; \
+    fi
 
 # make & build
 RUN umask ${DEFAULT_UMASK} \
     && cd /root/mysql-${MYSQL_VERSION} && mkdir build && cd build \
-    && cmake .. -DCMAKE_INSTALL_PREFIX=${MYSQL_HOME} \
+    && if [ "${MYSQL_VERSION:0:2}" = "5." ]; \
+    then cmake .. -DCMAKE_INSTALL_PREFIX=${MYSQL_HOME} \
     -DINSTALL_BINDIR=${MYSQL_HOME}/bin \
     -DINSTALL_SBINDIR=${MYSQL_HOME}/bin \
     -DMYSQL_DATADIR=/export/data/mysql/data \
     -DSYSCONFDIR=/export/server/mysql/etc \
-    -DMYSQL_UNIX_ADDR=/export/data/mysql/tmp/mysql.sock \
-    -DMYSQLX_UNIX_ADDR=/var/run/mysqld/mysqlx.sock \
+    -DMYSQL_UNIX_ADDR=/export/data/mysql/tmp/mysql.socket \
     -DDEFAULT_CHARSET=utf8mb4 \
     -DDEFAULT_COLLATION=utf8mb4_general_ci \
     -DINSTALL_MYSQLTESTDIR= \
     -DENABLED_LOCAL_INFILE=ON -DENABLED_PROFILING=ON -DWITH_DEBUG=0 -DMYSQL_TCP_PORT=3358 \
-    -DWITH_BOOST=../boost/boost_1_59_0/ \
+    -DWITH_BOOST=../boost/boost_1_59_0/; \
+    elif [ "${MYSQL_VERSION:0:2}" = "8." ]; \
+    then /usr/local/bin/cmake .. -DCMAKE_INSTALL_PREFIX=${MYSQL_HOME} \
+    -DINSTALL_BINDIR=${MYSQL_HOME}/bin \
+    -DINSTALL_SBINDIR=${MYSQL_HOME}/bin \
+    -DMYSQL_DATADIR=/export/data/mysql/data \
+    -DSYSCONFDIR=/export/server/mysql/etc \
+    -DMYSQL_UNIX_ADDR=/export/data/mysql/tmp/mysql.socket \
+    -DEXTRA_CHARSETS=all \
+    -DDEFAULT_CHARSET=utf8mb4 \
+    -DDEFAULT_COLLATION=utf8mb4_general_ci \
+    -DWITH_MYISAM_STORAGE_ENGINE=1 \
+    -DWITH_INNOBASE_STORAGE_ENGINE=1 \
+    -DWITH_MEMORY_STORAGE_ENGINE=1 \
+    -DWITH_READLINE=1 \
+    -DENABLED_LOCAL_INFILE=1 \
+    -DWITH_PARTITION_STORAGE_ENGINE=1 \
+    -DWITH_DEBUG=0 -DMYSQL_TCP_PORT=3358 \
+    -DWITH_BOOST=../boost/boost_1_77_0/; \
+    fi \
     && make -j8 && make install \
     && cd /root && rm -rf mysql-${MYSQL_VERSION}
 

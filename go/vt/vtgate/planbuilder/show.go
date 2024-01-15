@@ -84,7 +84,7 @@ func buildShowBasicPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) 
 	case sqlparser.Charset:
 		return buildCharsetPlan(show)
 	case sqlparser.Collation, sqlparser.Function, sqlparser.Privilege, sqlparser.Procedure:
-		return buildSendAnywherePlan(show, vschema)
+		return buildPlanWithDB(show, vschema)
 	case sqlparser.VariableGlobal, sqlparser.VariableSession:
 		return buildVariablePlan(show, vschema)
 	case sqlparser.Column, sqlparser.Index:
@@ -94,7 +94,7 @@ func buildShowBasicPlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) 
 	case sqlparser.OpenTable, sqlparser.TableStatus, sqlparser.Table, sqlparser.Trigger:
 		return buildPlanWithDB(show, vschema)
 	case sqlparser.StatusGlobal, sqlparser.StatusSession:
-		return buildSendAnywherePlan(show, vschema)
+		return buildPlanWithDB(show, vschema)
 	case sqlparser.VitessMigrations:
 		return buildShowVitessMigrationsPlan(show, vschema)
 	case sqlparser.VGtidExecGlobal:
@@ -155,7 +155,8 @@ func buildSendAnywherePlan(show *sqlparser.ShowBasic, vschema plancontext.VSchem
 }
 
 func buildVariablePlan(show *sqlparser.ShowBasic, vschema plancontext.VSchema) (engine.Primitive, error) {
-	plan, err := buildSendAnywherePlan(show, vschema)
+	//plan, err := buildSendAnywherePlan(show, vschema)
+	plan, err := buildPlanWithDB(show, vschema)
 	if err != nil {
 		return nil, err
 	}

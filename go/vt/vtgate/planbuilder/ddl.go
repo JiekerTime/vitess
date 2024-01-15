@@ -3,6 +3,7 @@ package planbuilder
 import (
 	"context"
 	"fmt"
+
 	"vitess.io/vitess/go/vt/key"
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	"vitess.io/vitess/go/vt/sqlparser"

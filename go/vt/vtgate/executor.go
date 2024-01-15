@@ -28,6 +28,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
 	vschemapb "vitess.io/vitess/go/vt/proto/vschema"
 	"vitess.io/vitess/go/vt/topotools"
 
@@ -803,7 +804,19 @@ func (e *Executor) showShards(ctx context.Context, filter *sqlparser.ShowFilter,
 
 	keyspaceFilters, shardFilters := showVitessShardsFilters(filter)
 
-	keyspaces, err := e.resolver.resolver.GetAllKeyspaces(ctx)
+	//keyspaces, err := e.resolver.resolver.GetAllKeyspaces(ctx)
+	var keyspaces []string
+	var err error
+	user := callerid.GetPrincipal(callerid.EffectiveCallerIDFromContext(ctx))
+	if user != "" {
+		keyspaces, err = e.authServer.GetKeyspace(user)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(keyspaces) == 1 && keyspaces[0] == "*" {
+		keyspaces, err = e.resolver.resolver.GetAllKeyspaces(ctx)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -852,7 +865,7 @@ func (e *Executor) showShards(ctx context.Context, filter *sqlparser.ShowFilter,
 	}, nil
 }
 
-func (e *Executor) showTablets(filter *sqlparser.ShowFilter) (*sqltypes.Result, error) {
+func (e *Executor) showTablets(ctx context.Context, filter *sqlparser.ShowFilter) (*sqltypes.Result, error) {
 	getTabletFilters := func(filter *sqlparser.ShowFilter) []tabletFilter {
 		var filters []tabletFilter
 
@@ -880,9 +893,35 @@ func (e *Executor) showTablets(filter *sqlparser.ShowFilter) (*sqltypes.Result, 
 
 	tabletFilters := getTabletFilters(filter)
 
+	var keyspaces []string
+	var err error
+	user := callerid.GetPrincipal(callerid.EffectiveCallerIDFromContext(ctx))
+	if user != "" {
+		keyspaces, err = e.authServer.GetKeyspace(user)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(keyspaces) == 1 && keyspaces[0] == "*" {
+		keyspaces, err = e.resolver.resolver.GetAllKeyspaces(ctx)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	rows := [][]sqltypes.Value{}
 	status := e.scatterConn.GetHealthCheckCacheStatus()
 	for _, s := range status {
+		exist := false
+		for _, ks := range keyspaces {
+			if s.Target.Keyspace == ks {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			continue
+		}
 		for _, ts := range s.TabletsStats {
 			state := "SERVING"
 			if !ts.Serving {
@@ -1177,7 +1216,6 @@ func (e *Executor) buildStatement(
 			plan.KSName = applySchemaChangeAfterExec.KSName
 			plan.AlterVschemaArray = applySchemaChangeAfterExec.AlterSchemaArray
 		}
-		break
 	default:
 		plan, err = planbuilder.BuildFromStmt(ctx, query, stmt, reservedVars, vcursor, bindVarNeeds, enableOnlineDDL, enableDirectDDL)
 	}
@@ -1314,9 +1352,9 @@ func generateDistSqlSchemaFromVschema(ctx context.Context, vSchema *vindexes.VSc
 		return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "vschema does not contain table %s in keyspace %s", tableName.Name.String(), ksName)
 	}
 
-	if table.AutoIncrement != nil {
-		//just ignore AutoIncrement
-	}
+	//if table.AutoIncrement != nil {
+	//	//just ignore AutoIncrement
+	//}
 
 	// single table
 	if len(table.Pinned) > 0 {

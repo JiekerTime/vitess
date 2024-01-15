@@ -38,25 +38,7 @@
   {
     "comment": "show variables",
     "query": "show variables",
-    "plan": {
-      "QueryType": "SHOW",
-      "Original": "show variables",
-      "Instructions": {
-        "OperatorType": "ReplaceVariables",
-        "Inputs": [
-          {
-            "OperatorType": "Send",
-            "Keyspace": {
-              "Name": "main",
-              "Sharded": false
-            },
-            "TargetDestination": "AnyShard()",
-            "Query": "show variables",
-            "SingleShardOnly": true
-          }
-        ]
-      }
-    }
+    "plan": "VT03007: keyspace not specified"
   },
   {
     "comment": "show full columns from system schema",
@@ -97,19 +79,6 @@
   {
     "comment": "show global status",
     "query": "show global status",
-    "plan": {
-      "QueryType": "SHOW",
-      "Original": "show global status",
-      "Instructions": {
-        "OperatorType": "Send",
-        "Keyspace": {
-          "Name": "main",
-          "Sharded": false
-        },
-        "TargetDestination": "AnyShard()",
-        "Query": "show global status",
-        "SingleShardOnly": true
-      }
-    }
+    "plan": "VT03007: keyspace not specified"
   }
 ]

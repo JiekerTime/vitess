@@ -77,7 +77,7 @@ type iExecute interface {
 
 	showVitessReplicationStatus(ctx context.Context, filter *sqlparser.ShowFilter) (*sqltypes.Result, error)
 	showShards(ctx context.Context, filter *sqlparser.ShowFilter, destTabletType topodatapb.TabletType) (*sqltypes.Result, error)
-	showTablets(filter *sqlparser.ShowFilter) (*sqltypes.Result, error)
+	showTablets(ctx context.Context, filter *sqlparser.ShowFilter) (*sqltypes.Result, error)
 	showVitessMetadata(ctx context.Context, filter *sqlparser.ShowFilter) (*sqltypes.Result, error)
 	setVitessMetadata(ctx context.Context, name, value string) error
 
@@ -1143,7 +1143,7 @@ func (vc *vcursorImpl) ShowExec(ctx context.Context, command sqlparser.ShowComma
 	case sqlparser.VitessShards:
 		return vc.executor.showShards(ctx, filter, vc.tabletType)
 	case sqlparser.VitessTablets:
-		return vc.executor.showTablets(filter)
+		return vc.executor.showTablets(ctx, filter)
 	case sqlparser.VitessVariables:
 		return vc.executor.showVitessMetadata(ctx, filter)
 	default:

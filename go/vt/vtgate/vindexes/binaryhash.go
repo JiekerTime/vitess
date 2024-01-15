@@ -23,6 +23,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"vitess.io/vitess/go/vt/vtgate/evalengine"
+
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
 )
@@ -78,7 +81,7 @@ func (vind *BinaryHash) Map(ctx context.Context, cursor VCursor, ids []sqltypes.
 			ival, err = strconv.ParseInt(str, 10, 64)
 			num = uint64(ival)
 		} else {
-			num, err = id.ToUint64()
+			num, err = evalengine.ToUint64(id)
 		}
 
 		if err != nil {
