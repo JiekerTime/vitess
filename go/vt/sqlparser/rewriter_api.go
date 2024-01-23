@@ -278,24 +278,16 @@ func AcqTokenIndex(query string, token string) []int {
 	token = FormateToken(token)
 	result := make([]int, 0)
 
-	l, r, t := -1, -1, 0
-
-	for c, s := range query {
-		if byte(s) == token[t] {
-			if l == -1 {
-				l = c
-			} else {
-				r = c
-			}
-			if r-l+1 == len(token) {
-				result = append(result, l, r)
-				t, l, r = 0, -1, -1
-			}
-			t++
+	i := 0
+	for i <= len(query)-len(token) {
+		if query[i:i+len(token)] == token {
+			result = append(result, i, i+len(token)-1)
+			i += len(token)
 		} else {
-			l, r, t = -1, -1, 0
+			i++
 		}
 	}
+
 	return result
 }
 

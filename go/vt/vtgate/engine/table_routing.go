@@ -253,7 +253,7 @@ func doGetQueries(token string, actualTables []vindexes.ActualTable, queries []s
 		indexes := sqlparser.AcqTokenIndex(query, token)
 		for ti, actualTable := range actualTables {
 			var buf strings.Builder
-			buf.Grow(len(query) + len(indexes)/2*(len(token)-len(actualTable.ActualTableName)))
+			buf.Grow(len(query) + len(indexes)/2*(len(actualTable.ActualTableName)-len(token)))
 			l := 0
 			for i := 1; i < len(indexes); i += 2 {
 				buf.WriteString(query[l:indexes[i-1]] + actualTable.ActualTableName)
