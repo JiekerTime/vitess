@@ -25,7 +25,7 @@ limitations under the License.
 // Alternatively, use a Watcher implementation which will constantly watch
 // a source (e.g. the topology) and add and remove tablets as they are
 // added or removed from the source.
-// For a Watcher example have a look at NewCellTabletsWatcher().
+// For a Watcher example have a look at NewTopologyWatcher().
 //
 // Internally, the HealthCheck module is connected to each tablet and has a
 // streaming RPC (StreamHealth) open to receive periodic health infos.
@@ -88,7 +88,7 @@ var (
 	refreshKnownTablets = true
 
 	// topoReadConcurrency tells us how many topo reads are allowed in parallel.
-	topoReadConcurrency = 32
+	topoReadConcurrency int64 = 32
 
 	// How much to sleep between each check.
 	waitAvailableTabletInterval = 100 * time.Millisecond
@@ -167,7 +167,7 @@ func registerWebUIFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&TabletURLTemplateString, "tablet_url_template", "http://{{.GetTabletHostPort}}", "Format string describing debug tablet url formatting. See getTabletDebugURL() for how to customize this.")
 	fs.DurationVar(&refreshInterval, "tablet_refresh_interval", 1*time.Minute, "Tablet refresh interval.")
 	fs.BoolVar(&refreshKnownTablets, "tablet_refresh_known_tablets", true, "Whether to reload the tablet's address/port map from topo in case they change.")
-	fs.IntVar(&topoReadConcurrency, "topo_read_concurrency", 32, "Concurrency of topo reads.")
+	fs.Int64Var(&topoReadConcurrency, "topo_read_concurrency", 32, "Concurrency of topo reads.")
 	ParseTabletURLTemplateFromFlag()
 }
 
@@ -350,7 +350,7 @@ func NewHealthCheck(ctx context.Context, retryDelay, healthCheckTimeout time.Dur
 		} else if len(KeyspacesToWatch) > 0 {
 			filter = NewFilterByKeyspace(KeyspacesToWatch)
 		}
-		topoWatchers = append(topoWatchers, NewCellTabletsWatcher(ctx, topoServer, hc, filter, c, refreshInterval, refreshKnownTablets, topoReadConcurrency))
+		topoWatchers = append(topoWatchers, NewTopologyWatcher(ctx, topoServer, hc, filter, c, refreshInterval, refreshKnownTablets, topoReadConcurrency))
 	}
 
 	hc.topoWatchers = topoWatchers
@@ -548,10 +548,10 @@ func (hc *HealthCheckImpl) updateHealth(th *TabletHealth, prevTarget *query.Targ
 		// We re-sort the healthy tablet list whenever we get a health update for tablets we can route to.
 		// Tablets from other cells for non-primary targets should not trigger a re-sort;
 		// they should also be excluded from healthy list.
-		if th.Target.TabletType != topodata.TabletType_PRIMARY && hc.isIncluded(th.Target.TabletType, th.Tablet.Alias) {
+		if th.Target.TabletType != topodata.TabletType_PRIMARY {
 			hc.recomputeHealthy(targetKey)
 		}
-		if targetChanged && prevTarget.TabletType != topodata.TabletType_PRIMARY && hc.isIncluded(th.Target.TabletType, th.Tablet.Alias) { // also recompute old target's healthy list
+		if targetChanged && prevTarget.TabletType != topodata.TabletType_PRIMARY { // also recompute old target's healthy list
 			oldTargetKey := KeyFromTarget(prevTarget)
 			hc.recomputeHealthy(oldTargetKey)
 		}
@@ -572,9 +572,7 @@ func (hc *HealthCheckImpl) recomputeHealthy(key KeyspaceShardTabletType) {
 	allArray := make([]*TabletHealth, 0, len(all))
 	for _, s := range all {
 		// Only tablets in same cell / cellAlias are included in healthy list.
-		if hc.isIncluded(s.Tablet.Type, s.Tablet.Alias) {
-			allArray = append(allArray, s)
-		}
+		allArray = append(allArray, s)
 	}
 	hc.healthy[key] = FilterStatsByReplicationLag(allArray)
 }

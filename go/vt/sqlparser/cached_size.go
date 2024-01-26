@@ -284,7 +284,7 @@ func (cached *AlterVschema) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(96)
+		size += int64(112)
 	}
 	// field Table vitess.io/vitess/go/vt/sqlparser.TableName
 	size += cached.Table.CachedSize(false)
@@ -299,6 +299,8 @@ func (cached *AlterVschema) CachedSize(alloc bool) int64 {
 	}
 	// field AutoIncSpec *vitess.io/vitess/go/vt/sqlparser.AutoIncSpec
 	size += cached.AutoIncSpec.CachedSize(true)
+	// field Value string
+	size += hack.RuntimeAllocSize(int64(len(cached.Value)))
 	return size
 }
 func (cached *Analyze) CachedSize(alloc bool) int64 {
@@ -1156,6 +1158,25 @@ func (cached *DerivedTable) CachedSize(alloc bool) int64 {
 	}
 	return size
 }
+func (cached *DistributionPrimaryKeyOption) CachedSize(alloc bool) int64 {
+	if cached == nil {
+		return int64(0)
+	}
+	size := int64(0)
+	if alloc {
+		size += int64(64)
+	}
+	// field TableName vitess.io/vitess/go/vt/sqlparser.TableName
+	size += cached.TableName.CachedSize(false)
+	// field ColList vitess.io/vitess/go/vt/sqlparser.Columns
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.ColList)) * int64(32))
+		for _, elem := range cached.ColList {
+			size += elem.CachedSize(false)
+		}
+	}
+	return size
+}
 func (cached *DropColumn) CachedSize(alloc bool) int64 {
 	if cached == nil {
 		return int64(0)
@@ -1200,7 +1221,7 @@ func (cached *DropTable) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(48)
+		size += int64(64)
 	}
 	// field FromTables vitess.io/vitess/go/vt/sqlparser.TableNames
 	{
@@ -3222,7 +3243,7 @@ func (cached *PartitionOption) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(96)
+		size += int64(160)
 	}
 	// field ColList vitess.io/vitess/go/vt/sqlparser.Columns
 	{
@@ -3237,6 +3258,10 @@ func (cached *PartitionOption) CachedSize(alloc bool) int64 {
 	}
 	// field SubPartition *vitess.io/vitess/go/vt/sqlparser.SubPartition
 	size += cached.SubPartition.CachedSize(true)
+	// field PartitionMethodName vitess.io/vitess/go/vt/sqlparser.IdentifierCI
+	size += cached.PartitionMethodName.CachedSize(false)
+	// field PartitionMethodType vitess.io/vitess/go/vt/sqlparser.IdentifierCI
+	size += cached.PartitionMethodType.CachedSize(false)
 	// field Definitions []*vitess.io/vitess/go/vt/sqlparser.PartitionDefinition
 	{
 		size += hack.RuntimeAllocSize(int64(cap(cached.Definitions)) * int64(8))
@@ -4155,7 +4180,7 @@ func (cached *TableOption) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(80)
+		size += int64(96)
 	}
 	// field Name string
 	size += hack.RuntimeAllocSize(int64(len(cached.Name)))
@@ -4170,6 +4195,12 @@ func (cached *TableOption) CachedSize(alloc bool) int64 {
 			size += elem.CachedSize(false)
 		}
 	}
+	// field DBPartitionOption *vitess.io/vitess/go/vt/sqlparser.PartitionOption
+	size += cached.DBPartitionOption.CachedSize(true)
+	// field TBPartitionOption *vitess.io/vitess/go/vt/sqlparser.PartitionOption
+	size += cached.TBPartitionOption.CachedSize(true)
+	// field DistributionPrimaryKeyOption *vitess.io/vitess/go/vt/sqlparser.DistributionPrimaryKeyOption
+	size += cached.DistributionPrimaryKeyOption.CachedSize(true)
 	return size
 }
 func (cached *TableSpec) CachedSize(alloc bool) int64 {

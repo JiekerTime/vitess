@@ -711,7 +711,7 @@ func (cached *Plan) CachedSize(alloc bool) int64 {
 	}
 	size := int64(0)
 	if alloc {
-		size += int64(144)
+		size += int64(192)
 	}
 	// field Original string
 	size += hack.RuntimeAllocSize(int64(len(cached.Original)))
@@ -735,6 +735,15 @@ func (cached *Plan) CachedSize(alloc bool) int64 {
 			size += hack.RuntimeAllocSize(int64(len(elem)))
 		}
 	}
+	// field AlterVschemaArray []*vitess.io/vitess/go/vt/sqlparser.AlterVschema
+	{
+		size += hack.RuntimeAllocSize(int64(cap(cached.AlterVschemaArray)) * int64(8))
+		for _, elem := range cached.AlterVschemaArray {
+			size += elem.CachedSize(true)
+		}
+	}
+	// field KSName string
+	size += hack.RuntimeAllocSize(int64(len(cached.KSName)))
 	return size
 }
 func (cached *Projection) CachedSize(alloc bool) int64 {

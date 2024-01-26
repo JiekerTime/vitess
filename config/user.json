@@ -24,14 +24,10 @@
     "Password": "QESVZxh8qnmQOlhHqoq9OA==",
     "UserData": "",
     "KeySpaces": [
-      {"Name":"test_keyspace"},
-      {"Name":"customer"},
-      {"Name":"commerce"}
+      {"Name":"*", "WhiteIPs": []}
     ],
     "Privilege": 1,
-    "ReadControlInfo":{
-      "CanReadMaster":true
-    }
+    "ReadRole": 2
   },
   "mysql_rw": {
     "Password": "QESVZxh8qnmQOlhHqoq9OA==",
@@ -40,17 +36,16 @@
     "KeySpaces": [
       {"Name":"*", "WhiteIPs": []}
     ],
-    "Privilege": 255,
+    "Privilege": 31,
     "ReadRole": 1
   },
   "mysql_rs": {
     "Password": "QESVZxh8qnmQOlhHqoq9OA==",
     "UserData": "",
     "KeySpaces": [
-      {"Name":"test_keyspace", "WhiteIPs": []},
-      {"Name":"customer", "WhiteIPs": []},
-      {"Name":"commerce", "WhiteIPs": []}
+      {"Name":"*", "WhiteIPs": []}
     ],
+    "Privilege": 15,
     "ReadRole": 3
   },
   "mysql_auth_test": {

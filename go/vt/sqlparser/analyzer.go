@@ -273,6 +273,100 @@ func Preview(sql string) StatementType {
 	return StmtUnknown
 }
 
+// PreviewNew analyzes the beginning of the query using a simpler and faster
+// textual comparison to identify the statement type.
+func PreviewNew(sql string) StatementType {
+	trimmed := StripLeadingComments(sql)
+
+	if strings.Index(trimmed, "/*!") == 0 {
+		return StmtComment
+	}
+
+	isNotLetter := func(r rune) bool { return !unicode.IsLetter(r) }
+	firstWord := strings.TrimLeftFunc(trimmed, isNotLetter)
+
+	if end := strings.IndexFunc(firstWord, unicode.IsSpace); end != -1 {
+		firstWord = firstWord[:end]
+	}
+	// Comparison is done in order of priority.
+	loweredFirstWord := strings.ToLower(firstWord)
+	switch loweredFirstWord {
+	case "select":
+		return StmtSelect
+	case "stream":
+		return StmtStream
+	case "vstream":
+		return StmtVStream
+	case "revert":
+		return StmtRevert
+	case "insert":
+		return StmtInsert
+	case "replace":
+		return StmtReplace
+	case "update":
+		return StmtUpdate
+	case "delete":
+		return StmtDelete
+	case "savepoint":
+		return StmtSavepoint
+	case "lock":
+		return StmtLockTables
+	case "load":
+		return StmtLoadData
+	case "unlock":
+		return StmtUnlockTables
+	}
+	// For the following statements it is not sufficient to rely
+	// on loweredFirstWord. This is because they are not statements
+	// in the grammar and we are relying on Preview to parse them.
+	// For instance, we don't want: "BEGIN JUNK" to be parsed
+	// as StmtBegin.
+	trimmedNoComments, _ := SplitMarginComments(trimmed)
+	switch strings.ToLower(trimmedNoComments) {
+	case "begin", "start transaction":
+		return StmtBegin
+	case "commit":
+		return StmtCommit
+	case "rollback":
+		return StmtRollback
+	}
+	switch loweredFirstWord {
+	case "create":
+		return StmtCreate
+	case "alter":
+		return StmtAlter
+	case "rename":
+		return StmtRename
+	case "drop":
+		return StmtDrop
+	case "truncate":
+		return StmtTruncate
+	case "flush":
+		return StmtFlush
+	case "set":
+		return StmtSet
+	case "show":
+		return StmtShow
+	case "use":
+		return StmtUse
+	case "describe", "desc", "explain":
+		return StmtExplain
+	case "repair", "optimize":
+		return StmtOther
+	case "analyze":
+		return StmtAnalyze
+	case "grant", "revoke":
+		return StmtPriv
+	case "release":
+		return StmtRelease
+	case "rollback":
+		return StmtSRollback
+	case "kill":
+		return StmtKill
+	}
+	return StmtUnknown
+}
+
 func (s StatementType) String() string {
 	switch s {
 	case StmtSelect:

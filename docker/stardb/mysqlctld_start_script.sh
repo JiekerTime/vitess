@@ -48,6 +48,7 @@ function mysqlctld_start() {
   --db_dba_user $DBA_USER \
   --init_db_sql_file /vt/config/vttablet/init_db.sql \
   --log_dir /export/data/mysql/tmp \
+  --keep_logs_by_mtime 72h \
   --mysql_port $MYSQL_PORT \
   --socket_file /export/data/mysql/mysqlctl.sock \
   --docker_run \

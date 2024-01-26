@@ -989,7 +989,7 @@ func (vh *vtgateHandler) getTabletType(accountType int8, query, user string) (st
 		tabletType = "@REPLICA"
 	}
 
-	stmtType := sqlparser.Preview(query)
+	stmtType := sqlparser.PreviewNew(query)
 
 	if isBasicPrivilege(stmtType) {
 		return tabletType, nil

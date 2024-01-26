@@ -39,6 +39,7 @@ function vtgate_start() {
     ARGS="--alsologtostderr \
     --grpc_prometheus \
     --log_dir /export/data/mysql/tmp \
+    --keep_logs_by_mtime 72h \
     --topo_implementation etcd2 \
     --topo_global_server_address http://$ETCD_SERVER \
     --topo_global_root /vt/global \
@@ -59,6 +60,7 @@ function vtgate_start() {
     ARGS="--alsologtostderr \
     --grpc_prometheus \
     --log_dir /export/data/mysql/tmp \
+    --keep_logs_by_mtime 72h \
     --topo_implementation etcd2 \
     --topo_global_server_address http://$ETCD_SERVER \
     --topo_global_root /vt/global \

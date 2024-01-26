@@ -19,6 +19,7 @@ package topotools
 import (
 	"reflect"
 	"strings"
+
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 
@@ -142,9 +143,7 @@ func ApplyVSchemaDDL(ksName string, ks *vschemapb.Keyspace, alterVschema *sqlpar
 
 		delete(ks.Tables, name)
 		// delete if exists in SplittableTables
-		if _, ok := ks.SplittableTables[name]; ok {
-			delete(ks.SplittableTables, name)
-		}
+		delete(ks.SplittableTables, name)
 
 		return ks, nil
 

@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"sync/atomic"
 	"time"
+
 	"vitess.io/vitess/go/vt/proto/query"
 	"vitess.io/vitess/go/vt/sqlparser"
 )

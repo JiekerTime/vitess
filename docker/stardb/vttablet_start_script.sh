@@ -32,6 +32,7 @@ function vttablet_start() {
   if [ "$ETCD_USER" == "" ];then
     ARGS="--alsologtostderr \
     --log_dir /export/data/mysql/tmp \
+    --keep_logs_by_mtime 72h \
     --topo_implementation etcd2 \
     --topo_global_server_address http://$ETCD_SERVER \
     --docker_run \
@@ -59,11 +60,11 @@ function vttablet_start() {
     --heartbeat_enable \
     --heartbeat_interval=1000ms \
     --enforce_strict_trans_tables=false \
-    --track_schema_versions=true \
     --watch_replication_stream=true"
   else
     ARGS="--alsologtostderr \
     --log_dir /export/data/mysql/tmp \
+    --keep_logs_by_mtime 72h \
     --topo_implementation etcd2 \
     --topo_global_server_address http://$ETCD_SERVER \
     --docker_run \
@@ -93,7 +94,6 @@ function vttablet_start() {
     --heartbeat_enable \
     --heartbeat_interval=1000ms \
     --enforce_strict_trans_tables=false \
-    --track_schema_versions=true \
     --watch_replication_stream=true"
   fi
 
