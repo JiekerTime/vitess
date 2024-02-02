@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -260,8 +261,6 @@ func (e *Executor) executeLoad(ctx context.Context, c *mysql.Conn, safeSession *
 		} else if !ks.Keyspace.Sharded && len(bindVars) == 0 {
 			return e.handleLoadDataSimple(ctx, isafeSession, dest, c, sql, bindVars, destKeyspace, destTabletType, logStats)
 		} else {
-			//return e.handleLoadDataSimple(ctx, safeSession, dest, c, sql, bindVars, destKeyspace, destTabletType, logStats)
-
 			return e.handleLoadData(ctx, isafeSession, c, sql, destKeyspace, destTabletType, logStats)
 		}
 	}
@@ -2004,7 +2003,7 @@ func (e *Executor) handleLoadDataSimple(ctx context.Context, safeSession *SafeSe
 			close(lErrs)
 			close(lines)
 		}()
-		err := loadData.LoadDataInfo.LoadDataInfileDataStream(ctx, nil, c, tb, safeSession, destTabletType, logStats, lines, false)
+		err := loadData.LoadDataInfo.LoadDataInfileDataStream(ctx, nil, c, tb, lines, false)
 		if err != nil {
 			lErrs <- err
 		}
@@ -2079,7 +2078,6 @@ func (e *Executor) handleLoadData(ctx context.Context, safeSession *SafeSession,
 		}
 	} else {
 		rss, err = e.resolver.resolver.ResolveDestination(ctx, destKeyspace, destTabletType, key.DestinationAllShards{})
-		//e.scatterConn.ExecuteMultiShard(ctx, rss)
 		if err != nil {
 			return nil, err
 		}
@@ -2089,13 +2087,8 @@ func (e *Executor) handleLoadData(ctx context.Context, safeSession *SafeSession,
 		return nil, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "keyspace %s get  shards failed", destKeyspace)
 	}
 
-	queries := make([]*querypb.BoundQuery, len(rss))
-	for i := range rss {
-		queries[i] = &querypb.BoundQuery{
-			Sql:           sql,
-			BindVariables: nil,
-		}
-	}
+	tableConfig, err := e.VSchema().FindSplitTable(destKeyspace, tbName)
+
 	vCursor, err := newVCursorImpl(safeSession, comments, e, logStats, e.vm, e.VSchema(), e.resolver.resolver, e.serv, e.warnShardedOnly, e.pv)
 	if err != nil {
 		return nil, err
@@ -2107,54 +2100,128 @@ func (e *Executor) handleLoadData(ctx context.Context, safeSession *SafeSession,
 		logStats.Error = err
 		return nil, err
 	}
-	err = e.scatterConn.txConn.Begin(ctx, safeSession, nil)
-	if err != nil {
+
+	var subQueries []string
+	queriesList := make([][]*querypb.BoundQuery, 0)
+
+	if err == nil && tableConfig != nil {
+		subQueries = make([]string, len(tableConfig.ActualTableList))
+		sort.Slice(tableConfig.ActualTableList, func(i, j int) bool {
+			return tableConfig.ActualTableList[i].Index < tableConfig.ActualTableList[j].Index
+		})
+		for i, actTbName := range tableConfig.ActualTableList {
+			queries := make([]*querypb.BoundQuery, len(rss))
+			subQueries[i] = strings.ReplaceAll(sql, tbName, actTbName.ActualTableName)
+			for j := range rss {
+				queries[j] = &querypb.BoundQuery{
+					Sql:           subQueries[i],
+					BindVariables: nil,
+				}
+			}
+			queriesList = append(queriesList, queries)
+		}
+	} else {
+		subQueries = []string{sql}
+		queries := make([]*querypb.BoundQuery, len(rss))
+		for i := range rss {
+			queries[i] = &querypb.BoundQuery{
+				Sql:           sql,
+				BindVariables: nil,
+			}
+		}
+		queriesList = append(queriesList, queries)
+	}
+
+	//get column index for  vindex fro per row
+	var vindexColumnIndex, tbVndexColumnIndex []int
+	for _, vindexColumnName := range tb.ColumnVindexes[0].Columns {
+		for index, column := range loadData.LoadDataInfo.Columns {
+			if column.String() == vindexColumnName.String() {
+				vindexColumnIndex = append(vindexColumnIndex, index)
+			}
+		}
+	}
+	if tableConfig != nil {
+		for _, tableColumn := range tableConfig.TableIndexColumn {
+			for index, column := range loadData.LoadDataInfo.Columns {
+				if column.String() == tableColumn.Column.String() {
+					tbVndexColumnIndex = append(tbVndexColumnIndex, index)
+				}
+			}
+		}
+		if len(tbVndexColumnIndex) == 0 {
+			return nil, fmt.Errorf("load data values should contain split table vindex column")
+		}
+	}
+
+	rowTypeList := make(map[int]sqltypes.Type, len(loadData.LoadDataInfo.Columns))
+
+	for _, tbCol := range tb.Columns {
+		for cidx, col := range loadData.LoadDataInfo.Columns {
+			if _, ok := rowTypeList[cidx]; !ok && tbCol.Name.String() == col.String() {
+				rowTypeList[cidx] = tbCol.Type
+			}
+		}
+	}
+
+	result := &sqltypes.Result{}
+
+	if err := e.scatterConn.txConn.Begin(ctx, safeSession, nil); err != nil {
 		return nil, err
 	}
 
-	_, errs := e.scatterConn.ExecuteMultiShard(ctx, nil, rss, queries, safeSession, false, false)
-	if len(errs) != 0 {
-		return nil, errs[0]
-	}
-
-	if err := c.WriteRequestFilePacket([]byte(loadStmt.Path)); err != nil {
-		return nil, err
-	}
-
-	lines := make(chan string, 10000)
-	lErrs := make(chan error, 100)
-	//c:=queryservicepb.QueryServer()
-	go func() {
-		defer func() {
-			close(lErrs)
-			close(lines)
-		}()
-		err := loadData.LoadDataInfo.LoadDataInfileDataStream(ctx, vCursor, c, tb, safeSession, destTabletType, logStats, lines, true)
-		if err != nil {
-			log.Errorf("load data from client err:%s", err.Error())
-			lErrs <- err
+	defer func() {
+		if err := recover(); err != nil {
+			_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
 		}
 	}()
 
-	var result *sqltypes.Result
-	if tb.Pinned != nil {
-		result, err = e.scatterConn.streamUpload(ctx, safeSession, rss[0], lines, sql)
-	} else {
-		result, err = loadData.LoadDataInfo.ExecLoadDataUpstream(ctx, vCursor, c, tb, safeSession, destTabletType, logStats, lines, lErrs, false, sql)
-	}
+	var wg sync.WaitGroup
+	for qi, queries := range queriesList {
+		if _, errs := e.scatterConn.ExecuteMultiShard(ctx, nil, rss, queries, safeSession, false, false); len(errs) != 0 {
+			_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+			return nil, errs[0]
+		}
 
-	errRead, hasErr := <-lErrs
-	if hasErr {
-		_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
-		return nil, errRead
-	}
+		if err := c.WriteRequestFilePacket([]byte(loadStmt.Path)); err != nil {
+			_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+			return nil, err
+		}
 
-	if err != nil {
-		_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+		lines, lErrs := make(chan string, 10000), make(chan error, 100)
+		wg.Add(1)
+		go func() {
+			defer func() {
+				close(lErrs)
+				close(lines)
+				wg.Done()
+			}()
+			err := loadData.LoadDataInfo.LoadDataInfileDataStream(ctx, vCursor, c, tb, lines, true)
+			if err != nil {
+				log.Errorf("load data from client err:%s", err.Error())
+				lErrs <- err
+			}
+		}()
+
+		var subResult *sqltypes.Result
+		if tb.Pinned != nil {
+			subResult, err = e.scatterConn.streamUpload(ctx, safeSession, rss[0], lines, sql)
+		} else {
+			subResult, err = loadData.LoadDataInfo.ExecLoadDataUpstream(ctx, vCursor, tb, safeSession, lines, lErrs, subQueries[qi], qi, tableConfig, rowTypeList, vindexColumnIndex, tbVndexColumnIndex)
+		}
+		if err != nil {
+			_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+			return nil, err
+		} else if err := <-lErrs; err != nil {
+			_ = e.scatterConn.txConn.Rollback(ctx, safeSession)
+			return nil, err
+		}
+		result.AppendResult(subResult)
+		wg.Wait()
+	}
+	if err := e.scatterConn.txConn.Commit(ctx, safeSession); err != nil {
 		return nil, err
 	}
-
-	err = e.scatterConn.txConn.Commit(ctx, safeSession)
 	return result, err
 }
 

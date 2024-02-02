@@ -8,6 +8,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"vitess.io/vitess/go/vt/vtgate/logstats"
@@ -20,7 +21,6 @@ import (
 	"vitess.io/vitess/go/vt/key"
 	"vitess.io/vitess/go/vt/log"
 	querypb "vitess.io/vitess/go/vt/proto/query"
-	"vitess.io/vitess/go/vt/proto/topodata"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/srvtopo"
@@ -560,15 +560,22 @@ func (l *LoadDataInfo) processPrimary(ctx context.Context, vcursor engine.VCurso
 	return keyspaceIDs, nil
 }
 
-func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.VCursor, table *vindexes.Table, rows [][]string, vindexColumnIndex []int) (map[*srvtopo.ResolvedShard][][]string, error) {
+func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.VCursor, table *vindexes.Table, rows [][]string, vindexColumnIndex []int,
+	tbVindexColumnIndex []int, tableIndex int, tableConfig *vindexes.LogicTableConfig, rowTypeList map[int]sqltypes.Type) (map[*srvtopo.ResolvedShard][][]string, error) {
 
-	vindexRowsValues := make([][]sqltypes.Value, len(rows))
+	var tbVindexRowsValues, vindexRowsValues [][]sqltypes.Value
 
 	rowCount := 0
 	rowMap := make(map[int][]string)
+	vindexRowsValues = make([][]sqltypes.Value, len(rows))
+	if len(tbVindexColumnIndex) > 0 {
+		tbVindexRowsValues = make([][]sqltypes.Value, len(rows))
+	}
 	for vIdx, row := range rows {
 		rowMap[vIdx] = row
 		for colIdx, colValues := range vindexColumnIndex {
+			var v sqltypes.Value
+			var err error
 			// This is the first iteration: allocate for transpose.
 			if colIdx == 0 {
 				if len(vindexColumnIndex) == 0 {
@@ -584,7 +591,11 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 				if colValues > len(row)-1 {
 					return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "load fields termined err ,please check")
 				}
-				v, err := sqltypes.NewValue(sqltypes.Char, []byte(row[colValues]))
+				if rowType, ok := rowTypeList[colValues]; ok {
+					v, err = sqltypes.NewValue(rowType, []byte(row[colValues]))
+				} else {
+					v, err = sqltypes.NewValue(sqltypes.Char, []byte(row[colValues]))
+				}
 				if err != nil {
 					return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "BUG: uneven row values for inserts: %d %d", rowCount, len(vindexColumnIndex))
 				}
@@ -594,11 +605,47 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 			// Perform the transpose.
 			//[]sqltypes.Value
 			//sqltypes.TypeToMySQL()
-			v, err := sqltypes.NewValue(sqltypes.Char, []byte(row[colValues]))
+			if rowType, ok := rowTypeList[colValues]; ok {
+				v, err = sqltypes.NewValue(rowType, []byte(row[colValues]))
+			} else {
+				v, err = sqltypes.NewValue(sqltypes.Char, []byte(row[colValues]))
+			}
 			if err != nil {
 				return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "BUG: uneven row values for inserts: %d %d", rowCount, len(vindexColumnIndex))
 			}
 			vindexRowsValues[vIdx] = append(vindexRowsValues[vIdx], v)
+		}
+		if len(tbVindexColumnIndex) > 0 {
+			var v sqltypes.Value
+			var err error
+			for tbColIdx, tbColValues := range tbVindexColumnIndex {
+				if tbColIdx == 0 {
+					tbVindexRowsValues[vIdx] = make([]sqltypes.Value, rowCount)
+					if tbColValues > len(row)-1 {
+						return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "load split table fields termined err ,please check")
+					}
+					if rowType, ok := rowTypeList[vIdx]; ok {
+						v, err = sqltypes.NewValue(rowType, []byte(row[tbColValues]))
+					} else {
+						v, err = sqltypes.NewValue(sqltypes.Char, []byte(row[tbColValues]))
+					}
+					v, err := sqltypes.NewValue(sqltypes.Char, []byte(row[tbColValues]))
+					if err != nil {
+						return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "BUG: uneven row values for inserts: %d %d", rowCount, len(tbVindexRowsValues))
+					}
+					tbVindexRowsValues[vIdx][0] = v
+					continue
+				}
+				if rowType, ok := rowTypeList[vIdx]; ok {
+					v, err = sqltypes.NewValue(rowType, []byte(row[tbColValues]))
+				} else {
+					v, err = sqltypes.NewValue(sqltypes.Char, []byte(row[tbColValues]))
+				}
+				if err != nil {
+					return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "BUG: uneven row values for inserts: %d %d", rowCount, len(tbVindexRowsValues))
+				}
+				tbVindexRowsValues[vIdx] = append(tbVindexRowsValues[vIdx], v)
+			}
 		}
 	}
 
@@ -630,15 +677,51 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 	if err != nil {
 		return nil, err
 	}
+
+	suitableRows := make(map[int]bool, 0)
+	if len(tbVindexRowsValues) > 0 {
+		var tableDestinations []vindexes.TableDestination
+		if err != nil {
+			return nil, err
+		}
+		switch tableVindex := tableConfig.TableVindex.(type) {
+		case vindexes.TableSingleColumn:
+			// Map using the Vindex
+			firstCols := make([]sqltypes.Value, 0, len(tbVindexRowsValues))
+			for _, val := range tbVindexRowsValues {
+				firstCols = append(firstCols, val[0])
+			}
+			tableDestinations, err = tableVindex.(vindexes.TableSingleColumn).Map(ctx, vcursor, firstCols)
+		default:
+			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported tableVindex: %v", tableVindex)
+		}
+		for rowIndex, destination := range tableDestinations {
+			if err = destination.Resolve(tableConfig, func(actualTableIndex int) error {
+				if actualTableIndex == tableIndex {
+					suitableRows[rowIndex] = true
+				}
+				return nil
+			}); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	rssLinesMap := make(map[*srvtopo.ResolvedShard][][]string)
 	for index, rs := range rss {
 		for _, rowIndex := range indexesPerRss[index] {
 			index, _ := strconv.ParseInt(string(rowIndex.Value), 0, 32)
-			if _, ok := rssLinesMap[rs]; ok {
-				rssLinesMap[rs] = append(rssLinesMap[rs], rowMap[int(index)])
-			} else {
-				rsList := [][]string{rowMap[int(index)]}
-				rssLinesMap[rs] = rsList
+			if _, ok := suitableRows[int(index)]; ok || len(tbVindexColumnIndex) == 0 {
+				index, _ := strconv.ParseInt(string(rowIndex.Value), 0, 32)
+				if _, ok := rssLinesMap[rs]; ok {
+					rssLinesMap[rs] = append(rssLinesMap[rs], rowMap[int(index)])
+				} else {
+					rsList := [][]string{rowMap[int(index)]}
+					rssLinesMap[rs] = rsList
+				}
 			}
 		}
 
@@ -648,8 +731,7 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 }
 
 // LoadDataInfileDataStream for single shard or pinned table
-func (l *LoadDataInfo) LoadDataInfileDataStream(ctx context.Context, vCursor engine.VCursor, c *mysql.Conn, table *vindexes.Table,
-	safeSession *SafeSession, tabletType topodata.TabletType, logStats *logstats.LogStats, lines chan string, wantField bool) error {
+func (l *LoadDataInfo) LoadDataInfileDataStream(ctx context.Context, vCursor engine.VCursor, c *mysql.Conn, table *vindexes.Table, lines chan string, wantField bool) error {
 	// Add some kind of timeout too.
 	var shouldBreak bool
 	var prevData, curData []byte
@@ -774,8 +856,8 @@ func (l *LoadDataInfo) LoadDataInfileDataStream(ctx context.Context, vCursor eng
 }
 
 // ExecLoadDataUpstream  LoadDataInfileDataStream for single shard or pinned table
-func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.VCursor, c *mysql.Conn, table *vindexes.Table, safeSession *SafeSession,
-	tabletType topodata.TabletType, logStats *logstats.LogStats, lines chan string, errs chan error, wantField bool, sql string) (*sqltypes.Result, error) {
+func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.VCursor, table *vindexes.Table, safeSession *SafeSession, lines chan string, errs chan error,
+	sql string, tableIndex int, tableConfig *vindexes.LogicTableConfig, rowTypeList map[int]sqltypes.Type, vindexColumnIndex []int, tbVndexColumnIndex []int) (*sqltypes.Result, error) {
 	count := 0
 	linesTdo := make([][]string, 0)
 	shardLinesMap := make(map[string]*chan string)
@@ -783,19 +865,11 @@ func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.
 	shardErr := make(chan error)
 	endResult := &sqltypes.Result{}
 
-	//get column index for  vindex fro per row
-	var vindexColumnIndex []int
-	for _, VindexColumnName := range table.ColumnVindexes[0].Columns {
-		for index, column := range l.Columns {
-			if column.String() == VindexColumnName.String() {
-				vindexColumnIndex = append(vindexColumnIndex, index)
-			}
-		}
-	}
-
 	select {
 	case err := <-errs:
-		return endResult, err
+		if err != nil {
+			return endResult, err
+		}
 	default:
 		ticker := time.NewTicker(time.Second * 1)
 		<-ticker.C
@@ -809,57 +883,63 @@ func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.
 			}
 		default:
 		}
-		count = count + 1
+		count++
 		linesTdo = append(linesTdo, strings.Split(strings.Trim(line, l.LinesInfo.Terminated), l.FieldsInfo.Terminated))
+
 		if count == l.maxRowsInBatch {
-			linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex)
+			var wg sync.WaitGroup
+			linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex, tbVndexColumnIndex, tableIndex, tableConfig, rowTypeList)
 			if err != nil {
 				return endResult, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "getLoadShardedRoute failed  for %v", vindexColumnIndex)
 			}
 			if linesPerShards == nil {
 				return endResult, err
 			}
-			for shard, lines := range linesPerShards {
+			for shard, preLines := range linesPerShards {
 				if _, ok := shardLinesMap[shard.Target.Shard]; !ok {
-					shardChan := make(chan string, 10000)
-					shardLinesMap[shard.Target.Shard] = &shardChan
+					localShardChan := make(chan string, 10000)
+					shardLinesMap[shard.Target.Shard] = &localShardChan
+					wg.Add(1)
 					go func(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines *chan string, sql string, resultChan chan *sqltypes.Result, errChan chan error) {
+						defer wg.Done()
 						var result *sqltypes.Result
 						var err error
 						defer func() {
-							errRecvoer := recover()
-							if errRecvoer != nil {
-								shardErr <- fmt.Errorf("%v", errRecvoer)
-							} else {
+							if r := recover(); r != nil {
+								errChan <- fmt.Errorf("recover from: %v", r)
+								resultChan <- nil
+							} else if err != nil {
 								shardErr <- err
+								resultChan <- nil
+							} else {
+								shardResult <- result
 							}
-							shardResult <- result
 						}()
 						result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
-					}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
+					}(ctx, safeSession, shard, &localShardChan, sql, shardResult, shardErr)
 				}
 				shardChan := shardLinesMap[shard.Target.Shard]
-				for _, line := range lines {
+				for _, line := range preLines {
 					if line != nil {
 						*shardChan <- strings.Join(line, l.FieldsInfo.Terminated) + l.LinesInfo.Terminated
 					}
 				}
-				//close(*shardChan)
 			}
 			count = 0
 			linesTdo = linesTdo[:0]
+			wg.Wait()
 		}
 	}
 
 	if len(linesTdo) >= 1 {
-		linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex)
+		linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex, tbVndexColumnIndex, tableIndex, tableConfig, rowTypeList)
 		if err != nil {
 			return endResult, err
 		}
 		if linesPerShards == nil {
-			return endResult, err
+			return endResult, fmt.Errorf("no shard routes found for the data")
 		}
-		for shard, lines := range linesPerShards {
+		for shard, preLines := range linesPerShards {
 			if _, ok := shardLinesMap[shard.Target.Shard]; !ok {
 				shardChan := make(chan string, 10000)
 				shardLinesMap[shard.Target.Shard] = &shardChan
@@ -867,20 +947,21 @@ func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.
 					var result *sqltypes.Result
 					var err error
 					defer func() {
-						errRecvoer := recover()
-						if errRecvoer != nil {
-							shardErr <- fmt.Errorf("%v", errRecvoer)
-						} else {
+						if r := recover(); r != nil {
+							errChan <- fmt.Errorf("recover from: %v", r)
+							resultChan <- nil
+						} else if err != nil {
 							shardErr <- err
+							resultChan <- nil
+						} else {
+							shardResult <- result
 						}
-						shardResult <- result
-						//close(lines)
 					}()
 					result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
 				}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
 			}
 			shardChan := shardLinesMap[shard.Target.Shard]
-			for _, line := range lines {
+			for _, line := range preLines {
 				if line != nil {
 					*shardChan <- strings.Join(line, l.FieldsInfo.Terminated) + l.LinesInfo.Terminated
 				}
@@ -903,35 +984,41 @@ func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.
 					var result *sqltypes.Result
 					var err error
 					defer func() {
-						errRecvoer := recover()
-						if errRecvoer != nil {
-							shardErr <- fmt.Errorf("%v", errRecvoer)
-						} else {
+						if r := recover(); r != nil {
+							errChan <- fmt.Errorf("recover from: %v", r)
+							resultChan <- nil
+						} else if err != nil {
 							shardErr <- err
+							resultChan <- nil
+						} else {
+							shardResult <- result
 						}
-						shardResult <- result
-						//close(lines)
 					}()
 					result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
 				}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
 			}
 		}
-
 	}
 
-	//close input chan
 	for _, linesChan := range shardLinesMap {
 		close(*linesChan)
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
 	allErr := make([]string, 0)
 	for i := 0; i < len(shardLinesMap); i++ {
-		err := <-shardErr
-		if err != nil {
-			allErr = append(allErr, err.Error())
-		}
-		result := <-shardResult
-		if result != nil {
-			endResult.RowsAffected = endResult.RowsAffected + result.RowsAffected
+		select {
+		case err := <-shardErr:
+			if err != nil {
+				allErr = append(allErr, err.Error())
+			}
+		case result := <-shardResult:
+			if result != nil {
+				endResult.RowsAffected = endResult.RowsAffected + result.RowsAffected
+			}
+		case <-ctx.Done():
+			allErr = append(allErr, "Load data sub-query execute time out. Please try again later.")
 		}
 	}
 
