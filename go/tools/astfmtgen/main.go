@@ -125,6 +125,12 @@ func (r *Rewriter) replaceAstfmtCalls(cursor *astutil.Cursor) bool {
 		if v.Name.Name == "Format" {
 			v.Name.Name = "formatFast"
 		}
+		if v.Name.Name == "formatTBPartition" {
+			v.Name.Name = "formatTBPartitionFast"
+		}
+		if v.Name.Name == "formatDBPartition" {
+			v.Name.Name = "formatDBPartitionFast"
+		}
 	case *ast.ExprStmt:
 		if call, ok := v.X.(*ast.CallExpr); ok {
 			switch r.methodName(call) {
@@ -134,7 +140,16 @@ func (r *Rewriter) replaceAstfmtCalls(cursor *astutil.Cursor) bool {
 				callexpr := call.Fun.(*ast.SelectorExpr)
 				callexpr.Sel.Name = "WriteString"
 				return true
+			case "formatDBPartition":
+				callexpr := call.Fun.(*ast.SelectorExpr)
+				callexpr.Sel.Name = "formatDBPartitionFast"
+				return true
+			case "formatTBPartition":
+				callexpr := call.Fun.(*ast.SelectorExpr)
+				callexpr.Sel.Name = "formatTBPartitionFast"
+				return true
 			}
+
 		}
 	}
 	return true

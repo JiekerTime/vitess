@@ -21,6 +21,7 @@ type tableRoute struct {
 }
 
 func (t *tableRoute) Wireup(_ *plancontext.PlanningContext) error {
+	t.prepareTheAST()
 	t.eroute.Query = t.Select
 
 	err := t.eroute.TableRouteParam.LoadRewriteCache(t.Select, "")
@@ -63,4 +64,31 @@ func (t *tableRoute) ContainsTables() semantics.TableSet {
 
 func (t *tableRoute) OutputColumns() []sqlparser.SelectExpr {
 	return sqlparser.GetFirstSelect(t.Select).SelectExprs
+}
+
+// prepareTheAST does minor fixups of the SELECT struct before producing the query string
+func (rb *tableRoute) prepareTheAST() {
+	_ = sqlparser.Walk(func(node sqlparser.SQLNode) (bool, error) {
+		switch node := node.(type) {
+		case *sqlparser.Select:
+			if len(node.SelectExprs) == 0 {
+				node.SelectExprs = []sqlparser.SelectExpr{
+					&sqlparser.AliasedExpr{
+						Expr: sqlparser.NewIntLiteral("1"),
+					},
+				}
+			}
+		case *sqlparser.ComparisonExpr:
+			// 42 = colName -> colName = 42
+			b := node.Operator == sqlparser.EqualOp
+			value := sqlparser.IsValue(node.Left)
+			name := sqlparser.IsColName(node.Right)
+			if b &&
+				value &&
+				name {
+				node.Left, node.Right = node.Right, node.Left
+			}
+		}
+		return true, nil
+	}, rb.Select)
 }

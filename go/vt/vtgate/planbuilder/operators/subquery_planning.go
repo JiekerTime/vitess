@@ -672,6 +672,14 @@ func (s *subqueryRouteMerger) merge(ctx *plancontext.PlanningContext, inner, out
 	}, nil
 }
 
+func (s *subqueryRouteMerger) mergeForSplitTable(ctx *plancontext.PlanningContext, op1, op2 *TableRoute, r Routing) (*TableRoute, error) {
+	return nil, vterrors.VT13001("subqueries not supported for split table")
+}
+
+func (s *subqueryRouteMerger) mergeShardedRoutingForSplitTable(ctx *plancontext.PlanningContext, r1, r2 *TableShardedRouting, op1, op2 *TableRoute) (*TableRoute, error) {
+	return nil, vterrors.VT13001("subqueries not supported for split table")
+}
+
 // rewriteASTExpression rewrites the subquery expression that is used in the merged output
 // Any changes that have been done to the operator tree since it was extracted from the
 // query need make it to the expression

@@ -41,11 +41,13 @@ type (
 
 	// TableVindexOption stores the information needed to know if we have all the information needed to use a vindex
 	TableVindexOption struct {
-		Ready      bool
-		Values     []evalengine.Expr
-		ValueExprs []sqlparser.Expr
-		Predicates []sqlparser.Expr
-		OpCode     engine.Opcode
+		Ready       bool
+		Values      []evalengine.Expr
+		ValueExprs  []sqlparser.Expr
+		Predicates  []sqlparser.Expr
+		OpCode      engine.Opcode
+		Cost        Cost
+		FoundTindex vindexes.Vindex
 	}
 )
 
@@ -253,6 +255,9 @@ func createTableRoute(
 	solves semantics.TableSet,
 ) (ops.Operator, error) {
 	config := ctx.SplitTableConfig[queryTable.Table.Name.String()]
+	if config == nil {
+		return createRoute(ctx, queryTable, solves)
+	}
 	plan := &TableRoute{
 		Source: &Table{
 			QTable: queryTable,

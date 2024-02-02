@@ -25,7 +25,10 @@ import (
 	"vitess.io/vitess/go/sqltypes"
 )
 
-var _ Vindex = (*SplitTableXXHash)(nil)
+var (
+	_ Vindex            = (*SplitTableXXHash)(nil)
+	_ TableSingleColumn = (*SplitTableXXHash)(nil)
+)
 
 type SplitTableXXHash struct {
 	name string

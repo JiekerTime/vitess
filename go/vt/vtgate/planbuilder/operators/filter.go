@@ -98,6 +98,9 @@ func (f *Filter) FindCol(ctx *plancontext.PlanningContext, expr sqlparser.Expr, 
 }
 
 func (f *Filter) GetColumns(ctx *plancontext.PlanningContext) ([]*sqlparser.AliasedExpr, error) {
+	if _, isSourceDerived := f.Source.(*Horizon); isSourceDerived {
+		return nil, nil
+	}
 	return f.Source.GetColumns(ctx)
 }
 

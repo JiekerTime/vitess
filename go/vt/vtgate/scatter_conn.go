@@ -460,6 +460,123 @@ func (stc *ScatterConn) StreamExecuteMulti(
 	return allErrors.GetErrors()
 }
 
+func (stc *ScatterConn) StreamExecuteMultiForSplitTable(
+	ctx context.Context,
+	primitive engine.Primitive,
+	querySQL []string,
+	rss []*srvtopo.ResolvedShard,
+	bindVars []map[string]*querypb.BindVariable,
+	session *SafeSession,
+	autocommit bool,
+	callback func(reply *sqltypes.Result) error,
+) []error {
+	if session.InLockSession() && session.TriggerLockHeartBeat() {
+		go stc.runLockQuery(ctx, session)
+	}
+
+	allErrors := stc.multiGoTransaction(
+		ctx,
+		"StreamExecute",
+		rss,
+		session,
+		autocommit,
+		func(rs *srvtopo.ResolvedShard, i int, info *shardActionInfo) (*shardActionInfo, error) {
+			var (
+				err   error
+				opts  *querypb.ExecuteOptions
+				alias *topodatapb.TabletAlias
+				qs    queryservice.QueryService
+			)
+			transactionID := info.transactionID
+			reservedID := info.reservedID
+			query := querySQL[i]
+			if session != nil && session.Session != nil {
+				opts = session.Session.Options
+			}
+
+			if autocommit {
+				// As this is auto-commit, the transactionID is supposed to be zero.
+				if transactionID != int64(0) {
+					return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "in autocommit mode, transactionID should be zero but was: %d", transactionID)
+				}
+			}
+
+			qs, err = getQueryService(rs, info, session, false)
+			if err != nil {
+				return nil, err
+			}
+
+			retryRequest := func(exec func()) {
+				retry := checkAndResetShardSession(info, err, session, rs.Target)
+				switch retry {
+				case newQS:
+					// Current tablet is not available, try querying new tablet using gateway.
+					qs = rs.Gateway
+					fallthrough
+				case shard:
+					// if we need to reset a reserved connection, here is our chance to try executing again,
+					// against a new connection
+					exec()
+				}
+			}
+
+			switch info.actionNeeded {
+			case nothing:
+				err = qs.StreamExecute(ctx, rs.Target, query, bindVars[i], transactionID, reservedID, opts, callback)
+				if err != nil {
+					retryRequest(func() {
+						// we seem to have lost our connection. it was a reserved connection, let's try to recreate it
+						info.actionNeeded = reserve
+						var state queryservice.ReservedState
+						state, err = qs.ReserveStreamExecute(ctx, rs.Target, session.SetPreQueries(), query, bindVars[i], 0 /*transactionId*/, opts, callback)
+						reservedID = state.ReservedID
+						alias = state.TabletAlias
+					})
+				}
+			case begin:
+				var state queryservice.TransactionState
+				state, err = qs.BeginStreamExecute(ctx, rs.Target, session.SavePoints(), query, bindVars[i], reservedID, opts, callback)
+				transactionID = state.TransactionID
+				alias = state.TabletAlias
+				if err != nil {
+					retryRequest(func() {
+						// we seem to have lost our connection. it was a reserved connection, let's try to recreate it
+						info.actionNeeded = reserveBegin
+						var state queryservice.ReservedTransactionState
+						state, err = qs.ReserveBeginStreamExecute(ctx, rs.Target, session.SetPreQueries(), session.SavePoints(), query, bindVars[i], opts, callback)
+						transactionID = state.TransactionID
+						reservedID = state.ReservedID
+						alias = state.TabletAlias
+					})
+				}
+			case reserve:
+				var state queryservice.ReservedState
+				state, err = qs.ReserveStreamExecute(ctx, rs.Target, session.SetPreQueries(), query, bindVars[i], transactionID, opts, callback)
+				reservedID = state.ReservedID
+				alias = state.TabletAlias
+			case reserveBegin:
+				var state queryservice.ReservedTransactionState
+				state, err = qs.ReserveBeginStreamExecute(ctx, rs.Target, session.SetPreQueries(), session.SavePoints(), query, bindVars[i], opts, callback)
+				transactionID = state.TransactionID
+				reservedID = state.ReservedID
+				alias = state.TabletAlias
+			default:
+				return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "[BUG] unexpected actionNeeded on query execution: %v", info.actionNeeded)
+			}
+			session.logging.log(primitive, rs.Target, rs.Gateway, query, info.actionNeeded == begin || info.actionNeeded == reserveBegin, bindVars[i])
+
+			// We need to new shard info irrespective of the error.
+			newInfo := info.updateTransactionAndReservedID(transactionID, reservedID, alias)
+			if err != nil {
+				return newInfo, err
+			}
+
+			return newInfo, nil
+		},
+	)
+	return allErrors.GetErrors()
+}
+
 // timeTracker is a convenience wrapper used by MessageStream
 // to track how long a stream has been unavailable.
 type timeTracker struct {

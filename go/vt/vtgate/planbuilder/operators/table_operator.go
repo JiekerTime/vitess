@@ -278,30 +278,47 @@ func checkAndErrIfTableVindexChanging(setClauses sqlparser.UpdateExprs, col sqlp
 func crossJoinForSplitTable(ctx *plancontext.PlanningContext, exprs sqlparser.TableExprs) (ops.Operator, error) {
 	var output ops.Operator
 	for _, tableExpr := range exprs {
-		op, err := getOperatorFromTableExprForSplitTable(ctx, tableExpr)
+		op, err := getOperatorFromTableExprForSplitTable(ctx, tableExpr, len(exprs) == 1)
 		if err != nil {
 			return nil, err
 		}
 		if output == nil {
 			output = op
 		} else {
-			return nil, vterrors.VT12001("multiple tables in split table")
-			// output = createJoin(ctx, output, op)
+			output = createJoinForSplitTable(ctx, output, op)
 		}
 	}
 	return output, nil
 }
 
-func getOperatorFromTableExprForSplitTable(ctx *plancontext.PlanningContext, tableExpr sqlparser.TableExpr) (ops.Operator, error) {
+func createJoinForSplitTable(ctx *plancontext.PlanningContext, LHS, RHS ops.Operator) ops.Operator {
+	lqg, lok := LHS.(*QueryGraph)
+	rqg, rok := RHS.(*QueryGraph)
+	if lok && rok {
+		op := &QueryGraph{
+			Tables:     append(lqg.Tables, rqg.Tables...),
+			innerJoins: append(lqg.innerJoins, rqg.innerJoins...),
+			NoDeps:     ctx.SemTable.AndExpressions(lqg.NoDeps, rqg.NoDeps),
+		}
+		return op
+	}
+	return &Join{LHS: LHS, RHS: RHS}
+}
+
+func getOperatorFromTableExprForSplitTable(ctx *plancontext.PlanningContext, tableExpr sqlparser.TableExpr, onlyTable bool) (ops.Operator, error) {
 	switch tableExpr := tableExpr.(type) {
 	case *sqlparser.AliasedTableExpr:
-		return getOperatorFromAliasedTableExprForSplitTable(ctx, tableExpr)
+		return getOperatorFromAliasedTableExprForSplitTable(ctx, tableExpr, onlyTable)
+	case *sqlparser.JoinTableExpr:
+		return getOperatorFromJoinTableExprForSplitTable(ctx, tableExpr)
+	case *sqlparser.ParenTableExpr:
+		return crossJoinForSplitTable(ctx, tableExpr.Exprs)
 	default:
 		return nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T table type in split table", tableExpr))
 	}
 }
 
-func getOperatorFromAliasedTableExprForSplitTable(ctx *plancontext.PlanningContext, tableExpr *sqlparser.AliasedTableExpr) (ops.Operator, error) {
+func getOperatorFromAliasedTableExprForSplitTable(ctx *plancontext.PlanningContext, tableExpr *sqlparser.AliasedTableExpr, onlyTable bool) (ops.Operator, error) {
 	tableID := ctx.SemTable.TableSetFor(tableExpr)
 	switch tbl := tableExpr.Expr.(type) {
 	case sqlparser.TableName:
@@ -311,6 +328,26 @@ func getOperatorFromAliasedTableExprForSplitTable(ctx *plancontext.PlanningConte
 		return qg, nil
 	default:
 		return nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T in split table", tbl))
+	}
+}
+
+func getOperatorFromJoinTableExprForSplitTable(ctx *plancontext.PlanningContext, tableExpr *sqlparser.JoinTableExpr) (ops.Operator, error) {
+	lhs, err := getOperatorFromTableExprForSplitTable(ctx, tableExpr.LeftExpr, false)
+	if err != nil {
+		return nil, err
+	}
+	rhs, err := getOperatorFromTableExprForSplitTable(ctx, tableExpr.RightExpr, false)
+	if err != nil {
+		return nil, err
+	}
+
+	switch tableExpr.Join {
+	case sqlparser.NormalJoinType:
+		return createInnerJoin(ctx, tableExpr, lhs, rhs)
+	case sqlparser.LeftJoinType, sqlparser.RightJoinType:
+		return createOuterJoin(tableExpr, lhs, rhs)
+	default:
+		return nil, vterrors.VT13001("unsupported: %s", tableExpr.Join.ToString())
 	}
 }
 
@@ -392,6 +429,32 @@ func seedOperatorListForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGr
 func mergeRoutesForSplitTable(ctx *plancontext.PlanningContext, qg *QueryGraph, physicalOps []ops.Operator, planCache opCacheMap, crossJoinsOK bool) (ops.Operator, error) {
 	if len(physicalOps) == 0 {
 		return nil, nil
+	}
+	for len(physicalOps) > 1 {
+		bestTree, lIdx, rIdx, err := findBestJoinForSplitTable(ctx, qg, physicalOps, planCache, crossJoinsOK)
+		if err != nil {
+			return nil, err
+		}
+		// if we found a plan, we'll replace the two plans that were joined with the join plan created
+		if bestTree != nil {
+			// we remove one plan, and replace the other
+			if rIdx > lIdx {
+				physicalOps = removeAt(physicalOps, rIdx)
+				physicalOps = removeAt(physicalOps, lIdx)
+			} else {
+				physicalOps = removeAt(physicalOps, lIdx)
+				physicalOps = removeAt(physicalOps, rIdx)
+			}
+			physicalOps = append(physicalOps, bestTree)
+		} else {
+			if crossJoinsOK {
+				return nil, vterrors.VT13001("should not happen: we should be able to merge cross joins")
+			}
+			// we will only fail to find a join plan when there are only cross joins left
+			// when that happens, we switch over to allow cross joins as well.
+			// this way we prioritize joining physicalOps with predicates first
+			crossJoinsOK = true
+		}
 	}
 	return physicalOps[0], nil
 }

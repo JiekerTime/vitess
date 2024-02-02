@@ -66,7 +66,11 @@ func (del *TableDelete) TryExecute(ctx context.Context, vcursor VCursor, bindVar
 
 // TryStreamExecute performs a streaming exec.
 func (del *TableDelete) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
-	panic("implement me")
+	res, err := del.TryExecute(ctx, vcursor, bindVars, wantfields)
+	if err != nil {
+		return err
+	}
+	return callback(res)
 }
 
 // GetFields fetches the field info.

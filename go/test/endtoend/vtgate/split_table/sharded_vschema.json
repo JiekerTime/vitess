@@ -20,6 +20,14 @@
     }
   },
   "tables": {
+    "t_user_shard": {
+      "columnVindexes": [
+        {
+          "column": "id",
+          "name": "xxhash"
+        }
+      ]
+    },
     "t_user": {
       "columnVindexes": [
         {

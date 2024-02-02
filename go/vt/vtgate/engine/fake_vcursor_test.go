@@ -336,6 +336,10 @@ func (t *noopVCursor) StreamExecuteMulti(ctx context.Context, primitive Primitiv
 	panic("unimplemented")
 }
 
+func (t *noopVCursor) StreamExecuteMultiForSplitTable(ctx context.Context, primitive Primitive, prims []string, rss []*srvtopo.ResolvedShard, bindVars []map[string]*querypb.BindVariable, rollbackOnError bool, autocommit bool, callback func(reply *sqltypes.Result) error) []error {
+	panic("unimplemented")
+}
+
 func (t *noopVCursor) ExecuteKeyspaceID(ctx context.Context, keyspace string, ksid []byte, query string, bindVars map[string]*querypb.BindVariable, rollbackOnError, autocommit bool) (*sqltypes.Result, error) {
 	panic("unimplemented")
 }
@@ -536,6 +540,18 @@ func (f *loggingVCursor) ExecuteStandalone(ctx context.Context, primitive Primit
 func (f *loggingVCursor) StreamExecuteMulti(ctx context.Context, primitive Primitive, query string, rss []*srvtopo.ResolvedShard, bindVars []map[string]*querypb.BindVariable, rollbackOnError bool, autocommit bool, callback func(reply *sqltypes.Result) error) []error {
 	f.mu.Lock()
 	f.log = append(f.log, fmt.Sprintf("StreamExecuteMulti %s %s", query, printResolvedShardsBindVars(rss, bindVars)))
+	r, err := f.nextResult()
+	f.mu.Unlock()
+	if err != nil {
+		return []error{err}
+	}
+
+	return []error{callback(r)}
+}
+
+func (f *loggingVCursor) StreamExecuteMultiForSplitTable(ctx context.Context, primitive Primitive, prims []string, rss []*srvtopo.ResolvedShard, bindVars []map[string]*querypb.BindVariable, rollbackOnError bool, autocommit bool, callback func(reply *sqltypes.Result) error) []error {
+	f.mu.Lock()
+	f.log = append(f.log, fmt.Sprintf("StreamExecuteMultiForSplitTable %s %s", prims[0], printResolvedShardsBindVars(rss, bindVars)))
 	r, err := f.nextResult()
 	f.mu.Unlock()
 	if err != nil {

@@ -918,17 +918,159 @@
   {
     "comment": "join push down using shard key",
     "query": "select u.name from t_user u join t_user_extra ue on u.id = ue.user_id ",
-    "plan": "VT12001: unsupported: multiple tables in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select u.name from t_user u join t_user_extra ue on u.id = ue.user_id ",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "u_id": 1
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select u.`name`, u.id from t_user_0 as u where 1 != 1",
+            "Query": "select u.`name`, u.id from t_user as u",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from t_user_extra_0 as ue where 1 != 1",
+            "Query": "select 1 from t_user_extra as ue where ue.user_id = :u_id",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   },
   {
     "comment": ",join push down using shard key",
     "query": "select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
-    "plan": "VT12001: unsupported: multiple tables in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "JoinVars": {
+          "t_user_id": 1
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_0.`name`, t_user_0.id from t_user_0 where 1 != 1",
+            "Query": "select t_user.`name`, t_user.id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select t_user_extra_0.col from t_user_extra_0 where 1 != 1",
+            "Query": "select t_user_extra.col from t_user_extra where t_user_extra.user_id = :t_user_id",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   },
   {
     "comment": "multiple tables",
     "query": "select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
-    "plan": "VT12001: unsupported: multiple tables in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Scalar",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Scalar",
+            "Aggregates": "sum_count_star(0) AS count(*)",
+            "Inputs": [
+              {
+                "OperatorType": "Projection",
+                "Expressions": [
+                  "[COLUMN 0] * [COLUMN 1] as count(*)"
+                ],
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "Join",
+                    "JoinColumnIndexes": "L:0,R:0",
+                    "JoinVars": {
+                      "t_user_id": 1
+                    },
+                    "TableName": "t_user_t_user_extra",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_user_0.id from t_user_0 where 1 != 1 group by t_user_0.id",
+                        "Query": "select count(*), t_user.id from t_user group by t_user.id",
+                        "Table": "t_user"
+                      },
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                        "Query": "select count(*) from t_user_extra where t_user_extra.user_id = :t_user_id group by .0",
+                        "Table": "t_user_extra"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   },
   {
     "comment": "for update",
@@ -1338,6 +1480,174 @@
       "TablesUsed": [
         "user.music_extra",
         "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "select from pinned table",
+    "query": "select * from pin_test",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from pin_test",
+      "Instructions": {
+        "OperatorType": "Route",
+        "Variant": "EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from pin_test where 1 != 1",
+        "Query": "select * from pin_test",
+        "Table": "pin_test",
+        "Values": [
+          "VARCHAR(\"\\x80\")"
+        ],
+        "Vindex": "binary"
+      },
+      "TablesUsed": [
+        "user.pin_test"
+      ]
+    }
+  },
+  {
+    "comment": "split table join split table,shard push,spilt not push",
+    "query": "select id, user_id from t_user join t_user_extra on t_user.id =t_user_extra.user_id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id, user_id from t_user join t_user_extra on t_user.id =t_user_extra.user_id",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0,R:0",
+        "JoinVars": {
+          "t_user_id": 0
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user_id from t_user_extra_0 where 1 != 1",
+            "Query": "select user_id from t_user_extra where t_user_extra.user_id = :t_user_id",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "split table join split table,shard push and spilt push",
+    "query": "select id, user_id from t_user join t_user_extra on t_user.id =t_user_extra.user_id and t_user.col =t_user_extra.col ",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id, user_id from t_user join t_user_extra on t_user.id =t_user_extra.user_id and t_user.col =t_user_extra.col ",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id, user_id from t_user_0, t_user_extra_0 where 1 != 1",
+        "Query": "select id, user_id from t_user, t_user_extra where t_user.id = t_user_extra.user_id and t_user.col = t_user_extra.col",
+        "Table": "t_user, t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "aggregate for split table join split table,shard push, spilt not push",
+    "query": "select count(*) from t_user join t_user_extra on t_user.id =t_user_extra.user_id group by t_user.user_id",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select count(*) from t_user join t_user_extra on t_user.id =t_user_extra.user_id group by t_user.user_id",
+      "Instructions": {
+        "OperatorType": "Aggregate",
+        "Variant": "Ordered",
+        "Aggregates": "sum_count_star(0) AS count(*)",
+        "GroupBy": "(1|2)",
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Aggregate",
+            "Variant": "Ordered",
+            "Aggregates": "sum_count_star(0) AS count(*)",
+            "GroupBy": "(1|2), 2",
+            "Inputs": [
+              {
+                "OperatorType": "Projection",
+                "Expressions": [
+                  "[COLUMN 0] * [COLUMN 1] as count(*)",
+                  "[COLUMN 2] as user_id",
+                  "[COLUMN 3] as weight_string(t_user.user_id)"
+                ],
+                "Inputs": [
+                  {
+                    "OperatorType": "Join",
+                    "Variant": "Join",
+                    "JoinColumnIndexes": "L:0,R:0,L:1,L:2",
+                    "JoinVars": {
+                      "t_user_id": 3
+                    },
+                    "TableName": "t_user_t_user_extra",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*), t_user_0.user_id, weight_string(t_user_0.user_id), t_user_0.id from t_user_0 where 1 != 1 group by t_user_0.user_id, weight_string(t_user_0.user_id), t_user_0.id",
+                        "OrderBy": "(1|2) ASC, 2 ASC",
+                        "Query": "select count(*), t_user.user_id, weight_string(t_user.user_id), t_user.id from t_user group by t_user.user_id, weight_string(t_user.user_id), t_user.id order by t_user.user_id asc, weight_string(t_user.user_id) asc",
+                        "Table": "t_user"
+                      },
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select count(*) from t_user_extra_0 where 1 != 1 group by .0",
+                        "OrderBy": "(1|2) ASC",
+                        "Query": "select count(*) from t_user_extra where t_user_extra.user_id = :t_user_id group by .0",
+                        "Table": "t_user_extra"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
       ]
     }
   }

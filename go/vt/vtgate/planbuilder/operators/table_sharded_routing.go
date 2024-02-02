@@ -2,6 +2,10 @@ package operators
 
 import (
 	"golang.org/x/exp/slices"
+	"io"
+	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
+	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 
 	"vitess.io/vitess/go/slice"
 	"vitess.io/vitess/go/vt/sqlparser"
@@ -376,4 +380,172 @@ func (tableRouting *TableShardedRouting) UpdateTableRoutingParams(_ *plancontext
 		rp.TableValues = tableRouting.Selected.Values
 	}
 	return nil
+}
+
+func tryMergeJoinShardedRoutingForSplitTable(
+	ctx *plancontext.PlanningContext,
+	routeA, routeB *TableRoute,
+	m merger,
+	joinPredicates []sqlparser.Expr,
+) (*TableRoute, error) {
+	sameKeyspace := routeA.Routing.Keyspace() == routeB.Routing.Keyspace()
+	tblA := routeA.Routing.(*TableShardedRouting)
+	tblB := routeB.Routing.(*TableShardedRouting)
+
+	switch tblA.RouteOpCode {
+	case engine.EqualUnique:
+		// If the two routes fully match, they can be merged together.
+		if tblB.RouteOpCode == engine.EqualUnique {
+			aVdx := tblA.SelectedTindex()
+			bVdx := tblB.SelectedTindex()
+			aExpr := tblA.TindexExpressions()
+			bExpr := tblB.TindexExpressions()
+			if aVdx == bVdx && gen4ValuesEqual(ctx, aExpr, bExpr) {
+				return m.mergeShardedRoutingForSplitTable(ctx, tblA, tblB, routeA, routeB)
+			}
+		}
+
+		// If the two routes don't match, fall through to the next case and see if we
+		// can merge via join predicates instead.
+		fallthrough
+
+	case engine.Scatter, engine.IN, engine.None:
+		if len(joinPredicates) == 0 {
+			// If we are doing two Scatters, we have to make sure that the
+			// joins are on the correct vindex to allow them to be merged
+			// no join predicates - no vindex
+			return nil, nil
+		}
+
+		if !sameKeyspace {
+			return nil, vterrors.VT12001("cross-shard correlated subquery")
+		}
+
+		canMerge := canMergeOnFiltersForSplitTable(ctx, routeA, routeB, joinPredicates)
+		if !canMerge {
+			return nil, nil
+		}
+		return m.mergeShardedRoutingForSplitTable(ctx, tblA, tblB, routeA, routeB)
+	}
+	return nil, nil
+}
+
+func (tr *TableShardedRouting) SelectedTindex() vindexes.Vindex {
+	if tr.Selected == nil {
+		return nil
+	}
+	return tr.Selected.FoundTindex
+}
+
+func (tr *TableShardedRouting) PickBestAvailableTindex() {
+	for _, v := range tr.TindexPreds {
+		option := v.bestOption()
+		if option != nil && (tr.Selected == nil || less(option.Cost, tr.Selected.Cost)) {
+			tr.Selected = option
+			tr.RouteOpCode = option.OpCode
+		}
+	}
+}
+
+func (tr *TableShardedRouting) TindexExpressions() []sqlparser.Expr {
+	if tr.Selected == nil {
+		return nil
+	}
+	return tr.Selected.ValueExprs
+}
+
+func canMergeOnFiltersForSplitTable(ctx *plancontext.PlanningContext, a, b *TableRoute, joinPredicates []sqlparser.Expr) bool {
+	for _, predicate := range joinPredicates {
+		for _, expr := range sqlparser.SplitAndExpression(nil, predicate) {
+			if canMergeOnFilterForSplit(ctx, a, b, expr) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func canMergeOnFilterForSplit(ctx *plancontext.PlanningContext, a, b *TableRoute, predicate sqlparser.Expr) bool {
+	comparison, ok := predicate.(*sqlparser.ComparisonExpr)
+	if !ok {
+		return false
+	}
+	if comparison.Operator != sqlparser.EqualOp {
+		return false
+	}
+	left := comparison.Left
+	right := comparison.Right
+
+	lVindex, tablCountL := findColumnTindex(ctx, a, left)
+	if lVindex == nil {
+		left, right = right, left
+		lVindex, tablCountL = findColumnTindex(ctx, a, left)
+	}
+	if lVindex == nil || !lVindex.IsUnique() {
+		return false
+	}
+	rVindex, tablCountR := findColumnTindex(ctx, b, right)
+	if rVindex == nil {
+		return false
+	}
+	return rVindex == lVindex && tablCountL == tablCountR
+}
+
+func findColumnTindex(ctx *plancontext.PlanningContext, a ops.Operator, exp sqlparser.Expr) (vindexes.TableSingleColumn, int32) {
+	_, isCol := exp.(*sqlparser.ColName)
+	if !isCol {
+		return nil, 0
+	}
+
+	exp = unwrapDerivedTables(ctx, exp)
+	if exp == nil {
+		return nil, 0
+	}
+
+	var singCol vindexes.TableSingleColumn
+	var tableCount int32
+
+	// for each equality expression that exp has with other column name, we check if it
+	// can be solved by any table in our routeTree. If an equality expression can be solved,
+	// we check if the equality expression and our table share the same vindex, if they do:
+	// the method will return the associated vindexes.SingleColumn.
+	for _, expr := range ctx.SemTable.GetExprAndEqualities(exp) {
+		col, isCol := expr.(*sqlparser.ColName)
+		if !isCol {
+			continue
+		}
+
+		deps := ctx.SemTable.RecursiveDeps(expr)
+
+		_ = rewrite.Visit(a, func(rel ops.Operator) error {
+			to, isTableOp := rel.(tableIDIntroducer)
+			if !isTableOp {
+				return nil
+			}
+			id := to.introducesTableID()
+			if deps.IsSolvedBy(id) {
+				tableInfo, err := ctx.SemTable.TableInfoFor(id)
+				if err != nil {
+					// an error here is OK, we just can't ask this operator about its column vindexes
+					return nil
+				}
+				vtable := tableInfo.GetVindexTable()
+				if vtable != nil {
+					logicTableConfig := ctx.SplitTableConfig[vtable.GetTableName().Name.String()]
+					sC, isSingle := logicTableConfig.TableVindex.(vindexes.TableSingleColumn)
+					if isSingle && logicTableConfig.TableIndexColumn[0].Column.Equal(col.Name) {
+						singCol = sC
+						tableCount = logicTableConfig.TableCount
+						return io.EOF
+					}
+				}
+			}
+			return nil
+		})
+		if singCol != nil {
+			return singCol, tableCount
+		}
+	}
+
+	return singCol, tableCount
 }

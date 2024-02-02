@@ -215,6 +215,50 @@
             }
           ]
         },
+        "t_user_shard": {
+          "column_vindexes": [
+            {
+              "column": "Id",
+              "name": "user_index"
+            },
+            {
+              "column": "Name",
+              "name": "name_user_map"
+            },
+            {
+              "column": "Costly",
+              "name": "costly_map"
+            }
+          ],
+          "auto_increment": {
+            "column": "id",
+            "sequence": "seq"
+          },
+          "columns": [
+            {
+              "name": "col",
+              "type": "INT16"
+            },
+            {
+              "name": "predef1"
+            },
+            {
+              "name": "predef2"
+            },
+            {
+              "name": "textcol1",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "intcol",
+              "type": "INT16"
+            },
+            {
+              "name": "textcol2",
+              "type": "VARCHAR"
+            }
+          ]
+        },
         "t_order": {
           "column_vindexes": [
             {

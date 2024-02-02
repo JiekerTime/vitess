@@ -36,10 +36,12 @@ func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limi
 	switch src := in.Source.(type) {
 	case *TableRoute:
 		return tryPushingDownLimitInRouteForSplitTable(ctx, in, src)
+	case *Route:
+		return tryPushingDownLimitInRoute(in, src)
 	case *Projection:
 		return nil, nil, vterrors.VT13001("unexpect case Projection")
 	case *Aggregator:
-		if isCrossShard(ctx.GetRoute()) {
+		if isCrossShard(ctx.GetRoute()) && len(ctx.GetRoute().TableNameSlice) <= 1 {
 			return rewrite.Swap(in, src, "limit pushed into aggregator")
 		}
 		return in, rewrite.SameTree, nil
@@ -49,8 +51,10 @@ func tryPushingDownLimitForSplitTable(ctx *plancontext.PlanningContext, in *Limi
 }
 
 func tryPushingDownLimitInRouteForSplitTable(ctx *plancontext.PlanningContext, in *Limit, src *TableRoute) (ops.Operator, *rewrite.ApplyResult, error) {
-	if src.IsSingleSplitTable() || isCrossShard(ctx.GetRoute()) {
-		return rewrite.Swap(in, src, "limit pushed into tableRoute")
+	if len(ctx.GetRoute().TableNameSlice) <= 1 {
+		if src.IsSingleSplitTable() || isCrossShard(ctx.GetRoute()) {
+			return rewrite.Swap(in, src, "limit pushed into tableRoute")
+		}
 	}
 	return setUpperLimitForSplitTable(in)
 }
@@ -100,10 +104,19 @@ func tryPushingDownOrderingForSplitTable(ctx *plancontext.PlanningContext, in *O
 	switch src := in.Source.(type) {
 	case *TableRoute:
 		return rewrite.Swap(in, src, "push ordering under tableRoute")
+	case *Route:
+		return rewrite.Swap(in, src, "push ordering under route")
 	case *Ordering:
 		// we'll just remove the order underneath. The top order replaces whatever was incoming
 		in.Source = src.Source
 		return in, rewrite.NewTree("remove double ordering", src), nil
+	case *ApplyJoin:
+		if canPushLeft(ctx, src, in.Order) {
+			// ApplyJoin is stable in regard to the columns coming from the LHS,
+			// so if all the ordering columns come from the LHS, we can push down the Ordering there
+			src.LHS, in.Source = in, src.LHS
+			return src, rewrite.NewTree("push down ordering on the LHS of a join", in), nil
+		}
 	case *Projection:
 		// we can move ordering under a projection if it's not introducing a column we're sorting by
 		for _, by := range in.Order {
@@ -121,10 +134,17 @@ func tryPushingDownOrderingForSplitTable(ctx *plancontext.PlanningContext, in *O
 	return in, rewrite.SameTree, nil
 }
 
-func tryPushingDownProjectionForSplitTable(_ *plancontext.PlanningContext, p *Projection) (ops.Operator, *rewrite.ApplyResult, error) {
+func tryPushingDownProjectionForSplitTable(ctx *plancontext.PlanningContext, p *Projection) (ops.Operator, *rewrite.ApplyResult, error) {
 	switch src := p.Source.(type) {
 	case *TableRoute:
 		return rewrite.Swap(p, src, "pushed projection under tableRoute")
+	case *Route:
+		return rewrite.Swap(p, src, "push projection under route")
+	case *ApplyJoin:
+		if p.FromAggr || !p.canPush(ctx) {
+			return p, rewrite.SameTree, nil
+		}
+		return pushProjectionInApplyJoin(ctx, p, src)
 	case *Limit:
 		return rewrite.Swap(p, src, "push projection under limit")
 	default:
@@ -288,7 +308,7 @@ func tryPushDistinctForSplitTable(ctx *plancontext.PlanningContext, in *Distinct
 		if src.IsSingleSplitTable() || !in.Required {
 			return rewrite.Swap(in, src, "push distinct under tableRoute")
 		}
-		if isCrossShard(ctx.GetRoute()) {
+		if isCrossShard(ctx.GetRoute()) && len(ctx.GetRoute().TableNameSlice) <= 1 {
 			return rewrite.Swap(in, src, "push distinct under tableRoute, Cross-shard Distinct")
 		}
 
@@ -300,6 +320,22 @@ func tryPushDistinctForSplitTable(ctx *plancontext.PlanningContext, in *Distinct
 		in.PushedPerformance = true
 
 		return in, rewrite.NewTree("added distinct under tableRoute - kept original", src), nil
+	case *Route:
+		if isDistinct(src.Source) && src.IsSingleShard() {
+			return src, rewrite.NewTree("distinct not needed", in), nil
+		}
+		if src.IsSingleShard() || !in.Required {
+			return rewrite.Swap(in, src, "push distinct under route")
+		}
+
+		if isDistinct(src.Source) {
+			return in, rewrite.SameTree, nil
+		}
+
+		src.Source = &Distinct{Source: src.Source}
+		in.PushedPerformance = true
+
+		return in, rewrite.NewTree("added distinct under route - kept original", src), nil
 	case *Distinct:
 		src.Required = false
 		src.PushedPerformance = false

@@ -15,11 +15,6 @@
     "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
   },
   {
-    "comment":"join query on sharding key with group by a unique vindex with having clause.",
-    "query":"select t_user.id, count(*) c from t_user, t_user_extra where t_user.id = t_user_extra.user_id group by t_user.id having max(t_user.col) > 10",
-    "plan":"VT12001: unsupported: multiple tables in split table"
-  },
-  {
     "comment":"correlated subquery on sharding key with group by a unique vindex with having clause.",
     "query":"select count(*) from t_user where exists (select 1 from t_user_extra where user_id = t_user.id group by user_id having max(col) > 10)",
     "plan":"VT12001: unsupported: subquery in split table"
@@ -58,11 +53,6 @@
     "comment":"count(*) on column from LIMIT",
     "query":"select count(*) from (select phone, id, city from t_user where id > 12 limit 10) as x",
     "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
-  },
-  {
-    "comment":"select u.id from t_user u join t_user_extra ue on ue.user_id = u.id group by u.id having count(u.name) = 3",
-    "query":"select u.id from t_user u join t_user_extra ue on ue.user_id = u.id group by u.id having count(u.name) = 3",
-    "plan":"VT12001: unsupported: multiple tables in split table"
   },
   {
     "comment":"aggregation on top of derived table with limit",

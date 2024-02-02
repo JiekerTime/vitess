@@ -30,7 +30,10 @@ const (
 	VindexTypeSplitTableBinaryHash = "split_table_binaryhash"
 )
 
-var _ Vindex = (*SplitTableHash)(nil)
+var (
+	_ Vindex            = (*SplitTableHash)(nil)
+	_ TableSingleColumn = (*SplitTableHash)(nil)
+)
 
 type SplitTableHash struct {
 	name string

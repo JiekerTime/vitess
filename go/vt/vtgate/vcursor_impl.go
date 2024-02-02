@@ -69,6 +69,7 @@ type iExecute interface {
 	Execute(ctx context.Context, mysqlCtx vtgateservice.MySQLConnection, c *mysql.Conn, method string, session *SafeSession, s string, vars map[string]*querypb.BindVariable) (*sqltypes.Result, error)
 	ExecuteMultiShard(ctx context.Context, primitive engine.Primitive, rss []*srvtopo.ResolvedShard, queries []*querypb.BoundQuery, session *SafeSession, autocommit bool, ignoreMaxMemoryRows bool) (qr *sqltypes.Result, errs []error)
 	StreamExecuteMulti(ctx context.Context, primitive engine.Primitive, query string, rss []*srvtopo.ResolvedShard, vars []map[string]*querypb.BindVariable, session *SafeSession, autocommit bool, callback func(reply *sqltypes.Result) error) []error
+	StreamExecuteMultiForSplitTable(ctx context.Context, primitive engine.Primitive, prims []string, rss []*srvtopo.ResolvedShard, vars []map[string]*querypb.BindVariable, session *SafeSession, autocommit bool, callback func(reply *sqltypes.Result) error) []error
 	ExecuteLock(ctx context.Context, rs *srvtopo.ResolvedShard, query *querypb.BoundQuery, session *SafeSession, lockFuncType sqlparser.LockingFuncType) (*sqltypes.Result, error)
 	Commit(ctx context.Context, safeSession *SafeSession) error
 	ExecuteMessageStream(ctx context.Context, rss []*srvtopo.ResolvedShard, name string, callback func(*sqltypes.Result) error) error
@@ -568,6 +569,18 @@ func (vc *vcursorImpl) StreamExecuteMulti(ctx context.Context, primitive engine.
 	errs := vc.executor.StreamExecuteMulti(ctx, primitive, vc.marginComments.Leading+query+vc.marginComments.Trailing, rss, bindVars, vc.safeSession, autocommit, callback)
 	vc.setRollbackOnPartialExecIfRequired(len(errs) != len(rss), rollbackOnError)
 
+	return errs
+}
+
+func (vc *vcursorImpl) StreamExecuteMultiForSplitTable(ctx context.Context, primitive engine.Primitive, prims []string, rss []*srvtopo.ResolvedShard, bindVars []map[string]*querypb.BindVariable, rollbackOnError bool, autocommit bool, callback func(reply *sqltypes.Result) error) []error {
+	noOfShards := len(rss)
+	atomic.AddUint64(&vc.logStats.ShardQueries, uint64(noOfShards))
+	err := vc.markSavepoint(ctx, rollbackOnError && (noOfShards > 1), map[string]*querypb.BindVariable{})
+	if err != nil {
+		return []error{err}
+	}
+	errs := vc.executor.StreamExecuteMultiForSplitTable(ctx, primitive, prims, rss, bindVars, vc.safeSession, autocommit, callback)
+	vc.setRollbackOnPartialExecIfRequired(len(errs) != len(rss), rollbackOnError)
 	return errs
 }
 

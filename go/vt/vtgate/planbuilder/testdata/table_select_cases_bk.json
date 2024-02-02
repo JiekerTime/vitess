@@ -384,32 +384,6 @@
     }
   },
   {
-    "comment": "select from pinned table",
-    "query": "select * from pin_test",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select * from pin_test",
-      "Instructions": {
-        "OperatorType": "Route",
-        "Variant": "EqualUnique",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select * from pin_test where 1 != 1",
-        "Query": "select * from pin_test",
-        "Table": "pin_test",
-        "Values": [
-          "VARCHAR(\"\\x80\")"
-        ],
-        "Vindex": "binary"
-      },
-      "TablesUsed": [
-        "user.pin_test"
-      ]
-    }
-  },
-  {
     "comment": "prefixing dual with a keyspace should not work",
     "query": "select 1 from user.dual",
     "plan": "table dual not found"

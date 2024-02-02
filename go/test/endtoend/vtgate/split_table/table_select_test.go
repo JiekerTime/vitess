@@ -2,32 +2,44 @@ package split_table
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestSelect(t *testing.T) {
 	mcmp, closer := start(t)
 	defer closer()
 	mcmp.Exec("use user")
-
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1,  '3',    'aaa', 1, false, 1, 2, 3, 100, 200, 'abc')")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (2,  '3',    'bbb', 2, false, 2, 3, 4, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1,  'aaa',    'aaa', 1, false, 1, 2, 3, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (2,  'bbb',    'bbb', 2, false, 2, 3, 4, 103, 200, 'abc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (3,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (4,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (5,  '12',   'ccc', 3, true,  3, 4, 5, 103, 200, 'abc')")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (6,  '2',    'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (7,  '1024', 'bbb', 2, false, 2, 3, 4, 100, 300, 3)")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  '1024', 'ccc', 3, false, 3, 4, 5, 102, 300, 4)")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  '1024', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, '1024', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (5,  'aaa',   'ccc', 3, true,  3, 4, 5, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (6,  'bbb',    'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (7,  'ccc', 'bbb', 2, false, 2, 3, 4, 100, 300, 3)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  'aaa', 'ccc', 3, false, 3, 4, 5, 102, 300, 4)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  'bbb', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, 'ccc', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (11, '12',   'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (12, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
-	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (13, '1024', 'aaa', 1, false, 3, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (12, 'aaa', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (13, 'aaa', 'aaa', 1, false, 3, 2, 3, 100, 300, 2)")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (14, '123',  'aaa', 1, false, 2, 2, 3, 100, 300, 'abc')")
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (15, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
-	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (1, 101, 101, 200, 'aaa', 200),(2, 102, 102, 200, 'xxx', 200),(3, 103, 103, 200, 'bbb', 200),(4, 104, 104, 200, 'aaa', 200),(5, 105, 105, 200, 'ada', 300)")
-	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (6, 101, 101, 300, 'aaa', 200),(7, 102, 102, 300, 'ddd', 200),(8, 103, 103, 300, 'ccc', 300),(9, 104, 104, 300, 'aaa', 300),(10, 105, 105, 300, 'axa', 300)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (1,  'aaa',    'aaa', 1, false, 1, 2, 3, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (2,  'bbb',    'bbb', 2, false, 2, 3, 4, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (3,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (4,  'abc',  'ccc', 3, true,  3, 4, 5, 100, 200, 'abc')")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (5,  'aaa',   'ccc', 3, true,  3, 4, 5, 103, 200, 'abc')")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (6,  'bbb',    'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (7,  'ccc', 'bbb', 2, false, 2, 3, 4, 100, 300, 3)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (8,  'aaa', 'ccc', 3, false, 3, 4, 5, 102, 300, 4)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (9,  'bbb', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (10, 'ccc', 'aaa', 1, false, 1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (11, '12',   'aaa', 1, true,  1, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (12, 'aaa', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (13, 'aaa', 'aaa', 1, false, 3, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (14, '123',  'aaa', 1, false, 2, 2, 3, 100, 300, 'abc')")
+	mcmp.Exec("insert into t_user_shard(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name) values (15, '1024', 'aaa', 1, false, 2, 2, 3, 100, 300, 2)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (1, 1, 101, 200, 'aaa', 200),(2, 2, 102, 200, 'xxx', 200),(3, 3, 103, 200, 'bbb', 200),(4, 4, 104, 200, 'aaa', 200),(5, 5, 105, 200, 'ada', 300)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (6, 6, 101, 300, 'aaa', 200),(7, 7, 102, 300, 'ddd', 200),(8, 8, 103, 300, 'ccc', 300),(9, 9, 104, 300, 'aaa', 300),(10, 10, 105, 300, 'axa', 300)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (101,  11, 'aaa', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (121,  10, 'aaa', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (131,  12, 'bbb', 10, 200)")
@@ -84,7 +96,7 @@ func TestSelect(t *testing.T) {
 	// Multiple parenthesized expressions
 	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 4 AND name ='abc' AND col = 'abc') limit 5")
 	// Column Aliasing with Table.Column
-	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 1 and col = 3 order by user0_.col desc limit 2")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 1 and col = 'aaa' order by user0_.col desc limit 2")
 	// Column Aliasing with Column
 	mcmp.ExecWithColumnCompareAndNotEmpty("select user0_.col as col0_ from t_user user0_ where id = 11 and col = 12 order by col0_ desc limit 3")
 	// Column Aliasing with Table.Column,splitTable Limit
@@ -96,7 +108,7 @@ func TestSelect(t *testing.T) {
 	// Column as boolean-ish
 	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 11) and (col = 12) AND f_bit limit 5")
 	// PK as fake boolean, and column as boolean-ish
-	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 5) and (col = 12) AND f_bit = true limit 5")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select * from t_user where (id = 5) and (col = 'aaa') AND f_bit = true limit 5")
 	// group by with non aggregated columns and table alias
 	mcmp.ExecWithColumnCompareAndNotEmpty("select u.id, u.intcol, u.col from t_user u group by u.id, u.col")
 	// Auto-resolve should work if unique vindex columns are referenced
@@ -128,14 +140,17 @@ func TestSelect(t *testing.T) {
 	// Single table sharded scatter
 	mcmp.ExecWithColumnCompareAndNotEmpty("select col from t_user for update")
 	// join push down using shard key
-	_, err := mcmp.ExecAndIgnore("select u.name from t_user u join t_user_extra ue on u.id = ue.user_id ")
-	require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
-	// ,join push down using shard key
-	_, err = mcmp.ExecAndIgnore("select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
-	require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
+	mcmp.Exec("select u.name from t_user u join t_user_extra ue on u.id = ue.user_id")
+	// join push down using shard key and split table key
+	mcmp.ExecWithColumnCompareAndNotEmpty("select u.name from t_user u join t_user_extra ue on u.id = ue.user_id and u.col=ue.col")
+	// join push down using shard key
+	mcmp.Exec("select t_user.name,t_user_extra.col from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
 	// multiple tables
-	_, err = mcmp.ExecAndIgnore("select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
-	require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
+	mcmp.Exec("select count(*) from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
+	// join push down using shard key
+	mcmp.Exec("select count(distinct t_user.id) from t_user,t_user_extra where t_user.id=t_user_extra.user_id")
+	// join push down using shard key for shard table and split table
+	mcmp.ExecWithColumnCompare("select t_user_shard.id  shard_id, t_user.id split_id from t_user_shard, t_user where t_user_shard.id = t_user.id")
 	// for update
 	mcmp.ExecWithColumnCompareAndNotEmpty("select t_user.col from t_user join t_user_extra for update")
 	// Hex number is not treated as a simple value

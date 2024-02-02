@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
+	"vitess.io/vitess/go/mysql/sqlerror"
 
 	"vitess.io/vitess/go/sqltypes"
 	"vitess.io/vitess/go/vt/key"
@@ -47,6 +49,8 @@ type TableRoute struct {
 
 	// QueryTimeout contains the optional timeout (in milliseconds) to apply to this query
 	QueryTimeout int
+
+	ScatterErrorsAsWarnings bool
 }
 
 func (tableRoute *TableRoute) RouteType() string {
@@ -168,6 +172,84 @@ func SortTableList(tables map[string][]vindexes.ActualTable) {
 	}
 }
 
+func (tableRoute *TableRoute) streamExecuteShards(
+	ctx context.Context,
+	vcursor VCursor,
+	bindVars map[string]*querypb.BindVariable,
+	wantfields bool,
+	callback func(*sqltypes.Result) error,
+	rss []*srvtopo.ResolvedShard,
+	bvs []map[string]*querypb.BindVariable,
+	actualTableNameMap map[string][]vindexes.ActualTable,
+) error {
+	querieses, err := tableRoute.generateQuerieses(rss, bvs, actualTableNameMap)
+	if err != nil {
+		return err
+	}
+
+	sqlStream := make([]string, 0, len(querieses)*len(querieses[0]))
+	rssStream := make([]*srvtopo.ResolvedShard, 0, len(querieses)*len(querieses[0]))
+	bvsStream := make([]map[string]*querypb.BindVariable, 0, len(querieses)*len(querieses[0]))
+	for i, rs := range rss {
+		queries := querieses[i]
+		for _, querySQL := range queries {
+			sqlStream = append(sqlStream, querySQL.Sql)
+			rssStream = append(rssStream, rs)
+			bvsStream = append(bvsStream, bvs[i])
+		}
+
+	}
+
+	if len(tableRoute.OrderBy) == 0 {
+		errs := vcursor.StreamExecuteMultiForSplitTable(ctx, tableRoute, sqlStream, rssStream, bvsStream, false /* rollbackOnError */, false /* autocommit */, func(qr *sqltypes.Result) error {
+			return callback(qr.Truncate(tableRoute.TruncateColumnCount))
+		})
+		if len(errs) > 0 {
+			if !tableRoute.ScatterErrorsAsWarnings || len(errs) == len(rss) {
+				return vterrors.Aggregate(errs)
+			}
+			partialSuccessScatterQueries.Add(1)
+			for _, err := range errs {
+				sErr := sqlerror.NewSQLErrorFromError(err).(*sqlerror.SQLError)
+				vcursor.Session().RecordWarning(&querypb.QueryWarning{Code: uint32(sErr.Num), Message: err.Error()})
+			}
+		}
+		return nil
+	}
+
+	return tableRoute.mergeSort(ctx, vcursor, bindVars, wantfields, callback, rssStream, sqlStream, bvsStream)
+}
+
+func (tableRoute *TableRoute) mergeSort(
+	ctx context.Context,
+	vcursor VCursor,
+	bindVars map[string]*querypb.BindVariable,
+	wantfields bool,
+	callback func(*sqltypes.Result) error,
+	rss []*srvtopo.ResolvedShard,
+	sqlArray []string,
+	bvs []map[string]*querypb.BindVariable,
+) error {
+	prims := make([]StreamExecutor, 0, len(rss))
+	for i, rs := range rss {
+		prims = append(prims, &shardRoute{
+			query:     sqlArray[i],
+			rs:        rs,
+			bv:        bvs[i],
+			primitive: tableRoute,
+		})
+	}
+
+	ms := MergeSort{
+		Primitives:              prims,
+		OrderBy:                 tableRoute.OrderBy,
+		ScatterErrorsAsWarnings: false,
+	}
+	return vcursor.StreamExecutePrimitive(ctx, &ms, bindVars, wantfields, func(qr *sqltypes.Result) error {
+		return callback(qr.Truncate(tableRoute.TruncateColumnCount))
+	})
+}
+
 func (tableRoute *TableRoute) executeShards(
 	ctx context.Context,
 	vcursor VCursor,
@@ -175,14 +257,9 @@ func (tableRoute *TableRoute) executeShards(
 	bvs []map[string]*querypb.BindVariable,
 	actualTableNameMap map[string][]vindexes.ActualTable,
 ) (*sqltypes.Result, error) {
-	querieses := make([][]*querypb.BoundQuery, len(rss))
-	for j := range rss {
-		// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
-		boundQueries, err := tableRoute.TableRouteParam.getTableQueries(tableRoute.Query, bvs[j], actualTableNameMap)
-		if err != nil {
-			return nil, err
-		}
-		querieses[j] = boundQueries
+	querieses, err := tableRoute.generateQuerieses(rss, bvs, actualTableNameMap)
+	if err != nil {
+		return nil, err
 	}
 	result, errs := vcursor.ExecuteBatchMultiShard(ctx, tableRoute, rss, querieses, false /* rollbackOnError */, false /* canAutocommit */)
 
@@ -212,6 +289,19 @@ func (tableRoute *TableRoute) executeShards(
 		}
 	}
 	return result.Truncate(tableRoute.TruncateColumnCount), nil
+}
+
+func (tableRoute *TableRoute) generateQuerieses(rss []*srvtopo.ResolvedShard, bvs []map[string]*querypb.BindVariable, actualTableNameMap map[string][]vindexes.ActualTable) ([][]*querypb.BoundQuery, error) {
+	querieses := make([][]*querypb.BoundQuery, len(rss))
+	for j := range rss {
+		// 2.SQL改写 改写表名（逻辑表->实际表）这里取的是获取分表的actualTableNameMap
+		boundQueries, err := tableRoute.TableRouteParam.getTableQueries(tableRoute.Query, bvs[j], actualTableNameMap)
+		if err != nil {
+			return nil, err
+		}
+		querieses[j] = boundQueries
+	}
+	return querieses, nil
 }
 
 func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error) {
@@ -250,7 +340,27 @@ func (tableRoute *TableRoute) sort(in *sqltypes.Result) (*sqltypes.Result, error
 }
 
 func (tableRoute *TableRoute) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
-	panic("implement me")
+	if tableRoute.QueryTimeout != 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(tableRoute.QueryTimeout)*time.Millisecond)
+		defer cancel()
+	}
+
+	// 0.计算分片
+	rss, bvs, err := tableRoute.ShardRouteParam.findRoute(ctx, vcursor, bindVars)
+	if err != nil {
+		return err
+	}
+
+	//1. 计算分表
+	actualTableMap, err := tableRoute.TableRouteParam.findTableRoute(ctx, vcursor, bindVars)
+	if err != nil {
+		return err
+	}
+	//排序分表
+	SortTableList(actualTableMap)
+
+	return tableRoute.streamExecuteShards(ctx, vcursor, bindVars, wantfields, callback, rss, bvs, actualTableMap)
 }
 
 // SetTruncateColumnCount sets the truncate column count.

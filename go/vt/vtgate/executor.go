@@ -1790,6 +1790,10 @@ func (e *Executor) StreamExecuteMulti(ctx context.Context, primitive engine.Prim
 	return e.scatterConn.StreamExecuteMulti(ctx, primitive, query, rss, vars, session, autocommit, callback)
 }
 
+func (e *Executor) StreamExecuteMultiForSplitTable(ctx context.Context, primitive engine.Primitive, prims []string, rss []*srvtopo.ResolvedShard, vars []map[string]*querypb.BindVariable, session *SafeSession, autocommit bool, callback func(reply *sqltypes.Result) error) []error {
+	return e.scatterConn.StreamExecuteMultiForSplitTable(ctx, primitive, prims, rss, vars, session, autocommit, callback)
+}
+
 // ExecuteLock implements the IExecutor interface
 func (e *Executor) ExecuteLock(ctx context.Context, rs *srvtopo.ResolvedShard, query *querypb.BoundQuery, session *SafeSession, lockFuncType sqlparser.LockingFuncType) (*sqltypes.Result, error) {
 	return e.scatterConn.ExecuteLock(ctx, rs, query, session, lockFuncType)

@@ -272,9 +272,9 @@ func (node *AlterVschema) Format(buf *TrackedBuffer) {
 	case DropAutoIncDDLAction:
 		buf.astPrintf(node, "alter vschema on %v drop auto_increment %v", node.Table, node.AutoIncSpec)
 	case AddColSingleDDLAction:
-		buf.astPrintf(node, "alter vschema on %v add single %v", node.Table, NewIdentifierCI(node.Value))
+		buf.astPrintf(node, "alter vschema on %v add single %s", node.Table, node.Value)
 	case DropColSingleDDLAction:
-		buf.astPrintf(node, "alter vschema on %v drop single %v", node.Table, NewIdentifierCI(node.Value))
+		buf.astPrintf(node, "alter vschema on %v drop single %s", node.Table, node.Value)
 	default:
 		buf.astPrintf(node, "%s table %v", node.Action.ToString(), node.Table)
 	}
@@ -678,7 +678,11 @@ func (ts *TableSpec) Format(buf *TrackedBuffer) {
 			buf.literal(",\n ")
 		}
 		buf.astPrintf(ts, " %s", opt.Name)
-		if opt.String != "" {
+		if opt.DBPartitionOption != nil {
+			ts.Options.formatDBPartition(buf, opt)
+		} else if opt.TBPartitionOption != nil {
+			ts.Options.formatTBPartition(buf, opt)
+		} else if opt.String != "" {
 			if opt.CaseSensitive {
 				buf.astPrintf(ts, " %#s", opt.String)
 			} else {

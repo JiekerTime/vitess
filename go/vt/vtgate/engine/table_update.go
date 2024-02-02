@@ -44,7 +44,11 @@ func (upd *TableUpdate) TryExecute(ctx context.Context, vcursor VCursor, bindVar
 }
 
 func (upd *TableUpdate) TryStreamExecute(ctx context.Context, vcursor VCursor, bindVars map[string]*querypb.BindVariable, wantfields bool, callback func(*sqltypes.Result) error) error {
-	return fmt.Errorf("implement me")
+	res, err := upd.TryExecute(ctx, vcursor, bindVars, wantfields)
+	if err != nil {
+		return err
+	}
+	return callback(res)
 }
 
 // GetFields fetches the field info.

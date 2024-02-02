@@ -18,8 +18,12 @@ import (
 
 func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operator) (logicalPlan, error) {
 	switch op := op.(type) {
+	case *operators.Route:
+		return transformRoutePlan(ctx, op)
 	case *operators.TableRoute:
 		return transformTableRoutePlan(ctx, op)
+	case *operators.ApplyJoin:
+		return transformTableApplyJoinPlan(ctx, op)
 	case *operators.Ordering:
 		return transformOrderingForSplitTable(ctx, op)
 	case *operators.Projection:
@@ -34,7 +38,7 @@ func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operat
 		return transformDistinctForSplitTable(ctx, op)
 	}
 
-	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToLogicalPlan)", op))
+	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToTableLogicalPlan)", op))
 }
 
 func transformDistinctForSplitTable(ctx *plancontext.PlanningContext, op *operators.Distinct) (logicalPlan, error) {
@@ -299,6 +303,29 @@ func transformFilterForSplitTable(ctx *plancontext.PlanningContext, op *operator
 			ASTPredicate: ast,
 			Truncate:     op.Truncate,
 		},
+	}, nil
+}
+
+func transformTableApplyJoinPlan(ctx *plancontext.PlanningContext, n *operators.ApplyJoin) (logicalPlan, error) {
+	lhs, err := transformToTableLogicalPlan(ctx, n.LHS)
+	if err != nil {
+		return nil, err
+	}
+	rhs, err := transformToTableLogicalPlan(ctx, n.RHS)
+	if err != nil {
+		return nil, err
+	}
+	opCode := engine.InnerJoin
+	if n.LeftJoin {
+		opCode = engine.LeftJoin
+	}
+
+	return &join{
+		Left:   lhs,
+		Right:  rhs,
+		Cols:   n.Columns,
+		Vars:   n.Vars,
+		Opcode: opCode,
 	}, nil
 }
 

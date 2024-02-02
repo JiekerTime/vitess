@@ -18,6 +18,16 @@ func tryPushAggregatorForSplitTable(ctx *plancontext.PlanningContext, aggregator
 	switch src := aggregator.Source.(type) {
 	case *TableRoute:
 		output, applyResult, err = pushAggregationThroughTableRoute(ctx, aggregator, src)
+	case *Route:
+		output, applyResult, err = pushAggregationThroughRoute(ctx, aggregator, src)
+	case *ApplyJoin:
+		if reachedPhase(ctx, delegateAggregation) {
+			output, applyResult, err = pushAggregationThroughJoin(ctx, aggregator, src)
+		}
+	case *Filter:
+		if reachedPhase(ctx, delegateAggregation) {
+			output, applyResult, err = pushAggregationThroughFilter(ctx, aggregator, src)
+		}
 	default:
 		return aggregator, rewrite.SameTree, nil
 	}
@@ -34,6 +44,51 @@ func tryPushAggregatorForSplitTable(ctx *plancontext.PlanningContext, aggregator
 	return
 }
 
+func tryPushFilterForSplitTable(ctx *plancontext.PlanningContext, in *Filter) (ops.Operator, *rewrite.ApplyResult, error) {
+	switch src := in.Source.(type) {
+	case *Projection:
+		return pushFilterUnderProjection(ctx, in, src)
+	case *Route:
+		for _, pred := range in.Predicates {
+			var err error
+			deps := ctx.SemTable.RecursiveDeps(pred)
+			if !isOuterTable(src, deps) {
+				// we can only update based on predicates on inner tables
+				src.Routing, err = src.Routing.updateRoutingLogic(ctx, pred)
+				if err != nil {
+					return nil, nil, err
+				}
+			}
+		}
+		return rewrite.Swap(in, src, "push filter into Route")
+	case *TableRoute:
+		for _, pred := range in.Predicates {
+			var err error
+			deps := ctx.SemTable.RecursiveDeps(pred)
+			if !isOuterTable(src, deps) {
+				// we can only update based on predicates on inner tables
+				src.Routing, err = src.Routing.updateRoutingLogic(ctx, pred)
+				if err != nil {
+					return nil, nil, err
+				}
+			}
+		}
+		return rewrite.Swap(in, src, "push filter into Route")
+	case *SubQuery:
+		outerTableID := TableID(src.Outer)
+		for _, pred := range in.Predicates {
+			deps := ctx.SemTable.RecursiveDeps(pred)
+			if !deps.IsSolvedBy(outerTableID) {
+				return in, rewrite.SameTree, nil
+			}
+		}
+		src.Outer, in.Source = in, src.Outer
+		return src, rewrite.NewTree("push filter to outer query in subquery container", in), nil
+	}
+
+	return in, rewrite.SameTree, nil
+}
+
 func pushAggregationThroughTableRoute(
 	ctx *plancontext.PlanningContext,
 	aggregator *Aggregator,
@@ -45,13 +100,14 @@ func pushAggregationThroughTableRoute(
 	}
 	// If the logicPlan of shardKeyspace has Aggregation, then the split table plan does not need to generate it again.
 	// such as Cross-shard aggregation functions, Cross-shard group by (not grouping by sharding keys)
-	if aggregator.Grouping == nil && isCrossShard(ctx.GetRoute()) {
-		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard aggregation functions - remove original")
+	if len(ctx.GetRoute().TableNameSlice) <= 1 {
+		if aggregator.Grouping == nil && isCrossShard(ctx.GetRoute()) {
+			return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard aggregation functions - remove original")
+		}
+		if aggregator.Grouping != nil && isCrossShard(ctx.GetRoute()) && !overlappingUniqueVindex(ctx, aggregator.Grouping) {
+			return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard group by - remove original")
+		}
 	}
-	if aggregator.Grouping != nil && isCrossShard(ctx.GetRoute()) && !overlappingUniqueVindex(ctx, aggregator.Grouping) {
-		return rewrite.Swap(aggregator, route, "push down aggregation under tableRoute, Cross-shard group by - remove original")
-	}
-
 	if !reachedPhase(ctx, delegateAggregation) {
 		return nil, nil, nil
 	}

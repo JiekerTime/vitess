@@ -45,6 +45,8 @@ func runRewritersForSplitTable(ctx *plancontext.PlanningContext, root ops.Operat
 		switch in := in.(type) {
 		case *Horizon:
 			return pushOrExpandHorizonForSplitTable(ctx, in)
+		case *Join:
+			return optimizeJoinForSplitTable(ctx, in)
 		case *Projection:
 			return tryPushingDownProjectionForSplitTable(ctx, in)
 		case *Limit:
@@ -53,6 +55,8 @@ func runRewritersForSplitTable(ctx *plancontext.PlanningContext, root ops.Operat
 			return tryPushingDownOrderingForSplitTable(ctx, in)
 		case *Aggregator:
 			return tryPushAggregatorForSplitTable(ctx, in)
+		case *Filter:
+			return tryPushFilterForSplitTable(ctx, in)
 		case *Distinct:
 			return tryPushDistinctForSplitTable(ctx, in)
 		case *QueryGraph:

@@ -908,9 +908,9 @@ func (ts *TableSpec) formatFast(buf *TrackedBuffer) {
 		buf.WriteByte(' ')
 		buf.WriteString(opt.Name)
 		if opt.DBPartitionOption != nil {
-			ts.Options.formatDBPartition(buf, opt)
+			ts.Options.formatDBPartitionFast(buf, opt)
 		} else if opt.TBPartitionOption != nil {
-			ts.Options.formatTBPartition(buf, opt)
+			ts.Options.formatTBPartitionFast(buf, opt)
 		} else if opt.String != "" {
 			if opt.CaseSensitive {
 				buf.WriteByte(' ')
@@ -3213,9 +3213,9 @@ func (node TableOptions) formatFast(buf *TrackedBuffer) {
 		buf.WriteString(option.Name)
 		switch {
 		case option.DBPartitionOption != nil:
-			node.formatDBPartition(buf, option)
+			node.formatDBPartitionFast(buf, option)
 		case option.TBPartitionOption != nil:
-			node.formatTBPartition(buf, option)
+			node.formatTBPartitionFast(buf, option)
 		case option.String != "":
 			if option.CaseSensitive {
 				buf.WriteByte(' ')
@@ -3232,6 +3232,46 @@ func (node TableOptions) formatFast(buf *TrackedBuffer) {
 			option.Tables.formatFast(buf)
 			buf.WriteByte(')')
 		}
+	}
+}
+
+func (node TableOptions) formatTBPartitionFast(buf *TrackedBuffer, option *TableOption) {
+	if !option.TBPartitionOption.PartitionMethodName.IsEmpty() {
+		buf.WriteString(" BY ")
+		buf.WriteString(option.TBPartitionOption.PartitionMethodName.val)
+	}
+	buf.WriteString("(")
+	prefix := ""
+	for _, n := range option.TBPartitionOption.ColList {
+		buf.WriteString(prefix)
+		n.formatFast(buf)
+		prefix = ", "
+	}
+	buf.WriteString(")")
+	if !option.TBPartitionOption.PartitionMethodType.IsEmpty() {
+		buf.WriteString(" USING ")
+		buf.WriteString(option.TBPartitionOption.PartitionMethodType.val)
+	}
+	buf.WriteString(" TableCount ")
+	option.Value.formatFast(buf)
+}
+
+func (node TableOptions) formatDBPartitionFast(buf *TrackedBuffer, option *TableOption) {
+	if !option.DBPartitionOption.PartitionMethodName.IsEmpty() {
+		buf.WriteString(" BY ")
+		buf.WriteString(option.DBPartitionOption.PartitionMethodName.val)
+	}
+	buf.WriteString("(")
+	prefix := ""
+	for _, n := range option.DBPartitionOption.ColList {
+		buf.WriteString(prefix)
+		n.formatFast(buf)
+		prefix = ", "
+	}
+	buf.WriteString(")")
+	if !option.DBPartitionOption.PartitionMethodType.IsEmpty() {
+		buf.WriteString(" USING ")
+		buf.WriteString(option.DBPartitionOption.PartitionMethodType.val)
 	}
 }
 
