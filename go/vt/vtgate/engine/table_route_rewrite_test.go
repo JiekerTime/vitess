@@ -136,19 +136,16 @@ func TestTokenRewriteMethod(t *testing.T) {
 				"select t1.id, t2.`name`, max(t3.age) from (select * from (select * from (select * from my_table_1 as t1 limit 5, 10) as t2 limit 5, 10) as t3 limit 5, 10) as t4 join my_table_1 as t5 on t4.id = t5.id where t4.id = 1 group by t1.id, t2.`name` order by max(t3.age) asc limit 5, 10",
 			},
 		},
-		// Map is unordered.
-		//{
-		//	name:  "Multi tables",
-		//	query: "select * from t_user join t_order",
-		//	exceptedQueries: []string{
-		//		"select * from t_user_0 join t_order_0",
-		//		"select * from t_user_0 join t_order_1",
-		//		"select * from t_user_1 join t_order_0",
-		//		"select * from t_user_1 join t_order_1",
-		//	},
-		//	logicalTables: []string{"t_user", "t_order"},
-		//	bvs:           map[string]*querypb.BindVariable{},
-		//},
+		{
+			name:  "Multi tables",
+			query: "select * from t_user join t_order",
+			exceptedQueries: []string{
+				"select * from t_user_0 join t_order_0",
+				"select * from t_user_1 join t_order_1",
+			},
+			logicalTables: []string{"t_user", "t_order"},
+			bvs:           map[string]*querypb.BindVariable{},
+		},
 	}
 
 	vc := &loggingVCursor{shards: []string{"-20", "20-"}}

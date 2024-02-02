@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -52,11 +53,12 @@ func (trp *TableRoutingParameters) getTableQueries(stmt sqlparser.SQLNode, bvs m
 	tokenValues := trp.getActTbsTokenMap(logicalActTbMap)
 
 	// Handling the Cartesian product.
-	queries := []string{
-		trp.CachedStmtWithToken,
-	}
+	var queries []string
 	for token, actualTables := range tokenValues {
-		queries = doGetQueries(token, actualTables, queries)
+		queries, err = trp.doGetQueries(token, actualTables, queries)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	result = make([]*querypb.BoundQuery, len(queries))
@@ -246,22 +248,32 @@ func (trp *TableRoutingParameters) generatorTokenReplacements(replaceToken strin
 	return replacements
 }
 
-// doGetQueries is a method that handles Cartesian product.
-func doGetQueries(token string, actualTables []vindexes.ActualTable, queries []string) (result []string) {
-	result = make([]string, len(actualTables)*len(queries))
-	for qi, query := range queries {
-		indexes := sqlparser.AcqTokenIndex(query, token)
+func (trp *TableRoutingParameters) doGetQueries(token string, actualTables []vindexes.ActualTable, queries []string) (result []string, err error) {
+	if queries == nil {
+		queries = []string{trp.CachedStmtWithToken}
+	}
+	if len(queries) != 1 && len(actualTables) != len(queries) {
+		return nil, fmt.Errorf("mismatch in the number of queries and actual tables: %d queries, %d tables", len(queries), len(actualTables))
+	}
+	result = make([]string, len(actualTables))
+	if len(queries) == 1 {
+		indexes := sqlparser.AcqTokenIndex(queries[0], token)
 		for ti, actualTable := range actualTables {
 			var buf strings.Builder
-			buf.Grow(len(query) + len(indexes)/2*(len(actualTable.ActualTableName)-len(token)))
+			buf.Grow(len(queries[0]) + len(indexes)/2*(len(actualTable.ActualTableName)-len(token)))
 			l := 0
 			for i := 1; i < len(indexes); i += 2 {
-				buf.WriteString(query[l:indexes[i-1]] + actualTable.ActualTableName)
+				buf.WriteString(queries[0][l:indexes[i-1]] + actualTable.ActualTableName)
 				l = indexes[i] + 1
 			}
-			buf.WriteString(query[l:])
-			result[qi*len(actualTables)+ti] = buf.String()
+			buf.WriteString(queries[0][l:])
+			result[ti] = buf.String()
+		}
+	} else {
+		formattedToken := sqlparser.FormateToken(token)
+		for i := 0; i < len(queries); i++ {
+			result[i] = strings.ReplaceAll(queries[i], formattedToken, actualTables[i].ActualTableName)
 		}
 	}
-	return result
+	return result, nil
 }
