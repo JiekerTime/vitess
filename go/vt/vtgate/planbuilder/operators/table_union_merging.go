@@ -1,32 +1,15 @@
-/*
-Copyright 2023 The Vitess Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package operators
 
 import (
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
-	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 )
 
-// mergeUnionInputInAnyOrder merges sources the sources of the union in any order
+// mergeUnionInputInAnyOrderForSplitTable merges sources the sources of the union in any order
 // can be used for UNION DISTINCT
-func mergeUnionInputInAnyOrder(ctx *plancontext.PlanningContext, op *Union) ([]ops.Operator, []sqlparser.SelectExprs, error) {
+func mergeUnionInputInAnyOrderForSplitTable(ctx *plancontext.PlanningContext, op *Union) ([]ops.Operator, []sqlparser.SelectExprs, error) {
 	sources := op.Sources
 	selects := op.Selects
 
@@ -43,7 +26,7 @@ func mergeUnionInputInAnyOrder(ctx *plancontext.PlanningContext, op *Union) ([]o
 			}
 			selA := selects[idx]
 			selB := selects[j]
-			newPlan, sel, err := mergeUnionInputs(ctx, srcA, srcB, selA, selB, op.distinct)
+			newPlan, sel, err := mergeUnionInputsForSplitTable(ctx, srcA, srcB, selA, selB, op.distinct)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -76,7 +59,7 @@ func mergeUnionInputInAnyOrder(ctx *plancontext.PlanningContext, op *Union) ([]o
 	return sources, selects, nil
 }
 
-func mergeUnionInputsInOrder(ctx *plancontext.PlanningContext, op *Union) ([]ops.Operator, []sqlparser.SelectExprs, error) {
+func mergeUnionInputsInOrderForSplitTable(ctx *plancontext.PlanningContext, op *Union) ([]ops.Operator, []sqlparser.SelectExprs, error) {
 	sources := op.Sources
 	selects := op.Selects
 	for {
@@ -85,7 +68,7 @@ func mergeUnionInputsInOrder(ctx *plancontext.PlanningContext, op *Union) ([]ops
 			j := i + 1
 			srcA, selA := sources[i], selects[i]
 			srcB, selB := sources[j], selects[j]
-			newPlan, sel, err := mergeUnionInputs(ctx, srcA, srcB, selA, selB, op.distinct)
+			newPlan, sel, err := mergeUnionInputsForSplitTable(ctx, srcA, srcB, selA, selB, op.distinct)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -109,13 +92,13 @@ func mergeUnionInputsInOrder(ctx *plancontext.PlanningContext, op *Union) ([]ops
 // If they can be merged, a new operator with the merged routing is returned
 // If they cannot be merged, nil is returned.
 // this function is very similar to mergeJoinInputs
-func mergeUnionInputs(
+func mergeUnionInputsForSplitTable(
 	ctx *plancontext.PlanningContext,
 	lhs, rhs ops.Operator,
 	lhsExprs, rhsExprs sqlparser.SelectExprs,
 	distinct bool,
 ) (ops.Operator, sqlparser.SelectExprs, error) {
-	lhsRoute, rhsRoute, routingA, routingB, a, b, sameKeyspace := prepareInputRoutes(lhs, rhs)
+	lhsRoute, rhsRoute, routingA, routingB, a, b, sameKeyspace := prepareInputRoutesForSplitTable(lhs, rhs)
 	if lhsRoute == nil {
 		return nil, nil, nil
 	}
@@ -124,17 +107,17 @@ func mergeUnionInputs(
 	// if either side is a dual query, we can always merge them together
 	// an unsharded/reference route can be merged with anything going to that keyspace
 	case b == dual || (b == anyShard && sameKeyspace):
-		return createMergedUnion(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingA)
+		return createMergedUnionForSplitTable(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingA)
 	case a == dual || (a == anyShard && sameKeyspace):
-		return createMergedUnion(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingB)
+		return createMergedUnionForSplitTable(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingB)
 
 	case a == none:
-		return createMergedUnion(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingB)
+		return createMergedUnionForSplitTable(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingB)
 	case b == none:
-		return createMergedUnion(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingA)
+		return createMergedUnionForSplitTable(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct, routingA)
 
 	case a == sharded && b == sharded && sameKeyspace:
-		res, exprs, err := tryMergeUnionShardedRouting(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct)
+		res, exprs, err := tryMergeUnionShardedRoutingForSplitTable(ctx, lhsRoute, rhsRoute, lhsExprs, rhsExprs, distinct)
 		if err != nil || res != nil {
 			return res, exprs, err
 		}
@@ -142,43 +125,9 @@ func mergeUnionInputs(
 	return nil, nil, nil
 }
 
-func tryMergeUnionShardedRouting(
+func createMergedUnionForSplitTable(
 	ctx *plancontext.PlanningContext,
-	routeA, routeB *Route,
-	exprsA, exprsB sqlparser.SelectExprs,
-	distinct bool,
-) (ops.Operator, sqlparser.SelectExprs, error) {
-	tblA := routeA.Routing.(*ShardedRouting)
-	tblB := routeB.Routing.(*ShardedRouting)
-
-	scatterA := tblA.RouteOpCode == engine.Scatter
-	scatterB := tblB.RouteOpCode == engine.Scatter
-	uniqueA := tblA.RouteOpCode == engine.EqualUnique
-	uniqueB := tblB.RouteOpCode == engine.EqualUnique
-
-	switch {
-	case scatterA:
-		return createMergedUnion(ctx, routeA, routeB, exprsA, exprsB, distinct, tblA)
-
-	case scatterB:
-		return createMergedUnion(ctx, routeA, routeB, exprsA, exprsB, distinct, tblB)
-
-	case uniqueA && uniqueB:
-		aVdx := tblA.SelectedVindex()
-		bVdx := tblB.SelectedVindex()
-		aExpr := tblA.VindexExpressions()
-		bExpr := tblB.VindexExpressions()
-		if aVdx == bVdx && gen4ValuesEqual(ctx, aExpr, bExpr) {
-			return createMergedUnion(ctx, routeA, routeB, exprsA, exprsB, distinct, tblA)
-		}
-	}
-
-	return nil, nil, nil
-}
-
-func createMergedUnion(
-	ctx *plancontext.PlanningContext,
-	lhsRoute, rhsRoute *Route,
+	lhsRoute, rhsRoute *TableRoute,
 	lhsExprs, rhsExprs sqlparser.SelectExprs,
 	distinct bool,
 	routing Routing) (ops.Operator, sqlparser.SelectExprs, error) {
@@ -213,48 +162,41 @@ func createMergedUnion(
 
 	union := newUnion([]ops.Operator{lhsRoute.Source, rhsRoute.Source}, []sqlparser.SelectExprs{lhsExprs, rhsExprs}, cols, distinct)
 	selectExprs := unionSelects(lhsExprs)
-	return &Route{
+	return &TableRoute{
 		Source:     union,
-		MergedWith: []*Route{rhsRoute},
+		MergedWith: []*TableRoute{rhsRoute},
 		Routing:    routing,
 	}, selectExprs, nil
 }
 
-func compactUnion(u *Union) *rewrite.ApplyResult {
-	if u.distinct {
-		// first we remove unnecessary DISTINCTs
-		for idx, source := range u.Sources {
-			d, ok := source.(*Distinct)
-			if !ok || !d.Required {
-				continue
-			}
-			u.Sources[idx] = d.Source
+func tryMergeUnionShardedRoutingForSplitTable(
+	ctx *plancontext.PlanningContext,
+	routeA, routeB *TableRoute,
+	exprsA, exprsB sqlparser.SelectExprs,
+	distinct bool,
+) (ops.Operator, sqlparser.SelectExprs, error) {
+	tblA := routeA.Routing.(*TableShardedRouting)
+	tblB := routeB.Routing.(*TableShardedRouting)
+
+	scatterA := tblA.RouteOpCode == engine.Scatter
+	scatterB := tblB.RouteOpCode == engine.Scatter
+	uniqueA := tblA.RouteOpCode == engine.EqualUnique
+	uniqueB := tblB.RouteOpCode == engine.EqualUnique
+
+	switch {
+	case scatterA:
+		return createMergedUnionForSplitTable(ctx, routeA, routeB, exprsA, exprsB, distinct, tblA)
+
+	case scatterB:
+		return createMergedUnionForSplitTable(ctx, routeA, routeB, exprsA, exprsB, distinct, tblB)
+
+	case uniqueA && uniqueB:
+		aExpr := tblA.VindexExpressions()
+		bExpr := tblB.VindexExpressions()
+		if gen4ValuesEqual(ctx, aExpr, bExpr) {
+			return createMergedUnionForSplitTable(ctx, routeA, routeB, exprsA, exprsB, distinct, tblA)
 		}
 	}
 
-	var newSources []ops.Operator
-	var newSelects []sqlparser.SelectExprs
-	merged := false
-
-	for idx, source := range u.Sources {
-		other, ok := source.(*Union)
-
-		if ok && (u.distinct || !other.distinct) {
-			newSources = append(newSources, other.Sources...)
-			newSelects = append(newSelects, other.Selects...)
-			merged = true
-			continue
-		}
-
-		newSources = append(newSources, source)
-		newSelects = append(newSelects, u.Selects[idx])
-	}
-
-	if !merged {
-		return rewrite.SameTree
-	}
-
-	u.Sources = newSources
-	u.Selects = newSelects
-	return rewrite.NewTree("merged UNIONs", u)
+	return nil, nil, nil
 }

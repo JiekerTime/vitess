@@ -2,8 +2,6 @@ package split_table
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestTableUnion(t *testing.T) {
@@ -34,6 +32,8 @@ func TestTableUnion(t *testing.T) {
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (8,  12, 'bbb', 10, 1, 302);")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (9,  13, 'bbb', 10, 1, 302);")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar, foo) VALUES (10, 13, 'A1B', 10, 1, 302);")
+	mcmp.Exec("insert into t_9(f_shard,f_table,f_int) values (1,'a',51),(2,'b',52),(3,'c',53),(4,'d',54);")
+	mcmp.Exec("insert into t_10(f_shard,f_table,f_int) values (61,11,21),(62,12,22),(63,13,23),(64,14,24);")
 
 	// union all between two SelectEqualUnique
 	mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user where id = 1  union all select id from t_user where id = 5")
@@ -60,19 +60,15 @@ func TestTableUnion(t *testing.T) {
 	// derived table with union and group by
 	mcmp.ExecWithColumnCompareAndNotEmpty("(SELECT id FROM t_user group by id ORDER BY id DESC LIMIT 1 ) UNION ALL (SELECT id FROM t_music ORDER BY col DESC LIMIT 1)")
 	// union all between two scatter selects
-	_, err := mcmp.ExecAndIgnore("select id from t_user union all select id from t_music")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement type *sqlparser.Union in split table")
+	mcmp.ExecAndNotEmpty("select id from t_user union all select id from t_music")
 	// union distinct between two scatter selects
-	_, err = mcmp.ExecAndIgnore("select id from t_user union select id from t_music")
-	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	mcmp.ExecAndNotEmpty("select id from t_user union select id from t_music")
 	// Union all
-	_, err = mcmp.ExecAndIgnore("select col1, col2 from t_user union all select col1, foo from t_user_extra")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement type *sqlparser.Union in split table")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select col1, col2 from t_user union all select col1, foo from t_user_extra")
 	// union operations in subqueries (FROM)
-	_, err = mcmp.ExecAndIgnore("select * from (select * from t_5 union all select * from t_6) as t")
-	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	mcmp.ExecAndNotEmpty("select * from (select * from t_9 union all select * from t_10) as t")
 	// union with different target shards
-	//mcmp.ExecWithColumnCompareAndNotEmpty("select 1 from t_music where id = 1 union select 1 from t_music where id = 2")
+	mcmp.ExecAndNotEmpty("select 1 from t_9 where id = 1 union select 1 from t_10 where id = 2")
 	// union distinct between a scatter query and a join (other side)
 	mcmp.ExecWithColumnCompareAndNotEmpty("(select t_user.textcol1, t_user.name from t_user join t_user_extra where t_user_extra.extra_id = '3') union select 'b','c' from t_user")
 	// union distinct between a scatter query and a join (other side)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"vitess.io/vitess/go/slice"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
@@ -24,6 +25,8 @@ func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operat
 		return transformTableRoutePlan(ctx, op)
 	case *operators.ApplyJoin:
 		return transformTableApplyJoinPlan(ctx, op)
+	case *operators.Union:
+		return transformTableUnionPlan(ctx, op)
 	case *operators.Ordering:
 		return transformOrderingForSplitTable(ctx, op)
 	case *operators.Projection:
@@ -39,6 +42,28 @@ func transformToTableLogicalPlan(ctx *plancontext.PlanningContext, op ops.Operat
 	}
 
 	return nil, vterrors.VT13001(fmt.Sprintf("unknown type encountered: %T (transformToTableLogicalPlan)", op))
+}
+
+func transformTableUnionPlan(ctx *plancontext.PlanningContext, op *operators.Union) (logicalPlan, error) {
+	sources, err := slice.MapWithError(op.Sources, func(src ops.Operator) (logicalPlan, error) {
+		plan, err := transformToTableLogicalPlan(ctx, src)
+		if err != nil {
+			return nil, err
+		}
+		return plan, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sources) == 1 {
+		return sources[0], nil
+	}
+	return &concatenate{
+		sources:           sources,
+		noNeedToTypeCheck: nil,
+	}, nil
+
 }
 
 func transformDistinctForSplitTable(ctx *plancontext.PlanningContext, op *operators.Distinct) (logicalPlan, error) {

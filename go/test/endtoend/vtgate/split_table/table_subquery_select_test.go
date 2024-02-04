@@ -252,8 +252,7 @@ func TestSubQuerySelectCase(t *testing.T) {
 	// Subquery with `IN` condition using columns with matching lookup vindexes
 	mcmp.ExecWithColumnCompareAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3))")
 	// Subquery with `IN` condition using columns with matching lookup vindexes, with derived table
-	_, err := mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) _inner)")
-	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	mcmp.ExecAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (1, 2, 3)) _inner)")
 	// Subquery with `IN` condition using columns with matching lookup vindexes, with inner scatter query
 	// plan单元测试期望报错VT12001: unsupported: multiple tables in split table，集成测试可以执行
 	// 由于plan单元测试元数据不一致导致，plan的t_music表多了{"column": "id", "name": "music_user_map"}
@@ -270,7 +269,7 @@ func TestSubQuerySelectCase(t *testing.T) {
 	//_, err = mcmp.ExecAndIgnore("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) AND t_music.user_id = 5")
 	//require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")
 	// `IN` comparison on Vindex with `None` subquery, as non-routing predicate
-	_, err = mcmp.ExecAndIgnore("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) OR t_music.user_id = 5")
+	_, err := mcmp.ExecAndIgnore("SELECT `t_music`.id FROM `t_music` WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (NULL)) OR t_music.user_id = 5")
 	require.ErrorContains(t, err, "VT12001: unsupported: subquery in split table")
 	// Mergeable scatter subquery
 	//_, err = mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.genre = 'pop')")
@@ -292,8 +291,7 @@ func TestSubQuerySelectCase(t *testing.T) {
 	//        [INT64(9)]
 	//mcmp.ExecWithColumnCompareAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT t_music.id FROM t_music WHERE t_music.genre = 'pop' GROUP BY t_music.genre)")
 	// Mergeable subquery with multiple levels of derived statements
-	_, err = mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id = 5 LIMIT 10) subquery_for_limit) subquery_for_limit)")
-	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	mcmp.ExecAndNotEmpty("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id = 5 LIMIT 10) subquery_for_limit) subquery_for_limit)")
 	// Mergeable subquery with multiple levels of derived statements, using a single value `IN` predicate
 	//_, err = mcmp.ExecAndIgnore("SELECT t_music.id FROM t_music WHERE t_music.id IN (SELECT * FROM (SELECT * FROM (SELECT t_music.id FROM t_music WHERE t_music.user_id IN (5) LIMIT 10) subquery_for_limit) subquery_for_limit)")
 	//require.ErrorContains(t, err, "VT12001: unsupported: multiple tables in split table")

@@ -7,6 +7,30 @@
   {
     "comment": "subquery derived table",
     "query": "select count(*) from (select id from t_user where id=111 and col=222) t",
-    "plan":"VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan":{
+      "QueryType": "SELECT",
+      "Original": "select count(*) from (select id from t_user where id=111 and col=222) t",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "EqualUnique-EqualUnique",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select count(*) from (select id from t_user_0 where 1 != 1) as t where 1 != 1",
+        "Query": "select count(*) from (select id from t_user where id = 111 and col = 222) as t",
+        "Table": "t_user",
+        "TableValues": [
+          "INT64(222)"
+        ],
+        "Values": [
+          "INT64(111)"
+        ],
+        "Vindex": "user_index"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
   }
 ]

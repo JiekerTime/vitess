@@ -124,6 +124,38 @@
         }
       ]
     },
+    "t_9": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ],
+      "autoIncrement": {
+        "column": "id",
+        "sequence": "user.t_9_seq"
+      }
+    },
+    "t_9_seq": {
+      "type": "sequence",
+      "pinned": "00"
+    },
+    "t_10": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ],
+      "autoIncrement": {
+        "column": "id",
+        "sequence": "user.t_10_seq"
+      }
+    },
+    "t_10_seq": {
+      "type": "sequence",
+      "pinned": "00"
+    },
     "t_user_extra": {
       "column_vindexes": [
         {
@@ -297,6 +329,30 @@
           "index": 0,
           "column": "f_shard_table",
           "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_9": {
+      "logic_table_name": "t_9",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 2
+    },
+    "t_10": {
+      "logic_table_name": "t_10",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "INT32"
         }
       ],
       "table_count": 2

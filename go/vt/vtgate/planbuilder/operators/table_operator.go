@@ -17,7 +17,7 @@ import (
 
 // TablePlanQuery creates a query plan for a given SQL statement
 func TablePlanQuery(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) (ops.Operator, error) {
-	op, err := createLogicalOperatorFromASTForSplitTable(ctx, stmt)
+	op, err := tableTranslateQueryToOp(ctx, stmt)
 	if err != nil {
 		return nil, err
 	}
@@ -34,11 +34,13 @@ func TablePlanQuery(ctx *plancontext.PlanningContext, stmt sqlparser.Statement) 
 	return op, err
 }
 
-// createLogicalOperatorFromASTForSplitTable creates an operator tree that represents the input SELECT or UNION query
-func createLogicalOperatorFromASTForSplitTable(ctx *plancontext.PlanningContext, selStmt sqlparser.Statement) (op ops.Operator, err error) {
+// tableTranslateQueryToOp creates an operator tree that represents the input SELECT or UNION query
+func tableTranslateQueryToOp(ctx *plancontext.PlanningContext, selStmt sqlparser.Statement) (op ops.Operator, err error) {
 	switch node := selStmt.(type) {
 	case *sqlparser.Select:
 		op, err = createOperatorFromSelectForSplitTable(ctx, node)
+	case *sqlparser.Union:
+		op, err = createOperatorFromUnionForSplitTable(ctx, node)
 	case *sqlparser.Insert:
 		op, err = createOperatorFromInsertForSplitTable(ctx, node)
 	case *sqlparser.Delete:
@@ -53,6 +55,29 @@ func createLogicalOperatorFromASTForSplitTable(ctx *plancontext.PlanningContext,
 	}
 
 	return op, nil
+}
+
+func createOperatorFromUnionForSplitTable(ctx *plancontext.PlanningContext, node *sqlparser.Union) (ops.Operator, error) {
+	opLHS, err := tableTranslateQueryToOp(ctx, node.Left)
+	if err != nil {
+		return nil, err
+	}
+
+	_, isRHSUnion := node.Right.(*sqlparser.Union)
+	if isRHSUnion {
+		return nil, vterrors.VT12001("nesting of UNIONs on the right-hand side")
+	}
+	opRHS, err := tableTranslateQueryToOp(ctx, node.Right)
+	if err != nil {
+		return nil, err
+	}
+
+	lexprs := ctx.SemTable.SelectExprs(node.Left)
+	rexprs := ctx.SemTable.SelectExprs(node.Right)
+
+	unionCols := ctx.SemTable.SelectExprs(node)
+	union := newUnion([]ops.Operator{opLHS, opRHS}, []sqlparser.SelectExprs{lexprs, rexprs}, unionCols, node.Distinct)
+	return newHorizon(union, node), nil
 }
 
 // createOperatorFromSelectForSplitTable creates an operator tree that represents the input SELECT query
@@ -326,6 +351,27 @@ func getOperatorFromAliasedTableExprForSplitTable(ctx *plancontext.PlanningConte
 		qt := &QueryTable{Alias: tableExpr, Table: tbl, ID: tableID, IsInfSchema: false}
 		qg.Tables = append(qg.Tables, qt)
 		return qg, nil
+	case *sqlparser.DerivedTable:
+		if onlyTable && tbl.Select.GetLimit() == nil {
+			tbl.Select.SetOrderBy(nil)
+		}
+
+		inner, err := tableTranslateQueryToOp(ctx, tbl.Select)
+		if err != nil {
+			return nil, err
+		}
+		if horizon, ok := inner.(*Horizon); ok {
+			horizon.TableId = &tableID
+			horizon.Alias = tableExpr.As.String()
+			horizon.ColumnAliases = tableExpr.Columns
+			qp, err := CreateQPFromSelectStatement(ctx, tbl.Select)
+			if err != nil {
+				return nil, err
+			}
+			horizon.QP = qp
+		}
+
+		return inner, nil
 	default:
 		return nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T in split table", tbl))
 	}

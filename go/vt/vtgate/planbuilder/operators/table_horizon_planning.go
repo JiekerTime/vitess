@@ -153,6 +153,15 @@ func tryPushingDownProjectionForSplitTable(ctx *plancontext.PlanningContext, p *
 }
 
 func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
+	if in.IsDerived() {
+		newOp, result, err := pushDerivedForSplitTable(ctx, in)
+		if err != nil {
+			return nil, nil, err
+		}
+		if result != rewrite.SameTree {
+			return newOp, result, nil
+		}
+	}
 	if !reachedPhase(ctx, initialPlanning) {
 		return in, rewrite.SameTree, nil
 	}
@@ -186,6 +195,20 @@ func pushOrExpandHorizonForSplitTable(ctx *plancontext.PlanningContext, in *Hori
 	return expandHorizonForSplitTable(ctx, in)
 }
 
+func pushDerivedForSplitTable(ctx *plancontext.PlanningContext, op *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
+	innerRoute, ok := op.Source.(*TableRoute)
+	if !ok {
+		return op, rewrite.SameTree, nil
+	}
+
+	if !(innerRoute.Routing.OpCode() == engine.EqualUnique) && !op.IsMergeable(ctx) {
+		// no need to check anything if we are sure that we will only hit a single shard
+		return op, rewrite.SameTree, nil
+	}
+
+	return rewrite.Swap(op, op.Source, "push derived under route")
+}
+
 func checkForSupportSql(_ *plancontext.PlanningContext, sel *sqlparser.Select) error {
 	if hasSubqueryInExprsAndWhere(sel) {
 		return vterrors.VT12001("subquery in split table")
@@ -194,7 +217,56 @@ func checkForSupportSql(_ *plancontext.PlanningContext, sel *sqlparser.Select) e
 }
 
 func expandHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
-	sel, _ := horizon.selectStatement().(*sqlparser.Select)
+	statement := horizon.selectStatement()
+	switch sel := statement.(type) {
+	case *sqlparser.Select:
+		return expandSelectHorizonForSplitTable(ctx, horizon, sel)
+	case *sqlparser.Union:
+		return expandUnionHorizonForSplitTable(ctx, horizon, sel)
+	}
+	return nil, nil, vterrors.VT13001(fmt.Sprintf("unexpected statement type %T", statement))
+}
+
+func expandUnionHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horizon, union *sqlparser.Union) (ops.Operator, *rewrite.ApplyResult, error) {
+	op := horizon.Source
+
+	qp, err := horizon.getQP(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(qp.OrderExprs) > 0 {
+		op = &Ordering{
+			Source: op,
+			Order:  qp.OrderExprs,
+		}
+	}
+
+	if union.Limit != nil {
+		op = &Limit{
+			Source: op,
+			AST:    union.Limit,
+		}
+	}
+
+	if horizon.TableId != nil {
+		proj := newAliasedProjection(op)
+		proj.DT = &DerivedTable{
+			TableID: *horizon.TableId,
+			Alias:   horizon.Alias,
+			Columns: horizon.ColumnAliases,
+		}
+		op = proj
+	}
+
+	if op == horizon.Source {
+		return op, rewrite.NewTree("removed UNION horizon not used", op), nil
+	}
+
+	return op, rewrite.NewTree("expand UNION horizon into smaller components", op), nil
+}
+
+func expandSelectHorizonForSplitTable(ctx *plancontext.PlanningContext, horizon *Horizon, sel *sqlparser.Select) (ops.Operator, *rewrite.ApplyResult, error) {
 
 	op, err := createProjectionFromSelectForSplitTable(ctx, horizon)
 	if err != nil {
@@ -341,7 +413,12 @@ func tryPushDistinctForSplitTable(ctx *plancontext.PlanningContext, in *Distinct
 		src.PushedPerformance = false
 		return src, rewrite.NewTree("remove double distinct", src), nil
 	case *Union:
-		return nil, nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T table type in split table", src))
+		for i := range src.Sources {
+			src.Sources[i] = &Distinct{Source: src.Sources[i]}
+		}
+		in.PushedPerformance = true
+
+		return in, rewrite.NewTree("push down distinct under union", src), nil
 	case *ApplyJoin:
 		return nil, nil, vterrors.VT12001(fmt.Sprintf("unable to use: %T table type in split table", src))
 	case *Ordering:
@@ -350,4 +427,40 @@ func tryPushDistinctForSplitTable(ctx *plancontext.PlanningContext, in *Distinct
 	}
 
 	return in, rewrite.SameTree, nil
+}
+
+func tryPushUnionForSplitTable(ctx *plancontext.PlanningContext, op *Union) (ops.Operator, *rewrite.ApplyResult, error) {
+	if res := compactUnion(op); res != rewrite.SameTree {
+		return op, res, nil
+	}
+
+	var sources []ops.Operator
+	var selects []sqlparser.SelectExprs
+	var err error
+
+	if op.distinct {
+		sources, selects, err = mergeUnionInputInAnyOrderForSplitTable(ctx, op)
+	} else {
+		sources, selects, err = mergeUnionInputsInOrderForSplitTable(ctx, op)
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(sources) == 1 {
+		result := sources[0].(*TableRoute)
+		if result.IsSingleSplitTable() || !op.distinct {
+			return result, rewrite.NewTree("push union under route", op), nil
+		}
+
+		return &Distinct{
+			Source:   result,
+			Required: true,
+		}, rewrite.NewTree("push union under route", op), nil
+	}
+
+	if len(sources) == len(op.Sources) {
+		return op, rewrite.SameTree, nil
+	}
+	return newUnion(sources, selects, op.unionColumns, op.distinct), rewrite.NewTree("merge union inputs", op), nil
 }

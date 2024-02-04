@@ -549,3 +549,10 @@ func findColumnTindex(ctx *plancontext.PlanningContext, a ops.Operator, exp sqlp
 
 	return singCol, tableCount
 }
+
+func (tsr *TableShardedRouting) VindexExpressions() []sqlparser.Expr {
+	if tsr.Selected == nil {
+		return nil
+	}
+	return tsr.Selected.ValueExprs
+}

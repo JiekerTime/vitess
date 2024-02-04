@@ -56,7 +56,7 @@ func (r *TableRoute) Cost() int {
 	return r.Routing.Cost()
 }
 
-// Clone implements the Operator interface
+// Clone implements the Operator interfpwdace
 func (r *TableRoute) Clone(inputs []ops.Operator) ops.Operator {
 	cloneRoute := *r
 	cloneRoute.Source = inputs[0]

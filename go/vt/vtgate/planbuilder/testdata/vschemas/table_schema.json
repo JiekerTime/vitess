@@ -458,6 +458,27 @@
           ],
           "column_list_authoritative": true
         },
+        "t_payment": {
+          "column_vindexes": [
+            {
+              "column": "user_id",
+              "name": "user_index"
+            }
+          ],
+          "columns": [
+            {
+              "name": "user_id"
+            },
+            {
+              "name": "col1",
+              "type": "VARCHAR"
+            },
+            {
+              "name": "col2"
+            }
+          ],
+          "column_list_authoritative": true
+        },
         "samecolvin": {
           "column_vindexes": [
             {
@@ -706,6 +727,18 @@
         },
         "t_authoritative": {
           "logic_table_name": "t_authoritative",
+          "table_vindex": "split_table_hash",
+          "table_vindex_column": [
+            {
+              "index": 0,
+              "column": "col1",
+              "column_type": "VARCHAR"
+            }
+          ],
+          "table_count": 4
+        },
+        "t_payment": {
+          "logic_table_name": "t_payment",
           "table_vindex": "split_table_hash",
           "table_vindex_column": [
             {

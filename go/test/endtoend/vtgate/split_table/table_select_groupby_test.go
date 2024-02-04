@@ -138,6 +138,8 @@ func TestTableAggrCases(t *testing.T) {
 	mcmp.Exec("insert into t_user(id, col, f_key, f_tinyint, f_bit, a, b, c, intcol, foo, name, val1, val2) values (1024, '45', 'aaa', 1, false, 1,  2, 3, 100, 300, 2    , 'aaa', 'axa')")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (100, 101, 101, 45, '45', 200),(200, 102, 102, 1024, '45', 200),(300, 103, 103, 1024, 'bbb', 200),(400, 104, 104, 3, '1024', 200),(500, 105, 105, 3, 'ada', 300)")
 	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (130, 101, 101, 45, '45', 200),(250, 102, 102, 1024, '1024', 200),(370, 103, 103, 1024, 'ccc', 300),(489, 104, 104, 3, '12', 300),(520, 105, 105, 3, 'axa', 300)")
+	mcmp.Exec("insert into t_user_extra(id, user_id, extra_id, bar, col, baz) VALUES (131, 1024, 101, 45, '45', 200),(251, 102, 102, 1024, '1024', 200),(371, 103, 103, 1024, 'ccc', 300),(490, 104, 104, 3, '12', 300),(521, 105, 105, 3, 'axa', 300)")
+
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (101, 11, 'aaa', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (121, 10, 'aaa', 10, 200)")
 	mcmp.Exec("insert into t_music(id, user_id, col, a, bar) VALUES (131, 12, 'bbb', 10, 200)")
@@ -376,8 +378,7 @@ func TestTableAggrCases(t *testing.T) {
 	// Can't inline derived table when it has HAVING with aggregation function
 	//mcmp.ExecWithColumnCompareAndNotEmpty("select * from (select id from t_user having count(*) = 22) s") Should NOT be empty, but was []
 	// order by inside derived tables can be ignored
-	_, err = mcmp.ExecAndIgnore("select col from (select t_user.col, t_user_extra.extra_id from t_user join t_user_extra on t_user.id = t_user_extra.user_id order by t_user_extra.extra_id) a")
-	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	mcmp.ExecAndNotEmpty("select col from (select t_user.col, t_user_extra.extra_id from t_user join t_user_extra on t_user.id = t_user_extra.user_id order by t_user_extra.extra_id) a")
 	// when pushing predicates into derived tables, make sure to put them in HAVING when they contain aggregations
 	//_, err = mcmp.ExecAndIgnore("select t1.portalId, t1.flowId from (select portalId, flowId, count(*) as count from t_user_extra where localDate > :v1 group by user_id, flowId order by null) as t1 where count >= :v2")
 	//require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")

@@ -3764,12 +3764,70 @@
   {
     "comment": "order by inside derived tables can be ignored",
     "query": "select col from (select t_user.col, t_user_extra.extra from t_user join t_user_extra on t_user.id = t_user_extra.user_id order by t_user_extra.extra) a",
-    "plan": "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col from (select t_user.col, t_user_extra.extra from t_user join t_user_extra on t_user.id = t_user_extra.user_id order by t_user_extra.extra) a",
+      "Instructions": {
+        "OperatorType": "Join",
+        "Variant": "Join",
+        "JoinColumnIndexes": "L:0",
+        "JoinVars": {
+          "t_user_id": 1
+        },
+        "TableName": "t_user_t_user_extra",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col, a.`t_user.id` from (select t_user_0.col, t_user_0.id as `t_user.id` from t_user_0 where 1 != 1) as a where 1 != 1",
+            "Query": "select col, a.`t_user.id` from (select t_user.col, t_user.id as `t_user.id` from t_user) as a",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select 1 from (select t_user_extra_0.extra from t_user_extra_0 where 1 != 1) as a where 1 != 1",
+            "Query": "select 1 from (select t_user_extra.extra from t_user_extra where t_user_extra.user_id = :t_user_id) as a",
+            "Table": "t_user_extra"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
   },
   {
     "comment": "when pushing predicates into derived tables, make sure to put them in HAVING when they contain aggregations",
     "query": "select t1.portalId, t1.flowId from (select portalId, flowId, count(*) as count from t_user_extra where localDate > :v1 group by user_id, flowId order by null) as t1 where count >= :v2",
-    "plan": "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select t1.portalId, t1.flowId from (select portalId, flowId, count(*) as count from t_user_extra where localDate > :v1 group by user_id, flowId order by null) as t1 where count >= :v2",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select t1.portalId, t1.flowId from (select portalId, flowId, count(*) as `count` from t_user_extra_0 where 1 != 1 group by user_id, flowId) as t1 where 1 != 1",
+        "Query": "select t1.portalId, t1.flowId from (select portalId, flowId, count(*) as `count` from t_user_extra where localDate > :v1 group by user_id, flowId) as t1 where `count` >= :v2",
+        "Table": "t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_user_extra"
+      ]
+    }
+
   },
   {
     "comment": "Cannot have more than one aggr(distinct...",

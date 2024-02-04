@@ -21,25 +21,10 @@ import (
 
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/vterrors"
-	"vitess.io/vitess/go/vt/vtgate/engine"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/plancontext"
 )
-
-func pushDerivedForSplitTable(ctx *plancontext.PlanningContext, op *Horizon) (ops.Operator, *rewrite.ApplyResult, error) {
-	innerRoute, ok := op.Source.(*Route)
-	if !ok {
-		return op, rewrite.SameTree, nil
-	}
-
-	if !(innerRoute.Routing.OpCode() == engine.EqualUnique) && !op.IsMergeable(ctx) {
-		// no need to check anything if we are sure that we will only hit a single shard
-		return op, rewrite.SameTree, nil
-	}
-
-	return rewrite.Swap(op, op.Source, "push derived under route")
-}
 
 func optimizeJoinForSplitTable(ctx *plancontext.PlanningContext, op *Join) (ops.Operator, *rewrite.ApplyResult, error) {
 	return mergeOrJoinForSplitTable(ctx, op.LHS, op.RHS, sqlparser.SplitAndExpression(nil, op.Predicate), !op.LeftJoin)

@@ -132,14 +132,11 @@ func TestSelectBeta(t *testing.T) {
 	mcmp.ExecAndNotEmpty("SELECT customer_id FROM zcorder1 WHERE country IN (SELECT country FROM zcorder2 WHERE total_amount > 1)")
 	mcmp.ExecAndNotEmpty("SELECT country FROM zcorder1 WHERE order_date BETWEEN '2023-01-01' AND '2023-12-31' AND customer_id > (SELECT MAX(total_amount) FROM zcorder1 WHERE order_date BETWEEN '2023-01-01' AND '2023-12-31') ORDER BY total_amount DESC;")
 
-	_, err = mcmp.ExecAndIgnore("SELECT * FROM zcorder1 where customer_id = 10 UNION ALL SELECT * FROM zcorder2;")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement type *sqlparser.Union in split table (errno 1235) (sqlstate 42000)")
+	mcmp.ExecAndNotEmpty("SELECT * FROM zcorder1 where customer_id = 10 UNION ALL SELECT * FROM zcorder2;")
 
-	_, err = mcmp.ExecAndIgnore("SELECT * FROM zcorder1 UNION ALL SELECT * FROM zcorder2 where customer_id = 10;")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement type *sqlparser.Union in split table (errno 1235) (sqlstate 42000)")
+	mcmp.ExecAndNotEmpty("SELECT * FROM zcorder1 UNION ALL SELECT * FROM zcorder2 where customer_id = 10;")
 
-	_, err = mcmp.ExecAndIgnore("SELECT * FROM zcorder1 where sequence_id = 5 UNION ALL SELECT * FROM zcorder2 where customer_id = 10 LIMIT 6;")
-	require.ErrorContains(t, err, "VT12001: unsupported: statement type *sqlparser.Union in split table (errno 1235) (sqlstate 42000)")
+	mcmp.ExecAndNotEmpty("SELECT * FROM zcorder1 where sequence_id = 5 UNION ALL SELECT * FROM zcorder2 where customer_id = 10 LIMIT 6;")
 
 	mcmp.ExecAndNotEmpty("SELECT order_id, order_date, total_amount FROM zcorder1 where customer_id = 6 UNION ALL SELECT order_id, order_date, total_amount FROM zcorder1 where customer_id = 10;")
 	mcmp.ExecAndNotEmpty("SELECT order_id, product_id, country FROM zcorder1 WHERE customer_id = 1  UNION ALL SELECT order_id, product_id, country FROM zcorder2 where customer_id = 10 LIMIT 100;")
@@ -149,5 +146,5 @@ func TestSelectBeta(t *testing.T) {
 	//mcmp.ExecAndNotEmpty("SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM (SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM zcorder1 ORDER BY customer_id LIMIT 10) AS t1 UNION ALL SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM (SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM zcorder1 ORDER BY customer_id LIMIT 10) AS t2 UNION ALL SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM (SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM zcorder2 ORDER BY customer_id LIMIT 10) AS t3 UNION ALL SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM (SELECT order_id, customer_id, product_id, country, default_id, order_date, total_amount, quantity, unit_price, string, sequence_id FROM zcorder2 ORDER BY customer_id LIMIT 10) AS t4;")
 	//mcmp.ExecAndNotEmpty("SELECT order_id, customer_id, product_id, country FROM (SELECT order_id, customer_id, product_id, country FROM zcorder1 ORDER BY customer_id ASC, order_id DESC LIMIT 10) AS t1 UNION ALL SELECT order_id, customer_id, product_id, country FROM (SELECT order_id, customer_id, product_id, country FROM zcorder2 ORDER BY customer_id ASC, order_id DESC LIMIT 10) AS t2;")
 
-	//mcmp.ExecAndNotEmpty("SELECT order_id, customer_id, product_id, country FROM zcorder1 ORDER BY order_date DESC, total_amount ASC UNION ALL SELECT order_id, customer_id, product_id, country FROM zcorder2 ORDER BY unit_price DESC, quantity DESC;")
+	//	mcmp.ExecAndNotEmpty("SELECT order_id, customer_id, product_id, country FROM zcorder1 ORDER BY order_date DESC, total_amount ASC UNION ALL SELECT order_id, customer_id, product_id, country FROM zcorder2 ORDER BY unit_price DESC, quantity DESC;")
 }

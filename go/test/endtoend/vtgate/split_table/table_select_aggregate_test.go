@@ -2,8 +2,6 @@ package split_table
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestTableAggregate(t *testing.T) {
@@ -82,8 +80,7 @@ func TestTableAggregate(t *testing.T) {
 	mcmp.ExecAndNotEmpty("select count(0) from t_user t where t.name like concat('%%','test','%%') and t.id in(1,2) and t.f_tinyint between 1 and 2")
 	mcmp.ExecWithColumnCompareAndNotEmpty("select a from (select count(*) as a from t_user) t")
 	mcmp.ExecWithColumnCompareAndNotEmpty("(select id from t_user order by 1 desc) order by 1 asc limit 2")
-	_, err := mcmp.ExecAndIgnore("select count(f_key) from (select id, f_key, col from t_user where id > 12 limit 3) as x")
-	require.ErrorContains(t, err, "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table")
+	mcmp.ExecAndNotEmpty("select count(f_key) from (select id, f_key, col from t_user where id > 12 limit 3) as x")
 	mcmp.ExecWithColumnCompareAndNotEmpty("select count(col) from (select t_user_extra.col as col from t_user left join t_user_extra on t_user.id = t_user_extra.id limit 3) as x")
 
 	// having max()

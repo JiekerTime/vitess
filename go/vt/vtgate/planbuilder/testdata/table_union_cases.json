@@ -656,22 +656,50 @@
   {
     "comment": "union all between two scatter selects",
     "query": "select id from t_user union all select id from t_music",
-    "plan": "VT12001: unsupported: statement type *sqlparser.Union in split table"
-  },
-  {
-    "comment": "union distinct between two scatter selects",
-    "query": "select id from t_user union select id from t_music",
-    "plan": "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user union all select id from t_music",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_0 where 1 != 1 union all select id from t_music_0 where 1 != 1",
+        "Query": "select id from t_user union all select id from t_music",
+        "Table": "t_music, t_user"
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+
   },
   {
     "comment": "Union all",
     "query": "select col1, col2 from t_user union all select col1, col2 from t_user_extra",
-    "plan": "VT12001: unsupported: statement type *sqlparser.Union in split table"
-  },
-  {
-    "comment": "union operations in subqueries (FROM)",
-    "query": "select * from (select * from t_user union all select * from t_user_extra) as t",
-    "plan": "VT12001: unsupported: unable to use: *sqlparser.DerivedTable in split table"
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col1, col2 from t_user union all select col1, col2 from t_user_extra",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col1, col2 from t_user_0 where 1 != 1 union all select col1, col2 from t_user_extra_0 where 1 != 1",
+        "Query": "select col1, col2 from t_user union all select col1, col2 from t_user_extra",
+        "Table": "t_user, t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+
   },
   {
     "comment": "union with different target shards",
@@ -877,5 +905,647 @@
         "user.t_user_extra"
       ]
     }
+  },
+  {
+    "comment": "union with the same target shard because of vindex",
+    "query": "select * from t_authoritative where user_id=1   union select * from t_payment where user_id =1 ",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_authoritative where user_id=1   union select * from t_payment where user_id =1 ",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:3)",
+          "1: latin1_swedish_ci",
+          "(2:4)"
+        ],
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select user_id, col1, col2, weight_string(user_id), weight_string(col2) from (select user_id, col1, col2 from t_authoritative_0 where 1 != 1 union select user_id, col1, col2 from t_payment_0 where 1 != 1) as dt where 1 != 1",
+            "Query": "select user_id, col1, col2, weight_string(user_id), weight_string(col2) from (select user_id, col1, col2 from t_authoritative where user_id = 1 union select user_id, col1, col2 from t_payment where user_id = 1) as dt",
+            "Table": "t_authoritative, t_payment",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_authoritative",
+        "user.t_payment"
+      ]
+    }
+
+  },
+  {
+    "comment": "union with the same target shard  because of vindex with the split table",
+    "query": "select * from t_authoritative where user_id = 1 and col1 ='test' union select * from t_payment where user_id = 1 and col1 ='a'",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from t_authoritative where user_id = 1 and col1 ='test' union select * from t_payment where user_id = 1 and col1 ='a'",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:3)",
+          "1: latin1_swedish_ci",
+          "(2:4)"
+        ],
+        "ResultColumns": 3,
+        "Inputs": [
+          {
+            "OperatorType": "Concatenate",
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "EqualUnique-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select user_id, col1, col2, weight_string(user_id), weight_string(col2) from t_authoritative_0 where 1 != 1",
+                "Query": "select distinct user_id, col1, col2, weight_string(user_id), weight_string(col2) from t_authoritative where user_id = 1 and col1 = 'test'",
+                "Table": "t_authoritative",
+                "TableValues": [
+                  "VARCHAR(\"test\")"
+                ],
+                "Values": [
+                  "INT64(1)"
+                ],
+                "Vindex": "user_index"
+              },
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "EqualUnique-EqualUnique",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select user_id, col1, col2, weight_string(user_id), weight_string(col2) from t_payment_0 where 1 != 1",
+                "Query": "select distinct user_id, col1, col2, weight_string(user_id), weight_string(col2) from t_payment where user_id = 1 and col1 = 'a'",
+                "Table": "t_payment",
+                "TableValues": [
+                  "VARCHAR(\"a\")"
+                ],
+                "Values": [
+                  "INT64(1)"
+                ],
+                "Vindex": "user_index"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_authoritative",
+        "user.t_payment"
+      ]
+    }
+
+  },
+  {
+    "comment": "UNION ALL with repeating column on the LHS",
+    "query": "select foo, foo, foo from t_user union all select bar, baz, toto from t_music",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select foo, foo, foo from t_user union all select bar, baz, toto from t_music",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select foo, foo, foo from t_user_0 where 1 != 1 union all select bar, baz, toto from t_music_0 where 1 != 1",
+        "Query": "select foo, foo, foo from t_user union all select bar, baz, toto from t_music",
+        "Table": "t_music, t_user"
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+
+  },
+  {
+    "comment": "union all on scatter and single route",
+    "query": "select id from t_user where id = 1 union select id from t_user where id = 1  union all select id from t_user",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id = 1 union select id from t_user where id = 1  union all select id from t_user",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_0 where 1 != 1 union select id from t_user_0 where 1 != 1 union all select id from t_user_0 where 1 != 1",
+        "Query": "select id from t_user where id = 1 union select id from t_user where id = 1 union all select id from t_user",
+        "Table": "t_user"
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+
+
+  },
+  {
+    "comment": "union operations in derived table, without star expression (FROM)¡",
+    "query": "select col1,col2 from (select col1, col2 from t_user union all select col1, col2 from t_user_extra) as t",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col1,col2 from (select col1, col2 from t_user union all select col1, col2 from t_user_extra) as t",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col1, col2 from (select col1, col2 from t_user_0 where 1 != 1 union all select col1, col2 from t_user_extra_0 where 1 != 1) as t where 1 != 1",
+        "Query": "select col1, col2 from (select col1, col2 from t_user union all select col1, col2 from t_user_extra) as t",
+        "Table": "t_user, t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+
+
+  },
+  {
+    "comment": "multi-shard union",
+    "query": "(select id from t_user union select id from t_music) union select 1 from main.dual",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "(select id from t_user union select id from t_music) union select 1 from main.dual",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:1)"
+        ],
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Concatenate",
+            "Inputs": [
+              {
+                "OperatorType": "Projection",
+                "Expressions": [
+                  "[COLUMN 0] as id",
+                  "WEIGHT_STRING([COLUMN 0]) as weight_string(id)"
+                ],
+                "Inputs": [
+                  {
+                    "OperatorType": "SimpleProjection",
+                    "Columns": [
+                      0
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Distinct",
+                        "Collations": [
+                          "(0:1)"
+                        ],
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select id, weight_string(id) from (select id from t_user_0 where 1 != 1 union select id from t_music_0 where 1 != 1) as dt where 1 != 1",
+                            "Query": "select id, weight_string(id) from (select id from t_user union select id from t_music) as dt",
+                            "Table": "t_music, t_user"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "OperatorType": "Route",
+                "Variant": "Unsharded",
+                "Keyspace": {
+                  "Name": "main",
+                  "Sharded": false
+                },
+                "FieldQuery": "select 1, weight_string(1) from dual where 1 != 1",
+                "Query": "select distinct 1, weight_string(1) from dual",
+                "Table": "dual"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "main.dual",
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+
+
+
+  },
+  {
+    "comment": "union operations in subqueries (FROM)",
+    "query": "select * from (select * from t_user union all select * from t_user_extra) as t",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from (select * from t_user union all select * from t_user_extra) as t",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select * from (select * from t_user_0 where 1 != 1 union all select * from t_user_extra_0 where 1 != 1) as t where 1 != 1",
+        "Query": "select * from (select * from t_user union all select * from t_user_extra) as t",
+        "Table": "t_user, t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+    "comment": "multi-shard union",
+    "query": "(select id from t_user union select id from t_music) union select 1 from main.dual",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "(select id from t_user union select id from t_music) union select 1 from main.dual",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:1)"
+        ],
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "Concatenate",
+            "Inputs": [
+              {
+                "OperatorType": "Projection",
+                "Expressions": [
+                  "[COLUMN 0] as id",
+                  "WEIGHT_STRING([COLUMN 0]) as weight_string(id)"
+                ],
+                "Inputs": [
+                  {
+                    "OperatorType": "SimpleProjection",
+                    "Columns": [
+                      0
+                    ],
+                    "Inputs": [
+                      {
+                        "OperatorType": "Distinct",
+                        "Collations": [
+                          "(0:1)"
+                        ],
+                        "Inputs": [
+                          {
+                            "OperatorType": "TableRoute",
+                            "Variant": "Scatter-Scatter",
+                            "Keyspace": {
+                              "Name": "user",
+                              "Sharded": true
+                            },
+                            "FieldQuery": "select id, weight_string(id) from (select id from t_user_0 where 1 != 1 union select id from t_music_0 where 1 != 1) as dt where 1 != 1",
+                            "Query": "select id, weight_string(id) from (select id from t_user union select id from t_music) as dt",
+                            "Table": "t_music, t_user"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "OperatorType": "Route",
+                "Variant": "Unsharded",
+                "Keyspace": {
+                  "Name": "main",
+                  "Sharded": false
+                },
+                "FieldQuery": "select 1, weight_string(1) from dual where 1 != 1",
+                "Query": "select distinct 1, weight_string(1) from dual",
+                "Table": "dual"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "main.dual",
+        "user.t_music",
+        "user.t_user"
+      ]
+    }
+
+
+  },
+  {
+    "comment": "multiple select statement have inner order by with union - TODO (systay) no need to send down ORDER BY if we are going to loose it with UNION DISTINCT",
+    "query": "(select id from t_user order by 1 desc) union (select id from t_user order by 1 asc)",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "(select id from t_user order by 1 desc) union (select id from t_user order by 1 asc)",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "(0:1)"
+        ],
+        "ResultColumns": 1,
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id, weight_string(id) from ((select id from t_user_0 where 1 != 1) union (select id from t_user_0 where 1 != 1)) as dt where 1 != 1",
+            "Query": "select id, weight_string(id) from ((select id from t_user order by id desc) union (select id from t_user order by id asc)) as dt",
+            "Table": "t_user"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "pushes predicate on both sides of UNION",
+    "query": "select * from (select name, id as foo from t_user union select 'extra', user_id from t_user_extra) X where X.foo = 3",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select * from (select name, id as foo from t_user union select 'extra', user_id from t_user_extra) X where X.foo = 3",
+      "Instructions": {
+        "OperatorType": "SimpleProjection",
+        "Columns": [
+          0,
+          1
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Distinct",
+            "Collations": [
+              "0: utf8mb4_0900_ai_ci",
+              "(1:2)"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "TableRoute",
+                "Variant": "EqualUnique-Scatter",
+                "Keyspace": {
+                  "Name": "user",
+                  "Sharded": true
+                },
+                "FieldQuery": "select `name`, foo, weight_string(foo) from (select `name`, id as foo from t_user_0 where 1 != 1 union select 'extra', user_id from t_user_extra_0 where 1 != 1) as dt where 1 != 1",
+                "Query": "select `name`, foo, weight_string(foo) from (select `name`, id as foo from t_user where id = 3 union select 'extra', user_id from t_user_extra where user_id = 3) as dt",
+                "Table": "t_user, t_user_extra",
+                "Values": [
+                  "INT64(3)"
+                ],
+                "Vindex": "user_index"
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+  },
+  {
+  "comment": "UNION with repeating column on the LHS",
+  "query": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
+  "plan": {
+    "QueryType": "SELECT",
+    "Original": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
+    "Instructions": {
+      "OperatorType": "Distinct",
+      "Collations": [
+        "0: latin1_swedish_ci",
+        "1: latin1_swedish_ci",
+        "2: latin1_swedish_ci"
+      ],
+      "Inputs": [
+        {
+          "OperatorType": "Distinct",
+          "Collations": [
+            "0: latin1_swedish_ci",
+            "1: latin1_swedish_ci",
+            "2: latin1_swedish_ci"
+          ],
+          "Inputs": [
+            {
+              "OperatorType": "TableRoute",
+              "Variant": "Scatter-Scatter",
+              "Keyspace": {
+                "Name": "user",
+                "Sharded": true
+              },
+              "FieldQuery": "select col, col, col from t_user_0 where 1 != 1 union select col1, col1, col1 from t_authoritative_0 where 1 != 1",
+              "Query": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
+              "Table": "t_authoritative, t_user"
+            }
+          ]
+        }
+      ]
+    },
+    "TablesUsed": [
+      "user.t_authoritative",
+      "user.t_user"
+    ]
   }
+
+  },
+  {
+    "comment": "union all splitTable and not splitTable",
+    "query": "select id from t_user where id = 1 union all select col from samecolvin where col = '5'",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id = 1 union all select col from samecolvin where col = '5'",
+      "Instructions": {
+        "OperatorType": "Concatenate",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where id = 1",
+            "Table": "t_user",
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "Route",
+            "Variant": "EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select col from samecolvin where 1 != 1",
+            "Query": "select col from samecolvin where col = '5'",
+            "Table": "samecolvin",
+            "Values": [
+              "VARCHAR(\"5\")"
+            ],
+            "Vindex": "vindex1"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.samecolvin",
+        "user.t_user"
+      ]
+    }
+  },
+  {
+    "comment": "union all between three  SelectEqualUnique",
+    "query": "select id from t_user where id = 1 and col = '1' union all select id from t_user where id = 5 and col = '5' union all select id from t_user where id = 7 and col = '4'",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user where id = 1 and col = '1' union all select id from t_user where id = 5 and col = '5' union all select id from t_user where id = 7 and col = '4'",
+      "Instructions": {
+        "OperatorType": "Concatenate",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where id = 1 and col = '1'",
+            "Table": "t_user",
+            "TableValues": [
+              "VARCHAR(\"1\")"
+            ],
+            "Values": [
+              "INT64(1)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where id = 5 and col = '5'",
+            "Table": "t_user",
+            "TableValues": [
+              "VARCHAR(\"5\")"
+            ],
+            "Values": [
+              "INT64(5)"
+            ],
+            "Vindex": "user_index"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "EqualUnique-EqualUnique",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user where id = 7 and col = '4'",
+            "Table": "t_user",
+            "TableValues": [
+              "VARCHAR(\"4\")"
+            ],
+            "Values": [
+              "INT64(7)"
+            ],
+            "Vindex": "user_index"
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_user"
+      ]
+    }
+
+  },
+  {
+    "comment": "union all ",
+    "query": "select id from t_user  union all select id from t_music  union all select id from t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select id from t_user  union all select id from t_music  union all select id from t_user_extra",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select id from t_user_0 where 1 != 1 union all select id from t_music_0 where 1 != 1 union all select id from t_user_extra_0 where 1 != 1",
+        "Query": "select id from t_user union all select id from t_music union all select id from t_user_extra",
+        "Table": "t_music, t_user, t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_music",
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+
+  },
+  {
+    "comment": "multi-shard union",
+    "query": "select col1, col2 from t_user union all select col1, foo from t_user_extra",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col1, col2 from t_user union all select col1, foo from t_user_extra",
+      "Instructions": {
+        "OperatorType": "TableRoute",
+        "Variant": "Scatter-Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "FieldQuery": "select col1, col2 from t_user_0 where 1 != 1 union all select col1, foo from t_user_extra_0 where 1 != 1",
+        "Query": "select col1, col2 from t_user union all select col1, foo from t_user_extra",
+        "Table": "t_user, t_user_extra"
+      },
+      "TablesUsed": [
+        "user.t_user",
+        "user.t_user_extra"
+      ]
+    }
+
+  }
+
+
 ]
