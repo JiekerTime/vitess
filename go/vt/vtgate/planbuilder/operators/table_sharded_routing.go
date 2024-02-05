@@ -1,8 +1,10 @@
 package operators
 
 import (
-	"golang.org/x/exp/slices"
 	"io"
+
+	"golang.org/x/exp/slices"
+
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/ops"
 	"vitess.io/vitess/go/vt/vtgate/planbuilder/operators/rewrite"
@@ -39,7 +41,7 @@ func newTableShardedRouting(logicTableConfig *vindexes.LogicTableConfig, id sema
 	routing := &TableShardedRouting{
 		RouteOpCode: engine.Scatter,
 	}
-	routing.TindexPreds = append(routing.TindexPreds, &TableVindexPlusPredicates{ColTableVindex: logicTableConfig.TableIndexColumn, TableID: id})
+	routing.TindexPreds = append(routing.TindexPreds, &TableVindexPlusPredicates{ColTableVindex: logicTableConfig.TableIndexColumn, TableID: id, TableVindex: logicTableConfig.TableVindex})
 	return routing
 }
 
@@ -315,11 +317,12 @@ func (tableRouting *TableShardedRouting) processSingleColumnVindex(
 	}
 
 	TableVindexPlusPredicates.Options = append(TableVindexPlusPredicates.Options, &TableVindexOption{
-		Values:     []evalengine.Expr{value},
-		ValueExprs: []sqlparser.Expr{valueExpr},
-		Predicates: []sqlparser.Expr{node},
-		OpCode:     routeOpcode,
-		Ready:      true,
+		Values:      []evalengine.Expr{value},
+		ValueExprs:  []sqlparser.Expr{valueExpr},
+		Predicates:  []sqlparser.Expr{node},
+		OpCode:      routeOpcode,
+		Ready:       true,
+		FoundTindex: TableVindexPlusPredicates.TableVindex,
 	})
 	return true
 }

@@ -34,6 +34,7 @@ type (
 	TableVindexPlusPredicates struct {
 		TableID        semantics.TableSet
 		ColTableVindex []*vindexes.TableColumn
+		TableVindex    vindexes.Vindex
 
 		// during planning, we store the alternatives found for this route in this slice
 		Options []*TableVindexOption

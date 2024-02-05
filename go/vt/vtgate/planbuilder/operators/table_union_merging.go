@@ -191,9 +191,11 @@ func tryMergeUnionShardedRoutingForSplitTable(
 		return createMergedUnionForSplitTable(ctx, routeA, routeB, exprsA, exprsB, distinct, tblB)
 
 	case uniqueA && uniqueB:
+		aVdx := tblA.SelectedTindex()
+		bVdx := tblB.SelectedTindex()
 		aExpr := tblA.VindexExpressions()
 		bExpr := tblB.VindexExpressions()
-		if gen4ValuesEqual(ctx, aExpr, bExpr) {
+		if aVdx == bVdx && gen4ValuesEqual(ctx, aExpr, bExpr) {
 			return createMergedUnionForSplitTable(ctx, routeA, routeB, exprsA, exprsB, distinct, tblA)
 		}
 	}
