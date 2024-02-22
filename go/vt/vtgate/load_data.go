@@ -3,7 +3,6 @@ package vtgate
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"strconv"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/pflag"
+	"vitess.io/vitess/go/vt/servenv"
 	"vitess.io/vitess/go/vt/vtgate/logstats"
 
 	"golang.org/x/net/context"
@@ -30,9 +31,16 @@ import (
 )
 
 var (
-	loadMaxRowsInBatch = flag.Int("load_max_rows_in_batch", 2000, "max insert rows in batch of load data")
-	//loadMaxRetryTimes  = flag.Int("load_max_retry_times", 2, "load data retry count for executing batch insert ")
+	loadMaxRowsInBatch           int
+	loadMaxSubExecuteTimeInBatch int
 )
+
+func init() {
+	servenv.OnParseFor("vtgate", func(fs *pflag.FlagSet) {
+		fs.IntVar(&loadMaxRowsInBatch, "load_max_rows_in_batch", 2000, "max insert rows in batch of load data")
+		fs.IntVar(&loadMaxSubExecuteTimeInBatch, "load_max_sub_execute_time_in_batch", 2, "max sub query time in batch of load data")
+	})
+}
 
 // InsertFunc insert callback
 type InsertFunc func(insert string) error
@@ -44,8 +52,9 @@ type LoadDataFunc func() error
 func NewLoadData(e *Executor) *LoadData {
 	return &LoadData{
 		LoadDataInfo: &LoadDataInfo{
-			e:              e,
-			maxRowsInBatch: *loadMaxRowsInBatch,
+			e:                 e,
+			maxRowsInBatch:    loadMaxRowsInBatch,
+			maxSubExecuteTime: loadMaxSubExecuteTimeInBatch,
 		},
 	}
 }
@@ -57,12 +66,13 @@ type LoadData struct {
 
 // LoadDataInfo params
 type LoadDataInfo struct {
-	e              *Executor
-	maxRowsInBatch int
-	LinesInfo      *sqlparser.LinesClause
-	FieldsInfo     *sqlparser.FieldsClause
-	Columns        sqlparser.Columns
-	Table          *sqlparser.TableName
+	e                 *Executor
+	maxRowsInBatch    int
+	maxSubExecuteTime int
+	LinesInfo         *sqlparser.LinesClause
+	FieldsInfo        *sqlparser.FieldsClause
+	Columns           sqlparser.Columns
+	Table             *sqlparser.TableName
 
 	//LoadDtaDone used for load data, set true if load data fnished(error or success)
 	LoadDataDone bool
@@ -602,9 +612,6 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 				vindexRowsValues[vIdx][0] = v
 				continue
 			}
-			// Perform the transpose.
-			//[]sqltypes.Value
-			//sqltypes.TypeToMySQL()
 			if rowType, ok := rowTypeList[colValues]; ok {
 				v, err = sqltypes.NewValue(rowType, []byte(row[colValues]))
 			} else {
@@ -695,6 +702,7 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 		default:
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported tableVindex: %v", tableVindex)
 		}
+		// 判断是否是当前分表的数据.
 		for rowIndex, destination := range tableDestinations {
 			if err = destination.Resolve(tableConfig, func(actualTableIndex int) error {
 				if actualTableIndex == tableIndex {
@@ -855,24 +863,105 @@ func (l *LoadDataInfo) LoadDataInfileDataStream(ctx context.Context, vCursor eng
 	return nil
 }
 
-// ExecLoadDataUpstream  LoadDataInfileDataStream for single shard or pinned table
 func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.VCursor, table *vindexes.Table, safeSession *SafeSession, lines chan string, errs chan error,
-	sql string, tableIndex int, tableConfig *vindexes.LogicTableConfig, rowTypeList map[int]sqltypes.Type, vindexColumnIndex []int, tbVndexColumnIndex []int) (*sqltypes.Result, error) {
-	count := 0
+	/* sub sql*/ sql string /*sub sql index*/, tableIndex int, tableConfig *vindexes.LogicTableConfig, rowTypeList map[int]sqltypes.Type, vindexColumnIndex []int, tbVndexColumnIndex []int) (*sqltypes.Result, error) {
+	endResult := &sqltypes.Result{}
 	linesTdo := make([][]string, 0)
-	shardLinesMap := make(map[string]*chan string)
+	shardLinesMap := make(map[string]chan string)
 	shardResult := make(chan *sqltypes.Result)
 	shardErr := make(chan error)
-	endResult := &sqltypes.Result{}
+	var wg sync.WaitGroup
 
-	select {
-	case err := <-errs:
+	handleError := func(err error) (*sqltypes.Result, error) {
 		if err != nil {
 			return endResult, err
 		}
+		return nil, nil
+	}
+
+	select {
+	case err := <-errs:
+		return handleError(err)
 	default:
-		ticker := time.NewTicker(time.Second * 1)
+		ticker := time.NewTicker(time.Duration(l.maxSubExecuteTime) * time.Second)
 		<-ticker.C
+	}
+
+	allShard, _, err := l.e.resolver.resolver.GetAllShards(ctx, table.Keyspace.Name, defaultTabletType)
+	if err != nil {
+		return endResult, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "GetAllShards for %s, err%s", table.Keyspace.Name, err.Error())
+	}
+
+	loadData := func() error {
+		linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex, tbVndexColumnIndex, tableIndex, tableConfig, rowTypeList)
+		if err != nil {
+			return vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "getLoadShardedRoute failed for %v", vindexColumnIndex)
+		}
+		if linesPerShards == nil {
+			return fmt.Errorf("no shard routes found for the data")
+		}
+		for shard, preLines := range linesPerShards {
+			shardChan, ok := shardLinesMap[shard.Target.Shard]
+			if !ok {
+				shardChan = make(chan string, 10000)
+				shardLinesMap[shard.Target.Shard] = shardChan
+				wg.Add(1)
+				go func(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines *chan string, sql string, resultChan chan *sqltypes.Result, errChan chan error) {
+					var (
+						result *sqltypes.Result
+						err    error
+					)
+					defer func() {
+						wg.Done()
+						if r := recover(); r != nil {
+							errChan <- fmt.Errorf("recover from: %v", r)
+							resultChan <- nil
+						} else if err != nil {
+							shardErr <- err
+							resultChan <- nil
+						} else {
+							shardResult <- result
+						}
+					}()
+					result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
+				}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
+			}
+			for _, line := range preLines {
+				if line != nil {
+					shardChan <- strings.Join(line, l.FieldsInfo.Terminated) + l.LinesInfo.Terminated
+				}
+			}
+			// 处理空shard
+			if len(shardLinesMap) < len(allShard) {
+				for _, shard := range allShard {
+					if _, ok := shardLinesMap[shard.Target.Shard]; !ok {
+						shardChan := make(chan string, 10000)
+						shardLinesMap[shard.Target.Shard] = shardChan
+						wg.Add(1)
+						go func(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines *chan string, sql string, resultChan chan *sqltypes.Result, errChan chan error) {
+							var (
+								result *sqltypes.Result
+								err    error
+							)
+							defer func() {
+								wg.Done()
+								if r := recover(); r != nil {
+									errChan <- fmt.Errorf("recover from: %v", r)
+									resultChan <- nil
+								} else if err != nil {
+									shardErr <- err
+									resultChan <- nil
+								} else {
+									shardResult <- result
+								}
+							}()
+							result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
+						}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
+					}
+				}
+			}
+		}
+		return nil
 	}
 
 	for line := range lines {
@@ -883,130 +972,29 @@ func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.
 			}
 		default:
 		}
-		count++
 		linesTdo = append(linesTdo, strings.Split(strings.Trim(line, l.LinesInfo.Terminated), l.FieldsInfo.Terminated))
-
-		if count == l.maxRowsInBatch {
-			var wg sync.WaitGroup
-			linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex, tbVndexColumnIndex, tableIndex, tableConfig, rowTypeList)
-			if err != nil {
-				return endResult, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "getLoadShardedRoute failed  for %v", vindexColumnIndex)
-			}
-			if linesPerShards == nil {
+		if len(linesTdo) == l.maxRowsInBatch {
+			if err := loadData(); err != nil {
 				return endResult, err
 			}
-			for shard, preLines := range linesPerShards {
-				if _, ok := shardLinesMap[shard.Target.Shard]; !ok {
-					localShardChan := make(chan string, 10000)
-					shardLinesMap[shard.Target.Shard] = &localShardChan
-					wg.Add(1)
-					go func(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines *chan string, sql string, resultChan chan *sqltypes.Result, errChan chan error) {
-						defer wg.Done()
-						var result *sqltypes.Result
-						var err error
-						defer func() {
-							if r := recover(); r != nil {
-								errChan <- fmt.Errorf("recover from: %v", r)
-								resultChan <- nil
-							} else if err != nil {
-								shardErr <- err
-								resultChan <- nil
-							} else {
-								shardResult <- result
-							}
-						}()
-						result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
-					}(ctx, safeSession, shard, &localShardChan, sql, shardResult, shardErr)
-				}
-				shardChan := shardLinesMap[shard.Target.Shard]
-				for _, line := range preLines {
-					if line != nil {
-						*shardChan <- strings.Join(line, l.FieldsInfo.Terminated) + l.LinesInfo.Terminated
-					}
-				}
-			}
-			count = 0
 			linesTdo = linesTdo[:0]
-			wg.Wait()
 		}
 	}
-
-	if len(linesTdo) >= 1 {
-		linesPerShards, err := l.getLoadShardedRoute(ctx, vCursor, table, linesTdo, vindexColumnIndex, tbVndexColumnIndex, tableIndex, tableConfig, rowTypeList)
-		if err != nil {
+	if len(linesTdo) > 0 {
+		if err := loadData(); err != nil {
 			return endResult, err
 		}
-		if linesPerShards == nil {
-			return endResult, fmt.Errorf("no shard routes found for the data")
-		}
-		for shard, preLines := range linesPerShards {
-			if _, ok := shardLinesMap[shard.Target.Shard]; !ok {
-				shardChan := make(chan string, 10000)
-				shardLinesMap[shard.Target.Shard] = &shardChan
-				go func(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines *chan string, sql string, resultChan chan *sqltypes.Result, errChan chan error) {
-					var result *sqltypes.Result
-					var err error
-					defer func() {
-						if r := recover(); r != nil {
-							errChan <- fmt.Errorf("recover from: %v", r)
-							resultChan <- nil
-						} else if err != nil {
-							shardErr <- err
-							resultChan <- nil
-						} else {
-							shardResult <- result
-						}
-					}()
-					result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
-				}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
-			}
-			shardChan := shardLinesMap[shard.Target.Shard]
-			for _, line := range preLines {
-				if line != nil {
-					*shardChan <- strings.Join(line, l.FieldsInfo.Terminated) + l.LinesInfo.Terminated
-				}
-			}
-		}
 	}
 
-	allShard, _, err := l.e.resolver.resolver.GetAllShards(ctx, table.Keyspace.Name, defaultTabletType)
-	if err != nil {
-		return endResult, vterrors.Errorf(vtrpcpb.Code_UNAVAILABLE, "GetAllShards for %s, err%s", table.Keyspace.Name, err.Error())
+	// 关闭所有shard的通道
+	for _, shardChan := range shardLinesMap {
+		close(shardChan)
 	}
 
-	//shard not having data to load
-	if len(shardLinesMap) < len(allShard) {
-		for _, shard := range allShard {
-			if _, ok := shardLinesMap[shard.Target.Shard]; !ok {
-				shardChan := make(chan string, 10000)
-				shardLinesMap[shard.Target.Shard] = &shardChan
-				go func(ctx context.Context, safeSession *SafeSession, rs *srvtopo.ResolvedShard, lines *chan string, sql string, resultChan chan *sqltypes.Result, errChan chan error) {
-					var result *sqltypes.Result
-					var err error
-					defer func() {
-						if r := recover(); r != nil {
-							errChan <- fmt.Errorf("recover from: %v", r)
-							resultChan <- nil
-						} else if err != nil {
-							shardErr <- err
-							resultChan <- nil
-						} else {
-							shardResult <- result
-						}
-					}()
-					result, err = l.e.scatterConn.streamUpload(ctx, safeSession, rs, *lines, sql)
-				}(ctx, safeSession, shard, &shardChan, sql, shardResult, shardErr)
-			}
-		}
-	}
+	// 等待所有goroutine完成
+	wg.Wait()
 
-	for _, linesChan := range shardLinesMap {
-		close(*linesChan)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-	allErr := make([]string, 0)
+	var allErr []string
 	for i := 0; i < len(shardLinesMap); i++ {
 		select {
 		case err := <-shardErr:
@@ -1015,16 +1003,19 @@ func (l *LoadDataInfo) ExecLoadDataUpstream(ctx context.Context, vCursor engine.
 			}
 		case result := <-shardResult:
 			if result != nil {
-				endResult.RowsAffected = endResult.RowsAffected + result.RowsAffected
+				endResult.RowsAffected += result.RowsAffected
+				// Consider aggregating other parts of the result if necessary.
 			}
 		case <-ctx.Done():
 			allErr = append(allErr, "Load data sub-query execute time out. Please try again later.")
 		}
 	}
 
-	if len(allErr) >= 1 {
-		return endResult, fmt.Errorf("%s", strings.Join(allErr, ""))
+	if len(allErr) > 0 {
+		return endResult, fmt.Errorf(strings.Join(allErr, "\n"))
 	}
+
+	// 返回最终结果
 	return endResult, nil
 }
 
