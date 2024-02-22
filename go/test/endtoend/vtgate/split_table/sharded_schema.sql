@@ -361,6 +361,71 @@ CREATE TABLE `t_10_seq`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb3 COMMENT ='vitess_sequence';
 
+CREATE TABLE `t_11_0`
+(
+    `id`        bigint ,
+    `f_shard`   int         NOT NULL COMMENT '分片键',
+    `f_table`   varchar(64) NOT NULL COMMENT '分表键',
+    `f_date`    date      DEFAULT NULL,
+    `f_tinyint` tinyint   DEFAULT NULL,
+    `f_bit`     bit(1)    DEFAULT NULL,
+    `f_midint`  mediumint DEFAULT NULL,
+    `f_int`     int       DEFAULT NULL,
+    `f_bool`    BOOLEAN   DEFAULT NULL,
+    primary key (id)
+) ENGINE = InnoDB;
+
+CREATE TABLE `t_11_1`
+(
+    `id`        bigint ,
+    `f_shard`   int         NOT NULL COMMENT '分片键',
+    `f_table`   varchar(64) NOT NULL COMMENT '分表键',
+    `f_date`    date      DEFAULT NULL,
+    `f_tinyint` tinyint   DEFAULT NULL,
+    `f_bit`     bit(1)    DEFAULT NULL,
+    `f_midint`  mediumint DEFAULT NULL,
+    `f_int`     int       DEFAULT NULL,
+    `f_bool`    BOOLEAN   DEFAULT NULL,
+    primary key (id)
+) ENGINE = InnoDB;
+
+CREATE TABLE `t_11_2`
+(
+    `id`        bigint ,
+    `f_shard`   int         NOT NULL COMMENT '分片键',
+    `f_table`   varchar(64) NOT NULL COMMENT '分表键',
+    `f_date`    date      DEFAULT NULL,
+    `f_tinyint` tinyint   DEFAULT NULL,
+    `f_bit`     bit(1)    DEFAULT NULL,
+    `f_midint`  mediumint DEFAULT NULL,
+    `f_int`     int       DEFAULT NULL,
+    `f_bool`    BOOLEAN   DEFAULT NULL,
+    primary key (id)
+) ENGINE = InnoDB;
+
+CREATE TABLE `t_11_3`
+(
+    `id`        bigint ,
+    `f_shard`   int         NOT NULL COMMENT '分片键',
+    `f_table`   varchar(64) NOT NULL COMMENT '分表键',
+    `f_date`    date      DEFAULT NULL,
+    `f_tinyint` tinyint   DEFAULT NULL,
+    `f_bit`     bit(1)    DEFAULT NULL,
+    `f_midint`  mediumint DEFAULT NULL,
+    `f_int`     int       DEFAULT NULL,
+    `f_bool`    BOOLEAN   DEFAULT NULL,
+    primary key (id)
+) ENGINE = InnoDB;
+
+CREATE TABLE `t_11_seq`
+(
+    `id`      int NOT NULL,
+    `next_id` bigint DEFAULT NULL,
+    `cache`   bigint DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb3 COMMENT ='vitess_sequence';
+
 
 CREATE TABLE `t_user_extra_0`
 (

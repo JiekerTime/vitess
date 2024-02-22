@@ -660,21 +660,38 @@
       "QueryType": "SELECT",
       "Original": "select id from t_user union all select id from t_music",
       "Instructions": {
-        "OperatorType": "TableRoute",
-        "Variant": "Scatter-Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select id from t_user_0 where 1 != 1 union all select id from t_music_0 where 1 != 1",
-        "Query": "select id from t_user union all select id from t_music",
-        "Table": "t_music, t_user"
+        "OperatorType": "Concatenate",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_music_0 where 1 != 1",
+            "Query": "select id from t_music",
+            "Table": "t_music"
+          }
+        ]
       },
       "TablesUsed": [
         "user.t_music",
         "user.t_user"
       ]
     }
+
 
   },
   {
@@ -1017,21 +1034,38 @@
       "QueryType": "SELECT",
       "Original": "select foo, foo, foo from t_user union all select bar, baz, toto from t_music",
       "Instructions": {
-        "OperatorType": "TableRoute",
-        "Variant": "Scatter-Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select foo, foo, foo from t_user_0 where 1 != 1 union all select bar, baz, toto from t_music_0 where 1 != 1",
-        "Query": "select foo, foo, foo from t_user union all select bar, baz, toto from t_music",
-        "Table": "t_music, t_user"
+        "OperatorType": "Concatenate",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select foo, foo, foo from t_user_0 where 1 != 1",
+            "Query": "select foo, foo, foo from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select bar, baz, toto from t_music_0 where 1 != 1",
+            "Query": "select bar, baz, toto from t_music",
+            "Table": "t_music"
+          }
+        ]
       },
       "TablesUsed": [
         "user.t_music",
         "user.t_user"
       ]
     }
+
 
   },
   {
@@ -1080,8 +1114,6 @@
         "user.t_user_extra"
       ]
     }
-
-
   },
   {
     "comment": "multi-shard union",
@@ -1119,15 +1151,31 @@
                         ],
                         "Inputs": [
                           {
-                            "OperatorType": "TableRoute",
-                            "Variant": "Scatter-Scatter",
-                            "Keyspace": {
-                              "Name": "user",
-                              "Sharded": true
-                            },
-                            "FieldQuery": "select id, weight_string(id) from (select id from t_user_0 where 1 != 1 union select id from t_music_0 where 1 != 1) as dt where 1 != 1",
-                            "Query": "select id, weight_string(id) from (select id from t_user union select id from t_music) as dt",
-                            "Table": "t_music, t_user"
+                            "OperatorType": "Concatenate",
+                            "Inputs": [
+                              {
+                                "OperatorType": "TableRoute",
+                                "Variant": "Scatter-Scatter",
+                                "Keyspace": {
+                                  "Name": "user",
+                                  "Sharded": true
+                                },
+                                "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
+                                "Query": "select distinct id, weight_string(id) from t_user",
+                                "Table": "t_user"
+                              },
+                              {
+                                "OperatorType": "TableRoute",
+                                "Variant": "Scatter-Scatter",
+                                "Keyspace": {
+                                  "Name": "user",
+                                  "Sharded": true
+                                },
+                                "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
+                                "Query": "select distinct id, weight_string(id) from t_music",
+                                "Table": "t_music"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -1156,8 +1204,6 @@
         "user.t_user"
       ]
     }
-
-
 
   },
   {
@@ -1219,15 +1265,31 @@
                         ],
                         "Inputs": [
                           {
-                            "OperatorType": "TableRoute",
-                            "Variant": "Scatter-Scatter",
-                            "Keyspace": {
-                              "Name": "user",
-                              "Sharded": true
-                            },
-                            "FieldQuery": "select id, weight_string(id) from (select id from t_user_0 where 1 != 1 union select id from t_music_0 where 1 != 1) as dt where 1 != 1",
-                            "Query": "select id, weight_string(id) from (select id from t_user union select id from t_music) as dt",
-                            "Table": "t_music, t_user"
+                            "OperatorType": "Concatenate",
+                            "Inputs": [
+                              {
+                                "OperatorType": "TableRoute",
+                                "Variant": "Scatter-Scatter",
+                                "Keyspace": {
+                                  "Name": "user",
+                                  "Sharded": true
+                                },
+                                "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
+                                "Query": "select distinct id, weight_string(id) from t_user",
+                                "Table": "t_user"
+                              },
+                              {
+                                "OperatorType": "TableRoute",
+                                "Variant": "Scatter-Scatter",
+                                "Keyspace": {
+                                  "Name": "user",
+                                  "Sharded": true
+                                },
+                                "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
+                                "Query": "select distinct id, weight_string(id) from t_music",
+                                "Table": "t_music"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -1256,8 +1318,6 @@
         "user.t_user"
       ]
     }
-
-
   },
   {
     "comment": "multiple select statement have inner order by with union - TODO (systay) no need to send down ORDER BY if we are going to loose it with UNION DISTINCT",
@@ -1336,48 +1396,63 @@
     }
   },
   {
-  "comment": "UNION with repeating column on the LHS",
-  "query": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
-  "plan": {
-    "QueryType": "SELECT",
-    "Original": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
-    "Instructions": {
-      "OperatorType": "Distinct",
-      "Collations": [
-        "0: latin1_swedish_ci",
-        "1: latin1_swedish_ci",
-        "2: latin1_swedish_ci"
-      ],
-      "Inputs": [
-        {
-          "OperatorType": "Distinct",
-          "Collations": [
-            "0: latin1_swedish_ci",
-            "1: latin1_swedish_ci",
-            "2: latin1_swedish_ci"
-          ],
-          "Inputs": [
-            {
-              "OperatorType": "TableRoute",
-              "Variant": "Scatter-Scatter",
-              "Keyspace": {
-                "Name": "user",
-                "Sharded": true
-              },
-              "FieldQuery": "select col, col, col from t_user_0 where 1 != 1 union select col1, col1, col1 from t_authoritative_0 where 1 != 1",
-              "Query": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
-              "Table": "t_authoritative, t_user"
-            }
-          ]
-        }
+    "comment": "UNION with repeating column on the LHS",
+    "query": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
+    "plan": {
+      "QueryType": "SELECT",
+      "Original": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
+      "Instructions": {
+        "OperatorType": "Distinct",
+        "Collations": [
+          "0: latin1_swedish_ci",
+          "1: latin1_swedish_ci",
+          "2: latin1_swedish_ci"
+        ],
+        "Inputs": [
+          {
+            "OperatorType": "Distinct",
+            "Collations": [
+              "0",
+              "1",
+              "2"
+            ],
+            "Inputs": [
+              {
+                "OperatorType": "Concatenate",
+                "Inputs": [
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select col, col, col from t_user_0 where 1 != 1",
+                    "Query": "select distinct col, col, col from t_user",
+                    "Table": "t_user"
+                  },
+                  {
+                    "OperatorType": "TableRoute",
+                    "Variant": "Scatter-Scatter",
+                    "Keyspace": {
+                      "Name": "user",
+                      "Sharded": true
+                    },
+                    "FieldQuery": "select col1, col1, col1 from t_authoritative_0 where 1 != 1",
+                    "Query": "select distinct col1, col1, col1 from t_authoritative",
+                    "Table": "t_authoritative"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "TablesUsed": [
+        "user.t_authoritative",
+        "user.t_user"
       ]
-    },
-    "TablesUsed": [
-      "user.t_authoritative",
-      "user.t_user"
-    ]
-  }
-
+    }
   },
   {
     "comment": "union all splitTable and not splitTable",
@@ -1504,15 +1579,42 @@
       "QueryType": "SELECT",
       "Original": "select id from t_user  union all select id from t_music  union all select id from t_user_extra",
       "Instructions": {
-        "OperatorType": "TableRoute",
-        "Variant": "Scatter-Scatter",
-        "Keyspace": {
-          "Name": "user",
-          "Sharded": true
-        },
-        "FieldQuery": "select id from t_user_0 where 1 != 1 union all select id from t_music_0 where 1 != 1 union all select id from t_user_extra_0 where 1 != 1",
-        "Query": "select id from t_user union all select id from t_music union all select id from t_user_extra",
-        "Table": "t_music, t_user, t_user_extra"
+        "OperatorType": "Concatenate",
+        "Inputs": [
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_0 where 1 != 1",
+            "Query": "select id from t_user",
+            "Table": "t_user"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_music_0 where 1 != 1",
+            "Query": "select id from t_music",
+            "Table": "t_music"
+          },
+          {
+            "OperatorType": "TableRoute",
+            "Variant": "Scatter-Scatter",
+            "Keyspace": {
+              "Name": "user",
+              "Sharded": true
+            },
+            "FieldQuery": "select id from t_user_extra_0 where 1 != 1",
+            "Query": "select id from t_user_extra",
+            "Table": "t_user_extra"
+          }
+        ]
       },
       "TablesUsed": [
         "user.t_music",
@@ -1520,7 +1622,6 @@
         "user.t_user_extra"
       ]
     }
-
   },
   {
     "comment": "multi-shard union",

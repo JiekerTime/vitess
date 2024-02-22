@@ -183,6 +183,19 @@ func tryMergeUnionShardedRoutingForSplitTable(
 	uniqueA := tblA.RouteOpCode == engine.EqualUnique
 	uniqueB := tblB.RouteOpCode == engine.EqualUnique
 
+	infoA, err := ctx.SemTable.TableInfoFor(tblA.TindexPreds[0].TableID)
+	if err != nil {
+		return nil, nil, nil
+	}
+	infoB, err := ctx.SemTable.TableInfoFor(tblB.TindexPreds[0].TableID)
+	if err != nil {
+		return nil, nil, nil
+	}
+
+	if ctx.SplitTableConfig[infoA.GetVindexTable().Name.String()].TableCount != ctx.SplitTableConfig[infoB.GetVindexTable().Name.String()].TableCount {
+		return nil, nil, nil
+	}
+
 	switch {
 	case scatterA:
 		return createMergedUnionForSplitTable(ctx, routeA, routeB, exprsA, exprsB, distinct, tblA)

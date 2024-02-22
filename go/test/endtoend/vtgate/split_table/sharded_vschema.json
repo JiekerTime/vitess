@@ -156,6 +156,22 @@
       "type": "sequence",
       "pinned": "00"
     },
+    "t_11": {
+      "columnVindexes": [
+        {
+          "column": "f_shard",
+          "name": "xxhash"
+        }
+      ],
+      "autoIncrement": {
+        "column": "id",
+        "sequence": "user.t_11_seq"
+      }
+    },
+    "t_11_seq": {
+      "type": "sequence",
+      "pinned": "00"
+    },
     "t_user_extra": {
       "column_vindexes": [
         {
@@ -356,6 +372,18 @@
         }
       ],
       "table_count": 2
+    },
+    "t_11": {
+      "logic_table_name": "t_11",
+      "table_vindex": "split_table_hash",
+      "table_vindex_column": [
+        {
+          "index": 0,
+          "column": "f_table",
+          "column_type": "VARCHAR"
+        }
+      ],
+      "table_count": 4
     },
     "t_1": {
       "logic_table_name": "t_1",

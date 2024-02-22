@@ -109,13 +109,15 @@ func start(t *testing.T) (utils.MySQLCompare, func()) {
 	deleteAll := func() {
 		_, _ = utils.ExecAllowError(t, mcmp.VtConn, "set workload = oltp")
 		mcmp.Exec("use user")
-		tables := []string{"t_user", "t_1", "t_2", "t_3", "t_4", "t_5", "t_6", "t_7", "t_8", "t_9", "t_10", "t_user_extra", "t_music", "t_user_shard"}
+		tables := []string{"t_user", "t_1", "t_2", "t_3", "t_4", "t_5", "t_6", "t_7", "t_8", "t_9", "t_10", "t_11", "t_user_extra", "t_music", "t_user_shard"}
 		for _, table := range tables {
 			mcmp.Exec("delete from " + table)
 		}
 		utils.Exec(t, mcmp.VtConn, "insert IGNORE into user.t_seq (id, next_id, cache) values (0, 1, 1)")
 		utils.Exec(t, mcmp.VtConn, "insert IGNORE into user.t_9_seq (id, next_id, cache) values (0, 1, 1)")
 		utils.Exec(t, mcmp.VtConn, "insert IGNORE into user.t_10_seq (id, next_id, cache) values (0, 1, 1)")
+		utils.Exec(t, mcmp.VtConn, "insert IGNORE into user.t_11_seq (id, next_id, cache) values (0, 1, 1)")
+
 	}
 
 	deleteAll()
