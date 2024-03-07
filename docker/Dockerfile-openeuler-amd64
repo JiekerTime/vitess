@@ -107,8 +107,8 @@ MAINTAINER StarDB <stardb@jd.com>
 ARG MYSQL_VERSION
 
 # Set up Vitess user and directory tree.
+RUN groupadd --system --gid 1001 mysql && useradd --system --uid 1001 --gid 1001 mysql
 RUN groupadd -r vitess && useradd -r -g vitess vitess
-RUN groupadd -r mysql && useradd -r -g mysql mysql
 RUN mkdir -p /vt/vtdataroot && chown -R vitess:vitess /vt
 
 # Set up Vitess environment (just enough to run pre-built Go binaries)
