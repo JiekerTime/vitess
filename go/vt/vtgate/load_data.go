@@ -11,9 +11,6 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
-	"vitess.io/vitess/go/vt/servenv"
-	"vitess.io/vitess/go/vt/vtgate/logstats"
-
 	"golang.org/x/net/context"
 
 	"vitess.io/vitess/go/hack"
@@ -23,10 +20,12 @@ import (
 	"vitess.io/vitess/go/vt/log"
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/servenv"
 	"vitess.io/vitess/go/vt/sqlparser"
 	"vitess.io/vitess/go/vt/srvtopo"
 	"vitess.io/vitess/go/vt/vterrors"
 	"vitess.io/vitess/go/vt/vtgate/engine"
+	"vitess.io/vitess/go/vt/vtgate/logstats"
 	"vitess.io/vitess/go/vt/vtgate/vindexes"
 )
 
@@ -632,9 +631,9 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 						return nil, vterrors.Errorf(vtrpcpb.Code_FAILED_PRECONDITION, "load split table fields termined err ,please check")
 					}
 					if rowType, ok := rowTypeList[vIdx]; ok {
-						v, err = sqltypes.NewValue(rowType, []byte(row[tbColValues]))
+						_, _ = sqltypes.NewValue(rowType, []byte(row[tbColValues]))
 					} else {
-						v, err = sqltypes.NewValue(sqltypes.Char, []byte(row[tbColValues]))
+						_, _ = sqltypes.NewValue(sqltypes.Char, []byte(row[tbColValues]))
 					}
 					v, err := sqltypes.NewValue(sqltypes.Char, []byte(row[tbColValues]))
 					if err != nil {
@@ -698,7 +697,7 @@ func (l *LoadDataInfo) getLoadShardedRoute(ctx context.Context, vcursor engine.V
 			for _, val := range tbVindexRowsValues {
 				firstCols = append(firstCols, val[0])
 			}
-			tableDestinations, err = tableVindex.(vindexes.TableSingleColumn).Map(ctx, vcursor, firstCols)
+			tableDestinations, err = tableVindex.Map(ctx, vcursor, firstCols)
 		default:
 			return nil, vterrors.Errorf(vtrpcpb.Code_INTERNAL, "unsupported tableVindex: %v", tableVindex)
 		}

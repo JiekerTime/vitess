@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+
 	"vitess.io/vitess/go/vt/vtgate"
 
 	"github.com/stretchr/testify/assert"

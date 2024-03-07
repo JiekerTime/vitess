@@ -1025,15 +1025,16 @@ func (asm *assembler) Convert_ui(offset int) {
 	}, "CONV UINT64(SP-%d), INT64", offset)
 }
 
-func (asm *assembler) Convert_xb(offset int, t sqltypes.Type, length int, hasLength bool) {
-	if hasLength {
+func (asm *assembler) Convert_xb(offset int, t sqltypes.Type, length *int) {
+	if length != nil {
+		l := *length
 		asm.emit(func(env *ExpressionEnv) int {
 			arg := evalToBinary(env.vm.stack[env.vm.sp-offset])
-			arg.truncateInPlace(length)
+			arg.truncateInPlace(l)
 			arg.tt = int16(t)
 			env.vm.stack[env.vm.sp-offset] = arg
 			return 1
-		}, "CONV (SP-%d), VARBINARY[%d]", offset, length)
+		}, "CONV (SP-%d), VARBINARY[%d]", offset, l)
 	} else {
 		asm.emit(func(env *ExpressionEnv) int {
 			arg := evalToBinary(env.vm.stack[env.vm.sp-offset])
@@ -1044,19 +1045,20 @@ func (asm *assembler) Convert_xb(offset int, t sqltypes.Type, length int, hasLen
 	}
 }
 
-func (asm *assembler) Convert_xc(offset int, t sqltypes.Type, collation collations.ID, length int, hasLength bool) {
-	if hasLength {
+func (asm *assembler) Convert_xc(offset int, t sqltypes.Type, collation collations.ID, length *int) {
+	if length != nil {
+		l := *length
 		asm.emit(func(env *ExpressionEnv) int {
 			arg, err := evalToVarchar(env.vm.stack[env.vm.sp-offset], collation, true)
 			if err != nil {
 				env.vm.stack[env.vm.sp-offset] = nil
 			} else {
-				arg.truncateInPlace(length)
+				arg.truncateInPlace(l)
 				arg.tt = int16(t)
 				env.vm.stack[env.vm.sp-offset] = arg
 			}
 			return 1
-		}, "CONV (SP-%d), VARCHAR[%d]", offset, length)
+		}, "CONV (SP-%d), VARCHAR[%d]", offset, l)
 	} else {
 		asm.emit(func(env *ExpressionEnv) int {
 			arg, err := evalToVarchar(env.vm.stack[env.vm.sp-offset], collation, true)
@@ -3332,31 +3334,32 @@ func cmpnum[N interface{ int64 | uint64 | float64 }](a, b N) int {
 	}
 }
 
-func (asm *assembler) Fn_Now(t querypb.Type, format *datetime.Strftime, prec uint8, utc bool) {
+func (asm *assembler) Fn_Now(prec uint8, utc bool) {
 	asm.adjustStack(1)
 	asm.emit(func(env *ExpressionEnv) int {
-		val := env.vm.arena.newEvalBytesEmpty()
-		val.tt = int16(t)
-		val.bytes = format.Format(env.time(utc), prec)
-		val.col = collationBinary
-		env.vm.stack[env.vm.sp] = val
+		env.vm.stack[env.vm.sp] = env.vm.arena.newEvalDateTime(env.time(utc), int(prec))
 		env.vm.sp++
 		return 1
-	}, "FN NOW")
+	}, "FN NOW(DATETIME)")
+}
+
+func (asm *assembler) Fn_NowTime(prec uint8, utc bool) {
+	asm.adjustStack(1)
+	asm.emit(func(env *ExpressionEnv) int {
+		env.vm.stack[env.vm.sp] = env.vm.arena.newEvalTime(env.time(utc).Time, int(prec))
+		env.vm.sp++
+		return 1
+	}, "FN NOW(TIME)")
 }
 
 func (asm *assembler) Fn_Sysdate(prec uint8) {
 	asm.adjustStack(1)
 	asm.emit(func(env *ExpressionEnv) int {
-		val := env.vm.arena.newEvalBytesEmpty()
-		val.tt = int16(sqltypes.Datetime)
 		now := SystemTime()
 		if tz := env.currentTimezone(); tz != nil {
 			now = now.In(tz)
 		}
-		val.bytes = datetime.NewDateTimeFromStd(now).Format(prec)
-		val.col = collationBinary
-		env.vm.stack[env.vm.sp] = val
+		env.vm.stack[env.vm.sp] = env.vm.arena.newEvalDateTime(datetime.NewDateTimeFromStd(now), int(prec))
 		env.vm.sp++
 		return 1
 	}, "FN SYSDATE")
@@ -3365,11 +3368,7 @@ func (asm *assembler) Fn_Sysdate(prec uint8) {
 func (asm *assembler) Fn_Curdate() {
 	asm.adjustStack(1)
 	asm.emit(func(env *ExpressionEnv) int {
-		val := env.vm.arena.newEvalBytesEmpty()
-		val.tt = int16(sqltypes.Date)
-		val.bytes = datetime.Date_YYYY_MM_DD.Format(env.time(false), 0)
-		val.col = collationBinary
-		env.vm.stack[env.vm.sp] = val
+		env.vm.stack[env.vm.sp] = env.vm.arena.newEvalDate(env.time(false).Date)
 		env.vm.sp++
 		return 1
 	}, "FN CURDATE")
@@ -3378,11 +3377,7 @@ func (asm *assembler) Fn_Curdate() {
 func (asm *assembler) Fn_UtcDate() {
 	asm.adjustStack(1)
 	asm.emit(func(env *ExpressionEnv) int {
-		val := env.vm.arena.newEvalBytesEmpty()
-		val.tt = int16(sqltypes.Date)
-		val.bytes = datetime.Date_YYYY_MM_DD.Format(env.time(true), 0)
-		val.col = collationBinary
-		env.vm.stack[env.vm.sp] = val
+		env.vm.stack[env.vm.sp] = env.vm.arena.newEvalDate(env.time(true).Date)
 		env.vm.sp++
 		return 1
 	}, "FN UTC_DATE")

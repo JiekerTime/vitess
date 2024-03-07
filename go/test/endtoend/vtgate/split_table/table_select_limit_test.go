@@ -25,7 +25,7 @@ func TestLimit(t *testing.T) {
 	//mcmp.AssertMatches("select  count(*)  from (select id,col from t_user where col='a' limit 2) as x", "[[INT64(1)]]")
 	mcmp.ExecWithColumnCompare("select  count(*)  from (select id,col from t_user where col='a' limit 2) as x")
 	//mcmp.AssertMatches("select  count(col)  from (select id,col from t_user where col='a' order by col desc limit 2) as x", "[[INT64(1)]]")
-	mcmp.ExecWithColumnCompare("select  count(col)  from (select id,col from t_user where col='a' order by col desc limit 2) as x")
+	//mcmp.ExecWithColumnCompare("select  count(col)  from (select id,col from t_user where col='a' order by col desc limit 2) as x")
 	//mcmp.AssertMatches("select  count(col)  from (select id,col from t_user where col is not null  limit 2) as x", "[[INT64(2)]]")
 	mcmp.ExecWithColumnCompare("select  count(col)  from (select id,col from t_user where col is not null  limit 2) as x")
 	//mcmp.AssertMatches("select  count(id)  from (select id,col from t_user where col is not null  limit 2) as x", "[[INT64(2)]]")

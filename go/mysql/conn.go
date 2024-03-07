@@ -1891,6 +1891,11 @@ func (c *Conn) ReConnectCrossTablet() error {
 		Flags:   uint64(c.StatusFlags | ClientLocalFiles),
 		Charset: "utf8mb4",
 		DbName:  schema}
+
+	if c.Capabilities|CapabilityClientFoundRows == c.Capabilities {
+		backendConnParam.Flags |= uint64(CapabilityClientFoundRows)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	crossconn, err := Connect(ctx, backendConnParam)
@@ -2125,7 +2130,7 @@ func (c *Conn) processData(data []byte, clientConn *Conn) error {
 		if c.isEOFPacket(rowData) {
 			_, statusFlag, _ := parse41EOFPacket(rowData)
 			if clientConn.Capabilities&CapabilityClientDeprecateEOF == 0 {
-				if err := clientConn.writeEOFPacket(clientConn.StatusFlags|(statusFlag&ServerMoreResultsExists), 0); err != nil {
+				if err := clientConn.writeEOFPacket(statusFlag, 0); err != nil {
 					return err
 				}
 				//if err := clientConn.flush(); err != nil {
@@ -2149,7 +2154,7 @@ func (c *Conn) processData(data []byte, clientConn *Conn) error {
 			}
 
 			//writeOKPacketWithEOFHeader will flush
-			if err := clientConn.writeOKPacketWithEOFHeader(&PacketOK{statusFlags: clientConn.StatusFlags | (statusFlag & ServerMoreResultsExists)}); err != nil {
+			if err := clientConn.writeOKPacketWithEOFHeader(&PacketOK{statusFlags: statusFlag}); err != nil {
 				return err
 			}
 			/*if err := clientConn.flush(); err != nil {
@@ -2285,7 +2290,7 @@ func (c *Conn) ptComPrepare(data []byte, clientConn *Conn) error {
 
 func parse41EOFPacket(data []byte) (uint16, uint16, error) {
 	pos := 1
-	numWarnings, _, ok := readUint16(data, pos)
+	numWarnings, pos, ok := readUint16(data, pos)
 	if !ok {
 		return 0, 0, fmt.Errorf("error 41 eof packet")
 	}

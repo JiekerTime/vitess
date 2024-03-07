@@ -715,8 +715,8 @@
           "Name": "main",
           "Sharded": false
         },
-        "FieldQuery": "select m1.col from unsharded as m1 join unsharded as m2 where 1 != 1",
-        "Query": "select m1.col from unsharded as m1 join unsharded as m2",
+        "FieldQuery": "select m1.col from unsharded as m1 straight_join unsharded as m2 where 1 != 1",
+        "Query": "select m1.col from unsharded as m1 straight_join unsharded as m2",
         "Table": "unsharded"
       },
       "TablesUsed": [
@@ -3800,8 +3800,8 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t3.push_it from (select bar as push_it from (select foo as bar from (select id as foo from `user` where 1 != 1) as t1 where 1 != 1) as t2 where 1 != 1) as t3 where 1 != 1",
-        "Query": "select t3.push_it from (select bar as push_it from (select foo as bar from (select id as foo from `user` where id = 12) as t1) as t2) as t3",
+        "FieldQuery": "select push_it from (select bar as push_it from (select foo as bar from (select id as foo from `user` where 1 != 1) as t1 where 1 != 1) as t2 where 1 != 1) as t3 where 1 != 1",
+        "Query": "select push_it from (select bar as push_it from (select foo as bar from (select id as foo from `user` where id = 12) as t1) as t2) as t3",
         "Table": "`user`",
         "Values": [
           "INT64(12)"
@@ -3826,8 +3826,8 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where 1 != 1) as user_details_view where 1 != 1",
-        "Query": "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = user_extra.user_id) as user_details_view",
+        "FieldQuery": "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where 1 != 1) as user_details_view where 1 != 1",
+        "Query": "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = user_extra.user_id) as user_details_view",
         "Table": "`user`, user_extra"
       },
       "TablesUsed": [
@@ -3849,8 +3849,8 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where 1 != 1) as user_details_view where 1 != 1",
-        "Query": "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = user_extra.user_id) as user_details_view",
+        "FieldQuery": "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where 1 != 1) as user_details_view where 1 != 1",
+        "Query": "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = user_extra.user_id) as user_details_view",
         "Table": "`user`, user_extra"
       },
       "TablesUsed": [
@@ -3993,8 +3993,8 @@
           "Name": "main",
           "Sharded": false
         },
-        "FieldQuery": "select A.col1 as col1, A.col2 as col2, B.col2 as col2 from unsharded_authoritative as A left join unsharded_authoritative as B on A.col1 = B.col1 where 1 != 1",
-        "Query": "select A.col1 as col1, A.col2 as col2, B.col2 as col2 from unsharded_authoritative as A left join unsharded_authoritative as B on A.col1 = B.col1",
+        "FieldQuery": "select * from unsharded_authoritative as A left join unsharded_authoritative as B using (col1) where 1 != 1",
+        "Query": "select * from unsharded_authoritative as A left join unsharded_authoritative as B using (col1)",
         "Table": "unsharded_authoritative"
       },
       "TablesUsed": [

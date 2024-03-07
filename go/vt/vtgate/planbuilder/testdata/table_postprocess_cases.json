@@ -70,7 +70,7 @@
           "Sharded": true
         },
         "FieldQuery": "select col from t_user_0 where 1 != 1",
-        "Query": "select col from t_user order by col asc",
+        "Query": "select col from t_user order by t_user.col asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
       },
@@ -93,7 +93,7 @@
           "Sharded": true
         },
         "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
-        "Query": "select id, weight_string(id) from t_user order by id asc",
+        "Query": "select id, weight_string(id) from t_user order by t_user.id asc",
         "OrderBy": "(0|1) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
@@ -164,7 +164,7 @@
           "Sharded": true
         },
         "FieldQuery": "select id as foo, weight_string(id) from t_user_0 where 1 != 1",
-        "Query": "select id as foo, weight_string(id) from t_user order by foo asc",
+        "Query": "select id as foo, weight_string(id) from t_user order by id asc",
         "OrderBy": "(0|1) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
@@ -494,7 +494,7 @@
           "Sharded": true
         },
         "FieldQuery": "select col from t_user_0 where 1 != 1",
-        "Query": "select col from t_user where id = 1 and col = 6 order by col asc",
+        "Query": "select col from t_user where id = 1 and col = 6 order by t_user.col asc",
         "Values": [
           "INT64(1)"
         ],
@@ -523,7 +523,7 @@
           "Sharded": true
         },
         "FieldQuery": "select col as foo from t_user_0 where 1 != 1",
-        "Query": "select col as foo from t_user order by foo asc",
+        "Query": "select col as foo from t_user order by t_user.col asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
       },
@@ -546,7 +546,7 @@
           "Sharded": true
         },
         "FieldQuery": "select col as foo, col2 as col, weight_string(col2) from t_user_0 where 1 != 1",
-        "Query": "select col as foo, col2 as col, weight_string(col2) from t_user order by col asc",
+        "Query": "select col as foo, col2 as col, weight_string(col2) from t_user order by t_user.col2 asc",
         "OrderBy": "(1|2) ASC",
         "ResultColumns": 2,
         "Table": "t_user"
@@ -570,7 +570,7 @@
           "Sharded": true
         },
         "FieldQuery": "select col, col from t_user_0 where 1 != 1",
-        "Query": "select col, col from t_user order by col asc",
+        "Query": "select col, col from t_user order by t_user.col asc",
         "OrderBy": "0 ASC",
         "Table": "t_user"
       },
@@ -616,8 +616,8 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select t_user_0.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user_0 where 1 != 1",
-        "Query": "select t_user.col1 as a, a collate utf8_general_ci, weight_string(a collate utf8_general_ci) from t_user order by a collate utf8_general_ci asc",
+        "FieldQuery": "select t_user_0.col1 as a, t_user_0.col1 collate utf8_general_ci, weight_string(t_user_0.col1 collate utf8_general_ci) from t_user_0 where 1 != 1",
+        "Query": "select t_user.col1 as a, t_user.col1 collate utf8_general_ci, weight_string(t_user.col1 collate utf8_general_ci) from t_user order by t_user.col1 collate utf8_general_ci asc",
         "OrderBy": "(1|2) ASC",
         "ResultColumns": 1,
         "Table": "t_user"
@@ -1032,7 +1032,7 @@
             },
             "OrderBy": "(0|3) ASC",
             "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2, t_user_0.id, weight_string(t_user_0.col1) from t_user_0 where 1 != 1",
-            "Query": "select t_user.col1 as a, t_user.col2, t_user.id, weight_string(t_user.col1) from t_user where t_user.id = 1 order by a asc",
+            "Query": "select t_user.col1 as a, t_user.col2, t_user.id, weight_string(t_user.col1) from t_user where t_user.id = 1 order by t_user.col1 asc",
             "Table": "t_user",
             "Values": [
               "INT64(1)"
@@ -1086,7 +1086,7 @@
             },
             "OrderBy": "(0|3) ASC",
             "FieldQuery": "select t_user_0.col1 as a, t_user_0.col2, t_user_0.id, weight_string(t_user_0.col1) from t_user_0 where 1 != 1",
-            "Query": "select t_user.col1 as a, t_user.col2, t_user.id, weight_string(t_user.col1) from t_user where t_user.id = 1 order by a asc",
+            "Query": "select t_user.col1 as a, t_user.col2, t_user.id, weight_string(t_user.col1) from t_user where t_user.id = 1 order by t_user.col1 asc",
             "Table": "t_user",
             "Values": [
               "INT64(1)"
@@ -1238,7 +1238,7 @@
             },
             "FieldQuery": "select `name`, weight_string(`name`) from t_user_0 where 1 != 1",
             "OrderBy": "(0|1) ASC",
-            "Query": "select `name`, weight_string(`name`) from t_user order by `name` asc",
+            "Query": "select `name`, weight_string(`name`) from t_user order by t_user.`name` asc",
             "Table": "t_user"
           },
           {
@@ -1288,7 +1288,7 @@
                 },
                 "FieldQuery": "select `name`, weight_string(`name`) from t_user_0 where 1 != 1",
                 "OrderBy": "(0|1) ASC",
-                "Query": "select `name`, weight_string(`name`) from t_user order by `name` asc",
+                "Query": "select `name`, weight_string(`name`) from t_user order by t_user.`name` asc",
                 "Table": "t_user"
               },
               {
@@ -1506,7 +1506,7 @@
               "Sharded": true
             },
             "FieldQuery": "select id from t_user_0 where 1 != 1",
-            "Query": "select id from t_user where id in ::__vals and :__sq_has_values",
+            "Query": "select id from t_user where t_user.id in ::__vals and :__sq_has_values",
             "Table": "t_user",
             "Values": [
               "::__sq1"
@@ -1636,7 +1636,7 @@
         },
         "FieldQuery": "select a, textcol1, b, weight_string(a), weight_string(b) from t_user_0 where 1 != 1",
         "OrderBy": "(0|3) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|4) ASC",
-        "Query": "select a, textcol1, b, weight_string(a), weight_string(b) from t_user order by a asc, textcol1 asc, b asc",
+        "Query": "select a, textcol1, b, weight_string(a), weight_string(b) from t_user order by t_user.a asc, t_user.textcol1 asc, t_user.b asc",
         "ResultColumns": 3,
         "Table": "t_user"
       },
@@ -1660,7 +1660,7 @@
         },
         "FieldQuery": "select a, t_user_0.textcol1, b, weight_string(a), weight_string(b) from t_user_0 where 1 != 1",
         "OrderBy": "(0|3) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|4) ASC",
-        "Query": "select a, t_user.textcol1, b, weight_string(a), weight_string(b) from t_user order by a asc, textcol1 asc, b asc",
+        "Query": "select a, t_user.textcol1, b, weight_string(a), weight_string(b) from t_user order by t_user.a asc, t_user.textcol1 asc, t_user.b asc",
         "ResultColumns": 3,
         "Table": "t_user"
       },
@@ -1682,9 +1682,9 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select a, textcol1, b, textcol2, weight_string(a), weight_string(b) from t_user_0 where 1 != 1",
-        "OrderBy": "(0|4) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|5) ASC, 3 ASC COLLATE latin1_swedish_ci",
-        "Query": "select a, textcol1, b, textcol2, weight_string(a), weight_string(b) from t_user order by a asc, textcol1 asc, b asc, textcol2 asc",
+        "FieldQuery": "select a, textcol1, b, textcol2, weight_string(a), weight_string(b), weight_string(textcol2) from t_user_0 where 1 != 1",
+        "OrderBy": "(0|4) ASC, 1 ASC COLLATE latin1_swedish_ci, (2|5) ASC, (3|6) ASC COLLATE ",
+        "Query": "select a, textcol1, b, textcol2, weight_string(a), weight_string(b), weight_string(textcol2) from t_user order by t_user.a asc, t_user.textcol1 asc, t_user.b asc, t_user.textcol2 asc",
         "ResultColumns": 4,
         "Table": "t_user"
       },
@@ -1708,7 +1708,7 @@
         },
         "FieldQuery": "select id as foo, weight_string(id) from t_music_0 where 1 != 1",
         "OrderBy": "(0|1) ASC",
-        "Query": "select id as foo, weight_string(id) from t_music order by foo asc",
+        "Query": "select id as foo, weight_string(id) from t_music order by id asc",
         "ResultColumns": 1,
         "Table": "t_music"
       },
@@ -1753,7 +1753,7 @@
             },
             "FieldQuery": "select col from t_user_0 where 1 != 1",
             "OrderBy": "0 ASC",
-            "Query": "select col from t_user where col in ::__sq1 and :__sq_has_values order by col asc",
+            "Query": "select col from t_user where col in ::__sq1 and :__sq_has_values order by t_user.col asc",
             "Table": "t_user",
             "TableValues": [
               "::__sq1"
@@ -2046,7 +2046,7 @@
           "Sharded": true
         },
         "FieldQuery": "select col1 from t_user_0 where 1 != 1",
-        "Query": "select col1 from t_user where id = 123 and col2 = 2 and col = 1 and col1 = 3",
+        "Query": "select col1 from t_user where id = 123 and col2 = 2 and col = 1 and t_user.col1 = 3",
         "Table": "t_user",
         "TableValues": [
           "INT64(1)"
@@ -2138,7 +2138,7 @@
               "Sharded": true
             },
             "FieldQuery": "select id from t_user_0 where 1 != 1",
-            "Query": "select id from t_user where id in ::__vals and :__sq_has_values",
+            "Query": "select id from t_user where t_user.id in ::__vals and :__sq_has_values",
             "Table": "t_user",
             "Values": [
               "::__sq1"
@@ -2207,7 +2207,7 @@
             },
             "FieldQuery": "select col from t_user_0 where 1 != 1 group by col",
             "OrderBy": "0 ASC",
-            "Query": "select col from t_user where id between :vtg1 and :vtg2 group by col order by col asc",
+            "Query": "select col from t_user where id between :vtg1 and :vtg2 group by col order by t_user.col asc",
             "Table": "t_user"
           }
         ]
@@ -2238,7 +2238,7 @@
             },
             "FieldQuery": "select foo, col, weight_string(foo) from t_user_0 where 1 != 1 group by col, foo, weight_string(foo)",
             "OrderBy": "1 ASC, (0|2) ASC",
-            "Query": "select foo, col, weight_string(foo) from t_user where id between :vtg1 and :vtg2 group by col, foo, weight_string(foo) order by col asc, foo asc",
+            "Query": "select foo, col, weight_string(foo) from t_user where id between :vtg1 and :vtg2 group by col, foo, weight_string(foo) order by t_user.col asc, foo asc",
             "Table": "t_user"
           }
         ]

@@ -25,47 +25,64 @@ import (
 // analyzer controls the flow of the analysis.
 // It starts the tree walking and controls which part of the analysis sees which parts of the tree
 type analyzer struct {
-	scoper   *scoper
-	tables   *tableCollector
-	binder   *binder
-	typer    *typer
-	rewriter *earlyRewriter
-	sig      QuerySignature
+	scoper      *scoper
+	earlyTables *earlyTableCollector
+	tables      *tableCollector
+	binder      *binder
+	typer       *typer
+	rewriter    *earlyRewriter
+	sig         QuerySignature
+	si          SchemaInformation
+	currentDb   string
+	recheck     bool
 
 	err          error
 	inProjection int
 
-	projErr      error
-	unshardedErr error
-	warning      string
+	projErr                 error
+	unshardedErr            error
+	warning                 string
+	singleUnshardedKeyspace bool
+	fullAnalysis            bool
 }
 
 // newAnalyzer create the semantic analyzer
-func newAnalyzer(dbName string, si SchemaInformation) *analyzer {
+func newAnalyzer(dbName string, si SchemaInformation, fullAnalysis bool) *analyzer {
 	// TODO  dependencies between these components are a little tangled. We should try to clean up
 	s := newScoper()
 	a := &analyzer{
-		scoper: s,
-		tables: newTableCollector(s, si, dbName),
-		typer:  newTyper(),
+		scoper:       s,
+		earlyTables:  newEarlyTableCollector(si, dbName),
+		typer:        newTyper(),
+		si:           si,
+		currentDb:    dbName,
+		fullAnalysis: fullAnalysis,
 	}
 	s.org = a
-	a.tables.org = a
-
-	b := newBinder(s, a, a.tables, a.typer)
-	a.binder = b
-	a.rewriter = &earlyRewriter{
-		scoper:          s,
-		binder:          b,
-		expandedColumns: map[sqlparser.TableName][]*sqlparser.ColName{},
-	}
-	s.binder = b
 	return a
+}
+
+func (a *analyzer) lateInit() {
+	a.tables = a.earlyTables.newTableCollector(a.scoper, a)
+	a.binder = newBinder(a.scoper, a, a.tables, a.typer)
+	a.scoper.binder = a.binder
+	a.rewriter = &earlyRewriter{
+		scoper:          a.scoper,
+		binder:          a.binder,
+		expandedColumns: map[sqlparser.TableName][]*sqlparser.ColName{},
+		aliasMapCache:   map[*sqlparser.Select]map[string]exprContainer{},
+		reAnalyze:       a.reAnalyze,
+		tables:          a.tables,
+	}
 }
 
 // Analyze analyzes the parsed query.
 func Analyze(statement sqlparser.Statement, currentDb string, si SchemaInformation) (*SemTable, error) {
-	analyzer := newAnalyzer(currentDb, newSchemaInfo(si))
+	return analyseAndGetSemTable(statement, currentDb, si, false)
+}
+
+func analyseAndGetSemTable(statement sqlparser.Statement, currentDb string, si SchemaInformation, fullAnalysis bool) (*SemTable, error) {
+	analyzer := newAnalyzer(currentDb, newSchemaInfo(si), fullAnalysis)
 
 	// Analysis for initial scope
 	err := analyzer.analyze(statement)
@@ -74,14 +91,12 @@ func Analyze(statement sqlparser.Statement, currentDb string, si SchemaInformati
 	}
 
 	// Creation of the semantic table
-	semTable := analyzer.newSemTable(statement, si.ConnCollation())
-
-	return semTable, nil
+	return analyzer.newSemTable(statement, si.ConnCollation())
 }
 
 // AnalyzeStrict analyzes the parsed query, and fails the analysis for any possible errors
 func AnalyzeStrict(statement sqlparser.Statement, currentDb string, si SchemaInformation) (*SemTable, error) {
-	st, err := Analyze(statement, currentDb, si)
+	st, err := analyseAndGetSemTable(statement, currentDb, si, true)
 	if err != nil {
 		return nil, err
 	}
@@ -96,12 +111,36 @@ func AnalyzeStrict(statement sqlparser.Statement, currentDb string, si SchemaInf
 	return st, nil
 }
 
-func (a *analyzer) newSemTable(statement sqlparser.Statement, coll collations.ID) *SemTable {
+func (a *analyzer) newSemTable(
+	statement sqlparser.Statement,
+	coll collations.ID,
+) (*SemTable, error) {
 	var comments *sqlparser.ParsedComments
 	commentedStmt, isCommented := statement.(sqlparser.Commented)
 	if isCommented {
 		comments = commentedStmt.GetParsedComments()
 	}
+
+	if a.singleUnshardedKeyspace {
+		return &SemTable{
+			Tables:            a.earlyTables.Tables,
+			Comments:          comments,
+			Warning:           a.warning,
+			Collation:         coll,
+			ExprTypes:         map[sqlparser.Expr]Type{},
+			NotSingleRouteErr: a.projErr,
+			NotUnshardedErr:   a.unshardedErr,
+			Recursive:         ExprDependencies{},
+			Direct:            ExprDependencies{},
+			ColumnEqualities:  map[columnName][]sqlparser.Expr{},
+			ExpandedColumns:   map[sqlparser.TableName][]*sqlparser.ColName{},
+			columns:           map[*sqlparser.Union]sqlparser.SelectExprs{},
+			comparator:        nil,
+			StatementIDs:      a.scoper.statementIDs,
+			QuerySignature:    QuerySignature{},
+		}, nil
+	}
+
 	columns := map[*sqlparser.Union]sqlparser.SelectExprs{}
 	for union, info := range a.tables.unionInfo {
 		columns[union] = info.exprs
@@ -122,7 +161,7 @@ func (a *analyzer) newSemTable(statement sqlparser.Statement, coll collations.ID
 		columns:           columns,
 		StatementIDs:      a.scoper.statementIDs,
 		QuerySignature:    a.sig,
-	}
+	}, nil
 }
 
 func (a *analyzer) setError(err error) {
@@ -176,10 +215,6 @@ func (a *analyzer) analyzeUp(cursor *sqlparser.Cursor) bool {
 		return false
 	}
 
-	if err := a.scoper.up(cursor); err != nil {
-		a.setError(err)
-		return false
-	}
 	if err := a.tables.up(cursor); err != nil {
 		a.setError(err)
 		return false
@@ -195,9 +230,17 @@ func (a *analyzer) analyzeUp(cursor *sqlparser.Cursor) bool {
 		return false
 	}
 
-	if err := a.rewriter.up(cursor); err != nil {
+	if !a.recheck {
+		// no need to run the rewriter on rechecking
+		if err := a.rewriter.up(cursor); err != nil {
+			a.setError(err)
+			return true
+		}
+	}
+
+	if err := a.scoper.up(cursor); err != nil {
 		a.setError(err)
-		return true
+		return false
 	}
 
 	a.leaveProjection(cursor)
@@ -279,8 +322,53 @@ func (a *analyzer) depsForExpr(expr sqlparser.Expr) (direct, recursive TableSet,
 }
 
 func (a *analyzer) analyze(statement sqlparser.Statement) error {
+	_ = sqlparser.Rewrite(statement, nil, a.earlyUp)
+	if a.err != nil {
+		return a.err
+	}
+
+	if a.canShortCut(statement) {
+		return nil
+	}
+
+	a.lateInit()
+
+	return a.lateAnalyze(statement)
+}
+
+func (a *analyzer) lateAnalyze(statement sqlparser.SQLNode) error {
 	_ = sqlparser.Rewrite(statement, a.analyzeDown, a.analyzeUp)
 	return a.err
+}
+
+func (a *analyzer) reAnalyze(statement sqlparser.SQLNode) error {
+	a.recheck = true
+	defer func() {
+		a.recheck = false
+	}()
+	return a.lateAnalyze(statement)
+}
+
+// canShortCut checks if we are dealing with a single unsharded keyspace and no tables that have managed foreign keys
+// if so, we can stop the analyzer early
+func (a *analyzer) canShortCut(statement sqlparser.Statement) bool {
+	if a.fullAnalysis {
+		return false
+	}
+	ks, _ := singleUnshardedKeyspace(a.earlyTables.Tables)
+	if ks == nil {
+		return false
+	}
+
+	a.singleUnshardedKeyspace = !sqlparser.IsDMLStatement(statement)
+	return a.singleUnshardedKeyspace
+}
+
+// earlyUp collects tables in the query, so we can check
+// if this a single unsharded query we are dealing with
+func (a *analyzer) earlyUp(cursor *sqlparser.Cursor) bool {
+	a.earlyTables.up(cursor)
+	return true
 }
 
 func (a *analyzer) shouldContinue() bool {
@@ -326,6 +414,10 @@ func (p ProjError) Error() string {
 // if the query is not unsharded
 type ShardedError struct {
 	Inner error
+}
+
+func (p ShardedError) Unwrap() error {
+	return p.Inner
 }
 
 func (p ShardedError) Error() string {

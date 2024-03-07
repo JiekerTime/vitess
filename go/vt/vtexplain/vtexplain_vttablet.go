@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	"vitess.io/vitess/go/vt/sidecardb"
+	"vitess.io/vitess/go/vt/topo"
 
 	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/mysql/collations"
@@ -34,7 +35,6 @@ import (
 	"vitess.io/vitess/go/vt/log"
 	"vitess.io/vitess/go/vt/mysqlctl"
 	"vitess.io/vitess/go/vt/sqlparser"
-	"vitess.io/vitess/go/vt/topo/memorytopo"
 	"vitess.io/vitess/go/vt/topo/topoproto"
 	"vitess.io/vitess/go/vt/vtgate/evalengine"
 
@@ -102,7 +102,7 @@ type explainTablet struct {
 
 var _ queryservice.QueryService = (*explainTablet)(nil)
 
-func (vte *VTExplain) newTablet(ctx context.Context, opts *Options, t *topodatapb.Tablet) *explainTablet {
+func (vte *VTExplain) newTablet(ctx context.Context, opts *Options, t *topodatapb.Tablet, ts *topo.Server) *explainTablet {
 	db := fakesqldb.New(nil)
 	sidecardb.AddSchemaInitQueries(db, true)
 
@@ -117,7 +117,7 @@ func (vte *VTExplain) newTablet(ctx context.Context, opts *Options, t *topodatap
 	config.EnableTableGC = false
 
 	// XXX much of this is cloned from the tabletserver tests
-	tsv := tabletserver.NewTabletServer(ctx, topoproto.TabletAliasString(t.Alias), config, memorytopo.NewServer(ctx, ""), t.Alias)
+	tsv := tabletserver.NewTabletServer(ctx, topoproto.TabletAliasString(t.Alias), config, ts, t.Alias)
 
 	tablet := explainTablet{db: db, tsv: tsv, vte: vte}
 	db.Handler = &tablet
@@ -454,8 +454,8 @@ func newTabletEnvironment(ddls []sqlparser.DDLStatement, opts *Options) (*tablet
 			}
 			tEnv.addResult(query, tEnv.getResult(likeQuery))
 
-			likeQuery = fmt.Sprintf(mysqlctl.GetColumnNamesQuery, "database()", sqlescape.UnescapeID(likeTable))
-			query = fmt.Sprintf(mysqlctl.GetColumnNamesQuery, "database()", sqlescape.UnescapeID(table))
+			likeQuery = fmt.Sprintf(mysqlctl.GetColumnNamesQuery, "database()", sqltypes.EncodeStringSQL(sqlescape.UnescapeID(likeTable)))
+			query = fmt.Sprintf(mysqlctl.GetColumnNamesQuery, "database()", sqltypes.EncodeStringSQL(sqlescape.UnescapeID(table)))
 			if tEnv.getResult(likeQuery) == nil {
 				return nil, fmt.Errorf("check your schema, table[%s] doesn't exist", likeTable)
 			}
@@ -496,7 +496,7 @@ func newTabletEnvironment(ddls []sqlparser.DDLStatement, opts *Options) (*tablet
 		tEnv.addResult("SELECT * FROM "+backtickedTable+" WHERE 1 != 1", &sqltypes.Result{
 			Fields: rowTypes,
 		})
-		query := fmt.Sprintf(mysqlctl.GetColumnNamesQuery, "database()", sqlescape.UnescapeID(table))
+		query := fmt.Sprintf(mysqlctl.GetColumnNamesQuery, "database()", sqltypes.EncodeStringSQL(sqlescape.UnescapeID(table)))
 		tEnv.addResult(query, &sqltypes.Result{
 			Fields: colTypes,
 			Rows:   colValues,
@@ -598,7 +598,7 @@ func (t *explainTablet) handleSelect(query string) (*sqltypes.Result, error) {
 
 	// Gen4 supports more complex queries so we now need to
 	// handle multiple FROM clauses
-	tables := make([]*sqlparser.AliasedTableExpr, len(selStmt.From))
+	tables := make([]*sqlparser.AliasedTableExpr, 0, len(selStmt.From))
 	for _, from := range selStmt.From {
 		tables = append(tables, getTables(from)...)
 	}

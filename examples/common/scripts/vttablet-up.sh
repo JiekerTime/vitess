@@ -54,8 +54,6 @@ vttablet \
  --service_map 'grpc-queryservice,grpc-tabletmanager,grpc-updatestream' \
  --pid_file $VTDATAROOT/$tablet_dir/vttablet.pid \
  --queryserver-config-max-result-size 10000000 \
- --heartbeat_enable \
- --heartbeat_interval=250ms \
  > $VTDATAROOT/$tablet_dir/vttablet.out 2>&1 &
 
 # Block waiting for the tablet to be listening

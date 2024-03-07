@@ -26,28 +26,25 @@ import (
 	"testing"
 	"time"
 
-	_flag "vitess.io/vitess/go/internal/flag"
-	"vitess.io/vitess/go/mysql/collations"
-	"vitess.io/vitess/go/streamlog"
-	"vitess.io/vitess/go/vt/vtgate/logstats"
-
-	"vitess.io/vitess/go/vt/sqlparser"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	_flag "vitess.io/vitess/go/internal/flag"
+	"vitess.io/vitess/go/mysql/collations"
 	"vitess.io/vitess/go/sqltypes"
+	"vitess.io/vitess/go/streamlog"
 	"vitess.io/vitess/go/test/utils"
 	"vitess.io/vitess/go/vt/discovery"
-	"vitess.io/vitess/go/vt/vterrors"
-	_ "vitess.io/vitess/go/vt/vtgate/vindexes"
-	"vitess.io/vitess/go/vt/vttablet/sandboxconn"
-
 	querypb "vitess.io/vitess/go/vt/proto/query"
 	topodatapb "vitess.io/vitess/go/vt/proto/topodata"
 	vtgatepb "vitess.io/vitess/go/vt/proto/vtgate"
 	vtrpcpb "vitess.io/vitess/go/vt/proto/vtrpc"
+	"vitess.io/vitess/go/vt/sqlparser"
+	"vitess.io/vitess/go/vt/vterrors"
+	"vitess.io/vitess/go/vt/vtgate/logstats"
+	_ "vitess.io/vitess/go/vt/vtgate/vindexes"
+	"vitess.io/vitess/go/vt/vttablet/sandboxconn"
 )
 
 func TestSelectNext(t *testing.T) {
@@ -1028,7 +1025,7 @@ func TestLastInsertIDInVirtualTable(t *testing.T) {
 	_, err := executorExec(ctx, executor, session, "select * from (select last_insert_id()) as t", nil)
 	require.NoError(t, err)
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select t.`last_insert_id()` from (select :__lastInsertId as `last_insert_id()` from dual) as t",
+		Sql:           "select `last_insert_id()` from (select :__lastInsertId as `last_insert_id()` from dual) as t",
 		BindVariables: map[string]*querypb.BindVariable{"__lastInsertId": sqltypes.Uint64BindVariable(0)},
 	}}
 
@@ -1874,7 +1871,7 @@ func TestSelectScatterOrderBy(t *testing.T) {
 	require.NoError(t, err)
 
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select col1, col2, weight_string(col2) from `user` order by col2 desc",
+		Sql:           "select col1, col2, weight_string(col2) from `user` order by `user`.col2 desc",
 		BindVariables: map[string]*querypb.BindVariable{},
 	}}
 	for _, conn := range conns {
@@ -1945,7 +1942,7 @@ func TestSelectScatterOrderByVarChar(t *testing.T) {
 	require.NoError(t, err)
 
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select col1, textcol from `user` order by textcol desc",
+		Sql:           "select col1, textcol from `user` order by `user`.textcol desc",
 		BindVariables: map[string]*querypb.BindVariable{},
 	}}
 	for _, conn := range conns {
@@ -2011,7 +2008,7 @@ func TestStreamSelectScatterOrderBy(t *testing.T) {
 	require.NoError(t, err)
 
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select id, col, weight_string(col) from `user` order by col desc",
+		Sql:           "select id, col, weight_string(col) from `user` order by `user`.col desc",
 		BindVariables: map[string]*querypb.BindVariable{},
 	}}
 	for _, conn := range conns {
@@ -2071,7 +2068,7 @@ func TestStreamSelectScatterOrderByVarChar(t *testing.T) {
 	require.NoError(t, err)
 
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select id, textcol from `user` order by textcol desc",
+		Sql:           "select id, textcol from `user` order by `user`.textcol desc",
 		BindVariables: map[string]*querypb.BindVariable{},
 	}}
 	for _, conn := range conns {
@@ -2267,7 +2264,7 @@ func TestSelectScatterLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select col1, col2, weight_string(col2) from `user` order by col2 desc limit :__upper_limit",
+		Sql:           "select col1, col2, weight_string(col2) from `user` order by `user`.col2 desc limit :__upper_limit",
 		BindVariables: map[string]*querypb.BindVariable{"__upper_limit": sqltypes.Int64BindVariable(3)},
 	}}
 	for _, conn := range conns {
@@ -2339,7 +2336,7 @@ func TestStreamSelectScatterLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select col1, col2, weight_string(col2) from `user` order by col2 desc limit :__upper_limit",
+		Sql:           "select col1, col2, weight_string(col2) from `user` order by `user`.col2 desc limit :__upper_limit",
 		BindVariables: map[string]*querypb.BindVariable{"__upper_limit": sqltypes.Int64BindVariable(3)},
 	}}
 	for _, conn := range conns {
@@ -4125,7 +4122,7 @@ func TestSelectView(t *testing.T) {
 	_, err = executor.Execute(context.Background(), nil, nil, "TestSelectView", session, "select * from user_details_view", nil)
 	require.NoError(t, err)
 	wantQueries := []*querypb.BoundQuery{{
-		Sql:           "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = user_extra.user_id) as user_details_view",
+		Sql:           "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = user_extra.user_id) as user_details_view",
 		BindVariables: map[string]*querypb.BindVariable{},
 	}}
 	utils.MustMatch(t, wantQueries, sbc.Queries)
@@ -4134,7 +4131,7 @@ func TestSelectView(t *testing.T) {
 	_, err = executor.Execute(context.Background(), nil, nil, "TestSelectView", session, "select * from user_details_view where id = 2", nil)
 	require.NoError(t, err)
 	wantQueries = []*querypb.BoundQuery{{
-		Sql: "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = :id /* INT64 */ and `user`.id = user_extra.user_id) as user_details_view",
+		Sql: "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id = :id /* INT64 */ and `user`.id = user_extra.user_id) as user_details_view",
 		BindVariables: map[string]*querypb.BindVariable{
 			"id": sqltypes.Int64BindVariable(2),
 		},
@@ -4147,7 +4144,7 @@ func TestSelectView(t *testing.T) {
 	bvtg1, _ := sqltypes.BuildBindVariable([]int64{1, 2, 3, 4, 5})
 	bvals, _ := sqltypes.BuildBindVariable([]int64{1, 2})
 	wantQueries = []*querypb.BoundQuery{{
-		Sql: "select user_details_view.id, user_details_view.col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id in ::__vals and `user`.id = user_extra.user_id) as user_details_view",
+		Sql: "select id, col from (select `user`.id, user_extra.col from `user`, user_extra where `user`.id in ::__vals and `user`.id = user_extra.user_id) as user_details_view",
 		BindVariables: map[string]*querypb.BindVariable{
 			"vtg1":   bvtg1,
 			"__vals": bvals,

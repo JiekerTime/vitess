@@ -19,10 +19,11 @@ package utils
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"vitess.io/vitess/go/mysql"
 	"vitess.io/vitess/go/sqltypes"
@@ -71,6 +72,12 @@ func (mcmp *MySQLCompare) AssertMatches(query, expected string) {
 	if diff != "" {
 		mcmp.t.Errorf("Query: %s (-want +got):\n%s\nGot:%s", query, diff, got)
 	}
+}
+
+// SkipIfBinaryIsBelowVersion should be used instead of using utils.SkipIfBinaryIsBelowVersion(t,
+// This is because we might be inside a Run block that has a different `t` variable
+func (mcmp *MySQLCompare) SkipIfBinaryIsBelowVersion(majorVersion int, binary string) {
+	SkipIfBinaryIsBelowVersion(mcmp.t, majorVersion, binary)
 }
 
 // AssertMatchesAny ensures the given query produces any one of the expected results.

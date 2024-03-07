@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+
 	"vitess.io/vitess/go/mysql/sqlerror"
 
 	"vitess.io/vitess/go/sqltypes"

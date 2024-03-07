@@ -20,7 +20,7 @@ import "vitess.io/vitess/go/vt/sqlparser"
 
 // TableAnalyze analyzes the parsed query.
 func TableAnalyze(statement sqlparser.Statement, currentDb string, si SchemaInformation) (*SemTable, error) {
-	analyzer := newAnalyzer(currentDb, newSchemaInfo(si))
+	analyzer := newAnalyzer(currentDb, newSchemaInfo(si), false)
 
 	// Analysis for initial scope
 	err := analyzer.tableAnalyze(statement)
@@ -29,12 +29,21 @@ func TableAnalyze(statement sqlparser.Statement, currentDb string, si SchemaInfo
 	}
 
 	// Creation of the semantic table
-	semTable := analyzer.newSemTable(statement, si.ConnCollation())
-
-	return semTable, nil
+	return analyzer.newSemTable(statement, si.ConnCollation())
 }
 
 func (a *analyzer) tableAnalyze(statement sqlparser.Statement) error {
+	_ = sqlparser.Rewrite(statement, nil, a.earlyUp)
+	if a.err != nil {
+		return a.err
+	}
+
+	if a.canShortCut(statement) {
+		return nil
+	}
+
+	a.lateInit()
+
 	_ = sqlparser.Rewrite(statement, a.tableAnalyzeDown, a.tableAnalyzeUp)
 	return a.err
 }
@@ -54,8 +63,6 @@ func (a *analyzer) tableAnalyzeDown(cursor *sqlparser.Cursor) bool {
 		a.setError(err)
 		return true
 	}
-	// log any warn in rewriting.
-	a.warning = a.rewriter.warning
 
 	a.noteQuerySignature(cursor.Node())
 

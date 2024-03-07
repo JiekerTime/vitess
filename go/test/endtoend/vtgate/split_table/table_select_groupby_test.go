@@ -161,14 +161,13 @@ func TestTableAggrCases(t *testing.T) {
 	// scatter aggregate multiple group by (numbers)
 	mcmp.ExecWithColumnCompareAndNotEmpty("select a, b, count(*) from t_user group by 2, 1")
 	// scatter aggregate group by aggregate function
-	_, err = mcmp.ExecAndIgnore("select count(*) b from t_user group by b")
-	require.ErrorContains(t, err, "VT03005: cannot group on 'count(*)'")
+	mcmp.ExecWithColumnCompareAndNotEmpty("select count(*) b from t_user group by b")
 	// scatter aggregate multiple group by columns inverse order
 	mcmp.ExecWithColumnCompareAndNotEmpty("select a, b, count(*) from t_user group by b, a")
 	// scatter aggregate group by column number
 	mcmp.ExecWithColumnCompareAndNotEmpty("select col from t_user group by 1")
 	// scatter aggregate group by invalid column number
-	mcmp.AssertContainsError("select col from t_user group by 2", "Unknown column '2' in 'group statement'")
+	mcmp.AssertContainsError("select col from t_user group by 2", "Unknown column '2' in 'group clause'")
 	// scatter aggregate with numbered order by columns
 	mcmp.ExecWithColumnCompareAndNotEmpty("select a, b, c, d, count(*) from t_user group by 1, 2, 3 order by 1, 2, 3")
 	// scatter aggregate with named order by columns
@@ -193,7 +192,7 @@ func TestTableAggrCases(t *testing.T) {
 	//        [INT64(1)]
 	//mcmp.ExecWithColumnCompareAndNotEmpty("select id from t_user group by 1.1")
 	// Group by out of range column number (code is duplicated from symab).
-	mcmp.AssertContainsError("select id from t_user group by 2", "Unknown column '2' in 'group statement'")
+	mcmp.AssertContainsError("select id from t_user group by 2", "Unknown column '2' in 'group clause'")
 	// aggregate query with order by aggregate column along with NULL
 	mcmp.ExecWithColumnCompareAndNotEmpty("select col, count(*) k from t_user group by col order by null, k")
 	// aggregate query with order by NULL

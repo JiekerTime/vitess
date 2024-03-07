@@ -12,42 +12,48 @@
         "TableName": "t_user_t_user_extra",
         "Inputs": [
           {
-            "OperatorType": "UncorrelatedSubquery",
-            "Variant": "PulloutValue",
-            "PulloutVars": [
-              "__sq1"
-            ],
+            "OperatorType": "Sort",
+            "Variant": "Memory",
+            "OrderBy": "(0|1) ASC",
             "Inputs": [
               {
-                "InputName": "SubQuery",
-                "OperatorType": "Limit",
-                "Count": "INT64(1)",
+                "OperatorType": "UncorrelatedSubquery",
+                "Variant": "PulloutValue",
+                "PulloutVars": [
+                  "__sq1"
+                ],
                 "Inputs": [
                   {
+                    "InputName": "SubQuery",
+                    "OperatorType": "Limit",
+                    "Count": "INT64(1)",
+                    "Inputs": [
+                      {
+                        "OperatorType": "TableRoute",
+                        "Variant": "Scatter-Scatter",
+                        "Keyspace": {
+                          "Name": "user",
+                          "Sharded": true
+                        },
+                        "FieldQuery": "select col from t_user_0 where 1 != 1",
+                        "Query": "select col from t_user limit :__upper_limit",
+                        "Table": "t_user"
+                      }
+                    ]
+                  },
+                  {
+                    "InputName": "Outer",
                     "OperatorType": "TableRoute",
                     "Variant": "Scatter-Scatter",
                     "Keyspace": {
                       "Name": "user",
                       "Sharded": true
                     },
-                    "FieldQuery": "select col from t_user_0 where 1 != 1",
-                    "Query": "select col from t_user limit :__upper_limit",
+                    "FieldQuery": "select :__sq1 as a, weight_string(:__sq1) from t_user_0 where 1 != 1",
+                    "Query": "select :__sq1 as a, weight_string(:__sq1) from t_user",
                     "Table": "t_user"
                   }
                 ]
-              },
-              {
-                "InputName": "Outer",
-                "OperatorType": "TableRoute",
-                "Variant": "Scatter-Scatter",
-                "Keyspace": {
-                  "Name": "user",
-                  "Sharded": true
-                },
-                "FieldQuery": "select :__sq1 as a, weight_string(:__sq1) from t_user_0 where 1 != 1",
-                "OrderBy": "(0|1) ASC",
-                "Query": "select :__sq1 as a, weight_string(:__sq1) from t_user order by a asc",
-                "Table": "t_user"
               }
             ]
           },
@@ -97,7 +103,7 @@
                 },
                 "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                 "OrderBy": "(0|1) ASC",
-                "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
+                "Query": "select id, weight_string(id) from t_user order by t_user.id asc limit :__upper_limit",
                 "Table": "t_user"
               }
             ]
@@ -110,8 +116,8 @@
               "Name": "user",
               "Sharded": true
             },
-            "FieldQuery": "select :__sq1 as `(select id from t_user order by id asc limit 1)` from t_user_extra_0 where 1 != 1",
-            "Query": "select :__sq1 as `(select id from t_user order by id asc limit 1)` from t_user_extra",
+            "FieldQuery": "select :__sq1 as `(select id from t_user order by t_user.id asc limit 1)` from t_user_extra_0 where 1 != 1",
+            "Query": "select :__sq1 as `(select id from t_user order by t_user.id asc limit 1)` from t_user_extra",
             "Table": "t_user_extra"
           }
         ]

@@ -975,8 +975,8 @@ func DeepCloneRefOfColumnType(n *ColumnType) *ColumnType {
 	}
 	out := *n
 	out.Options = DeepCloneRefOfColumnTypeOptions(n.Options)
-	out.Length = DeepCloneRefOfLiteral(n.Length)
-	out.Scale = DeepCloneRefOfLiteral(n.Scale)
+	out.Length = DeepCloneRefOfInt(n.Length)
+	out.Scale = DeepCloneRefOfInt(n.Scale)
 	out.Charset = DeepCloneColumnCharset(n.Charset)
 	out.EnumValues = DeepCloneSliceOfString(n.EnumValues)
 	return &out
@@ -1065,8 +1065,8 @@ func DeepCloneRefOfConvertType(n *ConvertType) *ConvertType {
 		return nil
 	}
 	out := *n
-	out.Length = DeepCloneRefOfLiteral(n.Length)
-	out.Scale = DeepCloneRefOfLiteral(n.Scale)
+	out.Length = DeepCloneRefOfInt(n.Length)
+	out.Scale = DeepCloneRefOfInt(n.Scale)
 	out.Charset = DeepCloneColumnCharset(n.Charset)
 	return &out
 }
@@ -4712,7 +4712,7 @@ func DeepCloneRefOfIndexColumn(n *IndexColumn) *IndexColumn {
 	}
 	out := *n
 	out.Column = DeepCloneIdentifierCI(n.Column)
-	out.Length = DeepCloneRefOfLiteral(n.Length)
+	out.Length = DeepCloneRefOfInt(n.Length)
 	out.Expression = DeepCloneExpr(n.Expression)
 	return &out
 }

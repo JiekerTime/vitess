@@ -946,14 +946,14 @@ func (ct *ColumnType) formatFast(buf *TrackedBuffer) {
 
 	if ct.Length != nil && ct.Scale != nil {
 		buf.WriteByte('(')
-		ct.Length.formatFast(buf)
+		buf.WriteString(fmt.Sprintf("%d", *ct.Length))
 		buf.WriteByte(',')
-		ct.Scale.formatFast(buf)
+		buf.WriteString(fmt.Sprintf("%d", *ct.Scale))
 		buf.WriteByte(')')
 
 	} else if ct.Length != nil {
 		buf.WriteByte('(')
-		ct.Length.formatFast(buf)
+		buf.WriteString(fmt.Sprintf("%d", *ct.Length))
 		buf.WriteByte(')')
 	}
 
@@ -1150,7 +1150,7 @@ func (idx *IndexDefinition) formatFast(buf *TrackedBuffer) {
 			col.Column.formatFast(buf)
 			if col.Length != nil {
 				buf.WriteByte('(')
-				col.Length.formatFast(buf)
+				buf.WriteString(fmt.Sprintf("%d", *col.Length))
 				buf.WriteByte(')')
 			}
 		}
@@ -2513,10 +2513,10 @@ func (node *ConvertType) formatFast(buf *TrackedBuffer) {
 	buf.WriteString(node.Type)
 	if node.Length != nil {
 		buf.WriteByte('(')
-		node.Length.formatFast(buf)
+		buf.WriteString(fmt.Sprintf("%d", *node.Length))
 		if node.Scale != nil {
 			buf.WriteString(", ")
-			node.Scale.formatFast(buf)
+			buf.WriteString(fmt.Sprintf("%d", *node.Scale))
 		}
 		buf.WriteByte(')')
 	}

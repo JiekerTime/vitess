@@ -47,27 +47,34 @@ func TestQP(t *testing.T) {
 		{
 			sql: "select 1, count(1) from user order by 1",
 			expOrder: []ops.OrderBy{
-				{Inner: &sqlparser.Order{Expr: sqlparser.NewIntLiteral("1")}, SimplifiedExpr: sqlparser.NewIntLiteral("1")},
+				{Inner: &sqlparser.Order{Expr: sqlparser.NewStrLiteral("")}, SimplifiedExpr: sqlparser.NewStrLiteral("")},
 			},
 		},
 		{
 			sql: "select id from user order by col, id, 1",
 			expOrder: []ops.OrderBy{
 				{Inner: &sqlparser.Order{Expr: sqlparser.NewColName("col")}, SimplifiedExpr: sqlparser.NewColName("col")},
-				{Inner: &sqlparser.Order{Expr: sqlparser.NewColName("id")}, SimplifiedExpr: sqlparser.NewColName("id")},
+				{Inner: &sqlparser.Order{Expr: sqlparser.NewColNameWithQualifier("id", sqlparser.NewTableName("user"))}, SimplifiedExpr: sqlparser.NewColNameWithQualifier("id", sqlparser.NewTableName("user"))},
 			},
 		},
 		{
 			sql: "SELECT CONCAT(last_name,', ',first_name) AS full_name FROM mytable ORDER BY full_name", // alias in order not supported
 			expOrder: []ops.OrderBy{
 				{
-					Inner: &sqlparser.Order{Expr: sqlparser.NewColName("full_name")},
+					Inner: &sqlparser.Order{Expr: &sqlparser.FuncExpr{
+						Name: sqlparser.NewIdentifierCI("CONCAT"),
+						Exprs: sqlparser.SelectExprs{
+							&sqlparser.AliasedExpr{Expr: sqlparser.NewColNameWithQualifier("last_name", sqlparser.NewTableName("mytable"))},
+							&sqlparser.AliasedExpr{Expr: sqlparser.NewStrLiteral(", ")},
+							&sqlparser.AliasedExpr{Expr: sqlparser.NewColNameWithQualifier("first_name", sqlparser.NewTableName("mytable"))},
+						},
+					}},
 					SimplifiedExpr: &sqlparser.FuncExpr{
 						Name: sqlparser.NewIdentifierCI("CONCAT"),
 						Exprs: sqlparser.SelectExprs{
-							&sqlparser.AliasedExpr{Expr: sqlparser.NewColName("last_name")},
+							&sqlparser.AliasedExpr{Expr: sqlparser.NewColNameWithQualifier("last_name", sqlparser.NewTableName("mytable"))},
 							&sqlparser.AliasedExpr{Expr: sqlparser.NewStrLiteral(", ")},
-							&sqlparser.AliasedExpr{Expr: sqlparser.NewColName("first_name")},
+							&sqlparser.AliasedExpr{Expr: sqlparser.NewColNameWithQualifier("first_name", sqlparser.NewTableName("mytable"))},
 						},
 					},
 				},
@@ -134,7 +141,7 @@ func TestQPSimplifiedExpr(t *testing.T) {
   "Grouping": [],
   "OrderBy": [
     "intcol asc",
-    "textcol asc"
+    "` + "`user`" + `.textcol asc"
   ],
   "Distinct": false
 }`,

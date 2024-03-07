@@ -126,7 +126,7 @@
                     "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                     "OrderBy": "(0|1) DESC",
                     "ResultColumns": 1,
-                    "Query": "select id, weight_string(id) from t_user order by id desc limit :__upper_limit",
+                    "Query": "select id, weight_string(id) from t_user order by t_user.id desc limit :__upper_limit",
                     "Table": "t_user"
                   }
                 ]
@@ -145,7 +145,7 @@
                     "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
                     "OrderBy": "(0|1) DESC",
                     "ResultColumns": 1,
-                    "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
+                    "Query": "select id, weight_string(id) from t_music order by t_music.id desc limit :__upper_limit",
                     "Table": "t_music"
                   }
                 ]
@@ -252,7 +252,7 @@
                     "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                     "OrderBy": "(0|1) ASC",
                     "ResultColumns": 1,
-                    "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
+                    "Query": "select id, weight_string(id) from t_user order by t_user.id asc limit :__upper_limit",
                     "Table": "t_user"
                   }
                 ]
@@ -271,7 +271,7 @@
                     "FieldQuery": "select id, weight_string(id) from t_music_0 where 1 != 1",
                     "OrderBy": "(0|1) DESC",
                     "ResultColumns": 1,
-                    "Query": "select id, weight_string(id) from t_music order by id desc limit :__upper_limit",
+                    "Query": "select id, weight_string(id) from t_music order by t_music.id desc limit :__upper_limit",
                     "Table": "t_music"
                   }
                 ]
@@ -447,7 +447,7 @@
                         },
                         "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                         "OrderBy": "(0|1) ASC",
-                        "Query": "select id, weight_string(id) from t_user order by id asc limit :__upper_limit",
+                        "Query": "select id, weight_string(id) from t_user order by t_user.id asc limit :__upper_limit",
                         "Table": "t_user"
                       }
                     ]
@@ -465,7 +465,7 @@
                         },
                         "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1",
                         "OrderBy": "(0|1) DESC",
-                        "Query": "select id, weight_string(id) from t_user order by id desc limit :__upper_limit",
+                        "Query": "select id, weight_string(id) from t_user order by t_user.id desc limit :__upper_limit",
                         "Table": "t_user"
                       }
                     ]
@@ -604,7 +604,7 @@
                   {
                     "OperatorType": "Aggregate",
                     "Variant": "Ordered",
-                    "Aggregates": "any_value(1) AS weight_string(id)",
+                    "Aggregates": "any_value(1) AS weight_string(t_user.id)",
                     "GroupBy": "(0|1)",
                     "ResultColumns": 1,
                     "Inputs": [
@@ -615,9 +615,9 @@
                           "Name": "user",
                           "Sharded": true
                         },
-                        "FieldQuery": "select id, weight_string(id) from t_user_0 where 1 != 1 group by id",
+                        "FieldQuery": "select id, weight_string(t_user_0.id) from t_user_0 where 1 != 1 group by id",
                         "OrderBy": "(0|1) DESC",
-                        "Query": "select id, weight_string(id) from t_user group by id order by id desc limit :__upper_limit",
+                        "Query": "select id, weight_string(t_user.id) from t_user group by id order by t_user.id desc limit :__upper_limit",
                         "Table": "t_user"
                       }
                     ]
@@ -1398,61 +1398,7 @@
   {
     "comment": "UNION with repeating column on the LHS",
     "query": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
-    "plan": {
-      "QueryType": "SELECT",
-      "Original": "select col, col, col from t_user union select col1, col1, col1 from t_authoritative",
-      "Instructions": {
-        "OperatorType": "Distinct",
-        "Collations": [
-          "0: latin1_swedish_ci",
-          "1: latin1_swedish_ci",
-          "2: latin1_swedish_ci"
-        ],
-        "Inputs": [
-          {
-            "OperatorType": "Distinct",
-            "Collations": [
-              "0",
-              "1",
-              "2"
-            ],
-            "Inputs": [
-              {
-                "OperatorType": "Concatenate",
-                "Inputs": [
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select col, col, col from t_user_0 where 1 != 1",
-                    "Query": "select distinct col, col, col from t_user",
-                    "Table": "t_user"
-                  },
-                  {
-                    "OperatorType": "TableRoute",
-                    "Variant": "Scatter-Scatter",
-                    "Keyspace": {
-                      "Name": "user",
-                      "Sharded": true
-                    },
-                    "FieldQuery": "select col1, col1, col1 from t_authoritative_0 where 1 != 1",
-                    "Query": "select distinct col1, col1, col1 from t_authoritative",
-                    "Table": "t_authoritative"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "TablesUsed": [
-        "user.t_authoritative",
-        "user.t_user"
-      ]
-    }
+    "plan": "Duplicate column name 'col'"
   },
   {
     "comment": "union all splitTable and not splitTable",

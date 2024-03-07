@@ -1111,12 +1111,6 @@ func VisitRefOfColumnType(in *ColumnType, f Visit) error {
 	if cont, err := f(in); err != nil || !cont {
 		return err
 	}
-	if err := VisitRefOfLiteral(in.Length, f); err != nil {
-		return err
-	}
-	if err := VisitRefOfLiteral(in.Scale, f); err != nil {
-		return err
-	}
 	return nil
 }
 func VisitColumns(in Columns, f Visit) error {
@@ -1222,12 +1216,6 @@ func VisitRefOfConvertType(in *ConvertType, f Visit) error {
 		return nil
 	}
 	if cont, err := f(in); err != nil || !cont {
-		return err
-	}
-	if err := VisitRefOfLiteral(in.Length, f); err != nil {
-		return err
-	}
-	if err := VisitRefOfLiteral(in.Scale, f); err != nil {
 		return err
 	}
 	return nil

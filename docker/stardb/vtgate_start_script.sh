@@ -55,6 +55,7 @@ function vtgate_start() {
     --mysql_server_version $MYSQL_VERSION \
     --pid_file /export/data/mysql/tmp/vtgate.pid \
     --mysql_auth_server_config_file /vt/config/vtgate/user.json \
+    --vschema_ddl_authorized_users % \
     > /export/data/mysql/tmp/vtgate.out 2>&1"
   else
     ARGS="--alsologtostderr \
@@ -78,6 +79,7 @@ function vtgate_start() {
     --mysql_server_version $MYSQL_VERSION \
     --pid_file /export/data/mysql/tmp/vtgate.pid \
     --mysql_auth_server_config_file /vt/config/vtgate/user.json \
+    --vschema_ddl_authorized_users % \
     > /export/data/mysql/tmp/vtgate.out 2>&1"
   fi
   echo "su -c \"/export/bin/vtgate ${ARGS}\" vitess"

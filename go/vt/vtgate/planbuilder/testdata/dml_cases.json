@@ -4903,58 +4903,58 @@
     }
   },
   {
-    "QueryType": "delete comment",
-    "Original": "/* comment1 */ delete /* comment2 */ from  /* comment3 */ user /* comment4 */ ",
-    "Instructions": {
-      "OperatorType": "Delete",
-      "Variant": "Scatter",
-      "Keyspace": {
-        "Name": "user",
-        "Sharded": true
-      },
-      "TargetTabletType": "PRIMARY",
-      "KsidLength": 1,
-      "KsidVindex": "user_index",
-      "OwnedVindexQuery": "select Id, `Name`, Costly from `user` for update",
-      "Query": "delete /* comment2 */ from `user`",
-      "Table": "user"
-    },
-    "TablesUsed": [
-      "user.user"
-    ]
-  },
-  {
-    "comment": "update Comments",
-    "query": "/* comment1 */ update /* comment2 */ user /* comment3 */ set /* comment4 */ val = 1 /* comment5 */ where id = 1 /* comment6 */",
+    "comment": "Delete with routed table on music",
+    "query": "delete from second_user.bar",
     "plan": {
-      "QueryType": "UPDATE",
-      "Original": "/* comment1 */ update /* comment2 */ user /* comment3 */ set /* comment4 */ val = 1 /* comment5 */ where id = 1 /* comment6 */",
+      "QueryType": "DELETE",
+      "Original": "delete from second_user.bar",
       "Instructions": {
-        "OperatorType": "Update",
-        "Variant": "EqualUnique",
+        "OperatorType": "Delete",
+        "Variant": "Scatter",
         "Keyspace": {
           "Name": "user",
           "Sharded": true
         },
         "TargetTabletType": "PRIMARY",
-        "Query": "update /* comment2 */ `user` set val = 1 where id = 1",
-        "Table": "user",
-        "Values": [
-          "INT64(1)"
-        ],
-        "Vindex": "user_index"
+        "KsidLength": 1,
+        "KsidVindex": "user_index",
+        "OwnedVindexQuery": "select user_id, id from music as bar for update",
+        "Query": "delete from music as bar",
+        "Table": "music"
       },
       "TablesUsed": [
-        "user.user"
+        "user.music"
       ]
     }
   },
   {
-    "comment": "insert Comments",
-    "query": "/* comment1 */ insert /* comment2 */ into /* comment3 */ music(user_id, id) /* comment4 */ values(1, 2) /* comment5 */",
+    "comment": "Update with routed table on music",
+    "query": "update second_user.bar set col = 23",
+    "plan": {
+      "QueryType": "UPDATE",
+      "Original": "update second_user.bar set col = 23",
+      "Instructions": {
+        "OperatorType": "Update",
+        "Variant": "Scatter",
+        "Keyspace": {
+          "Name": "user",
+          "Sharded": true
+        },
+        "TargetTabletType": "PRIMARY",
+        "Query": "update music as bar set col = 23",
+        "Table": "music"
+      },
+      "TablesUsed": [
+        "user.music"
+      ]
+    }
+  },
+  {
+    "comment": "Insert with routed table on music",
+    "query": "insert into second_user.bar(id) values (2)",
     "plan": {
       "QueryType": "INSERT",
-      "Original": "/* comment1 */ insert /* comment2 */ into /* comment3 */ music(user_id, id) /* comment4 */ values(1, 2) /* comment5 */",
+      "Original": "insert into second_user.bar(id) values (2)",
       "Instructions": {
         "OperatorType": "Insert",
         "Variant": "Sharded",
@@ -4963,11 +4963,11 @@
           "Sharded": true
         },
         "TargetTabletType": "PRIMARY",
-        "Query": "insert /* comment2 */ into music(user_id, id) values (:_user_id_0, :_id_0)",
+        "Query": "insert into music(id, user_id) values (:_id_0, :_user_id_0)",
         "TableName": "music",
         "VindexValues": {
           "music_user_map": "INT64(2)",
-          "user_index": "INT64(1)"
+          "user_index": "NULL"
         }
       },
       "TablesUsed": [

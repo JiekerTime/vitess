@@ -144,8 +144,8 @@
           "Name": "user",
           "Sharded": true
         },
-        "FieldQuery": "select a.user_id, a.col1, a.col2 from t_authoritative_0 as a where 1 != 1",
-        "Query": "select a.user_id, a.col1, a.col2 from t_authoritative as a",
+        "FieldQuery": "select user_id, col1, col2 from t_authoritative_0 as a where 1 != 1",
+        "Query": "select user_id, col1, col2 from t_authoritative as a",
         "Table": "t_authoritative"
       },
       "TablesUsed": [
@@ -173,7 +173,7 @@
             },
             "FieldQuery": "select user_id, weight_string(user_id) from t_music_0 where 1 != 1",
             "OrderBy": "(0|1) ASC",
-            "Query": "select user_id, weight_string(user_id) from t_music order by user_id asc limit :__upper_limit",
+            "Query": "select user_id, weight_string(user_id) from t_music order by t_music.user_id asc limit :__upper_limit",
             "ResultColumns": 1,
             "Table": "t_music"
           }
@@ -314,7 +314,7 @@
           "Sharded": true
         },
         "FieldQuery": "select user0_.col as col0_ from t_user_0 as user0_ where 1 != 1",
-        "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 and col = 12 order by col0_ desc limit 3",
+        "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 and col = 12 order by user0_.col desc limit 3",
         "Table": "t_user",
         "TableValues": [
           "INT64(12)"
@@ -381,7 +381,7 @@
             },
             "FieldQuery": "select user0_.col as col0_ from t_user_0 as user0_ where 1 != 1",
             "OrderBy": "0 DESC",
-            "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 order by col0_ desc limit :__upper_limit",
+            "Query": "select user0_.col as col0_ from t_user as user0_ where id = 1 order by user0_.col desc limit :__upper_limit",
             "Table": "t_user",
             "Values": [
               "INT64(1)"
@@ -1419,7 +1419,7 @@
             },
             "FieldQuery": "select u.foo, weight_string(u.foo) from t_user_0 as u where 1 != 1",
             "OrderBy": "(0|1) ASC",
-            "Query": "select u.foo, weight_string(u.foo) from t_user as u order by foo asc",
+            "Query": "select u.foo, weight_string(u.foo) from t_user as u order by u.foo asc",
             "Table": "t_user"
           },
           {
